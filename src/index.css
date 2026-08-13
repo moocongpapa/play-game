@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .break-keep {
+    word-break: keep-all;
+    overflow-wrap: break-word;
+  }
+}
