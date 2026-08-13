@@ -1,48 +1,39 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { SHAPE_COLOR_ITEMS_BY_AGE } from '../../data/gameData';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
-import { getDifficultyConfig, getAgeGroupLabel, pickDistractors, pickRandom } from '../../utils/ageEngine';
-import { AgeGroup } from '../../types';
+import { getDifficultyConfig, getAgeGroupLabel, pickRandom } from '../../utils/ageEngine';
+import { PATTERN_ITEMS_BY_AGE } from '../../data/gameData';
+import { AgeGroup, PatternItem } from '../../types';
 import { Volume2, RefreshCw, Timer } from 'lucide-react';
 
-interface ShapeColorItem {
-  id: string;
-  shape: string;
-  colorName: string;
-  color: string;
-  emoji: string;
-  path: string;
-}
-
-interface RanoShapeColorGameProps {
+interface PatternSequenceGameProps {
   onCompleteQuiz: (starsEarned: number) => void;
   soundEnabled: boolean;
   ageGroup: AgeGroup;
   childName: string;
 }
 
-export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
+export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
   onCompleteQuiz,
   soundEnabled,
   ageGroup,
   childName,
 }) => {
   const diffConfig = getDifficultyConfig(ageGroup);
-  const itemPool = SHAPE_COLOR_ITEMS_BY_AGE[ageGroup] || SHAPE_COLOR_ITEMS_BY_AGE.sprout;
+  const itemPool = PATTERN_ITEMS_BY_AGE[ageGroup] || PATTERN_ITEMS_BY_AGE.sprout;
 
-  const [targetItem, setTargetItem] = useState<ShapeColorItem>(itemPool[0]);
-  const [options, setOptions] = useState<ShapeColorItem[]>([]);
-  const [shakingCardId, setShakingCardId] = useState<string | null>(null);
+  const [targetItem, setTargetItem] = useState<PatternItem>(itemPool[0]);
+  const [options, setOptions] = useState<string[]>([]);
   const [selectedCorrectId, setSelectedCorrectId] = useState<string | null>(null);
+  const [shakingCardId, setShakingCardId] = useState<string | null>(null);
 
   // 힌트 상태
   const [showHint, setShowHint] = useState(false);
   const hintTimerRef = useRef<number | null>(null);
 
-  // 타이머 상태 (꽃잎반/별님반)
+  // 타이머 상태
   const [timeLeft, setTimeLeft] = useState<number>(diffConfig.timeLimit);
   const [timeOut, setTimeOut] = useState(false);
   const gameTimerRef = useRef<number | null>(null);
@@ -57,22 +48,23 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
     setTimeOut(false);
     setTimeLeft(diffConfig.timeLimit);
 
-    const target = pickRandom<ShapeColorItem>(itemPool, 1)[0];
+    const target = pickRandom<PatternItem>(itemPool, 1)[0];
     setTargetItem(target);
 
-    const distractors = pickDistractors<ShapeColorItem>(itemPool, target.id, diffConfig.optionCount - 1);
-    const roundOptions = [...distractors, target].sort(() => Math.random() - 0.5);
+    // 정답 + 오답 구성 (선택지 2~3개)
+    const distractors = target.distractors.slice(0, diffConfig.optionCount - 1);
+    const roundOptions = [target.answer, ...distractors].sort(() => Math.random() - 0.5);
     setOptions(roundOptions);
 
     if (soundEnabled) {
-      speakText(`라노와 함께 알록달록 ${target.colorName} ${target.shape} 모양을 찾아주세요!`, soundEnabled, { characterId: 'rano' });
+      speakText(`라노랑 신나는 패턴 놀이! 물음표 상자에는 어떤 친구가 올까요? 규칙을 찾아보아요!`, soundEnabled, { characterId: 'rano' });
     }
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
       hintTimerRef.current = window.setTimeout(() => {
         setShowHint(true);
-        speakText(`여기 반짝이는 걸 눌러봐!`, soundEnabled, { characterId: 'rano', playIntroSFX: false });
+        speakText(`여기 반짝이는 친구를 골라봐!`, soundEnabled, { characterId: 'rano', playIntroSFX: false });
       }, diffConfig.hintDelaySec * 1000);
     }
 
@@ -83,7 +75,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
           if (prev <= 1) {
             if (gameTimerRef.current) clearInterval(gameTimerRef.current);
             setTimeOut(true);
-            speakText(`시간이 끝났어요. 다음 문제를 풀어보아요!`, soundEnabled, { characterId: 'rano' });
+            speakText(`시간 초과! 다음 패턴 규칙을 찾아볼까요?`, soundEnabled, { characterId: 'rano' });
             return 0;
           }
           return prev - 1;
@@ -100,21 +92,21 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
     };
   }, [ageGroup]);
 
-  const handleSelectCard = (item: typeof itemPool[0]) => {
+  const handleSelectCard = (ans: string) => {
     if (selectedCorrectId || timeOut) return;
 
-    if (item.id === targetItem.id) {
+    if (ans === targetItem.answer) {
       if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
-      setSelectedCorrectId(item.id);
+      setSelectedCorrectId(ans);
       playCorrectFanfare(soundEnabled);
-      speakText(`크앙! 정답이에요! ${item.colorName} ${item.shape}!`, soundEnabled, { characterId: 'rano' });
+      speakText(`크앙! 정답이에요! 패턴을 예쁘게 완성했어요!`, soundEnabled, { characterId: 'rano' });
       onCompleteQuiz(diffConfig.starsPerCorrect);
     } else {
-      setShakingCardId(item.id);
+      setShakingCardId(ans);
       playWrongBoing(soundEnabled);
-      speakText(`다시 골라볼까요?`, soundEnabled, { characterId: 'rano' });
+      speakText(`다시 순서를 곰곰이 살펴볼까요?`, soundEnabled, { characterId: 'rano' });
       setTimeout(() => setShakingCardId(null), 600);
     }
   };
@@ -126,14 +118,14 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
         <CharacterAvatar id="rano" size="md" mood={selectedCorrectId ? 'excited' : 'waving'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#2E7D32] mb-1">
-            <span>🦖 {getAgeGroupLabel(ageGroup)} &bull; 모양 색상</span>
+            <span>🦖 {getAgeGroupLabel(ageGroup)} &bull; 패턴 완성</span>
           </div>
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
-            &ldquo;<span className="text-[#2E7D32] underline">{targetItem.colorName} {targetItem.shape}</span>&rdquo;
+            물음표 <span className="text-[#2E7D32] underline">❓</span> 칸에 올 친구는?
           </h2>
         </div>
         <button
-          onClick={() => speakText(`${targetItem.colorName} ${targetItem.shape}를 찾아보아요!`, soundEnabled, { characterId: 'rano' })}
+          onClick={() => speakText(`규칙을 보며 어떤 것이 오는지 맞춰보아요!`, soundEnabled, { characterId: 'rano' })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#66BB6A] shadow-xs text-[#2E7D32] cursor-pointer shrink-0"
         >
           <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -159,57 +151,69 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
       {/* Time out warning */}
       {timeOut && (
         <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-2xl w-full text-center font-black text-rose-600 animate-pulse my-4">
-          ⏰ 째깍째깍! 시간이 지났어요! 다음 문제로 풀기를 진행해요!
+          ⏰ 아쉽네요! 시간 초과! 다음 패턴 방으로 이동해요!
         </div>
       )}
 
-      {/* Dinosaur Footprint Target Slot */}
-      <div className="my-3 sm:my-4 p-4 sm:p-6 bg-white rounded-3xl sm:rounded-full border-3 sm:border-4 border-dashed border-[#81C784] shadow-inner flex flex-col items-center justify-center">
-        <span className="text-xs font-bold text-[#8C7B79] mb-1">라노 발자국 틀</span>
-        <div
-          className="w-18 h-18 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl flex items-center justify-center text-4xl sm:text-5xl shadow-sm transition-transform"
-          style={{ backgroundColor: targetItem.color }}
-        >
-          {targetItem.emoji}
+      {/* Pattern Sequence Display Box */}
+      <div className="my-4 sm:my-6 p-4 sm:p-6 w-full bg-white rounded-3xl border-3 sm:border-4 border-[#C8E6C9] shadow-inner flex flex-col items-center justify-center">
+        <span className="text-xs font-black text-[#8C7B79] mb-3 leading-none">패턴 레일</span>
+        <div className="flex items-center justify-center gap-2 sm:gap-4 flex-wrap max-w-full">
+          {targetItem.sequence.map((emoji, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-2xl sm:text-4xl shadow-xs"
+            >
+              {emoji}
+            </motion.div>
+          ))}
+          {/* ❓ Box */}
+          <motion.div
+            animate={selectedCorrectId ? { scale: [1, 1.1, 1] } : {}}
+            transition={{ repeat: Infinity, duration: 1.0 }}
+            className={`w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-2xl sm:text-4xl shadow-md border-2 ${
+              selectedCorrectId ? 'bg-emerald-100 border-emerald-400' : 'bg-amber-100 border-amber-400'
+            }`}
+          >
+            {selectedCorrectId ? targetItem.answer : '❓'}
+          </motion.div>
         </div>
       </div>
 
-      {/* Options */}
-      <div className={`grid gap-2 sm:gap-4 w-full my-3 sm:my-4 ${
-        options.length === 2 ? 'grid-cols-2' : 'grid-cols-3'
-      }`}>
-        {options.map((item) => {
-          const isShaking = shakingCardId === item.id;
-          const isSolved = selectedCorrectId === item.id;
-          const isTarget = item.id === targetItem.id;
+      {/* Options Buttons */}
+      <div className="flex items-center justify-center gap-3 sm:gap-6 my-2 sm:my-4 w-full">
+        {options.map((ans) => {
+          const isShaking = shakingCardId === ans;
+          const isSolved = selectedCorrectId === ans;
+          const isTarget = ans === targetItem.answer;
           const shouldPulse = showHint && isTarget && !selectedCorrectId;
 
           return (
-            <motion.div
-              key={item.id}
+            <motion.button
+              key={ans}
               animate={
                 isShaking
-                  ? { x: [-10, 10, -8, 8, 0] }
+                  ? { x: [-8, 8, -6, 6, 0] }
                   : isSolved
-                  ? { scale: 1.05 }
+                  ? { scale: 1.15 }
                   : shouldPulse
-                  ? { scale: [1, 1.06, 1], filter: ['brightness(1)', 'brightness(1.15)', 'brightness(1)'] }
+                  ? { scale: [1, 1.12, 1] }
                   : { scale: 1 }
               }
-              transition={{ duration: isShaking ? 0.5 : shouldPulse ? 1.2 : 0.5 }}
-              onClick={() => handleSelectCard(item)}
-              className={`flex flex-col items-center justify-center p-2.5 sm:p-5 rounded-2xl sm:rounded-3xl border-3 sm:border-4 cursor-pointer select-none transition-all shadow-md touch-manipulation min-h-[130px] sm:min-h-[160px] ${
+              transition={{ duration: isShaking ? 0.5 : shouldPulse ? 1.0 : 0.2 }}
+              onClick={() => handleSelectCard(ans)}
+              className={`w-16 h-16 sm:w-24 sm:h-24 rounded-3xl text-4xl sm:text-6xl flex items-center justify-center shadow-md border-4 transition-all cursor-pointer ${
                 isSolved
                   ? 'bg-[#E8F5E9] border-[#66BB6A]'
                   : shouldPulse
-                  ? 'bg-amber-50 border-amber-400 ring-4 ring-amber-300/50'
-                  : 'bg-white hover:bg-[#F1F8E9] border-[#C8E6C9]'
+                  ? 'bg-amber-50 border-amber-400 ring-4 ring-amber-300'
+                  : 'bg-white border-[#C8E6C9] hover:bg-[#F1F8E9]'
               }`}
             >
-              <span className="text-3xl sm:text-5xl mb-1">{item.emoji}</span>
-              <span className="text-xs sm:text-base font-black text-[#4A3E3D]">{item.colorName}</span>
-              <span className="text-sm sm:text-lg font-black text-[#2E7D32]">{item.shape}</span>
-            </motion.div>
+              {ans}
+            </motion.button>
           );
         })}
       </div>
@@ -218,7 +222,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
       <div className="flex items-center justify-center gap-3 w-full">
         {selectedCorrectId || timeOut ? (
           <JellyButton variant="green" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 퍼즐 풀기 🦖
+            다음 패턴 완성하기 🦖
           </JellyButton>
         ) : (
           <JellyButton variant="white" size="md" onClick={generateRound} className="!px-4">

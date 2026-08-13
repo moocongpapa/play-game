@@ -4,8 +4,8 @@ import { CHARACTER_LIST } from '../data/characters';
 import { CharacterId } from '../types';
 import { CharacterAvatar } from '../components/CharacterAvatar';
 import { JellyButton } from '../components/JellyButton';
-import { speakText, playCharacterVoiceSFX } from '../utils/soundEngine';
-import { Sparkles, Heart, Film } from 'lucide-react';
+import { speakText } from '../utils/soundEngine';
+import { Sparkles } from 'lucide-react';
 
 interface CharacterTalkScreenProps {
   selectedCharacter: CharacterId;
@@ -13,6 +13,7 @@ interface CharacterTalkScreenProps {
   onGoHome: () => void;
   onOpenCharmVideo: (characterId?: CharacterId) => void;
   soundEnabled: boolean;
+  childName: string;
 }
 
 export const CharacterTalkScreen: React.FC<CharacterTalkScreenProps> = ({
@@ -21,6 +22,7 @@ export const CharacterTalkScreen: React.FC<CharacterTalkScreenProps> = ({
   onGoHome,
   onOpenCharmVideo,
   soundEnabled,
+  childName,
 }) => {
   const [activeMood, setActiveMood] = useState<'happy' | 'dancing' | 'waving' | 'excited'>('happy');
 
@@ -31,20 +33,23 @@ export const CharacterTalkScreen: React.FC<CharacterTalkScreenProps> = ({
     setActiveMood('dancing');
     const target = CHARACTER_LIST.find((c) => c.id === charId);
     if (target) {
-      speakText(`${target.greeting}`, soundEnabled, { characterId: charId });
+      const greeting = target.greetingTemplate.replace('{name}', childName);
+      speakText(greeting, soundEnabled, { characterId: charId });
     }
     setTimeout(() => setActiveMood('happy'), 1500);
   };
+
+  const currentGreeting = activeChar.greetingTemplate.replace('{name}', childName);
 
   return (
     <div className="flex flex-col items-center justify-between w-full max-w-3xl mx-auto p-2.5 sm:p-4 min-h-[85vh] overflow-hidden">
       {/* Top Banner */}
       <div className="w-full text-center bg-white/80 p-3 sm:p-4 rounded-3xl border-2 sm:border-3 border-[#FFD15C] shadow-sm mb-3 break-keep">
         <h1 className="text-xl sm:text-3xl font-black text-[#4A3E3D] flex items-center justify-center gap-2">
-          <span>💖</span> 유하와 동물 친구들의 대화방!
+          <span>💖</span> {childName}와 동물 친구들의 대화방!
         </h1>
         <p className="text-xs sm:text-base font-bold text-[#8C7B79] mt-0.5">
-          유하가 터치하면 친구들이 반갑게 "유하야 안녕!" 인사하고 춤을 춰요!
+          {childName}가 터치하면 친구들이 반갑게 &ldquo;{childName}야 안녕!&rdquo; 인사하고 춤을 춰요!
         </p>
       </div>
 
@@ -69,7 +74,7 @@ export const CharacterTalkScreen: React.FC<CharacterTalkScreenProps> = ({
 
         <div className="mt-2.5 bg-white/90 p-3 sm:p-4 rounded-2xl border-2 border-[#FFD15C] w-full max-w-lg shadow-xs break-keep">
           <p className="text-base sm:text-lg font-black text-[#4A3E3D] leading-relaxed">
-            &ldquo;{activeChar.greeting}&rdquo;
+            &ldquo;{currentGreeting}&rdquo;
           </p>
         </div>
 
@@ -90,7 +95,8 @@ export const CharacterTalkScreen: React.FC<CharacterTalkScreenProps> = ({
             variant="secondary"
             onClick={() => {
               setActiveMood('excited');
-              speakText(activeChar.praise[0], soundEnabled, { characterId: activeChar.id });
+              const praiseText = activeChar.praise[0].replace('{name}', childName);
+              speakText(praiseText, soundEnabled, { characterId: activeChar.id });
               setTimeout(() => setActiveMood('happy'), 1500);
             }}
           >

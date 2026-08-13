@@ -9,12 +9,14 @@ interface SplashLoaderProps {
   onFinish: () => void;
   soundEnabled: boolean;
   bgmEnabled: boolean;
+  childName: string;
 }
 
 export const SplashLoader: React.FC<SplashLoaderProps> = ({
   onFinish,
   soundEnabled,
   bgmEnabled,
+  childName,
 }) => {
   const [progress, setProgress] = useState(0);
   const [hasStartedAudio, setHasStartedAudio] = useState(false);
@@ -27,7 +29,7 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({
     if (bgmEnabled) {
       startBGM(0.18);
     }
-    speakText('유하야 어서와! 친구들과 함께 신나게 놀자!', soundEnabled);
+    speakText(`${childName}야 어서와! 친구들과 함께 신나게 놀자!`, soundEnabled);
   };
 
   useEffect(() => {
@@ -106,7 +108,7 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({
           >
             <Sparkles className="w-6 h-6 text-amber-500 animate-spin" />
             <span className="text-xl sm:text-2xl font-black text-[#E65100]">
-              유하의 캐릭터 놀이터
+              {childName}의 캐릭터 놀이터
             </span>
             <Star className="w-6 h-6 text-amber-500 fill-amber-400" />
           </motion.div>
@@ -116,11 +118,11 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({
             animate={{ opacity: 1, y: 0 }}
             className="text-3xl sm:text-5xl lg:text-6xl font-black text-[#4A3E3D] drop-shadow-sm flex items-center gap-2 justify-center flex-wrap"
           >
-            <span>✨ 유하야, 어서와! ✨</span>
+            <span>✨ {childName}야, 어서와! ✨</span>
           </motion.h1>
 
           <p className="text-base sm:text-xl font-bold text-[#8C7B79] mt-2 flex items-center gap-1.5">
-            <span>🎉 귀여운 동물 친구들이 유하를 기다려! 💖</span>
+            <span>🎉 귀여운 동물 친구들이 {childName}를 기다려! 💖</span>
           </p>
         </div>
 
@@ -146,7 +148,7 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({
               className="flex flex-col items-center cursor-pointer group"
               onClick={() => {
                 triggerAudio();
-                speakText(`유하야 안녕! 나는 ${char.name}야!`, soundEnabled, { characterId: char.id });
+                speakText(`${childName}야 안녕! 나는 ${char.name}야!`, soundEnabled, { characterId: char.id });
               }}
             >
               <div className="relative">
@@ -180,7 +182,7 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({
           </div>
 
           <div className="flex items-center justify-between w-full text-xs sm:text-sm font-black text-[#6D4C41] px-2">
-            <span>🚀 유하와 출발 준비 중...</span>
+            <span>🚀 {childName}와 출발 준비 중...</span>
             <span>{Math.round(progress)}%</span>
           </div>
 
@@ -195,7 +197,7 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({
             className="mt-1 py-2.5 px-6 bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 text-white font-black text-sm sm:text-base rounded-full shadow-lg flex items-center gap-2 cursor-pointer border-2 border-white"
           >
             <Play className="w-5 h-5 fill-current" />
-            <span>✨ 유하야, 바로 시작하기! ✨</span>
+            <span>✨ {childName}야, 바로 시작하기! ✨</span>
           </motion.button>
         </div>
       </motion.div>

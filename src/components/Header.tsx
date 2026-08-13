@@ -2,8 +2,9 @@ import React from 'react';
 import { Volume2, VolumeX, Music, Shield, Sparkles, Home } from 'lucide-react';
 import { JellyButton } from './JellyButton';
 import { CharacterAvatar } from './CharacterAvatar';
-import { CharacterId } from '../types';
+import { CharacterId, AgeGroup } from '../types';
 import { CHARACTERS } from '../data/characters';
+import { getAgeGroupEmoji, getAgeGroupLabel } from '../utils/ageEngine';
 
 interface HeaderProps {
   stars: number;
@@ -17,6 +18,8 @@ interface HeaderProps {
   onOpenCharacterSelect: () => void;
   onGoHome: () => void;
   currentScreen: 'home' | 'game' | 'stickers' | 'talk' | 'parent';
+  childName: string;
+  ageGroup: AgeGroup;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -31,6 +34,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenCharacterSelect,
   onGoHome,
   currentScreen,
+  childName,
+  ageGroup,
 }) => {
   const currentBuddy = CHARACTERS[selectedCharacter];
 
@@ -55,20 +60,28 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <CharacterAvatar id={selectedCharacter} size="sm" mood="happy" className="!w-9 !h-9 sm:!w-12 sm:!h-12" />
           <div className="text-left hidden sm:block">
-            <span className="text-xs text-[#8C7B79] block leading-none">유하의 친구</span>
+            <span className="text-[10px] text-[#8C7B79] block leading-none">{childName}의 친구</span>
             <span className="text-base font-black text-[#4A3E3D]">{currentBuddy?.name}</span>
           </div>
         </button>
       </div>
 
-      {/* Middle: Stars / Rewards */}
-      <div
-        onClick={onOpenStickerRoom}
-        className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-[#FFF59D] to-[#FFD54F] px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full border-2 border-[#FFA000] shadow-sm cursor-pointer hover:scale-105 transition-transform shrink-0"
-      >
-        <span className="text-lg sm:text-2xl animate-bounce">🌟</span>
-        <span className="text-base sm:text-xl font-black text-[#4A3E3D]">{stars}개</span>
-        <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#E65100]" />
+      {/* Middle: Stars / Rewards & Age Badge */}
+      <div className="flex items-center gap-1.5 sm:gap-3">
+        <div
+          onClick={onOpenStickerRoom}
+          className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-[#FFF59D] to-[#FFD54F] px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full border-2 border-[#FFA000] shadow-sm cursor-pointer hover:scale-105 transition-transform shrink-0"
+        >
+          <span className="text-lg sm:text-2xl animate-bounce">🌟</span>
+          <span className="text-base sm:text-xl font-black text-[#4A3E3D]">{stars}개</span>
+          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#E65100]" />
+        </div>
+
+        {/* Age Group Badge */}
+        <div className="hidden xs:flex items-center gap-1 bg-[#FFF9E6] border-2 border-[#FFD15C] rounded-full px-3 py-1 text-xs font-black text-[#6D4C41] shadow-2xs">
+          <span>{getAgeGroupEmoji(ageGroup)}</span>
+          <span>{getAgeGroupLabel(ageGroup)}</span>
+        </div>
       </div>
 
       {/* Right: Sound, Music, Sticker Room, Parent Gate */}

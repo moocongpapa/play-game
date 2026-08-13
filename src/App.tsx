@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AppState, CharacterId, GameId } from './types';
+import { AppState, CharacterId, GameId, ChildProfile } from './types';
 import { Header } from './components/Header';
 import { ConfettiEffect } from './components/ConfettiEffect';
 import { ParentalGateModal } from './components/ParentalGateModal';
@@ -9,8 +9,9 @@ import { StickerRoomScreen } from './screens/StickerRoomScreen';
 import { ParentDashboard } from './screens/ParentDashboard';
 import { CharacterCharmVideoModal } from './components/CharacterCharmVideoModal';
 import { SplashLoader } from './components/SplashLoader';
+import { OnboardingScreen } from './screens/OnboardingScreen';
 
-// Mini Games
+// Mini Games (기존 7종)
 import { GgomiObjectGame } from './screens/games/GgomiObjectGame';
 import { RanoShapeColorGame } from './screens/games/RanoShapeColorGame';
 import { JellyKoreanGame } from './screens/games/JellyKoreanGame';
@@ -19,18 +20,31 @@ import { GgulgguliCountingGame } from './screens/games/GgulgguliCountingGame';
 import { EummeCloudShapeGame } from './screens/games/EummeCloudShapeGame';
 import { NurungjiTreasureGame } from './screens/games/NurungjiTreasureGame';
 
+// New Mini Games (신규 5종)
+import { EmotionQuizGame } from './screens/games/EmotionQuizGame';
+import { PatternSequenceGame } from './screens/games/PatternSequenceGame';
+import { WordPuzzleGame } from './screens/games/WordPuzzleGame';
+import { RhythmGame } from './screens/games/RhythmGame';
+import { SizeComparisonGame } from './screens/games/SizeComparisonGame';
+
 import { startBGM, stopBGM, setBGMVolume, playStarGain, speakText } from './utils/soundEngine';
 import { initAuth, fetchDriveFolderVideos, GOOGLE_DRIVE_FOLDER_ID } from './services/googleDrive';
-import { Moon, Shield, RefreshCw } from 'lucide-react';
+import { Moon, Shield } from 'lucide-react';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>(() => {
     const saved = localStorage.getItem('ITSME_APP_STATE');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // 하위 호환성 패치
+        if (parsed.onboardingCompleted === undefined) {
+          parsed.onboardingCompleted = false;
+          parsed.childProfile = null;
+        }
+        return parsed;
       } catch (e) {
-        console.warn('Failed to parse saved state', e);
+        console.warn('Failed to parse saved state, using default', e);
       }
     }
     return {
@@ -54,7 +68,14 @@ export default function App() {
         counting_food: 0,
         cloud_shapes: 0,
         treasure_hunt: 0,
+        emotion_quiz: 0,
+        pattern_sequence: 0,
+        word_puzzle: 0,
+        rhythm_game: 0,
+        size_comparison: 0,
       },
+      childProfile: null,
+      onboardingCompleted: false,
     };
   });
 
@@ -138,10 +159,17 @@ export default function App() {
       if (newStars >= 20 && !unlocked.includes('stk_nurungji')) unlocked.push('stk_nurungji');
       if (newStars >= 25 && !unlocked.includes('stk_rainbow')) unlocked.push('stk_rainbow');
 
+      // 활성화된 게임 카운트 증가
+      const updatedGames = { ...prev.completedGames };
+      if (activeGameId) {
+        updatedGames[activeGameId] = (updatedGames[activeGameId] || 0) + 1;
+      }
+
       return {
         ...prev,
         stars: newStars,
         unlockedStickers: unlocked,
+        completedGames: updatedGames,
       };
     });
 
@@ -153,6 +181,17 @@ export default function App() {
     setActiveGameId(gameId);
     setCurrentScreen('game');
   };
+
+  const handleCompleteOnboarding = (profile: ChildProfile) => {
+    setAppState((prev) => ({
+      ...prev,
+      childProfile: profile,
+      onboardingCompleted: true,
+    }));
+  };
+
+  const childName = appState.childProfile?.name || '유하';
+  const ageGroup = appState.childProfile?.ageGroup || 'sprout';
 
   // Render current screen content
   const renderContent = () => {
@@ -167,11 +206,11 @@ export default function App() {
           </h1>
           <p className="text-lg font-bold text-[#8C7B79] mb-6">
             오늘 공부와 놀이를 참 잘했어요!<br />
-            내일 또 꼬미와 친구들을 만나러 와주세요. 푹 자요~ 😴
+            내일 또 만나러 와주세요. 푹 자요~ 😴
           </p>
           <button
             onClick={() => setIsParentGateOpen(true)}
-            className="px-6 py-3 rounded-2xl bg-amber-100 hover:bg-amber-200 text-[#4A3E3D] font-bold text-sm flex items-center gap-2 cursor-pointer"
+            className="px-6 py-3 rounded-2xl bg-amber-100 hover:bg-amber-200 text-[#4A3E3D] font-bold text-sm flex items-center gap-2 cursor-pointer border-2 border-amber-300 active:scale-95"
           >
             <Shield className="w-5 h-5" /> 부모 전용 잠금 해제
           </button>
@@ -190,6 +229,7 @@ export default function App() {
             onOpenCharacterTalk={() => setCurrentScreen('talk')}
             onOpenCharmVideo={handleOpenCharmVideo}
             soundEnabled={appState.soundEnabled}
+            childProfile={appState.childProfile}
           />
         );
 
@@ -201,6 +241,7 @@ export default function App() {
             onGoHome={() => setCurrentScreen('home')}
             onOpenCharmVideo={handleOpenCharmVideo}
             soundEnabled={appState.soundEnabled}
+            childName={childName}
           />
         );
 
@@ -253,16 +294,22 @@ export default function App() {
               window.location.reload();
             }}
             onGoHome={() => setCurrentScreen('home')}
+            onUpdateProfile={(profile) => {
+              setAppState((prev) => ({ ...prev, childProfile: profile }));
+            }}
           />
         );
 
       case 'game':
         switch (activeGameId) {
+          // 기존 7개 게임
           case 'object_recognition':
             return (
               <GgomiObjectGame
                 onCompleteQuiz={handleCompleteQuiz}
                 soundEnabled={appState.soundEnabled}
+                ageGroup={ageGroup}
+                childName={childName}
               />
             );
           case 'shape_color':
@@ -270,6 +317,8 @@ export default function App() {
               <RanoShapeColorGame
                 onCompleteQuiz={handleCompleteQuiz}
                 soundEnabled={appState.soundEnabled}
+                ageGroup={ageGroup}
+                childName={childName}
               />
             );
           case 'korean_letters':
@@ -277,6 +326,8 @@ export default function App() {
               <JellyKoreanGame
                 onCompleteQuiz={handleCompleteQuiz}
                 soundEnabled={appState.soundEnabled}
+                ageGroup={ageGroup}
+                childName={childName}
               />
             );
           case 'sound_quiz':
@@ -284,6 +335,8 @@ export default function App() {
               <DochiSoundGame
                 onCompleteQuiz={handleCompleteQuiz}
                 soundEnabled={appState.soundEnabled}
+                ageGroup={ageGroup}
+                childName={childName}
               />
             );
           case 'counting_food':
@@ -291,6 +344,8 @@ export default function App() {
               <GgulgguliCountingGame
                 onCompleteQuiz={handleCompleteQuiz}
                 soundEnabled={appState.soundEnabled}
+                ageGroup={ageGroup}
+                childName={childName}
               />
             );
           case 'cloud_shapes':
@@ -298,6 +353,8 @@ export default function App() {
               <EummeCloudShapeGame
                 onCompleteQuiz={handleCompleteQuiz}
                 soundEnabled={appState.soundEnabled}
+                ageGroup={ageGroup}
+                childName={childName}
               />
             );
           case 'treasure_hunt':
@@ -305,8 +362,58 @@ export default function App() {
               <NurungjiTreasureGame
                 onCompleteQuiz={handleCompleteQuiz}
                 soundEnabled={appState.soundEnabled}
+                ageGroup={ageGroup}
+                childName={childName}
               />
             );
+
+          // 신규 5개 게임
+          case 'emotion_quiz':
+            return (
+              <EmotionQuizGame
+                onCompleteQuiz={handleCompleteQuiz}
+                soundEnabled={appState.soundEnabled}
+                ageGroup={ageGroup}
+                childName={childName}
+              />
+            );
+          case 'pattern_sequence':
+            return (
+              <PatternSequenceGame
+                onCompleteQuiz={handleCompleteQuiz}
+                soundEnabled={appState.soundEnabled}
+                ageGroup={ageGroup}
+                childName={childName}
+              />
+            );
+          case 'word_puzzle':
+            return (
+              <WordPuzzleGame
+                onCompleteQuiz={handleCompleteQuiz}
+                soundEnabled={appState.soundEnabled}
+                ageGroup={ageGroup}
+                childName={childName}
+              />
+            );
+          case 'rhythm_game':
+            return (
+              <RhythmGame
+                onCompleteQuiz={handleCompleteQuiz}
+                soundEnabled={appState.soundEnabled}
+                ageGroup={ageGroup}
+                childName={childName}
+              />
+            );
+          case 'size_comparison':
+            return (
+              <SizeComparisonGame
+                onCompleteQuiz={handleCompleteQuiz}
+                soundEnabled={appState.soundEnabled}
+                ageGroup={ageGroup}
+                childName={childName}
+              />
+            );
+
           default:
             return (
               <HomeScreen
@@ -317,6 +424,7 @@ export default function App() {
                 onOpenCharacterTalk={() => setCurrentScreen('talk')}
                 onOpenCharmVideo={handleOpenCharmVideo}
                 soundEnabled={appState.soundEnabled}
+                childProfile={appState.childProfile}
               />
             );
         }
@@ -343,6 +451,8 @@ export default function App() {
         onOpenCharacterSelect={() => setCurrentScreen('talk')}
         onGoHome={() => setCurrentScreen('home')}
         currentScreen={currentScreen}
+        childName={childName}
+        ageGroup={ageGroup}
       />
 
       <main className="container mx-auto px-4 py-4 pb-12">
@@ -372,6 +482,14 @@ export default function App() {
           onFinish={() => setShowSplash(false)}
           soundEnabled={appState.soundEnabled}
           bgmEnabled={appState.bgmEnabled}
+          childName={childName}
+        />
+      )}
+
+      {!appState.onboardingCompleted && !showSplash && (
+        <OnboardingScreen
+          onCompleteOnboarding={handleCompleteOnboarding}
+          soundEnabled={appState.soundEnabled}
         />
       )}
     </div>

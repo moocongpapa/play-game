@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { AppState } from '../types';
+import { AppState, ChildProfile } from '../types';
 import { JellyButton } from '../components/JellyButton';
-import { Shield, Clock, Volume2, Music, Sparkles, Home, RotateCcw, Mic, VolumeX } from 'lucide-react';
+import { Shield, Clock, Volume2, Music, Sparkles, Home, RotateCcw, Mic, Calendar, User, CheckCircle2 } from 'lucide-react';
 import { speakText, setVoiceToneMode } from '../utils/soundEngine';
+import { calculateAgeMonths, determineAgeGroup, getAgeGroupLabel, getAgeGroupEmoji, getAgeGroupDescription } from '../utils/ageEngine';
 
 interface ParentDashboardProps {
   appState: AppState;
@@ -14,6 +15,7 @@ interface ParentDashboardProps {
   onUnlockAllStickers: () => void;
   onResetProgress: () => void;
   onGoHome: () => void;
+  onUpdateProfile: (profile: ChildProfile) => void;
 }
 
 export const ParentDashboard: React.FC<ParentDashboardProps> = ({
@@ -26,8 +28,14 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   onUnlockAllStickers,
   onResetProgress,
   onGoHome,
+  onUpdateProfile,
 }) => {
   const [activeTone, setActiveTone] = useState<'cheerful' | 'gentle' | 'energetic'>('cheerful');
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  
+  // 편집용 프로필 상태
+  const [editName, setEditName] = useState(appState.childProfile?.name || '유하');
+  const [editBirthDate, setEditBirthDate] = useState(appState.childProfile?.birthDate || '2023-01-01');
 
   const formatSeconds = (sec: number) => {
     const m = Math.floor(sec / 60);
@@ -47,6 +55,38 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
     });
   };
 
+  const handleSaveProfile = () => {
+    const ageMonths = calculateAgeMonths(editBirthDate);
+    const ageGroup = determineAgeGroup(ageMonths);
+    
+    const updated: ChildProfile = {
+      name: editName.trim() || '유하',
+      birthDate: editBirthDate,
+      ageMonths,
+      ageGroup,
+    };
+    
+    onUpdateProfile(updated);
+    setIsEditingProfile(false);
+    speakText('프로필 정보가 수정되었습니다!', appState.soundEnabled);
+  };
+
+  // 게임 레이블 맵핑
+  const GAME_LABELS: Record<string, string> = {
+    object_recognition: '꼬미의 사물 인지',
+    shape_color: '라노의 모양 퍼즐',
+    korean_letters: '젤리의 한글 비누방울',
+    sound_quiz: '도치의 소리 퀴즈',
+    counting_food: '꿀꿀이의 수 세기',
+    cloud_shapes: '음메의 구름 퍼즐',
+    treasure_hunt: '누룽지의 보물 찾기',
+    emotion_quiz: '꼬미의 감정 퀴즈',
+    pattern_sequence: '라노의 패턴 놀이',
+    word_puzzle: '젤리의 단어 퍼즐',
+    rhythm_game: '도치의 리듬 놀이',
+    size_comparison: '꿀꿀이의 크기 비교',
+  };
+
   return (
     <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[85vh] overflow-hidden">
       {/* Header */}
@@ -57,9 +97,65 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
           </div>
           <div className="break-keep">
             <h1 className="text-xl sm:text-2xl font-black text-[#4A3E3D]">부모 전용 대시보드</h1>
-            <p className="text-[11px] sm:text-xs font-bold text-[#8C7B79]">아이의 놀이 시간과 음량을 안전하게 관리하세요.</p>
+            <p className="text-[11px] sm:text-xs font-bold text-[#8C7B79]">아이의 놀이 시간과 연령별 맞춤 설정을 관리하세요.</p>
           </div>
         </div>
+      </div>
+
+      {/* Child Profile Section */}
+      <div className="w-full bg-white p-4 sm:p-5 rounded-3xl border-2 sm:border-3 border-amber-200 shadow-sm mb-3 text-left">
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-base sm:text-lg font-black text-[#4A3E3D] flex items-center gap-2">
+            <User className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" /> 아이 프로필 설정
+          </h2>
+          <button
+            onClick={() => {
+              if (isEditingProfile) handleSaveProfile();
+              else setIsEditingProfile(true);
+            }}
+            className="text-xs font-black text-[#FF9E4A] bg-amber-50 hover:bg-amber-100 border border-amber-300 rounded-lg px-2.5 py-1.5 cursor-pointer"
+          >
+            {isEditingProfile ? '저장 완료' : '정보 수정'}
+          </button>
+        </div>
+
+        {isEditingProfile ? (
+          <div className="space-y-3 p-3 bg-amber-50/50 rounded-2xl border border-amber-200/50">
+            <div className="flex flex-col">
+              <label className="text-xs font-bold text-[#8C7B79] mb-1">아이 이름</label>
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="px-3 py-2 rounded-xl border border-amber-300 focus:outline-[#FF9E4A] font-black text-sm text-[#4A3E3D]"
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="text-xs font-bold text-[#8C7B79] mb-1">아이 생년월일</label>
+              <input
+                type="date"
+                value={editBirthDate}
+                onChange={(e) => setEditBirthDate(e.target.value)}
+                className="px-3 py-2 rounded-xl border border-amber-300 focus:outline-[#FF9E4A] font-black text-sm text-[#4A3E3D]"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 p-3 bg-amber-50/30 rounded-2xl border border-amber-100">
+            <div>
+              <span className="text-[10px] sm:text-xs font-bold text-[#8C7B79] block">이름</span>
+              <span className="text-sm sm:text-base font-black text-[#4A3E3D]">{appState.childProfile?.name || '유하'}</span>
+            </div>
+            <div>
+              <span className="text-[10px] sm:text-xs font-bold text-[#8C7B79] block">맞춤 연령반</span>
+              <span className="text-sm sm:text-base font-black text-[#4A3E3D] flex items-center gap-1">
+                <span>{getAgeGroupEmoji(appState.childProfile?.ageGroup || 'sprout')}</span>
+                <span>{getAgeGroupLabel(appState.childProfile?.ageGroup || 'sprout')}</span>
+                <span className="text-xs font-normal text-[#8C7B79]">({appState.childProfile?.ageMonths || 43}개월)</span>
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Play Statistics Card */}
@@ -67,7 +163,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
         <h2 className="text-base sm:text-lg font-black text-[#4A3E3D] flex items-center gap-2 mb-2.5 break-keep">
           <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-[#FF9E4A] shrink-0" /> 오늘 아이의 놀이 기록
         </h2>
-        <div className="grid grid-cols-2 gap-2 sm:gap-3 text-center">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 text-center mb-4">
           <div className="p-2.5 sm:p-3 bg-amber-50 rounded-2xl border border-amber-200">
             <span className="text-[11px] sm:text-xs font-bold text-[#8C7B79] block">총 이용 시간</span>
             <span className="text-lg sm:text-2xl font-black text-[#FF9E4A]">{formatSeconds(appState.playTimeSeconds)}</span>
@@ -76,6 +172,28 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
             <span className="text-[11px] sm:text-xs font-bold text-[#8C7B79] block">모은 🌟 별 개수</span>
             <span className="text-lg sm:text-2xl font-black text-rose-500">{appState.stars}개</span>
           </div>
+        </div>
+
+        {/* 놀이 통계 시각화 */}
+        <h3 className="text-xs font-black text-[#4A3E3D] text-left mb-2 flex items-center gap-1">
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> 놀이 종류별 완료 통계
+        </h3>
+        <div className="space-y-2 text-left max-h-32 overflow-y-auto pr-1">
+          {Object.entries(GAME_LABELS).map(([gameId, label]) => {
+            const count = appState.completedGames[gameId] || 0;
+            return (
+              <div key={gameId} className="flex items-center justify-between text-xs">
+                <span className="font-bold text-[#8C7B79] truncate w-32">{label}</span>
+                <div className="flex-1 mx-3 bg-slate-100 h-2.5 rounded-full overflow-hidden relative">
+                  <div
+                    className="bg-emerald-400 h-full rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, count * 20)}%` }}
+                  />
+                </div>
+                <span className="font-black text-[#4A3E3D] shrink-0 w-8 text-right">{count}회</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -214,4 +332,3 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
     </div>
   );
 };
-
