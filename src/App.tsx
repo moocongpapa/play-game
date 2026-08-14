@@ -30,23 +30,39 @@ import { SizeComparisonGame } from './screens/games/SizeComparisonGame';
 import { startBGM, stopBGM, setBGMVolume, playStarGain, speakText } from './utils/soundEngine';
 import { initAuth, fetchDriveFolderVideos, GOOGLE_DRIVE_FOLDER_ID } from './services/googleDrive';
 import { Moon, Shield } from 'lucide-react';
+import { createChildProfile, DEFAULT_CHILD_PROFILE } from './utils/ageEngine';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>(() => {
+    // 1. 전용 프로필 스토리지 우선 확인
+    let savedProfile: ChildProfile | null = null;
+    const profileJson = localStorage.getItem('ITSME_CHILD_PROFILE');
+    if (profileJson) {
+      try {
+        savedProfile = JSON.parse(profileJson);
+      } catch (e) {
+        console.warn('Failed to parse saved child profile', e);
+      }
+    }
+
+    // 2. 전체 앱 상태 확인
     const saved = localStorage.getItem('ITSME_APP_STATE');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        // 하위 호환성 패치
-        if (parsed.onboardingCompleted === undefined) {
-          parsed.onboardingCompleted = false;
-          parsed.childProfile = null;
-        }
-        return parsed;
+        // 저장된 프로필이 있으면 반영, 없으면 기본값(유하, 2023-01-03)
+        const finalProfile = savedProfile || parsed.childProfile || createChildProfile('유하', '2023-01-03');
+        return {
+          ...parsed,
+          childProfile: finalProfile,
+          onboardingCompleted: true, // 항상 유지되도록 완료 처리
+        };
       } catch (e) {
         console.warn('Failed to parse saved state, using default', e);
       }
     }
+
+    const defaultProf = savedProfile || createChildProfile('유하', '2023-01-03');
     return {
       stars: 5,
       unlockedStickers: ['stk_ggomi', 'stk_rano', 'stk_jelly', 'stk_dochi', 'stk_star', 'stk_flower'],
@@ -74,8 +90,8 @@ export default function App() {
         rhythm_game: 0,
         size_comparison: 0,
       },
-      childProfile: null,
-      onboardingCompleted: false,
+      childProfile: defaultProf,
+      onboardingCompleted: true, // 한 번 입력 후 또는 기본값으로 계속 유지
     };
   });
 
@@ -183,6 +199,11 @@ export default function App() {
   };
 
   const handleCompleteOnboarding = (profile: ChildProfile) => {
+    try {
+      localStorage.setItem('ITSME_CHILD_PROFILE', JSON.stringify(profile));
+    } catch (e) {
+      console.warn('Failed to save child profile', e);
+    }
     setAppState((prev) => ({
       ...prev,
       childProfile: profile,
@@ -295,6 +316,11 @@ export default function App() {
             }}
             onGoHome={() => setCurrentScreen('home')}
             onUpdateProfile={(profile) => {
+              try {
+                localStorage.setItem('ITSME_CHILD_PROFILE', JSON.stringify(profile));
+              } catch (e) {
+                console.warn('Failed to save child profile', e);
+              }
               setAppState((prev) => ({ ...prev, childProfile: profile }));
             }}
           />

@@ -16,13 +16,13 @@ export const OnboardingScreen: React.FC<OnboardingScreenProps> = ({
   soundEnabled,
 }) => {
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [name, setName] = useState('');
+  const [name, setName] = useState('유하');
   
-  // Birth date select states
+  // Birth date select states (기본값: 2023년 1월 3일)
   const currentYear = new Date().getFullYear();
-  const [year, setYear] = useState(currentYear - 3);
+  const [year, setYear] = useState(2023);
   const [month, setMonth] = useState(1);
-  const [day, setDay] = useState(1);
+  const [day, setDay] = useState(3);
   
   const [computedProfile, setComputedProfile] = useState<ChildProfile | null>(null);
 

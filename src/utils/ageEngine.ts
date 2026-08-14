@@ -3,7 +3,28 @@
  * 아이 생년월일 → 월령 계산 → 연령 그룹 배정 → 난이도 설정 반환
  */
 
-import { AgeGroup, DifficultyConfig, GameId } from '../types';
+import { AgeGroup, DifficultyConfig, GameId, ChildProfile } from '../types';
+
+/**
+ * 기본 아이 프로필 (유하, 2023-01-03)
+ */
+export function createChildProfile(name: string = '유하', birthDate: string = '2023-01-03'): ChildProfile {
+  const ageMonths = calculateAgeMonths(birthDate);
+  const ageGroup = determineAgeGroup(ageMonths);
+  return {
+    name: name.trim() || '유하',
+    birthDate,
+    ageMonths,
+    ageGroup,
+  };
+}
+
+export const DEFAULT_CHILD_PROFILE: ChildProfile = {
+  name: '유하',
+  birthDate: '2023-01-03',
+  ageMonths: 43,
+  ageGroup: 'sprout',
+};
 
 /**
  * 생년월일 문자열(YYYY-MM-DD)로부터 현재 월령(개월 수)을 계산합니다.

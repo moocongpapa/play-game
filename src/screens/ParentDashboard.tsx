@@ -35,7 +35,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   
   // 편집용 프로필 상태
   const [editName, setEditName] = useState(appState.childProfile?.name || '유하');
-  const [editBirthDate, setEditBirthDate] = useState(appState.childProfile?.birthDate || '2023-01-01');
+  const [editBirthDate, setEditBirthDate] = useState(appState.childProfile?.birthDate || '2023-01-03');
 
   const formatSeconds = (sec: number) => {
     const m = Math.floor(sec / 60);
