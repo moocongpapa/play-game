@@ -26,6 +26,8 @@ import { PatternSequenceGame } from './screens/games/PatternSequenceGame';
 import { WordPuzzleGame } from './screens/games/WordPuzzleGame';
 import { RhythmGame } from './screens/games/RhythmGame';
 import { SizeComparisonGame } from './screens/games/SizeComparisonGame';
+import { MemoryCardGame } from './screens/games/MemoryCardGame';
+import { ShadowQuizGame } from './screens/games/ShadowQuizGame';
 
 import { startBGM, stopBGM, setBGMVolume, playStarGain, speakText } from './utils/soundEngine';
 import { initAuth, fetchDriveFolderVideos, GOOGLE_DRIVE_FOLDER_ID } from './services/googleDrive';
@@ -433,6 +435,24 @@ export default function App() {
           case 'size_comparison':
             return (
               <SizeComparisonGame
+                onCompleteQuiz={handleCompleteQuiz}
+                soundEnabled={appState.soundEnabled}
+                ageGroup={ageGroup}
+                childName={childName}
+              />
+            );
+          case 'memory_card':
+            return (
+              <MemoryCardGame
+                onCompleteQuiz={handleCompleteQuiz}
+                soundEnabled={appState.soundEnabled}
+                ageGroup={ageGroup}
+                childName={childName}
+              />
+            );
+          case 'shadow_quiz':
+            return (
+              <ShadowQuizGame
                 onCompleteQuiz={handleCompleteQuiz}
                 soundEnabled={appState.soundEnabled}
                 ageGroup={ageGroup}

@@ -13,7 +13,9 @@ export type GameId =
   | 'pattern_sequence'   // 라노의 패턴 완성 놀이
   | 'word_puzzle'        // 젤리의 단어 조합 퍼즐
   | 'rhythm_game'        // 도치의 리듬 따라하기
-  | 'size_comparison';   // 꿀꿀이의 크기 비교 놀이
+  | 'size_comparison'    // 꿀꿀이의 크기 비교 놀이
+  | 'memory_card'        // 누룽지의 기억력 카드 뒤집기
+  | 'shadow_quiz';       // 꼬미의 그림자 실루엣 퀴즈
 
 // 연령 그룹 (4단계)
 export type AgeGroup = 'baby' | 'sprout' | 'bloom' | 'star';

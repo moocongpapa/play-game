@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { QuizItem, AgeGroup } from '../../types';
 import { OBJECT_ITEMS_BY_AGE } from '../../data/gameData';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
 import { getDifficultyConfig, getAgeGroupLabel, pickDistractors, pickRandom } from '../../utils/ageEngine';
-import { Volume2, RefreshCw, Timer } from 'lucide-react';
+import { Volume2, RefreshCw, Timer, Flame } from 'lucide-react';
 
 interface GgomiObjectGameProps {
   onCompleteQuiz: (starsEarned: number) => void;
@@ -33,6 +33,11 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
   const [showHint, setShowHint] = useState(false);
   const hintTimerRef = useRef<number | null>(null);
 
+  // 콤보 스트릭 상태
+  const [streak, setStreak] = useState(0);
+  const [showComboBanner, setShowComboBanner] = useState(false);
+  const [questionPrompt, setQuestionPrompt] = useState('');
+
   // 타이머 상태 (꽃잎반/별님반)
   const [timeLeft, setTimeLeft] = useState<number>(diffConfig.timeLimit);
   const [timeOut, setTimeOut] = useState(false);
@@ -57,8 +62,24 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
     const roundOptions = [target, ...distractors].sort(() => Math.random() - 0.5);
     setOptions(roundOptions);
 
+    // 다채로운 질문 생성 (단순 매칭 vs 속성 질문)
+    let promptText = '';
+    const categoryLabels: Record<string, string> = {
+      fruit: '달콤한 과일',
+      animal: '동물 친구',
+      vehicle: '씽씽 달리는 탈것',
+      food: '맛있는 음식',
+    };
+
+    if (ageGroup !== 'baby' && target.category && categoryLabels[target.category] && Math.random() > 0.5) {
+      promptText = `${categoryLabels[target.category]}인 '${target.koreanName}'를 찾아주세요!`;
+    } else {
+      promptText = `꼬미가 '${target.koreanName}'를 찾고 있어요! 어디에 있을까요?`;
+    }
+    setQuestionPrompt(promptText);
+
     if (soundEnabled) {
-      speakText(`꼬미가 ${target.koreanName}를 찾고 있어요! ${target.koreanName}는 어디에 있을까요?`, soundEnabled, { characterId: 'ggomi' });
+      speakText(promptText, soundEnabled, { characterId: 'ggomi' });
     }
 
     // 힌트 타이머 구동
@@ -102,12 +123,23 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
       
       setSelectedCorrectId(item.id);
       playCorrectFanfare(soundEnabled);
-      speakText(`정답이에요! 참 잘했어요! ${item.koreanName}!`, soundEnabled, { characterId: 'ggomi' });
+
+      const nextStreak = streak + 1;
+      setStreak(nextStreak);
+
+      if (nextStreak >= 2) {
+        setShowComboBanner(true);
+        setTimeout(() => setShowComboBanner(false), 1500);
+        speakText(`와우! ${nextStreak}연속 정답! ${childName}야 정말 똑똑하구나!`, soundEnabled, { characterId: 'ggomi' });
+      } else {
+        speakText(`정답이에요! 참 잘했어요!`, soundEnabled, { characterId: 'ggomi' });
+      }
       onCompleteQuiz(diffConfig.starsPerCorrect);
     } else {
       setShakingCardId(item.id);
+      setStreak(0);
       playWrongBoing(soundEnabled);
-      speakText(`다시 한번 찾아보아요!`, soundEnabled, { characterId: 'ggomi' });
+      speakText(`다시 한번 생각해보아요!`, soundEnabled, { characterId: 'ggomi' });
       setTimeout(() => setShakingCardId(null), 600);
     }
   };
@@ -119,14 +151,14 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
   return (
     <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[80vh] overflow-hidden">
       {/* Top Banner */}
-      <div className="w-full bg-gradient-to-r from-[#FFB7D5] to-[#FFE4EC] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FF80AB] shadow-sm flex items-center gap-3 sm:gap-4">
+      <div className="w-full bg-gradient-to-r from-[#FFB7D5] to-[#FFE4EC] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FF80AB] shadow-sm flex items-center gap-3 sm:gap-4 relative">
         <CharacterAvatar id="ggomi" size="md" mood={selectedCorrectId ? 'dancing' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#FF4081] mb-1">
             <span>🐻 {getAgeGroupLabel(ageGroup)} &bull; 사물 인지</span>
           </div>
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug">
-            &ldquo;<span className="text-[#FF4081] underline">{targetItem.koreanName}</span>&rdquo;를 찾아주세요!
+            {questionPrompt || <>&ldquo;<span className="text-[#FF4081] underline">{targetItem.koreanName}</span>&rdquo;를 찾아주세요!</>}
           </h2>
         </div>
         <button
@@ -135,6 +167,21 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
         >
           <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
+
+        {/* Combo Streak Banner */}
+        <AnimatePresence>
+          {showComboBanner && (
+            <motion.div
+              initial={{ scale: 0, y: 20 }}
+              animate={{ scale: 1.1, y: 0 }}
+              exit={{ scale: 0, opacity: 0 }}
+              className="absolute -top-3 right-4 bg-gradient-to-r from-rose-500 to-amber-500 text-white px-3 py-1 rounded-full font-black text-xs sm:text-sm shadow-lg flex items-center gap-1 border-2 border-white"
+            >
+              <Flame className="w-4 h-4 text-yellow-200 fill-yellow-200 animate-bounce" />
+              <span>{streak}연속 정답! 콤보 보너스!</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Timer display for older kids */}

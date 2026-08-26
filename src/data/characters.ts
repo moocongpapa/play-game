@@ -116,6 +116,10 @@ export const CHARACTERS: Record<string, CharacterInfo> = {
     gameId: 'cloud_shapes',
     gameTitle: '음메의 폭신폭신 구름 모으기',
     gameDesc: '하늘을 떠다니는 구름 친구들의 모양을 찾아보아요!',
+    subGameId: 'shadow_quiz',
+    subGameTitle: '음메의 그림자 실루엣 퀴즈',
+    subGameDesc: '깜깜한 그림자를 보고 알맞은 친구를 찾아보아요!',
+    subGameMinAgeGroup: 'sprout',
   },
   nurungji: {
     id: 'nurungji',
@@ -132,6 +136,10 @@ export const CHARACTERS: Record<string, CharacterInfo> = {
     gameId: 'treasure_hunt',
     gameTitle: '누룽지의 숨은 보물 단어 찾기',
     gameDesc: '알록달록 풍경 속에 숨겨진 보물 단어를 찾아보아요!',
+    subGameId: 'memory_card',
+    subGameTitle: '누룽지의 기억력 카드 놀이',
+    subGameDesc: '뒤집힌 카드의 짝을 찾아 기억력을 쑥쑥 키워요!',
+    subGameMinAgeGroup: 'baby',
   },
 };
 

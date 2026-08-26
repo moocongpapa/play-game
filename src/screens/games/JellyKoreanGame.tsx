@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { KOREAN_LETTER_ITEMS_BY_AGE } from '../../data/gameData';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
-import { speakText, playBubblePop, playCorrectFanfare } from '../../utils/soundEngine';
+import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
 import { getDifficultyConfig, getAgeGroupLabel, pickDistractors, pickRandom } from '../../utils/ageEngine';
 import { AgeGroup } from '../../types';
-import { Volume2, Sparkles, RefreshCw, Timer } from 'lucide-react';
+import { Volume2, Sparkles, RefreshCw, Timer, Flame } from 'lucide-react';
 
 interface KoreanLetterItem {
   id: string;
@@ -37,6 +37,10 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
   const [poppedIds, setPoppedIds] = useState<string[]>([]);
   const [isCompleted, setIsCompleted] = useState(false);
 
+  const [streak, setStreak] = useState(0);
+  const [showComboBanner, setShowComboBanner] = useState(false);
+  const [questionPrompt, setQuestionPrompt] = useState('');
+
   // 힌트 상태
   const [showHint, setShowHint] = useState(false);
   const hintTimerRef = useRef<number | null>(null);
@@ -65,8 +69,16 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
     const roundBubbles = [target, ...distractors].sort(() => Math.random() - 0.5);
     setBubbles(roundBubbles);
 
+    let prompt = '';
+    if (ageGroup !== 'baby' && target.word && Math.random() > 0.4) {
+      prompt = `'${target.word}' ${target.emoji} 할 때 첫 글자는 무엇일까요? '${target.letter}' 방울을 터트려주세요!`;
+    } else {
+      prompt = `젤리와 함께 '${target.letter}' 글자 비누방울을 팡팡 터트려주세요!`;
+    }
+    setQuestionPrompt(prompt);
+
     if (soundEnabled) {
-      speakText(`젤리와 함께 '${target.letter}' 글자를 찾아서 비누방울을 팡팡 터트려주세요!`, soundEnabled, { characterId: 'jelly' });
+      speakText(prompt, soundEnabled, { characterId: 'jelly' });
     }
 
     // 힌트 타이머 구동
@@ -84,6 +96,7 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
           if (prev <= 1) {
             if (gameTimerRef.current) clearInterval(gameTimerRef.current);
             setTimeOut(true);
+            setStreak(0);
             speakText(`시간이 완료되었어요. 다른 방울을 터트려보자!`, soundEnabled, { characterId: 'jelly' });
             return 0;
           }
@@ -101,37 +114,53 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
     };
   }, [ageGroup]);
 
-  const handlePopBubble = (item: typeof itemPool[0]) => {
-    if (poppedIds.includes(item.id) || isCompleted || timeOut) return;
+  const handlePopBubble = (bubble: KoreanLetterItem) => {
+    if (isCompleted || timeOut) return;
 
-    playBubblePop(soundEnabled);
-
-    if (item.id === targetItem.id) {
+    if (bubble.id === targetItem.id) {
       if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
-      setPoppedIds((prev) => [...prev, item.id]);
+      setPoppedIds((prev) => [...prev, bubble.id]);
       setIsCompleted(true);
+      playBubblePop(soundEnabled);
       playCorrectFanfare(soundEnabled);
-      speakText(`깡총! 참 잘했어요! '${item.letter}' 글자 정답!`, soundEnabled, { characterId: 'jelly' });
+
+      const nextStreak = streak + 1;
+      setStreak(nextStreak);
+
+      if (nextStreak >= 2) {
+        setShowComboBanner(true);
+        setTimeout(() => setShowComboBanner(false), 1500);
+        speakText(`와우! ${nextStreak}연속 정답! 젤리가 너무 신나요!`, soundEnabled, { characterId: 'jelly' });
+      } else {
+        speakText(`정답이에요! '${bubble.letter}' 방울을 팡팡 터트렸어요!`, soundEnabled, { characterId: 'jelly' });
+      }
+
       onCompleteQuiz(diffConfig.starsPerCorrect);
     } else {
-      speakText(item.word ? `${item.letter}! ${item.word}` : item.letter, soundEnabled, { characterId: 'jelly', playIntroSFX: false });
-      setPoppedIds((prev) => [...prev, item.id]);
+      setStreak(0);
+      playWrongBoing(soundEnabled);
+      setPoppedIds((prev) => [...prev, bubble.id]);
+      speakText(`다른 글자 방울을 골라보아요!`, soundEnabled, { characterId: 'jelly' });
     }
   };
 
   return (
     <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[80vh] overflow-hidden">
       {/* Top Banner */}
-      <div className="w-full bg-gradient-to-r from-[#E1BEE7] to-[#F3E5F5] p-3.5 sm:p-4 rounded-3xl border-3 border-[#AB47BC] shadow-sm flex items-center gap-3 sm:gap-4">
+      <div className="w-full bg-gradient-to-r from-[#E1BEE7] to-[#F3E5F5] p-3.5 sm:p-4 rounded-3xl border-3 border-[#AB47BC] shadow-sm flex items-center gap-3 sm:gap-4 relative">
         <CharacterAvatar id="jelly" size="md" mood={isCompleted ? 'dancing' : 'happy'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#8E24AA] mb-1">
             <span>🐰 {getAgeGroupLabel(ageGroup)} &bull; 한글 비누방울</span>
           </div>
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
-            &ldquo;<span className="text-[#8E24AA] underline font-black text-2xl sm:text-3xl">{targetItem.letter}</span>&rdquo; ({targetItem.word})
+            {questionPrompt ? (
+              <span>{questionPrompt}</span>
+            ) : (
+              <>&ldquo;<span className="text-[#8E24AA] underline font-black text-2xl sm:text-3xl">{targetItem.letter}</span>&rdquo; ({targetItem.word})</>
+            )}
           </h2>
         </div>
         <button
@@ -140,6 +169,21 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
         >
           <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
+
+        {/* Combo Streak Banner */}
+        <AnimatePresence>
+          {showComboBanner && (
+            <motion.div
+              initial={{ scale: 0, y: 20 }}
+              animate={{ scale: 1.1, y: 0 }}
+              exit={{ scale: 0, opacity: 0 }}
+              className="absolute -top-3 right-4 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-3 py-1 rounded-full font-black text-xs sm:text-sm shadow-lg flex items-center gap-1 border-2 border-white"
+            >
+              <Flame className="w-4 h-4 text-yellow-200 fill-yellow-200 animate-bounce" />
+              <span>{streak}연속 정답! 콤보 보너스!</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Timer display */}

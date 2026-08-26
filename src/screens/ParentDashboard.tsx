@@ -113,6 +113,8 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
     word_puzzle: '젤리의 단어 퍼즐',
     rhythm_game: '도치의 리듬 놀이',
     size_comparison: '꿀꿀이의 크기 비교',
+    memory_card: '누룽지의 기억력 카드',
+    shadow_quiz: '음메의 그림자 퀴즈',
   };
 
   return (

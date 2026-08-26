@@ -76,12 +76,12 @@ export function getDifficultyConfig(ageGroup: AgeGroup): DifficultyConfig {
         ageGroup: 'sprout',
         label: '새싹반',
         emoji: '🌱',
-        optionCount: 3,
+        optionCount: 4,         // 4지선다로 업그레이드하여 인지 집중력 강화
         timeLimit: 0,           // 무제한
         hintEnabled: true,
-        hintDelaySec: 8,        // 8초 후 음성 힌트
+        hintDelaySec: 10,       // 10초 후 음성 힌트
         starsPerCorrect: 2,
-        countingRange: [1, 5],
+        countingRange: [1, 7],  // 수 세기 1~7까지 확장
       };
     case 'bloom':
       return {
