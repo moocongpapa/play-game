@@ -410,22 +410,25 @@ function formatExpressiveText(text: string): string {
   return cleanTextForTTS(formatted);
 }
 
+import { playGeminiSpeech, stopGeminiAudio, isGeminiTTSEnabled, getGeminiApiKey } from '../services/geminiTTS';
+
 export interface SpeakOptions {
   characterId?: string;
   pitch?: number;
   rate?: number;
   playIntroSFX?: boolean;
+  onStart?: () => void;
+  onEnd?: () => void;
 }
 
 /**
- * Upgraded Speech Synthesis Function.
- * Delivers human-like, energetic, character-driven speech with warm intonation.
+ * Fallback browser SpeechSynthesis speaker
  */
-export function speakText(text: string, enabled = true, options: SpeakOptions = {}) {
+function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions = {}) {
   if (!enabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
 
   try {
-    window.speechSynthesis.cancel(); // Cancel any lingering robotic audio
+    window.speechSynthesis.cancel(); // Cancel any lingering audio
 
     const expressiveText = formatExpressiveText(text);
     if (!expressiveText) return;
@@ -471,6 +474,9 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
     utterance.rate = options.rate ?? baseRate;
     utterance.volume = 1.0;
 
+    if (options.onStart) utterance.onstart = () => options.onStart?.();
+    if (options.onEnd) utterance.onend = () => options.onEnd?.();
+
     // Speak with a tiny 100ms offset if intro SFX played so the voice sounds seamless
     if (options.characterId && options.playIntroSFX !== false) {
       setTimeout(() => {
@@ -485,9 +491,58 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
 }
 
 /**
+ * Main Speech Function:
+ * Prioritizes Gemini 2.0 Human-like Audio AI TTS.
+ * Gracefully falls back to browser speech if offline or API key is not configured.
+ */
+export function speakText(text: string, enabled = true, options: SpeakOptions = {}) {
+  if (!enabled) return;
+
+  // Stop any ongoing speech
+  stopGeminiAudio();
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+
+  const clean = text.trim();
+  if (!clean) return;
+
+  // Try Gemini 2.0 AI Audio if enabled & configured
+  if (isGeminiTTSEnabled() && getGeminiApiKey()) {
+    try {
+      const ctx = getAudioContext();
+      
+      // Optional intro sound effect
+      if (options.characterId && options.playIntroSFX !== false && CHARACTER_VOICE_PROFILES[options.characterId]) {
+        playCharacterVoiceSFX(CHARACTER_VOICE_PROFILES[options.characterId].prefixSFX, enabled);
+      }
+
+      playGeminiSpeech(clean, {
+        characterId: options.characterId,
+        audioCtx: ctx,
+        onStart: options.onStart,
+        onEnd: options.onEnd,
+      }).then((success) => {
+        if (!success) {
+          // Gemini failed (e.g. rate limit, network), fallback to browser voice
+          speakWithBrowserTTS(clean, enabled, options);
+        }
+      });
+      return;
+    } catch (e) {
+      console.warn('Gemini TTS attempt failed, falling back to browser voice:', e);
+    }
+  }
+
+  // Fallback to browser TTS
+  speakWithBrowserTTS(clean, enabled, options);
+}
+
+/**
  * Speak with a specific character identity
  */
 export function speakCharacterText(characterId: string, text: string, enabled = true) {
   speakText(text, enabled, { characterId, playIntroSFX: true });
 }
+
 

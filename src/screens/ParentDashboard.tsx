@@ -4,6 +4,7 @@ import { JellyButton } from '../components/JellyButton';
 import { Shield, Clock, Volume2, Music, Sparkles, Home, RotateCcw, Mic, Calendar, User, CheckCircle2 } from 'lucide-react';
 import { speakText, setVoiceToneMode } from '../utils/soundEngine';
 import { calculateAgeMonths, determineAgeGroup, getAgeGroupLabel, getAgeGroupEmoji, getAgeGroupDescription } from '../utils/ageEngine';
+import { getGeminiApiKey, setGeminiApiKey, isGeminiTTSEnabled, setGeminiTTSEnabled } from '../services/geminiTTS';
 
 interface ParentDashboardProps {
   appState: AppState;
@@ -37,6 +38,11 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   const [editName, setEditName] = useState(appState.childProfile?.name || '유하');
   const [editBirthDate, setEditBirthDate] = useState(appState.childProfile?.birthDate || '2023-01-03');
 
+  // Gemini TTS 상태
+  const [geminiEnabled, setGeminiEnabled] = useState(isGeminiTTSEnabled());
+  const [geminiKeyInput, setGeminiKeyInput] = useState(getGeminiApiKey());
+  const [isKeySaved, setIsKeySaved] = useState(false);
+
   const formatSeconds = (sec: number) => {
     const m = Math.floor(sec / 60);
     const s = sec % 60;
@@ -49,8 +55,30 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   };
 
   const handleTestVoice = () => {
-    speakText('안녕~! 나는 꼬미야! 사람처럼 다정하고 신나게 말하니까 정말 재밌지?', appState.soundEnabled, {
+    speakText(`안녕~! 나는 꼬미야! 사람처럼 다정하고 신나게 말하니까 정말 재밌지?`, appState.soundEnabled, {
       characterId: 'ggomi',
+      playIntroSFX: true,
+    });
+  };
+
+  const handleTestVoiceCharacter = (characterId: string) => {
+    const childName = appState.childProfile?.name || '유하';
+    let sampleMsg = '';
+    switch (characterId) {
+      case 'ggomi':
+        sampleMsg = `안녕 ${childName}야! 나는 꼬미야~ 오늘 나랑 재미있는 사물 퀴즈 놀이 해볼래?`;
+        break;
+      case 'rano':
+        sampleMsg = `크앙! ${childName} 안녕! 나는 힘센 라노야! 알록달록 모양 친구들을 같이 찾아보자!`;
+        break;
+      case 'jelly':
+        sampleMsg = `깡총깡총! ${childName} 안녕? 나는 젤리야! 방울방울 한글 놀이하러 가자!`;
+        break;
+      default:
+        sampleMsg = `안녕 ${childName}야! 반가워!`;
+    }
+    speakText(sampleMsg, appState.soundEnabled, {
+      characterId,
       playIntroSFX: true,
     });
   };
@@ -197,49 +225,90 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
         </div>
       </div>
 
-      {/* Voice Humanization Settings */}
-      <div className="w-full bg-white p-4 sm:p-5 rounded-3xl border-2 sm:border-3 border-amber-200 shadow-sm mb-3">
+      {/* Gemini 2.0 AI Human-like Voice Settings */}
+      <div className="w-full bg-white p-4 sm:p-5 rounded-3xl border-2 sm:border-3 border-purple-300 shadow-sm mb-3">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-base sm:text-lg font-black text-[#4A3E3D] flex items-center gap-2 break-keep">
-            <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500 shrink-0" /> 캐릭터 말하기 톤 & 생생 음성
+          <h2 className="text-base sm:text-lg font-black text-[#4A3E3D] flex items-center gap-2">
+            <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" /> ✨ Gemini AI 사람 목소리
           </h2>
-          <span className="bg-purple-100 text-purple-700 text-[10px] sm:text-xs font-black px-2 py-0.5 rounded-full">
-            자연스러운 인공지능 톤
-          </span>
+          <button
+            onClick={() => {
+              const next = !geminiEnabled;
+              setGeminiEnabled(next);
+              setGeminiTTSEnabled(next);
+            }}
+            className={`px-3 py-1 rounded-full font-black text-xs border cursor-pointer transition-all ${
+              geminiEnabled
+                ? 'bg-purple-600 text-white border-purple-700 shadow-xs'
+                : 'bg-gray-100 text-gray-500 border-gray-300'
+            }`}
+          >
+            {geminiEnabled ? 'AI 음성 켜짐' : '기본 음성'}
+          </button>
         </div>
-        <p className="text-[11px] sm:text-xs font-bold text-[#8C7B79] mb-3 break-keep">
-          기계같은 음성을 방지하고, 기분 좋은 억양과 캐릭터 소리 효과로 사람처럼 다정하게 말합니다.
+
+        <p className="text-[11px] sm:text-xs font-bold text-[#8C7B79] mb-3 text-left">
+          기계음 대신 Google Gemini 2.0 오디오로 진짜 사람 성우처럼 다정하게 읽어줍니다.
         </p>
 
-        <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-3">
-          {[
-            { id: 'cheerful', name: '🌟 밝고 다정함' },
-            { id: 'gentle', name: '🌸 상냥함' },
-            { id: 'energetic', name: '⚡ 통통 튐' },
-          ].map((item) => {
-            const isSelected = activeTone === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleSelectTone(item.id as 'cheerful' | 'gentle' | 'energetic')}
-                className={`py-2 px-1 rounded-2xl font-black text-xs border-2 transition-all cursor-pointer ${
-                  isSelected
-                    ? 'bg-purple-600 text-white border-purple-700 shadow-sm'
-                    : 'bg-gray-50 text-[#4A3E3D] border-gray-200 hover:bg-gray-100'
-                }`}
-              >
-                {item.name}
-              </button>
-            );
-          })}
+        {/* Gemini API Key Input */}
+        <div className="p-3 bg-purple-50/60 rounded-2xl border border-purple-200 mb-3 text-left">
+          <label className="text-[11px] sm:text-xs font-black text-purple-900 mb-1 block">
+            Google Gemini API Key
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="password"
+              placeholder="AIzaSy... (API 키를 입력하세요)"
+              value={geminiKeyInput}
+              onChange={(e) => setGeminiKeyInput(e.target.value)}
+              className="flex-1 px-3 py-2 text-xs rounded-xl border border-purple-300 bg-white focus:outline-purple-500 font-mono text-[#4A3E3D]"
+            />
+            <button
+              onClick={() => {
+                setGeminiApiKey(geminiKeyInput.trim());
+                setIsKeySaved(true);
+                setTimeout(() => setIsKeySaved(false), 2000);
+              }}
+              className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white font-black text-xs rounded-xl cursor-pointer shrink-0"
+            >
+              {isKeySaved ? '저장됨 ✓' : '저장'}
+            </button>
+          </div>
+          <span className="text-[10px] text-purple-700 mt-1 block">
+            * 키가 없거나 네트워크 오류 시 자동으로 기본 음성으로 안전하게 재생됩니다.
+          </span>
         </div>
 
-        <button
-          onClick={handleTestVoice}
-          className="w-full py-2.5 px-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-black text-xs sm:text-sm rounded-2xl shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-transform active:scale-98"
-        >
-          <Volume2 className="w-4 h-4" /> 🔊 캐릭터 사람 목소리 샘플 듣기
-        </button>
+        {/* Character Voice Test Buttons */}
+        <div className="space-y-1.5">
+          <span className="text-[11px] font-black text-[#4A3E3D] block text-left">
+            🎭 캐릭터별 AI 목소리 미리 들어보기
+          </span>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              onClick={() => handleTestVoiceCharacter('ggomi')}
+              className="py-2 px-1 bg-pink-50 hover:bg-pink-100 text-pink-700 font-black text-[11px] sm:text-xs rounded-xl border border-pink-200 cursor-pointer flex flex-col items-center gap-0.5"
+            >
+              <span>🎀 꼬미 (곰)</span>
+              <span className="text-[9px] font-normal text-pink-500">따뜻한 톤</span>
+            </button>
+            <button
+              onClick={() => handleTestVoiceCharacter('rano')}
+              className="py-2 px-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-black text-[11px] sm:text-xs rounded-xl border border-emerald-200 cursor-pointer flex flex-col items-center gap-0.5"
+            >
+              <span>🦖 라노 (공룡)</span>
+              <span className="text-[9px] font-normal text-emerald-500">씩씩한 톤</span>
+            </button>
+            <button
+              onClick={() => handleTestVoiceCharacter('jelly')}
+              className="py-2 px-1 bg-purple-50 hover:bg-purple-100 text-purple-700 font-black text-[11px] sm:text-xs rounded-xl border border-purple-200 cursor-pointer flex flex-col items-center gap-0.5"
+            >
+              <span>🐰 젤리 (토끼)</span>
+              <span className="text-[9px] font-normal text-purple-500">발랄한 톤</span>
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Timer Restriction Settings */}
