@@ -92,12 +92,12 @@ export const SHAPE_COLOR_ITEMS_BY_AGE: Record<
   baby: [
     { id: 'red_circle', shape: '동그라미', colorName: '빨간색', color: '#FF5252', emoji: '🔴', path: 'circle' },
     { id: 'blue_square', shape: '네모', colorName: '파란색', color: '#42A5F5', emoji: '🟦', path: 'square' },
-    { id: 'yellow_triangle', shape: '세모', colorName: '노란색', color: '#FFCA28', emoji: '🟡', path: 'triangle' },
+    { id: 'yellow_triangle', shape: '세모', colorName: '노란색', color: '#FFD600', emoji: '🔺', path: 'triangle' },
   ],
   sprout: [
     { id: 'red_circle', shape: '동그라미', colorName: '빨간색', color: '#FF5252', emoji: '🔴', path: 'circle' },
     { id: 'blue_square', shape: '네모', colorName: '파란색', color: '#42A5F5', emoji: '🟦', path: 'square' },
-    { id: 'yellow_triangle', shape: '세모', colorName: '노란색', color: '#FFCA28', emoji: '🟡', path: 'triangle' },
+    { id: 'yellow_triangle', shape: '세모', colorName: '노란색', color: '#FFD600', emoji: '🔺', path: 'triangle' },
     { id: 'green_star', shape: '별', colorName: '초록색', color: '#66BB6A', emoji: '⭐', path: 'star' },
     { id: 'pink_heart', shape: '하트', colorName: '분홍색', color: '#FF4081', emoji: '💖', path: 'heart' },
     { id: 'purple_diamond', shape: '다이아몬드', colorName: '보라색', color: '#AB47BC', emoji: '🔷', path: 'diamond' },
@@ -105,7 +105,7 @@ export const SHAPE_COLOR_ITEMS_BY_AGE: Record<
   bloom: [
     { id: 'red_circle', shape: '동그라미', colorName: '빨간색', color: '#FF5252', emoji: '🔴', path: 'circle' },
     { id: 'blue_square', shape: '네모', colorName: '파란색', color: '#42A5F5', emoji: '🟦', path: 'square' },
-    { id: 'yellow_triangle', shape: '세모', colorName: '노란색', color: '#FFCA28', emoji: '🟡', path: 'triangle' },
+    { id: 'yellow_triangle', shape: '세모', colorName: '노란색', color: '#FFD600', emoji: '🔺', path: 'triangle' },
     { id: 'green_star', shape: '별', colorName: '초록색', color: '#66BB6A', emoji: '⭐', path: 'star' },
     { id: 'pink_heart', shape: '하트', colorName: '분홍색', color: '#FF4081', emoji: '💖', path: 'heart' },
     { id: 'purple_diamond', shape: '다이아몬드', colorName: '보라색', color: '#AB47BC', emoji: '🔷', path: 'diamond' },
@@ -115,7 +115,7 @@ export const SHAPE_COLOR_ITEMS_BY_AGE: Record<
   star: [
     { id: 'red_circle', shape: '동그라미', colorName: '빨간색', color: '#FF5252', emoji: '🔴', path: 'circle' },
     { id: 'blue_square', shape: '네모', colorName: '파란색', color: '#42A5F5', emoji: '🟦', path: 'square' },
-    { id: 'yellow_triangle', shape: '세모', colorName: '노란색', color: '#FFCA28', emoji: '🟡', path: 'triangle' },
+    { id: 'yellow_triangle', shape: '세모', colorName: '노란색', color: '#FFD600', emoji: '🔺', path: 'triangle' },
     { id: 'green_star', shape: '별', colorName: '초록색', color: '#66BB6A', emoji: '⭐', path: 'star' },
     { id: 'pink_heart', shape: '하트', colorName: '분홍색', color: '#FF4081', emoji: '💖', path: 'heart' },
     { id: 'purple_diamond', shape: '다이아몬드', colorName: '보라색', color: '#AB47BC', emoji: '🔷', path: 'diamond' },

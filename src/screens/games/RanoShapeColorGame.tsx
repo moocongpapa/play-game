@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { SHAPE_COLOR_ITEMS_BY_AGE } from '../../data/gameData';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
 import { getDifficultyConfig, getAgeGroupLabel, pickDistractors, pickRandom } from '../../utils/ageEngine';
 import { AgeGroup } from '../../types';
-import { Volume2, RefreshCw, Timer } from 'lucide-react';
+import { Volume2, RefreshCw, Timer, Flame } from 'lucide-react';
 
 interface ShapeColorItem {
   id: string;
@@ -24,6 +24,107 @@ interface RanoShapeColorGameProps {
   childName: string;
 }
 
+/**
+ * High-precision SVG Shape Renderer
+ * Ensures Circle, Triangle, Square, Star, Heart, etc. render 100% accurately in the correct color
+ */
+const ShapeFigure: React.FC<{ shape: string; color: string; className?: string }> = ({
+  shape,
+  color,
+  className = 'w-16 h-16 sm:w-20 sm:h-20',
+}) => {
+  switch (shape) {
+    case '동그라미':
+    case 'circle':
+      return (
+        <svg viewBox="0 0 100 100" className={className}>
+          <circle cx="50" cy="50" r="44" fill={color} stroke="#333" strokeWidth="4" />
+        </svg>
+      );
+    case '세모':
+    case 'triangle':
+      return (
+        <svg viewBox="0 0 100 100" className={className}>
+          <polygon points="50,10 92,88 8,88" fill={color} stroke="#333" strokeWidth="4" strokeLinejoin="round" />
+        </svg>
+      );
+    case '네모':
+    case 'square':
+      return (
+        <svg viewBox="0 0 100 100" className={className}>
+          <rect x="12" y="12" width="76" height="76" rx="8" fill={color} stroke="#333" strokeWidth="4" />
+        </svg>
+      );
+    case '별':
+    case 'star':
+      return (
+        <svg viewBox="0 0 100 100" className={className}>
+          <polygon
+            points="50,8 62,36 92,36 68,54 77,82 50,65 23,82 32,54 8,36 38,36"
+            fill={color}
+            stroke="#333"
+            strokeWidth="4"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case '하트':
+    case 'heart':
+      return (
+        <svg viewBox="0 0 100 100" className={className}>
+          <path
+            d="M 50,86 C 25,60 10,40 10,25 C 10,12 20,8 32,8 C 42,8 48,15 50,22 C 52,15 58,8 68,8 C 80,8 90,12 90,25 C 90,40 75,60 50,86 Z"
+            fill={color}
+            stroke="#333"
+            strokeWidth="4"
+            strokeLinejoin="round"
+          />
+        </svg>
+      );
+    case '다이아몬드':
+    case 'diamond':
+      return (
+        <svg viewBox="0 0 100 100" className={className}>
+          <polygon points="50,10 88,50 50,90 12,50" fill={color} stroke="#333" strokeWidth="4" strokeLinejoin="round" />
+        </svg>
+      );
+    case '오각형':
+    case 'pentagon':
+      return (
+        <svg viewBox="0 0 100 100" className={className}>
+          <polygon points="50,10 90,40 75,88 25,88 10,40" fill={color} stroke="#333" strokeWidth="4" strokeLinejoin="round" />
+        </svg>
+      );
+    case '타원':
+    case 'oval':
+      return (
+        <svg viewBox="0 0 100 100" className={className}>
+          <ellipse cx="50" cy="50" rx="44" ry="30" fill={color} stroke="#333" strokeWidth="4" />
+        </svg>
+      );
+    case '육각형':
+    case 'hexagon':
+      return (
+        <svg viewBox="0 0 100 100" className={className}>
+          <polygon points="50,10 88,30 88,70 50,90 12,70 12,30" fill={color} stroke="#333" strokeWidth="4" strokeLinejoin="round" />
+        </svg>
+      );
+    case '초승달':
+    case 'crescent':
+      return (
+        <svg viewBox="0 0 100 100" className={className}>
+          <path d="M 50,10 A 40,40 0 1,0 90,50 A 30,30 0 1,1 50,10 Z" fill={color} stroke="#333" strokeWidth="4" />
+        </svg>
+      );
+    default:
+      return (
+        <svg viewBox="0 0 100 100" className={className}>
+          <circle cx="50" cy="50" r="40" fill={color} stroke="#333" strokeWidth="4" />
+        </svg>
+      );
+  }
+};
+
 export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
   onCompleteQuiz,
   soundEnabled,
@@ -37,6 +138,8 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
   const [options, setOptions] = useState<ShapeColorItem[]>([]);
   const [shakingCardId, setShakingCardId] = useState<string | null>(null);
   const [selectedCorrectId, setSelectedCorrectId] = useState<string | null>(null);
+  const [streak, setStreak] = useState(0);
+  const [showComboBanner, setShowComboBanner] = useState(false);
 
   // 힌트 상태
   const [showHint, setShowHint] = useState(false);
@@ -65,7 +168,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
     setOptions(roundOptions);
 
     if (soundEnabled) {
-      speakText(`라노와 함께 알록달록 ${target.colorName} ${target.shape} 모양을 찾아주세요!`, soundEnabled, { characterId: 'rano' });
+      speakText(`라노와 함께 알록달록 ${target.colorName} ${target.shape}를 찾아주세요!`, soundEnabled, { characterId: 'rano' });
     }
 
     // 힌트 타이머 구동
@@ -83,6 +186,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
           if (prev <= 1) {
             if (gameTimerRef.current) clearInterval(gameTimerRef.current);
             setTimeOut(true);
+            setStreak(0);
             speakText(`시간이 끝났어요. 다음 문제를 풀어보아요!`, soundEnabled, { characterId: 'rano' });
             return 0;
           }
@@ -100,7 +204,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
     };
   }, [ageGroup]);
 
-  const handleSelectCard = (item: typeof itemPool[0]) => {
+  const handleSelectCard = (item: ShapeColorItem) => {
     if (selectedCorrectId || timeOut) return;
 
     if (item.id === targetItem.id) {
@@ -109,12 +213,24 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
 
       setSelectedCorrectId(item.id);
       playCorrectFanfare(soundEnabled);
-      speakText(`크앙! 정답이에요! ${item.colorName} ${item.shape}!`, soundEnabled, { characterId: 'rano' });
+
+      const nextStreak = streak + 1;
+      setStreak(nextStreak);
+
+      if (nextStreak >= 2) {
+        setShowComboBanner(true);
+        setTimeout(() => setShowComboBanner(false), 1500);
+        speakText(`크앙! ${nextStreak}연속 정답! ${item.colorName} ${item.shape}를 완벽하게 맞췄어요!`, soundEnabled, { characterId: 'rano' });
+      } else {
+        speakText(`크앙! 정답이에요! ${item.colorName} ${item.shape}!`, soundEnabled, { characterId: 'rano' });
+      }
+
       onCompleteQuiz(diffConfig.starsPerCorrect);
     } else {
       setShakingCardId(item.id);
+      setStreak(0);
       playWrongBoing(soundEnabled);
-      speakText(`다시 골라볼까요?`, soundEnabled, { characterId: 'rano' });
+      speakText(`모양과 색깔을 다시 한번 잘 살펴보아요!`, soundEnabled, { characterId: 'rano' });
       setTimeout(() => setShakingCardId(null), 600);
     }
   };
@@ -122,14 +238,14 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
   return (
     <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[80vh] overflow-hidden">
       {/* Top Banner */}
-      <div className="w-full bg-gradient-to-r from-[#DCEDC8] to-[#E8F5E9] p-3.5 sm:p-4 rounded-3xl border-3 border-[#66BB6A] shadow-sm flex items-center gap-3 sm:gap-4">
+      <div className="w-full bg-gradient-to-r from-[#DCEDC8] to-[#E8F5E9] p-3.5 sm:p-4 rounded-3xl border-3 border-[#66BB6A] shadow-sm flex items-center gap-3 sm:gap-4 relative">
         <CharacterAvatar id="rano" size="md" mood={selectedCorrectId ? 'excited' : 'waving'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#2E7D32] mb-1">
             <span>🦖 {getAgeGroupLabel(ageGroup)} &bull; 모양 색상</span>
           </div>
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
-            &ldquo;<span className="text-[#2E7D32] underline">{targetItem.colorName} {targetItem.shape}</span>&rdquo;
+            &ldquo;<span className="text-[#2E7D32] underline">{targetItem.colorName} {targetItem.shape}</span>&rdquo;를 찾아주세요!
           </h2>
         </div>
         <button
@@ -138,6 +254,21 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
         >
           <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
+
+        {/* Combo Banner */}
+        <AnimatePresence>
+          {showComboBanner && (
+            <motion.div
+              initial={{ scale: 0, y: 20 }}
+              animate={{ scale: 1.1, y: 0 }}
+              exit={{ scale: 0, opacity: 0 }}
+              className="absolute -top-3 right-4 bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-3 py-1 rounded-full font-black text-xs sm:text-sm shadow-lg flex items-center gap-1 border-2 border-white"
+            >
+              <Flame className="w-4 h-4 text-yellow-200 fill-yellow-200 animate-bounce" />
+              <span>{streak}연속 정답 콤보!</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Timer display */}
@@ -163,20 +294,20 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
         </div>
       )}
 
-      {/* Dinosaur Footprint Target Slot */}
-      <div className="my-3 sm:my-4 p-4 sm:p-6 bg-white rounded-3xl sm:rounded-full border-3 sm:border-4 border-dashed border-[#81C784] shadow-inner flex flex-col items-center justify-center">
-        <span className="text-xs font-bold text-[#8C7B79] mb-1">라노 발자국 틀</span>
-        <div
-          className="w-18 h-18 sm:w-24 sm:h-24 rounded-2xl sm:rounded-3xl flex items-center justify-center text-4xl sm:text-5xl shadow-sm transition-transform"
-          style={{ backgroundColor: targetItem.color }}
-        >
-          {targetItem.emoji}
+      {/* Target Slot */}
+      <div className="my-3 sm:my-4 p-4 sm:p-5 bg-white rounded-3xl border-3 sm:border-4 border-dashed border-[#81C784] shadow-inner flex flex-col items-center justify-center">
+        <span className="text-xs font-bold text-[#8C7B79] mb-1">찾아야 할 모양 친구</span>
+        <div className="p-3 rounded-2xl bg-amber-50/60 border border-amber-200 shadow-sm flex flex-col items-center">
+          <ShapeFigure shape={targetItem.shape} color={targetItem.color} className="w-20 h-20 sm:w-24 sm:h-24 drop-shadow-md" />
+          <span className="text-xs sm:text-sm font-black text-[#2E7D32] mt-1">
+            {targetItem.colorName} {targetItem.shape}
+          </span>
         </div>
       </div>
 
       {/* Options */}
-      <div className={`grid gap-2 sm:gap-4 w-full my-3 sm:my-4 ${
-        options.length === 2 ? 'grid-cols-2' : 'grid-cols-3'
+      <div className={`grid gap-3 sm:gap-4 w-full my-2 sm:my-3 ${
+        options.length === 2 ? 'grid-cols-2' : options.length === 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'
       }`}>
         {options.map((item) => {
           const isShaking = shakingCardId === item.id;
@@ -191,24 +322,25 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
                 isShaking
                   ? { x: [-10, 10, -8, 8, 0] }
                   : isSolved
-                  ? { scale: 1.05 }
+                  ? { scale: 1.08 }
                   : shouldPulse
-                  ? { scale: [1, 1.06, 1], filter: ['brightness(1)', 'brightness(1.15)', 'brightness(1)'] }
+                  ? { scale: [1, 1.08, 1], filter: ['brightness(1)', 'brightness(1.15)', 'brightness(1)'] }
                   : { scale: 1 }
               }
               transition={{ duration: isShaking ? 0.5 : shouldPulse ? 1.2 : 0.5 }}
               onClick={() => handleSelectCard(item)}
-              className={`flex flex-col items-center justify-center p-2.5 sm:p-5 rounded-2xl sm:rounded-3xl border-3 sm:border-4 cursor-pointer select-none transition-all shadow-md touch-manipulation min-h-[130px] sm:min-h-[160px] ${
+              className={`p-3 sm:p-4 rounded-2xl sm:rounded-3xl border-3 flex flex-col items-center justify-center cursor-pointer transition-all shadow-sm ${
                 isSolved
-                  ? 'bg-[#E8F5E9] border-[#66BB6A]'
+                  ? 'bg-emerald-50 border-emerald-400 ring-4 ring-emerald-300'
                   : shouldPulse
-                  ? 'bg-amber-50 border-amber-400 ring-4 ring-amber-300/50'
-                  : 'bg-white hover:bg-[#F1F8E9] border-[#C8E6C9]'
+                  ? 'bg-amber-50 border-amber-400 ring-4 ring-amber-300'
+                  : 'bg-white border-green-200 hover:border-green-400 hover:bg-emerald-50/50'
               }`}
             >
-              <span className="text-3xl sm:text-5xl mb-1">{item.emoji}</span>
-              <span className="text-xs sm:text-base font-black text-[#4A3E3D]">{item.colorName}</span>
-              <span className="text-sm sm:text-lg font-black text-[#2E7D32]">{item.shape}</span>
+              <ShapeFigure shape={item.shape} color={item.color} className="w-14 h-14 sm:w-18 sm:h-18 mb-1 drop-shadow-sm" />
+              <span className="text-xs sm:text-sm font-black text-[#4A3E3D] text-center">
+                {item.colorName} {item.shape}
+              </span>
             </motion.div>
           );
         })}
@@ -217,12 +349,12 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
       {/* Actions */}
       <div className="flex items-center justify-center gap-3 w-full">
         {selectedCorrectId || timeOut ? (
-          <JellyButton variant="green" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 퍼즐 풀기 🦖
+          <JellyButton variant="primary" size="lg" onClick={generateRound} className="w-full sm:w-auto">
+            다음 모양 놀이 🦖
           </JellyButton>
         ) : (
           <JellyButton variant="white" size="md" onClick={generateRound} className="!px-4">
-            <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 다른 문제
+            <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 다른 모양
           </JellyButton>
         )}
       </div>
