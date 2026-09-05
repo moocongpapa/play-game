@@ -216,6 +216,8 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
     return idx === minIdx;
   };
 
+  if (targetItems.length === 0) return null;
+
   return (
     <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[80vh] overflow-hidden">
       {/* Top Banner */}

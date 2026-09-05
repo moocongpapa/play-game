@@ -59,25 +59,19 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
     setTargetFood(food);
     setTargetCount(count);
 
-    // 숫자 대안 카드 생성 (정답 번호 + 오답 대안들)
-    const optionsSet = new Set<number>([count]);
-    const maxVal = diffConfig.countingRange[1];
-    
-    // 정답 근처의 숫자를 대안으로 우선 선정하여 학습 효과 증진
-    while (optionsSet.size < Math.min(diffConfig.optionCount, maxVal)) {
-      const offset = Math.floor(Math.random() * 5) - 2; // -2, -1, 1, 2
-      const candidate = count + offset;
-      if (candidate >= minRange && candidate <= maxVal) {
-        optionsSet.add(candidate);
+    // 숫자 대안 카드 생성 (정답 번호 + 오답 대안들 - 무한 루프 100% 방지)
+    const allDistractors: number[] = [];
+    for (let i = minRange; i <= maxRange; i++) {
+      if (i !== count) {
+        allDistractors.push(i);
       }
     }
-    // 그래도 부족하면 무작위로 채움
-    while (optionsSet.size < Math.min(diffConfig.optionCount, maxVal)) {
-      const randNum = Math.floor(Math.random() * (maxVal - minRange + 1)) + minRange;
-      optionsSet.add(randNum);
-    }
+    // 정답 근처의 숫자를 우선 정렬하여 학습 효과 증진
+    allDistractors.sort((a, b) => Math.abs(a - count) - Math.abs(b - count) || Math.random() - 0.5);
+    const selectedDistractors = allDistractors.slice(0, Math.max(1, diffConfig.optionCount - 1));
+    const finalOptions = [count, ...selectedDistractors].sort((a, b) => a - b);
 
-    setNumberOptions(Array.from(optionsSet).sort((a, b) => a - b));
+    setNumberOptions(finalOptions);
 
     if (soundEnabled) {
       speakText(`꿀꿀이 접시에 맛있는 ${food.name}가 몇 개 있는지 세어주세요!`, soundEnabled, { characterId: 'ggulgguli' });

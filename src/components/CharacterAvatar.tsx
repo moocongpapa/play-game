@@ -40,7 +40,7 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
           transition: {
             duration: 0.8,
             repeat: Infinity,
-            ease: 'easeInOut',
+            ease: 'easeInOut' as const,
           },
         };
       case 'waving':
@@ -82,7 +82,7 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
           transition: {
             duration: 2,
             repeat: Infinity,
-            ease: 'easeInOut',
+            ease: 'easeInOut' as const,
           },
         };
     }

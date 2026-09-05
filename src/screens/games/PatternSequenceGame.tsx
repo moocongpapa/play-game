@@ -48,11 +48,12 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
     setTimeOut(false);
     setTimeLeft(diffConfig.timeLimit);
 
-    const target = pickRandom<PatternItem>(itemPool, 1)[0];
+    const target = pickRandom<PatternItem>(itemPool, 1)[0] || itemPool[0];
+    if (!target) return;
     setTargetItem(target);
 
-    // 정답 + 오답 구성 (선택지 2~3개)
-    const distractors = target.distractors.slice(0, diffConfig.optionCount - 1);
+    // 정답 + 오답 구성 (선택지 2~4개)
+    const distractors = (target.distractors || ['🍎', '⭐']).slice(0, diffConfig.optionCount - 1);
     const roundOptions = [target.answer, ...distractors].sort(() => Math.random() - 0.5);
     setOptions(roundOptions);
 
@@ -110,6 +111,8 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
       setTimeout(() => setShakingCardId(null), 600);
     }
   };
+
+  if (!targetItem) return null;
 
   return (
     <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[80vh] overflow-hidden">

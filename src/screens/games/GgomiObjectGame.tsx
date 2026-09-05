@@ -54,7 +54,8 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
     setTimeOut(false);
     setTimeLeft(diffConfig.timeLimit);
 
-    const target = pickRandom<QuizItem>(itemPool, 1)[0];
+    const target = pickRandom<QuizItem>(itemPool, 1)[0] || itemPool[0];
+    if (!target) return;
     setTargetItem(target);
 
     // 연령별 난이도 설정에 따른 선택지 생성
@@ -145,8 +146,11 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
   };
 
   const handleReplayVoice = () => {
+    if (!targetItem) return;
     speakText(`${targetItem.koreanName}는 어디에 있을까요?`, soundEnabled, { characterId: 'ggomi' });
   };
+
+  if (!targetItem) return null;
 
   return (
     <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[80vh] overflow-hidden">
@@ -158,7 +162,7 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
             <span>🐻 {getAgeGroupLabel(ageGroup)} &bull; 사물 인지</span>
           </div>
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug">
-            {questionPrompt || <>&ldquo;<span className="text-[#FF4081] underline">{targetItem.koreanName}</span>&rdquo;를 찾아주세요!</>}
+            {questionPrompt || <>&ldquo;<span className="text-[#FF4081] underline">{targetItem?.koreanName}</span>&rdquo;를 찾아주세요!</>}
           </h2>
         </div>
         <button

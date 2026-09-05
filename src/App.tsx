@@ -33,6 +33,7 @@ import { startBGM, stopBGM, setBGMVolume, playStarGain, speakText } from './util
 import { initAuth, fetchDriveFolderVideos, GOOGLE_DRIVE_FOLDER_ID } from './services/googleDrive';
 import { Moon, Shield } from 'lucide-react';
 import { createChildProfile, DEFAULT_CHILD_PROFILE } from './utils/ageEngine';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>(() => {
@@ -329,151 +330,160 @@ export default function App() {
         );
 
       case 'game':
-        switch (activeGameId) {
-          // 기존 7개 게임
-          case 'object_recognition':
-            return (
-              <GgomiObjectGame
-                onCompleteQuiz={handleCompleteQuiz}
-                soundEnabled={appState.soundEnabled}
-                ageGroup={ageGroup}
-                childName={childName}
-              />
-            );
-          case 'shape_color':
-            return (
-              <RanoShapeColorGame
-                onCompleteQuiz={handleCompleteQuiz}
-                soundEnabled={appState.soundEnabled}
-                ageGroup={ageGroup}
-                childName={childName}
-              />
-            );
-          case 'korean_letters':
-            return (
-              <JellyKoreanGame
-                onCompleteQuiz={handleCompleteQuiz}
-                soundEnabled={appState.soundEnabled}
-                ageGroup={ageGroup}
-                childName={childName}
-              />
-            );
-          case 'sound_quiz':
-            return (
-              <DochiSoundGame
-                onCompleteQuiz={handleCompleteQuiz}
-                soundEnabled={appState.soundEnabled}
-                ageGroup={ageGroup}
-                childName={childName}
-              />
-            );
-          case 'counting_food':
-            return (
-              <GgulgguliCountingGame
-                onCompleteQuiz={handleCompleteQuiz}
-                soundEnabled={appState.soundEnabled}
-                ageGroup={ageGroup}
-                childName={childName}
-              />
-            );
-          case 'cloud_shapes':
-            return (
-              <EummeCloudShapeGame
-                onCompleteQuiz={handleCompleteQuiz}
-                soundEnabled={appState.soundEnabled}
-                ageGroup={ageGroup}
-                childName={childName}
-              />
-            );
-          case 'treasure_hunt':
-            return (
-              <NurungjiTreasureGame
-                onCompleteQuiz={handleCompleteQuiz}
-                soundEnabled={appState.soundEnabled}
-                ageGroup={ageGroup}
-                childName={childName}
-              />
-            );
+        return (
+          <ErrorBoundary
+            fallbackTitle="앗! 이 놀이에서 동물 친구가 잠시 쉬고 있어요!"
+            onReset={() => setCurrentScreen('home')}
+          >
+            {(() => {
+              switch (activeGameId) {
+                // 기존 7개 게임
+                case 'object_recognition':
+                  return (
+                    <GgomiObjectGame
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={appState.soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'shape_color':
+                  return (
+                    <RanoShapeColorGame
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={appState.soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'korean_letters':
+                  return (
+                    <JellyKoreanGame
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={appState.soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'sound_quiz':
+                  return (
+                    <DochiSoundGame
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={appState.soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'counting_food':
+                  return (
+                    <GgulgguliCountingGame
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={appState.soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'cloud_shapes':
+                  return (
+                    <EummeCloudShapeGame
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={appState.soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'treasure_hunt':
+                  return (
+                    <NurungjiTreasureGame
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={appState.soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
 
-          // 신규 5개 게임
-          case 'emotion_quiz':
-            return (
-              <EmotionQuizGame
-                onCompleteQuiz={handleCompleteQuiz}
-                soundEnabled={appState.soundEnabled}
-                ageGroup={ageGroup}
-                childName={childName}
-              />
-            );
-          case 'pattern_sequence':
-            return (
-              <PatternSequenceGame
-                onCompleteQuiz={handleCompleteQuiz}
-                soundEnabled={appState.soundEnabled}
-                ageGroup={ageGroup}
-                childName={childName}
-              />
-            );
-          case 'word_puzzle':
-            return (
-              <WordPuzzleGame
-                onCompleteQuiz={handleCompleteQuiz}
-                soundEnabled={appState.soundEnabled}
-                ageGroup={ageGroup}
-                childName={childName}
-              />
-            );
-          case 'rhythm_game':
-            return (
-              <RhythmGame
-                onCompleteQuiz={handleCompleteQuiz}
-                soundEnabled={appState.soundEnabled}
-                ageGroup={ageGroup}
-                childName={childName}
-              />
-            );
-          case 'size_comparison':
-            return (
-              <SizeComparisonGame
-                onCompleteQuiz={handleCompleteQuiz}
-                soundEnabled={appState.soundEnabled}
-                ageGroup={ageGroup}
-                childName={childName}
-              />
-            );
-          case 'memory_card':
-            return (
-              <MemoryCardGame
-                onCompleteQuiz={handleCompleteQuiz}
-                soundEnabled={appState.soundEnabled}
-                ageGroup={ageGroup}
-                childName={childName}
-              />
-            );
-          case 'shadow_quiz':
-            return (
-              <ShadowQuizGame
-                onCompleteQuiz={handleCompleteQuiz}
-                soundEnabled={appState.soundEnabled}
-                ageGroup={ageGroup}
-                childName={childName}
-              />
-            );
+                // 신규 5개 게임
+                case 'emotion_quiz':
+                  return (
+                    <EmotionQuizGame
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={appState.soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'pattern_sequence':
+                  return (
+                    <PatternSequenceGame
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={appState.soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'word_puzzle':
+                  return (
+                    <WordPuzzleGame
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={appState.soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'rhythm_game':
+                  return (
+                    <RhythmGame
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={appState.soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'size_comparison':
+                  return (
+                    <SizeComparisonGame
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={appState.soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'memory_card':
+                  return (
+                    <MemoryCardGame
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={appState.soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'shadow_quiz':
+                  return (
+                    <ShadowQuizGame
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={appState.soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
 
-          default:
-            return (
-              <HomeScreen
-                selectedCharacter={appState.selectedCharacter}
-                onSelectCharacter={(id) => setAppState((prev) => ({ ...prev, selectedCharacter: id }))}
-                onStartGame={handleStartGame}
-                onOpenStickerRoom={() => setCurrentScreen('stickers')}
-                onOpenCharacterTalk={() => setCurrentScreen('talk')}
-                onOpenCharmVideo={handleOpenCharmVideo}
-                soundEnabled={appState.soundEnabled}
-                childProfile={appState.childProfile}
-              />
-            );
-        }
+                default:
+                  return (
+                    <HomeScreen
+                      selectedCharacter={appState.selectedCharacter}
+                      onSelectCharacter={(id) => setAppState((prev) => ({ ...prev, selectedCharacter: id }))}
+                      onStartGame={handleStartGame}
+                      onOpenStickerRoom={() => setCurrentScreen('stickers')}
+                      onOpenCharacterTalk={() => setCurrentScreen('talk')}
+                      onOpenCharmVideo={handleOpenCharmVideo}
+                      soundEnabled={appState.soundEnabled}
+                      childProfile={appState.childProfile}
+                    />
+                  );
+              }
+            })()}
+          </ErrorBoundary>
+        );
     }
   };
 
@@ -502,7 +512,9 @@ export default function App() {
       />
 
       <main className="container mx-auto px-4 py-4 pb-12">
-        {renderContent()}
+        <ErrorBoundary onReset={() => setCurrentScreen('home')}>
+          {renderContent()}
+        </ErrorBoundary>
       </main>
 
       <ParentalGateModal

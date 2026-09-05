@@ -48,7 +48,8 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
     setTimeOut(false);
     setTimeLeft(diffConfig.timeLimit);
 
-    const target = pickRandom<TreasureItem>(itemPool, 1)[0];
+    const target = pickRandom<TreasureItem>(itemPool, 1)[0] || itemPool[0];
+    if (!target) return;
     setTargetItem(target);
 
     const distractors = pickDistractors<TreasureItem>(itemPool, target.id, diffConfig.optionCount - 1);
@@ -109,6 +110,8 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
       setTimeout(() => setShakingCardId(null), 600);
     }
   };
+
+  if (!targetItem) return null;
 
   return (
     <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[80vh] overflow-hidden">

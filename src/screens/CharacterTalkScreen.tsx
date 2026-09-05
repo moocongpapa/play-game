@@ -104,7 +104,7 @@ export const CharacterTalkScreen: React.FC<CharacterTalkScreenProps> = ({
           </JellyButton>
           <JellyButton
             size="sm"
-            variant="orange"
+            variant="primary"
             onClick={() => onOpenCharmVideo(activeChar.id)}
           >
             🎬 10초 매력 영상 보기

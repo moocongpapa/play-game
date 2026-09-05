@@ -48,7 +48,8 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
     setTimeOut(false);
     setTimeLeft(diffConfig.timeLimit);
 
-    const target = pickRandom<CloudItem>(itemPool, 1)[0];
+    const target = pickRandom<CloudItem>(itemPool, 1)[0] || itemPool[0];
+    if (!target) return;
     setTargetCloud(target);
 
     const distractors = pickDistractors<CloudItem>(itemPool, target.id, diffConfig.optionCount - 1);
@@ -110,6 +111,8 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
       setTimeout(() => setShakingCloudId(null), 600);
     }
   };
+
+  if (!targetCloud) return null;
 
   return (
     <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[80vh] overflow-hidden">

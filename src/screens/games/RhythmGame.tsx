@@ -80,18 +80,36 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     for (let i = 0; i < item.notes.length; i++) {
+      if (!isMountedRef.current) return;
       const note = item.notes[i];
-      // 해당 노트를 활성화
       setActiveButtonIdx(i);
       playTone(note, 0.4);
       await new Promise((resolve) => setTimeout(resolve, 600));
+      if (!isMountedRef.current) return;
       setActiveButtonIdx(null);
       await new Promise((resolve) => setTimeout(resolve, 150));
     }
     
+    if (!isMountedRef.current) return;
     setIsPlayingSequence(false);
     speakText(`이제 똑같이 톡톡 터치해볼까요?`, soundEnabled, { characterId: 'dochi', playIntroSFX: false });
   };
+
+  const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+        try {
+          audioCtxRef.current.close();
+        } catch (e) {
+          // ignore
+        }
+      }
+    };
+  }, []);
 
   const generateRound = () => {
     if (gameTimerRef.current) clearInterval(gameTimerRef.current);
@@ -101,7 +119,8 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
     setTimeLeft(diffConfig.timeLimit);
     setUserSequence([]);
 
-    const target = pickRandom<RhythmItem>(itemPool, 1)[0];
+    const target = pickRandom<RhythmItem>(itemPool, 1)[0] || itemPool[0];
+    if (!target) return;
     setTargetItem(target);
 
     playSequence(target);
@@ -162,6 +181,8 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
       }, 1800);
     }
   };
+
+  if (!targetItem) return null;
 
   return (
     <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[80vh] overflow-hidden">
