@@ -103,7 +103,6 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const finishSplash = useCallback(() => setShowSplash(false), []);
   const [homeStep, setHomeStep] = useState<'friends' | 'games'>('friends');
-  const [gamePage, setGamePage] = useState(0);
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
   const [currentScreen, setCurrentScreen] = useState<'home' | 'game' | 'stickers' | 'talk' | 'parent' | 'drawing'>('home');
   const [activeGameId, setActiveGameId] = useState<GameId | null>(null);
@@ -261,8 +260,6 @@ export default function App() {
           <HomeScreen
             step={homeStep}
             onChangeStep={setHomeStep}
-            page={gamePage}
-            onChangePage={setGamePage}
             selectedCharacter={appState.selectedCharacter}
             onSelectCharacter={(id) => setAppState((prev) => ({ ...prev, selectedCharacter: id }))}
             onStartGame={handleStartGame}
@@ -516,8 +513,6 @@ export default function App() {
                     <HomeScreen
                       step={homeStep}
                       onChangeStep={setHomeStep}
-                      page={gamePage}
-                      onChangePage={setGamePage}
                       selectedCharacter={appState.selectedCharacter}
                       onSelectCharacter={(id) => setAppState((prev) => ({ ...prev, selectedCharacter: id }))}
                       onStartGame={handleStartGame}

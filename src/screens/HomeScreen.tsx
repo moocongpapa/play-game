@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronLeft, ChevronRight, Hand, MessageCircle, Palette, Play, Volume2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, Check, Hand, MessageCircle, Palette, Play, Volume2 } from 'lucide-react';
 import { CHARACTER_LIST, CHARACTERS } from '../data/characters';
 import { CharacterAvatar } from '../components/CharacterAvatar';
 import { BuddyVideo } from '../components/BuddyVideo';
@@ -21,11 +21,9 @@ interface HomeScreenProps {
   childProfile: ChildProfile | null;
   step: HomeStep;
   onChangeStep: (step: HomeStep) => void;
-  page: number;
-  onChangePage: (page: number) => void;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSelectCharacter, onStartGame, onOpenDrawing, onOpenStickerRoom, onOpenCharacterTalk, soundEnabled, childProfile, step, onChangeStep, page, onChangePage }) => {
+export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSelectCharacter, onStartGame, onOpenDrawing, onOpenStickerRoom, onOpenCharacterTalk, soundEnabled, childProfile, step, onChangeStep }) => {
   const buddy = CHARACTERS[selectedCharacter] || CHARACTERS.ggomi;
   const childName = childProfile?.name || '유하';
   const age = childProfile?.ageGroup || 'sprout';
@@ -34,9 +32,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
   const available = availableGameIds(age);
   const preferred = ([buddy.gameId, buddy.subGameId, 'balloon_pop', 'stage_adventure'] as Array<GameId | undefined>).filter((id): id is GameId => Boolean(id) && available.includes(id!));
   const games = [...new Set([...preferred, ...available])];
-  const pageCount = Math.ceil(games.length / 4);
-  const safePage = Math.min(page, pageCount - 1);
-  const currentGames = games.slice(safePage * 4, safePage * 4 + 4);
 
   useEffect(() => () => stopAllSpeech(), []);
   useEffect(() => {
@@ -46,16 +41,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
   const chooseFriend = (id: CharacterId) => {
     playJellyTap(soundEnabled);
     onSelectCharacter(id);
-    onChangePage(0);
     onChangeStep('games');
     setHasNavigated(true);
     window.scrollTo({ top: 0 });
     speakText(`${childName}야, ${CHARACTERS[id].name}랑 같이 놀자! 어떤 게임 해볼까? 그림을 눌러봐.`, soundEnabled, { characterId: id });
-  };
-  const changePage = (next: number) => {
-    playJellyTap(soundEnabled);
-    onChangePage(next);
-    speakText('또 다른 놀이가 있어! 하고 싶은 그림을 눌러봐.', soundEnabled, { characterId: selectedCharacter });
   };
 
   return <div className={`storybook-home home-${step}`}>
@@ -79,12 +68,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
         <span className="friend-name">{friend.name}<span className="friend-arrow"><ArrowRight size={20} /></span></span>
       </button>)}</div>
     </section> : <section aria-label="게임 선택" className="games-section">
-      <div className="section-heading"><button className="change-friend" onClick={() => { stopAllSpeech(); onChangeStep('friends'); setHasNavigated(true); speakText('다른 친구랑도 놀아볼까?', soundEnabled); }}><ArrowLeft size={20} /><CharacterAvatar id={selectedCharacter} size="sm" /><span>친구 바꾸기</span></button><span className="page-indicator" aria-label={`${pageCount}쪽 중 ${safePage + 1}쪽`}>{Array.from({ length: pageCount }, (_, i) => <i key={i} className={i === safePage ? 'active' : ''} />)}</span></div>
-      <div className="game-card-grid" key={`${selectedCharacter}-${safePage}`}>{currentGames.map(id => <button key={id} className={`picture-game-card theme-${GAME_CATALOG[id].theme}`} onClick={() => { stopAllSpeech(); playJellyTap(soundEnabled); onStartGame(id, selectedCharacter); }} aria-label={`${GAME_CATALOG[id].title} 시작`}>
+      <div className="section-heading"><button className="change-friend" onClick={() => { stopAllSpeech(); onChangeStep('friends'); setHasNavigated(true); speakText('다른 친구랑도 놀아볼까?', soundEnabled); }}><ArrowLeft size={20} /><CharacterAvatar id={selectedCharacter} size="sm" /><span>친구 바꾸기</span></button></div>
+      <div className="game-card-grid" key={selectedCharacter}>{games.map(id => <button key={id} className={`picture-game-card theme-${GAME_CATALOG[id].theme}`} onClick={() => { stopAllSpeech(); playJellyTap(soundEnabled); onStartGame(id, selectedCharacter); }} aria-label={`${GAME_CATALOG[id].title} 시작`}>
         <GameArtwork gameId={id} />
         <span className="game-card-caption"><span>{GAME_CATALOG[id].title}</span><span className="play-medallion"><Play fill="currentColor" size={20} /></span></span>
       </button>)}</div>
-      <nav className="game-pagination" aria-label="다른 게임 보기"><button aria-label="이전 게임들" disabled={safePage === 0} onClick={() => changePage(safePage - 1)}><ChevronLeft size={30} /><span>앞으로</span></button><span>{safePage + 1} / {pageCount}</span><button aria-label="다음 게임들" disabled={safePage === pageCount - 1} onClick={() => changePage(safePage + 1)}><span>다른 놀이</span><ChevronRight size={30} /></button></nav>
     </section>}
 
     <section className="extra-play" aria-label="자유 놀이">
