@@ -15,6 +15,7 @@ interface HomeScreenProps {
   onOpenStickerRoom: () => void;
   onOpenCharacterTalk: () => void;
   onOpenCharmVideo: (characterId?: CharacterId) => void;
+  onOpenDrawing?: () => void;
   soundEnabled: boolean;
   childProfile: ChildProfile | null;
 }
@@ -26,6 +27,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onOpenStickerRoom,
   onOpenCharacterTalk,
   onOpenCharmVideo,
+  onOpenDrawing,
   soundEnabled,
   childProfile,
 }) => {
@@ -85,14 +87,26 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <span className="hidden sm:inline">🎬 영상</span>
           </button>
 
+          {/* Sketchbook & Coloring Button */}
+          {onOpenDrawing && (
+            <button
+              onClick={onOpenDrawing}
+              className="p-2 sm:px-3 sm:py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full font-black text-xs sm:text-sm shadow-xs flex items-center gap-1 cursor-pointer active:scale-95 transition-transform"
+              title="알록달록 스케치북"
+            >
+              <Palette className="w-4 h-4 text-amber-200" />
+              <span className="hidden sm:inline">🖌️ 스케치북</span>
+            </button>
+          )}
+
           {/* Sticker Book Button */}
           <button
             onClick={onOpenStickerRoom}
             className="p-2 sm:px-3 sm:py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full font-black text-xs sm:text-sm shadow-xs flex items-center gap-1 cursor-pointer active:scale-95 transition-transform"
             title="스티커북"
           >
-            <Palette className="w-4 h-4 text-purple-200" />
-            <span className="hidden sm:inline">🎨 스티커</span>
+            <Sparkles className="w-4 h-4 text-purple-200" />
+            <span className="hidden sm:inline">✨ 스티커</span>
           </button>
 
           {/* Character Talk Button */}

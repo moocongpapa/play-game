@@ -10,6 +10,7 @@ import { ParentDashboard } from './screens/ParentDashboard';
 import { CharacterCharmVideoModal } from './components/CharacterCharmVideoModal';
 import { SplashLoader } from './components/SplashLoader';
 import { OnboardingScreen } from './screens/OnboardingScreen';
+import { SketchbookScreen } from './screens/SketchbookScreen';
 
 // Mini Games (기존 7종)
 import { GgomiObjectGame } from './screens/games/GgomiObjectGame';
@@ -101,7 +102,7 @@ export default function App() {
   });
 
   const [showSplash, setShowSplash] = useState(true);
-  const [currentScreen, setCurrentScreen] = useState<'home' | 'game' | 'stickers' | 'talk' | 'parent'>('home');
+  const [currentScreen, setCurrentScreen] = useState<'home' | 'game' | 'stickers' | 'talk' | 'parent' | 'drawing'>('home');
   const [activeGameId, setActiveGameId] = useState<GameId | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isParentGateOpen, setIsParentGateOpen] = useState(false);
@@ -254,8 +255,18 @@ export default function App() {
             onOpenStickerRoom={() => setCurrentScreen('stickers')}
             onOpenCharacterTalk={() => setCurrentScreen('talk')}
             onOpenCharmVideo={handleOpenCharmVideo}
+            onOpenDrawing={() => setCurrentScreen('drawing')}
             soundEnabled={appState.soundEnabled}
             childProfile={appState.childProfile}
+          />
+        );
+
+      case 'drawing':
+        return (
+          <SketchbookScreen
+            onGoHome={() => setCurrentScreen('home')}
+            soundEnabled={appState.soundEnabled}
+            childName={childName}
           />
         );
 
@@ -526,6 +537,7 @@ export default function App() {
         onOpenParentGate={() => setIsParentGateOpen(true)}
         onOpenStickerRoom={() => setCurrentScreen('stickers')}
         onOpenCharacterSelect={() => setCurrentScreen('talk')}
+        onOpenDrawing={() => setCurrentScreen('drawing')}
         onGoHome={() => setCurrentScreen('home')}
         currentScreen={currentScreen}
         childName={childName}

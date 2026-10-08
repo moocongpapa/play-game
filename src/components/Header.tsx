@@ -16,8 +16,9 @@ interface HeaderProps {
   onOpenParentGate: () => void;
   onOpenStickerRoom: () => void;
   onOpenCharacterSelect: () => void;
+  onOpenDrawing?: () => void;
   onGoHome: () => void;
-  currentScreen: 'home' | 'game' | 'stickers' | 'talk' | 'parent';
+  currentScreen: 'home' | 'game' | 'stickers' | 'talk' | 'parent' | 'drawing';
   childName: string;
   ageGroup: AgeGroup;
 }
@@ -32,6 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenParentGate,
   onOpenStickerRoom,
   onOpenCharacterSelect,
+  onOpenDrawing,
   onGoHome,
   currentScreen,
   childName,
@@ -110,13 +112,24 @@ export const Header: React.FC<HeaderProps> = ({
           {soundEnabled ? <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" /> : <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" />}
         </button>
 
+        {onOpenDrawing && (
+          <JellyButton
+            size="sm"
+            variant="purple"
+            onClick={onOpenDrawing}
+            className="!px-2.5 !py-1.5 sm:!px-3 sm:!py-2 font-bold text-xs sm:text-sm bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-xs"
+          >
+            🖌️ <span className="hidden xs:inline">스케치북</span>
+          </JellyButton>
+        )}
+
         <JellyButton
           size="sm"
           variant="pink"
           onClick={onOpenStickerRoom}
           className="!px-2.5 !py-1.5 sm:!px-3 sm:!py-2 font-bold text-xs sm:text-sm"
         >
-          🎨 <span className="hidden xs:inline">스티커북</span>
+          ✨ <span className="hidden xs:inline">스티커북</span>
         </JellyButton>
 
         <button
