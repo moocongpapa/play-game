@@ -48,7 +48,6 @@ export const CharacterTalkScreen: React.FC<CharacterTalkScreenProps> = ({
   }, []);
 
   const sayHello = (id: CharacterId) => {
-    stopAllSpeech();
     onSelectCharacter(id);
     setReplayKey(key => key + 1);
     setPlaying(true);

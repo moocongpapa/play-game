@@ -459,6 +459,7 @@ let browserSpeechStartTimer: number | null = null;
 let pendingBrowserSpeech: (() => void) | null = null;
 let currentVoiceToneMode: 'cheerful' | 'gentle' | 'energetic' = 'cheerful';
 let speechRequestId = 0;
+let activeSpeech: { key: string; provider?: 'ai' | 'browser' } | null = null;
 
 function clearBrowserSpeechStartTimer() {
   if (browserSpeechStartTimer === null) return;
@@ -535,7 +536,10 @@ export interface SpeakOptions {
  * Intelligently adjusts pitch and rate: prevents robotic chipmunk artifacts on legacy voices.
  */
 function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions = {}) {
-  if (!enabled || !masterSoundEnabled) return;
+  if (!enabled || !masterSoundEnabled || !speechEnabled) {
+    options.onError?.();
+    return;
+  }
   if (typeof window === 'undefined' || !('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
     options.onError?.();
     return;
@@ -543,7 +547,7 @@ function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions
 
   try {
     const formatted = formatKindergartenTeacherText(text);
-    if (!formatted) return;
+    if (!formatted) { options.onError?.(); return; }
     selectedVoice ||= findBestVoice();
     // Wait briefly for asynchronously loaded voices; never hand the choice to
     // an arbitrary OS default that could be a deep adult male or another language.
@@ -586,8 +590,9 @@ function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions
       if (activeBrowserUtterance !== utterance) return;
       clearBrowserSpeechStartTimer();
       activeBrowserUtterance = null;
-      if (event.error === 'canceled' || event.error === 'interrupted') return;
-      console.warn('Browser speech synthesis failed:', event.error);
+      if (event.error !== 'canceled' && event.error !== 'interrupted') {
+        console.warn('Browser speech synthesis failed:', event.error);
+      }
       options.onError?.();
     };
 
@@ -613,21 +618,40 @@ function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions
 export function speakText(text: string, enabled = true, options: SpeakOptions = {}) {
   if (!enabled || !masterSoundEnabled || !speechEnabled) return;
 
+  const clean = localizeSpeech(text.trim(), speechLanguage, spokenChildName);
+  if (!clean) return;
+  const key = JSON.stringify([
+    clean.replace(/\s+/g, ' '), options.characterId || 'ggomi', speechLanguage,
+    options.pitch ?? null, options.rate ?? null,
+  ]);
+  // Protect the first request from repeated taps, including AI download and
+  // browser voice loading. Do not restart it or queue another copy behind it.
+  if (activeSpeech?.key === key) {
+    // A repeated preview click can still show the current playback status.
+    if (activeSpeech.provider) options.onStart?.(activeSpeech.provider);
+    return;
+  }
+
   stopAllSpeech();
   const requestId = speechRequestId;
+  activeSpeech = { key };
   const originalOptions = options;
   const finish = (callback?: () => void) => {
     if (requestId !== speechRequestId) return;
+    activeSpeech = null;
     setBGMDucked('speech', false);
     callback?.();
   };
   options = { ...originalOptions,
+    onStart: provider => {
+      if (requestId !== speechRequestId || !activeSpeech) return;
+      activeSpeech.provider = provider;
+      originalOptions.onStart?.(provider);
+    },
     onEnd: () => finish(originalOptions.onEnd),
     onError: () => finish(originalOptions.onError),
   };
 
-  const clean = localizeSpeech(text.trim(), speechLanguage, spokenChildName);
-  if (!clean) return;
   setBGMDucked('speech', true);
 
   if (isGeminiTTSEnabled() && getCachedGeminiVoiceAvailability() !== false) {
@@ -658,6 +682,7 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
  * Halts all voice speech across all engines immediately
  */
 export function stopAllSpeech() {
+  activeSpeech = null;
   stopAnimalSound();
   setBGMDucked('speech', false);
   speechRequestId += 1;

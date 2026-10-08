@@ -2,13 +2,14 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { setImmediate } from 'node:timers/promises';
 
-test('audio playback uses the saved language, cancels stale speech, separates caches and respects mute', async () => {
+test('speech playback respects preferences, navigation and uninterrupted repeated taps', async t => {
   const original = new Map(['window', 'localStorage', 'SpeechSynthesisUtterance', 'fetch'].map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
   const storage = new Map<string, string>();
   let voices = [{ name: 'Korean natural', lang: 'ko-KR' }, { name: 'English natural', lang: 'en-US' }];
   class Utterance {
     lang = ''; voice: unknown = null;
     onstart?: () => void; onend?: () => void;
+    onerror?: (event: { error: string }) => void;
     constructor(public text: string) {}
   }
   const spoken: Utterance[] = [];
@@ -17,17 +18,29 @@ test('audio playback uses the saved language, cancels stale speech, separates ca
   let stops = 0;
   let provider = 'gemini';
   const playbackRates: number[] = [];
+  class Source {
+    buffer: unknown = null;
+    playbackRate = { value: 1 };
+    onended: (() => void) | null = null;
+    connect() {} disconnect() {}
+    start() { starts++; playbackRates.push(this.playbackRate.value); }
+    stop() { stops++; }
+  }
+  const sources: Source[] = [];
   class Context {
     state = 'running'; destination = {};
     async resume() { this.state = 'running'; }
     async suspend() { this.state = 'suspended'; }
     async decodeAudioData() { return {}; }
     createBufferSource() {
-      return { buffer: null, playbackRate: { value: 1 }, onended: null, connect() {}, disconnect() {}, start() { starts++; playbackRates.push(this.playbackRate.value); }, stop() { stops++; } };
+      const source = new Source();
+      sources.push(source);
+      return source;
     }
   }
   const requests: Array<{ text: string; characterId: string; language: string; signal: AbortSignal }> = [];
   let holdRequest = false;
+  let failRequest = false;
   let release: ((response: Response) => void) | undefined;
   Object.defineProperties(globalThis, {
     window: { configurable: true, value: { AudioContext: Context, SpeechSynthesisUtterance: Utterance, setTimeout, clearTimeout, speechSynthesis: {
@@ -38,7 +51,7 @@ test('audio playback uses the saved language, cancels stale speech, separates ca
     fetch: { configurable: true, value: async (_url: string, init?: RequestInit) => {
       if (!init?.method) return Response.json({ available: true });
       requests.push({ ...JSON.parse(String(init.body)), signal: init.signal });
-      return holdRequest ? new Promise<Response>(resolve => { release = resolve; }) : new Response(new Uint8Array(44), { headers: { 'X-Speech-Provider': provider } });
+      return holdRequest ? new Promise<Response>(resolve => { release = resolve; }) : failRequest ? new Response(null, { status: 502 }) : new Response(new Uint8Array(44), { headers: { 'X-Speech-Provider': provider } });
     } },
   });
   const engine = await import('./soundEngine');
@@ -82,6 +95,7 @@ test('audio playback uses the saved language, cancels stale speech, separates ca
     engine.speakText('바나나', true, { characterId: 'jelly' }); await flush();
     const liftedRate = playbackRates.at(-1)!;
     assert.ok(liftedRate >= 1.08 && liftedRate <= 1.16);
+    sources.at(-1)?.onended?.();
     const beforeReplay = requests.length;
     engine.speakText('바나나', true, { characterId: 'jelly' }); await flush();
     assert.equal(requests.length, beforeReplay);
@@ -114,12 +128,131 @@ test('audio playback uses the saved language, cancels stale speech, separates ca
     window.speechSynthesis.onvoiceschanged!(new Event('voiceschanged'));
     assert.equal(spoken.length, 3);
     assert.equal(spoken.at(-1)?.voice, voices[0]);
+    spoken.at(-1)?.onend?.();
     voices = [{ name: 'Microsoft Guy Online (Natural)', lang: 'en-US' }];
     window.speechSynthesis.onvoiceschanged!(new Event('voiceschanged'));
     let unavailable = false;
     engine.speakText('사과', true, { onError: () => { unavailable = true; } });
     assert.equal(spoken.length, 3, 'A known adult male is not used as the only available fallback');
     assert.equal(unavailable, true);
+
+    voices = [{ name: 'Microsoft Ana Online (Natural)', lang: 'en-US' }];
+    window.speechSynthesis.onvoiceschanged!(new Event('voiceschanged'));
+
+    await t.test('AI loading and playback survive repeated taps; completion allows cached replay', async () => {
+      ai.setGeminiTTSEnabled(true);
+      holdRequest = true;
+      let ended = 0;
+      engine.speakText('Keep playing, friend!', true, { characterId: 'jelly', onEnd: () => { ended++; } });
+      await flush();
+      const currentRequest = requests.at(-1)!;
+      const before = { requests: requests.length, starts, stops, cancelled };
+      for (let i = 0; i < 5; i++) engine.speakText('Keep playing, friend!', true, { characterId: 'jelly' });
+      await flush();
+      assert.deepEqual({ requests: requests.length, starts, stops, cancelled }, before);
+      assert.equal(currentRequest.signal.aborted, false, 'Repeated taps do not abort the first download');
+      holdRequest = false;
+      release!(new Response(new Uint8Array(44))); await flush();
+      assert.equal(starts, before.starts + 1);
+      const firstClip = sources.at(-1)!;
+      let previewProvider = '';
+      for (let i = 0; i < 5; i++) engine.speakText('Keep playing, friend!', true, {
+        characterId: 'jelly', onStart: value => { previewProvider = value; },
+      });
+      await flush();
+      assert.equal(starts, before.starts + 1);
+      assert.equal(stops, before.stops);
+      assert.equal(previewProvider, 'ai', 'Preview status remains playing when tapped again');
+      firstClip.onended?.(); await flush();
+      assert.equal(ended, 1);
+      assert.equal(starts, before.starts + 1, 'No duplicate clip is queued after completion');
+      engine.speakText('Keep playing, friend!', true, { characterId: 'jelly' }); await flush();
+      assert.equal(starts, before.starts + 2);
+      assert.equal(requests.length, before.requests, 'A tap after completion replays the cached clip');
+      engine.stopAllSpeech();
+    });
+
+    await t.test('navigation cancels playback and pending speech, and permits the same line on return', async () => {
+      engine.speakText('Keep playing, friend!', true, { characterId: 'jelly' }); await flush();
+      const beforeStop = stops;
+      engine.stopAllSpeech();
+      assert.equal(stops, beforeStop + 1);
+      const beforeReturn = starts;
+      engine.speakText('Keep playing, friend!', true, { characterId: 'jelly' }); await flush();
+      assert.equal(starts, beforeReturn + 1);
+      engine.stopAllSpeech();
+
+      holdRequest = true;
+      engine.speakText('A late voice from the previous screen.'); await flush();
+      const lateRequest = requests.at(-1)!;
+      const before = { starts, spoken: spoken.length };
+      engine.stopAllSpeech();
+      assert.equal(lateRequest.signal.aborted, true);
+      holdRequest = false;
+      release!(new Response(new Uint8Array(44))); await flush();
+      assert.deepEqual({ starts, spoken: spoken.length }, before, 'No stale playback or fallback on the next screen');
+    });
+
+    await t.test('browser speech is not cancelled or queued twice and can replay after end or error', () => {
+      ai.setGeminiTTSEnabled(false);
+      let ended = 0;
+      engine.speakText('Listen to the whole sentence.', true, { onEnd: () => { ended++; } });
+      const first = spoken.at(-1)!;
+      const before = { spoken: spoken.length, cancelled };
+      for (let i = 0; i < 5; i++) engine.speakText('  Listen to the whole sentence.  ');
+      assert.deepEqual({ spoken: spoken.length, cancelled }, before);
+      first.onend?.();
+      assert.equal(ended, 1);
+      assert.equal(spoken.length, before.spoken, 'Finishing does not queue the repeated taps');
+      engine.speakText('Listen to the whole sentence.');
+      assert.equal(spoken.length, before.spoken + 1);
+      spoken.at(-1)?.onerror?.({ error: 'interrupted' });
+      engine.speakText('Listen to the whole sentence.');
+      assert.equal(spoken.length, before.spoken + 2, 'A browser interruption clears the active request');
+      engine.setAudioPreferences(false);
+      engine.speakText('Listen to the whole sentence.');
+      assert.equal(spoken.length, before.spoken + 2);
+      engine.setAudioPreferences(true);
+      engine.speakText('Listen to the whole sentence.');
+      assert.equal(spoken.length, before.spoken + 3, 'Unmuting permits the same sentence again');
+      engine.stopAllSpeech();
+    });
+
+    await t.test('pending browser voices and AI-to-browser fallback keep the first request', async () => {
+      voices = [];
+      window.speechSynthesis.onvoiceschanged!(new Event('voiceschanged'));
+      engine.speakText('Wait for the voice.');
+      const before = { spoken: spoken.length, cancelled };
+      engine.speakText('Wait for the voice.');
+      assert.deepEqual({ spoken: spoken.length, cancelled }, before);
+      voices = [{ name: 'Microsoft Ana Online (Natural)', lang: 'en-US' }];
+      window.speechSynthesis.onvoiceschanged!(new Event('voiceschanged'));
+      assert.equal(spoken.length, before.spoken + 1);
+      engine.stopAllSpeech();
+
+      ai.setGeminiTTSEnabled(true);
+      failRequest = true;
+      engine.speakText('Keep the fallback going.'); await flush();
+      assert.equal(spoken.at(-1)?.text, 'Keep the fallback going.');
+      const fallback = { requests: requests.length, spoken: spoken.length, cancelled };
+      engine.speakText('Keep the fallback going.'); await flush();
+      assert.deepEqual({ requests: requests.length, spoken: spoken.length, cancelled }, fallback);
+      spoken.at(-1)?.onend?.();
+      failRequest = false;
+      engine.stopAllSpeech();
+    });
+
+    await t.test('a different character or sentence still replaces the old speech', () => {
+      ai.setGeminiTTSEnabled(false);
+      engine.speakText('Hello, friend!', true, { characterId: 'jelly' });
+      const before = { spoken: spoken.length, cancelled };
+      engine.speakText('Hello, friend!', true, { characterId: 'pingu' });
+      assert.equal(spoken.length, before.spoken + 1);
+      assert.equal(cancelled, before.cancelled + 1);
+      engine.speakText('Let us play!', true, { characterId: 'pingu' });
+      assert.equal(spoken.length, before.spoken + 2);
+      assert.equal(cancelled, before.cancelled + 2);
+    });
   } finally {
     engine.stopAllSpeech(); ai.clearGeminiAudioCache();
     for (const [key, descriptor] of original) {
