@@ -1,3 +1,4 @@
+import { chooseSpeechVoice, localizeSpeech, type SpeechLanguage } from './speechLanguage';
 import { randomEffectPitch } from './juice';
 import { BACKGROUND_MUSIC, SLEEP_MUSIC, type MusicTrack } from '../data/backgroundMusic';
 import { ANIMAL_RECORDINGS, resolveAnimalSound } from '../data/animalSounds';
@@ -10,6 +11,16 @@ import { playGeminiSpeech, stopGeminiAudio, isGeminiTTSEnabled, getCachedGeminiV
 
 let masterSoundEnabled = true;
 let speechEnabled = true;
+let speechLanguage: SpeechLanguage = 'en';
+let spokenChildName = '유하';
+
+export function setSpeechLanguage(language: SpeechLanguage, childName = spokenChildName) {
+  spokenChildName = childName;
+  if (speechLanguage === language) return;
+  stopAllSpeech();
+  speechLanguage = language;
+  selectedVoice = findBestVoice();
+}
 
 export function setAudioPreferences(sound: boolean, speech = true) {
   masterSoundEnabled = sound;
@@ -469,61 +480,10 @@ const CHARACTER_VOICE_PROFILES: Record<string, { pitch: number; rate: number; pr
   pingu: { pitch: 1.09, rate: 0.88, prefixSFX: 'pingu' },    // 맑고 다정하게 말하는 핑구
 };
 
-/**
- * Filter and select the best Korean voice.
- * Prioritizes high-definition Natural/Neural voices (Microsoft Natural SunHi, Apple Yuna/Siri, Samsung Natural)
- * and avoids robotic legacy Google TTS voices.
- */
-function findBestKoreanVoice(): SpeechSynthesisVoice | null {
+/** Pick a natural voice in the selected language, never a voice from the other language. */
+function findBestVoice(): SpeechSynthesisVoice | null {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null;
-  const voices = window.speechSynthesis.getVoices();
-  if (!voices || voices.length === 0) return null;
-
-  const koVoices = voices.filter(
-    (v) => v.lang.includes('ko') || v.lang.includes('KO') || v.lang.toLowerCase().includes('korean')
-  );
-
-  if (koVoices.length === 0) return null;
-
-  // 1. Edge / Windows Microsoft Natural Neural Voices (SunHi, InJoon - highest quality human speech)
-  const msNatural = koVoices.find(
-    (v) =>
-      v.name.toLowerCase().includes('natural') ||
-      v.name.toLowerCase().includes('neural') ||
-      v.name.includes('SunHi') ||
-      v.name.includes('선희')
-  );
-  if (msNatural) return msNatural;
-
-  // 2. Apple Siri / Premium / Enhanced Voices (macOS / iOS Yuna Premium)
-  const appleNatural = koVoices.find(
-    (v) =>
-      v.name.toLowerCase().includes('premium') ||
-      v.name.toLowerCase().includes('enhanced') ||
-      v.name.toLowerCase().includes('siri') ||
-      v.name.includes('Yuna') ||
-      v.name.includes('유나')
-  );
-  if (appleNatural) return appleNatural;
-
-  // 3. Samsung or other Korean female/gentle high-quality voices
-  const otherHighQuality = koVoices.find(
-    (v) =>
-      v.name.includes('Heami') ||
-      v.name.includes('혜미') ||
-      v.name.includes('Hyeryun') ||
-      v.name.includes('kof')
-  );
-  if (otherHighQuality) return otherHighQuality;
-
-  // 4. Any voice that is NOT the older robotic Google legacy voice
-  const nonRoboticGoogle = koVoices.find(
-    (v) => !v.name.includes('Google') && !v.name.includes('구글')
-  );
-  if (nonRoboticGoogle) return nonRoboticGoogle;
-
-  // 5. Fallback to first available Korean voice
-  return koVoices[0];
+  return chooseSpeechVoice(window.speechSynthesis.getVoices(), speechLanguage);
 }
 
 /**
@@ -541,9 +501,9 @@ function isRoboticVoice(voice: SpeechSynthesisVoice | null): boolean {
 
 if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
   window.speechSynthesis.onvoiceschanged = () => {
-    selectedVoice = findBestKoreanVoice();
+    selectedVoice = findBestVoice();
   };
-  selectedVoice = findBestKoreanVoice();
+  selectedVoice = findBestVoice();
 }
 
 /**
@@ -593,13 +553,13 @@ function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions
     activeBrowserUtterance = utterance;
 
     if (!selectedVoice) {
-      selectedVoice = findBestKoreanVoice();
+      selectedVoice = findBestVoice();
     }
     if (selectedVoice) {
       utterance.voice = selectedVoice;
       utterance.lang = selectedVoice.lang;
     } else {
-      utterance.lang = 'ko-KR';
+      utterance.lang = speechLanguage === 'en' ? 'en-US' : 'ko-KR';
     }
 
     const isRobotic = isRoboticVoice(selectedVoice);
@@ -674,7 +634,7 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
     onError: () => finish(originalOptions.onError),
   };
 
-  const clean = text.trim();
+  const clean = localizeSpeech(text.trim(), speechLanguage, spokenChildName);
   if (!clean) return;
   setBGMDucked('speech', true);
 
@@ -682,6 +642,7 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
     try {
       const ctx = getAudioContext();
       playGeminiSpeech(clean, {
+        language: speechLanguage,
         characterId: options.characterId,
         audioCtx: ctx,
         onStart: () => options.onStart?.('ai'),

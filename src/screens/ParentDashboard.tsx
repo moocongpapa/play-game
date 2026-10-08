@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AppState, ChildProfile } from '../types';
+import { AppState, ChildProfile, SpeechLanguage } from '../types';
 import { JellyButton } from '../components/JellyButton';
 import { Shield, Clock, Volume2, Music, Sparkles, Home, RotateCcw, Mic, Calendar, User, CheckCircle2 } from 'lucide-react';
 import { speakText } from '../utils/soundEngine';
@@ -12,6 +12,7 @@ interface ParentDashboardProps {
   onUpdateTimerMinutes: (min: number) => void;
   onUpdateBgmVolume: (vol: number) => void;
   onUpdateSfxVolume: (vol: number) => void;
+  onUpdateSpeechLanguage: (language: SpeechLanguage) => void;
   onToggleSound: () => void;
   onToggleHaptics: () => void;
   onToggleBGM: () => void;
@@ -26,6 +27,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   onUpdateTimerMinutes,
   onUpdateBgmVolume,
   onUpdateSfxVolume,
+  onUpdateSpeechLanguage,
   onToggleSound,
   onToggleHaptics,
   onToggleBGM,
@@ -223,6 +225,19 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
           })}
         </div>
       </div>
+
+      <section className="w-full bg-white p-4 sm:p-5 rounded-3xl border-2 border-sky-200 shadow-sm mb-3 text-left" aria-labelledby="speech-language-title">
+        <h2 id="speech-language-title" className="text-base sm:text-lg font-black text-[#4A3E3D] mb-2">음성 언어 · Voice language</h2>
+        <p className="text-xs sm:text-sm text-[#625d67] mb-3">안내, 칭찬, 캐릭터 대화와 말소리 효과의 언어를 선택해요. 기본 언어는 영어예요.</p>
+        <div className="grid grid-cols-2 gap-3" role="group" aria-label="음성 언어 선택">
+          {([{ id: 'en', label: 'English', detail: '영어 · 기본값' }, { id: 'ko', label: '한국어', detail: 'Korean' }] as const).map(language => <button
+            key={language.id} type="button" aria-pressed={appState.speechLanguage === language.id}
+            onClick={() => { setPreviewStatus(''); onUpdateSpeechLanguage(language.id); }}
+            className={`min-h-16 px-4 py-3 rounded-2xl border-2 text-left cursor-pointer focus-visible:outline-2 focus-visible:outline-sky-700 ${appState.speechLanguage === language.id ? 'bg-sky-100 border-sky-500 text-sky-950' : 'bg-white border-slate-200 text-slate-600'}`}
+          ><span className="flex items-center justify-between font-black">{language.label}{appState.speechLanguage === language.id && <CheckCircle2 size={20} aria-hidden="true" />}</span><span className="text-xs">{language.detail}</span></button>)}
+        </div>
+        <p className="text-xs text-[#625d67] mt-3">선택은 자동 저장돼요. 아래에서 친구 목소리를 미리 들어보세요. 배경음악·악기·실제 동물 녹음은 공통으로 사용해요.</p>
+      </section>
 
       {/* Character AI voice settings */}
       <section className="w-full bg-white p-4 sm:p-5 rounded-3xl border-2 border-purple-200 shadow-sm mb-3 text-left" aria-labelledby="character-voice-title">

@@ -1,3 +1,4 @@
+import { normalizeSpeechLanguage } from '../utils/speechLanguage';
 import { getCharacterVoice } from '../data/characterVoices';
 
 const GEMINI_MODEL = 'gemini-3.8-flash-tts';
@@ -30,10 +31,11 @@ export async function handleSpeechRequest(
 
   const input = body && typeof body === 'object' ? body as Record<string, unknown> : {};
   const text = typeof input.text === 'string' ? input.text.trim() : '';
-  if (!text || text.length > 300 || (input.characterId !== undefined && typeof input.characterId !== 'string')) {
+  if ((input.language !== undefined && !['en', 'ko'].includes(input.language as string)) || !text || text.length > 300 || (input.characterId !== undefined && typeof input.characterId !== 'string')) {
     return jsonError(400, 'Invalid speech request');
   }
 
+  const language = normalizeSpeechLanguage(input.language);
   const character = getCharacterVoice(typeof input.characterId === 'string' ? input.characterId : 'ggomi');
 
   // 1. Try ElevenLabs first if configured (Ultra-natural realistic speech)
@@ -83,7 +85,7 @@ export async function handleSpeechRequest(
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiKey.trim() },
         body: JSON.stringify({
           model: GEMINI_MODEL,
-          input: [{ type: 'user_input', content: [{ type: 'text', text, annotations: [{ type: 'speech_metadata', style: character.style }] }] }],
+          input: [{ type: 'user_input', content: [{ type: 'text', text, annotations: [{ type: 'speech_metadata', style: character.style.replace('Speak natural Korean', language === 'en' ? 'Speak natural English' : 'Speak natural Korean') }] }] }],
           response_format: { type: 'audio' },
           generation_config: { speech_config: [{ voice: character.voice }] },
         }),

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
+import { normalizeSpeechLanguage } from './utils/speechLanguage';
+import React, { useState, useEffect, useLayoutEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { AppState, CharacterId, GameId, ChildProfile } from './types';
 import { CharacterAvatar } from './components/CharacterAvatar';
 import { Header } from './components/Header';
@@ -11,7 +12,7 @@ import { SplashLoader } from './components/SplashLoader';
 import { OnboardingScreen } from './screens/OnboardingScreen';
 import { useViewportLock } from './hooks/useViewportLock';
 
-import { getAudioContext, setBGMScene, startBGM, stopBGM, setBGMVolume, playStarGain, speakText, stopAllSpeech, stopPlaySounds, setAudioPreferences } from './utils/soundEngine';
+import { getAudioContext, setSpeechLanguage, setBGMScene, startBGM, stopBGM, setBGMVolume, playStarGain, speakText, stopAllSpeech, stopPlaySounds, setAudioPreferences } from './utils/soundEngine';
 import { Moon, Shield } from 'lucide-react';
 import { createChildProfile } from './utils/ageEngine';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -78,6 +79,7 @@ export default function App() {
         const finalProfile = savedProfile || parsed.childProfile || createChildProfile('유하', '2023-01-03');
         return {
           ...parsed,
+          speechLanguage: normalizeSpeechLanguage(parsed.speechLanguage),
           stars: 0, // 점수 누적 제거
           childProfile: finalProfile,
           onboardingCompleted: true, // 항상 유지되도록 완료 처리
@@ -98,6 +100,7 @@ export default function App() {
       bgmVolume: 0.15,
       sfxVolume: 1.0,
       ttsEnabled: true,
+      speechLanguage: 'en',
       hapticsEnabled: true,
       timerMinutes: 0, // 0 = unlimited
       playTimeSeconds: 0,
@@ -155,7 +158,11 @@ export default function App() {
     localStorage.setItem('ITSME_APP_STATE', JSON.stringify(appState));
   }, [appState]);
 
-  useEffect(() => { setAudioPreferences(appState.soundEnabled, appState.ttsEnabled !== false); }, [appState.soundEnabled, appState.ttsEnabled]);
+  // Apply audio choices before child screens start their passive-effect greetings.
+  useLayoutEffect(() => {
+    setSpeechLanguage(appState.speechLanguage, appState.childProfile?.name || '유하');
+    setAudioPreferences(appState.soundEnabled, appState.ttsEnabled !== false);
+  }, [appState.soundEnabled, appState.ttsEnabled, appState.speechLanguage, appState.childProfile?.name]);
 
   const quietPlay = currentScreen === 'game' && activeGameId === 'goodnight_sleep';
 
@@ -359,6 +366,10 @@ export default function App() {
             onUpdateSfxVolume={(vol) =>
               setAppState((prev) => ({ ...prev, sfxVolume: vol }))
             }
+            onUpdateSpeechLanguage={language => {
+              setSpeechLanguage(language, childName);
+              setAppState(prev => ({ ...prev, speechLanguage: language }));
+            }}
             onToggleSound={handleToggleSound}
             onToggleHaptics={() => setAppState(prev => ({ ...prev, hapticsEnabled: prev.hapticsEnabled === false }))}
             onToggleBGM={() =>

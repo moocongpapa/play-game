@@ -32,6 +32,8 @@ export type GameId =
   | 'sensory_paint'
   | 'balloon_pop';       // 꿀꿀이의 둥둥 풍선 팡팡 놀이
 
+export type SpeechLanguage = 'en' | 'ko';
+
 // 연령 그룹 (4단계)
 export type AgeGroup = 'baby' | 'sprout' | 'bloom' | 'star';
 
@@ -104,6 +106,7 @@ export interface AppState {
   bgmVolume: number;
   sfxVolume: number;
   ttsEnabled: boolean;
+  speechLanguage: SpeechLanguage;
   hapticsEnabled?: boolean;
   timerMinutes: number; // 0 means unlimited
   playTimeSeconds: number;

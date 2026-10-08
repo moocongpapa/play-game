@@ -16,7 +16,7 @@ test('speech endpoint keeps the key server-side and selects a distinct voice for
 
   try {
     for (const id of Object.keys(CHARACTER_VOICES)) {
-      const response = await handleSpeechRequest('POST', { text: '안녕, 유하야!', characterId: id }, 'server-secret');
+      const response = await handleSpeechRequest('POST', { text: '안녕, 유하야!', characterId: id, language: 'ko' }, 'server-secret');
       assert.equal(response.status, 200);
       assert.equal(response.headers.get('Content-Type'), 'audio/wav');
       assert.deepEqual(Buffer.from(await response.arrayBuffer()), wav);
@@ -52,10 +52,12 @@ test('speech endpoint uses ElevenLabs when configured and falls back properly', 
   mp3Data.fill(0x55);
   let calledUrl = '';
   let calledHeaders: Record<string, string> = {};
+  let calledText = '';
 
   globalThis.fetch = async (url, init) => {
     calledUrl = String(url);
     calledHeaders = (init?.headers || {}) as Record<string, string>;
+    calledText = JSON.parse(String(init?.body)).text;
     return new Response(mp3Data, {
       status: 200,
       headers: { 'Content-Type': 'audio/mpeg' },
@@ -65,14 +67,37 @@ test('speech endpoint uses ElevenLabs when configured and falls back properly', 
   try {
     const response = await handleSpeechRequest(
       'POST',
-      { text: '안녕, 나는 핑구야!', characterId: 'pingu' },
+      { text: 'Hello, I am Pingu!', characterId: 'pingu', language: 'en' },
       { elevenLabsApiKey: 'test-eleven-key' }
     );
     assert.equal(response.status, 200);
     assert.equal(response.headers.get('Content-Type'), 'audio/mpeg');
     assert.equal(calledUrl, `https://api.elevenlabs.io/v1/text-to-speech/${CHARACTER_VOICES.pingu.elevenVoiceId}`);
     assert.equal(calledHeaders['xi-api-key'], 'test-eleven-key');
+    assert.equal(calledText, 'Hello, I am Pingu!');
   } finally {
     globalThis.fetch = originalFetch;
   }
+});
+
+test('speech defaults to English and preserves the character style in Gemini fallback', async () => {
+  const originalFetch = globalThis.fetch;
+  const requests: Array<{ url: string; body: { input?: Array<{ content: Array<{ annotations: Array<{ style: string }> }> }> } }> = [];
+  const wav = Buffer.alloc(44);
+  wav.write('RIFF', 0); wav.write('WAVE', 8);
+  globalThis.fetch = async (url, init) => {
+    requests.push({ url: String(url), body: JSON.parse(String(init?.body)) });
+    if (String(url).includes('elevenlabs')) return new Response(new Uint8Array());
+    return Response.json({ steps: [{ type: 'model_output', content: [{ type: 'audio', data: wav.toString('base64') }] }] });
+  };
+  try {
+    const response = await handleSpeechRequest('POST', { text: 'Hello, Yuha!', characterId: 'jelly' }, { elevenLabsApiKey: 'test', geminiApiKey: 'test' });
+    assert.equal(response.status, 200);
+    assert.equal(requests.length, 2);
+    assert.equal(requests[1].body.input?.[0].content[0].annotations[0].style, CHARACTER_VOICES.jelly.style.replace('Speak natural Korean', 'Speak natural English'));
+    for (const language of ['fr', null, {}, 1]) {
+      assert.equal((await handleSpeechRequest('POST', { text: 'Hello', language }, 'test')).status, 400);
+    }
+    assert.equal(requests.length, 2, 'Invalid language must not reach a voice provider');
+  } finally { globalThis.fetch = originalFetch; }
 });
