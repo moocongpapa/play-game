@@ -1,0 +1,53 @@
+/* Two sibling touch targets: the landscape speaks; the portrait changes friend. */
+.storybook-home .welcome-voice-surface { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; padding: 0; border: 0; border-radius: inherit; background: transparent; scale: 1; }
+.welcome-voice-surface:focus-visible { outline-offset: -7px; }
+.storybook-home .welcome-copy, .storybook-home .welcome-friends { pointer-events: none; }
+.storybook-home .selected-buddy-halo { pointer-events: auto; }
+.selected-buddy-halo > * { pointer-events: none; }
+.selected-buddy-halo:focus-visible { outline-offset: 3px; }
+
+.home-games .welcome-scene { min-height: 220px; padding: 22px 30px; }
+.home-games .welcome-copy { max-width: 55%; }
+.home-games .welcome-copy h1 { font-size: clamp(27px, 3.5vw, 36px); }
+.home-games .welcome-subtitle { margin: 9px 0 0; }
+.home-games .selected-buddy-halo { width: 166px; height: 166px; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 7px; }
+.home-games .games-section { margin-top: 24px; }
+
+/* Roughly 80% of the previous card height, while keeping artwork undistorted
+   and card labels/touch targets readable. Only home thumbnails are affected. */
+.storybook-home .picture-game-card { padding: 6px; }
+.storybook-home .picture-game-card > .game-artwork { aspect-ratio: 2.3; }
+.storybook-home .picture-game-card .thumb-bears,
+.storybook-home .picture-game-card .mini-hide-friend { scale: .8; transform-origin: center bottom; }
+.storybook-home .game-card-caption { padding: 9px 8px 4px; }
+.storybook-home .game-card-caption .play-medallion { width: 36px; height: 36px; }
+.storybook-home .picture-game-badge { margin-bottom: 6px; padding: 2px 7px; }
+.storybook-home .friend-day-card { padding: 10px 18px; }
+.storybook-home .friend-day-card > div:first-child { width: 68px; height: 68px; }
+.storybook-home .day-mini-pictures > .game-artwork { aspect-ratio: 2.4; }
+.storybook-home .extra-play > button { min-height: 64px; padding-block: 6px; }
+.storybook-home .extra-icon { width: 36px; height: 36px; }
+.storybook-home .extra-play > .extra-character-park { min-height: 94px; }
+.storybook-home .park-card-friends > div { width: 60px; height: 60px; }
+
+@media (max-width: 639px) {
+  .home-games .welcome-scene { min-height: 190px; padding: 18px 16px; }
+  .home-games .welcome-copy h1 { font-size: 25px; }
+  .home-games .welcome-copy .eyebrow { margin-bottom: 8px; font-size: 9px; }
+  .home-games .welcome-subtitle { max-width: 153px; font-size: 11px; }
+  .home-games .selected-buddy-halo { width: 124px; height: 124px; left: 45%; padding: 6px; }
+  .home-games .selected-buddy-halo > span { min-width: 88px; min-height: 30px; font-size: 13px; bottom: -7px; }
+  .home-games .selected-buddy-halo > span svg { width: 16px; height: 16px; }
+  .home-games .hero-star { top: 15px; }
+  .home-games .games-section { margin-top: 20px; }
+  .storybook-home .picture-game-card { padding: 4px; }
+  .storybook-home .picture-game-card > .game-artwork { aspect-ratio: 1.6; }
+  .storybook-home .game-card-caption { padding: 8px 4px 4px; }
+  .storybook-home .game-card-caption .play-medallion { width: 30px; height: 30px; }
+  .storybook-home .friend-day-card { padding: 8px 10px; }
+  .storybook-home .friend-day-card > div:first-child { width: 56px; height: 56px; }
+  .storybook-home .day-mini-pictures > .game-artwork { aspect-ratio: 1.9; }
+  .storybook-home .extra-play > button { min-height: 80px; }
+  .storybook-home .extra-play > .extra-character-park { min-height: 90px; }
+  .storybook-home .park-card-friends > div { width: 52px; height: 52px; }
+}

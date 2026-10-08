@@ -21,8 +21,6 @@ h1:focus { outline: none; }
 .welcome-copy { z-index: 2; }
 .welcome-copy h1 { font-size: clamp(27px, 4vw, 43px); font-weight: 900; letter-spacing: -.045em; line-height: 1.22; margin: 0; color: #3b5349; }
 .welcome-subtitle { margin: 12px 0 16px; color: #6f7563; font-weight: 600; font-size: 14px; }
-.voice-pill { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 46px; padding: 0 17px; border: 1px solid #d9ddc8; border-radius: 24px; background: #fffdf2df; color: #527f71; font-size: 13px; font-weight: 800; box-shadow: 0 3px 0 #d4decb; }
-.voice-pill:disabled { opacity: .45; }
 .welcome-friends { position: absolute; inset: 0 0 0 44%; z-index: 1; }
 .welcome-friends > .hero-bunny { position: absolute; left: 0; bottom: 32px; transform: rotate(-12deg); width: 31%; height: auto; aspect-ratio: 1; }
 .welcome-friends > .hero-bear { position: absolute; left: 26%; bottom: 36px; width: 42%; height: auto; aspect-ratio: 1; }
@@ -53,8 +51,6 @@ h1:focus { outline: none; }
 .selected-buddy-halo { position: absolute; width: 205px; height: 205px; left: 28%; top: 40px; padding: 9px; border: 2px dashed #fff9e8; border-radius: 50%; background: #fff5d85e; }
 .selected-buddy-halo > span { position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; justify-content: center; gap: 6px; background: #faf9e9; border-radius: 25px; box-shadow: 0 3px 0 #c7d7a3; border: 2px solid #c7d7a3; min-width: 102px; min-height: 38px; font-size: 15px; font-weight: 800; color: #5d7962; }
 .hero-star { position: absolute; width: 55px !important; height: 55px !important; top: 30px; right: 12%; transform: rotate(18deg); }
-.change-friend { display: inline-flex; align-items: center; min-height: 56px; gap: 8px; background: #fffdf6; border: 1px solid #e4dccd; border-radius: 22px; padding: 0 14px 0 10px; font-size: 13px; font-weight: 750; }
-.change-friend > div { width: 40px; height: 40px; }
 .game-card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; animation: arrive .25s ease-out; }
 .picture-game-card { position: relative; min-width: 0; padding: 8px; border: 2px solid #e9dfce; background: #fffdf7; border-radius: 29px; box-shadow: 0 6px 0 #e7ddcb; text-align: left; transition: transform .18s, box-shadow .18s; overflow: hidden; }
 .picture-game-card:hover { transform: translateY(-3px); box-shadow: 0 9px 0 #e7ddcb; }
