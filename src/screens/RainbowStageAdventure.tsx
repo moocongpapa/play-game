@@ -1,3 +1,4 @@
+import { DragMatch, DragPiece, DropSlot, DragHint } from '../components/DragMatch';
 import { RoundContinuation } from '../components/RoundContinuation';
 import { useSoundClue } from '../hooks/useSoundClue';
 import { PLAY_THEMES } from '../data/playThemes';
@@ -161,12 +162,10 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
   // -------------------------------------------------------------
   const [l2SortedCount, setL2SortedCount] = useState(0);
   const [l2RemainingItems, setL2RemainingItems] = useState<BasketSortItem[]>([]);
-  const [l2SelectedFruit, setL2SelectedFruit] = useState<BasketSortItem | null>(null);
   const [l2BasketBounce, setL2BasketBounce] = useState<'red' | 'yellow' | 'green' | null>(null);
 
   const initLevel2 = () => {
     setL2SortedCount(0);
-    setL2SelectedFruit(null);
     const selected = [...SORT_ITEMS].sort(() => Math.random() - 0.5).slice(0, 3);
     setL2RemainingItems(selected);
 
@@ -176,6 +175,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
   };
 
   const handleL2SortFruit = (fruit: BasketSortItem, basketColor: 'red' | 'yellow' | 'green') => {
+    if (clearingLevel.current || !l2RemainingItems.some(item => item.id === fruit.id)) return;
     if (fruit.colorId === basketColor) {
       // Correct match
       playJellyTap(soundEnabled);
@@ -185,7 +185,6 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
 
       const nextRemaining = l2RemainingItems.filter((f) => f.id !== fruit.id);
       setL2RemainingItems(nextRemaining);
-      setL2SelectedFruit(null);
       const nextCount = l2SortedCount + 1;
       setL2SortedCount(nextCount);
 
@@ -510,6 +509,12 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
       {/* LEVEL 2: 색깔 과일 바구니 분류 (드래그 & 원터치) */}
       {/* ========================================================= */}
       {currentLevel === 2 && (
+        <DragMatch resetKey={currentLevel} disabled={l2SortedCount >= 3} onDrop={(id, basketId) => {
+          const fruit = l2RemainingItems.find(item => item.id === id);
+          if (!fruit || clearingLevel.current || !['red', 'yellow', 'green'].includes(basketId)) return false;
+          handleL2SortFruit(fruit, basketId as BasketSortItem['colorId']);
+          return fruit.colorId === basketId;
+        }}>
         <motion.div
           key="stage-2"
           initial={{ opacity: 0, y: 20 }}
@@ -535,23 +540,15 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
               </span>
             ) : (
               l2RemainingItems.map((fruit) => {
-                const isSelected = l2SelectedFruit?.id === fruit.id;
                 return (
-                  <motion.button
+                  <DragPiece
                     key={fruit.id}
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={() => {
-                      playJellyTap(soundEnabled);
-                      setL2SelectedFruit(isSelected ? null : fruit);
-                    }}
-                    className={`p-3 sm:p-4 rounded-3xl border-3 cursor-pointer shadow-xs flex flex-col items-center bg-white transition-all ${
-                      isSelected ? 'ring-4 ring-amber-400 scale-105 border-amber-500' : 'border-gray-200'
-                    }`}
+                    id={fruit.id} label={fruit.name}
+                    className="fruit-drag-piece p-2 sm:p-4 rounded-3xl border-3 border-amber-200 shadow-md flex flex-col items-center bg-white"
                   >
                     <span className="text-5xl sm:text-6xl drop-shadow-sm select-none"><ToyArtwork emoji={fruit.id === 'watermelon' ? 'watermelon-whole' : fruit.emoji} /></span>
                     <span className="text-xs font-black text-[#4A3E3D] mt-1">{fruit.name}</span>
-                  </motion.button>
+                  </DragPiece>
                 );
               })
             )}
@@ -567,33 +564,22 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
               const isBouncing = l2BasketBounce === basket.colorId;
 
               return (
-                <motion.button
-                  key={basket.colorId}
-                  animate={{ scale: isBouncing ? [1, 1.15, 1] : 1 }}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    if (l2SelectedFruit) {
-                      handleL2SortFruit(l2SelectedFruit, basket.colorId);
-                    } else {
-                      playBouncyBoing(soundEnabled);
-                      speakText(`먼저 위에서 과일을 선택한 후 바구니를 눌러주세요!`, soundEnabled, { characterId: buddy });
-                    }
-                  }}
-                  style={{ backgroundColor: basket.bg, borderColor: basket.border }}
-                  className="color-basket p-2 sm:p-5 rounded-[24px] border-3 shadow-md flex flex-col items-center justify-center gap-1.5 cursor-pointer touch-manipulation min-h-[130px]"
+                <DropSlot
+                  key={basket.colorId} id={basket.colorId} label={basket.label}
+                  className={`color-basket basket-${basket.colorId} p-2 sm:p-5 rounded-[24px] border-3 shadow-md flex flex-col items-center justify-center gap-1.5 min-h-[130px]`}
                 >
-                  <BasketArtwork color={basket.border} />
+                  <motion.span className="w-full flex justify-center" animate={{ scale: isBouncing ? [1, 1.15, 1] : 1 }}>
+                    <BasketArtwork color={basket.border} />
+                  </motion.span>
                   <span className="text-xs sm:text-sm font-black text-[#4A3E3D]">{basket.label}</span>
-                </motion.button>
+                </DropSlot>
               );
             })}
           </div>
 
-          <p className="text-xs font-bold text-emerald-800/80 bg-white/70 py-1.5 px-4 rounded-full">
-            💡 과일을 터치하고 맞는 색깔 바구니를 콕 눌러주세요!
-          </p>
+          <DragHint>과일을 잡아 바구니에 쏙!</DragHint>
         </motion.div>
+        </DragMatch>
       )}
 
       {/* ========================================================= */}
@@ -654,6 +640,12 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
       {/* LEVEL 4: 그림자 실루엣 퍼즐 */}
       {/* ========================================================= */}
       {currentLevel === 4 && (
+        <DragMatch resetKey={l4Target.id} disabled={l4Solved} onDrop={id => {
+          const item = l4Options.find(option => option.id === id);
+          if (!item || l4Solved || clearingLevel.current) return false;
+          handleL4Match(item);
+          return item.id === l4Target.id;
+        }}>
         <motion.div
           key="stage-4"
           initial={{ opacity: 0, y: 20 }}
@@ -666,13 +658,13 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
             <div className="text-left flex-1 min-w-0">
               <span className="text-xs font-black text-purple-600 block">Level 4 &bull; 그림자 실루엣 퍼즐</span>
               <p className="text-base sm:text-lg font-black text-[#4A3E3D] leading-snug">
-                그림자와 꼭 맞는 모양의 친구를 찾아주세요!
+                그림을 잡아 같은 그림자 위에 올려 주세요!
               </p>
             </div>
           </div>
 
           {/* Central Silhouette Display Frame */}
-          <div className="w-52 h-52 sm:w-60 sm:h-60 rounded-[36px] bg-white border-4 border-dashed border-purple-400 flex flex-col items-center justify-center shadow-inner relative overflow-hidden">
+          <DropSlot id="shadow" label="그림자" filled={l4Solved} className="w-40 h-40 sm:w-60 sm:h-60 rounded-[36px] bg-white border-4 border-dashed border-purple-400 flex flex-col items-center justify-center shadow-inner relative overflow-hidden">
             <motion.span
               animate={l4Solved ? { scale: [1, 1.3, 1], rotate: [0, 10, -10, 0] } : {}}
               transition={{ duration: 0.6 }}
@@ -687,24 +679,26 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
                 {l4Target.name} 완성! ✨
               </span>
             )}
-          </div>
+          </DropSlot>
+          <DragHint>그림자 위에 쏙!</DragHint>
 
           {/* Object Choice Cards */}
           <div className="grid grid-cols-3 gap-3 w-full max-w-md">
             {l4Options.map((opt) => (
-              <motion.button
+              <DragPiece
                 key={opt.id}
                 whileHover={{ scale: 1.08 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={() => handleL4Match(opt)}
+                id={opt.id} label={opt.name}
                 className="p-4 rounded-3xl bg-white border-3 border-purple-300 shadow-md flex flex-col items-center justify-center cursor-pointer active:scale-95 touch-manipulation min-h-[100px]"
               >
                 <span className="text-5xl sm:text-6xl drop-shadow-xs select-none"><ToyArtwork emoji={opt.emoji} /></span>
                 <span className="text-sm font-black text-[#4A3E3D] mt-1">{opt.name}</span>
-              </motion.button>
+              </DragPiece>
             ))}
           </div>
         </motion.div>
+        </DragMatch>
       )}
 
       {/* ========================================================= */}

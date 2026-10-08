@@ -1,3 +1,5 @@
+import { DragMatch, DragPiece, DropSlot, DragHint } from '../../components/DragMatch';
+import { placeMatchingValue } from '../../utils/dropTarget';
 import { RoundContinuation } from '../../components/RoundContinuation';
 import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
@@ -5,14 +7,13 @@ import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
 import { getDifficultyConfig, getAgeGroupLabel } from '../../utils/ageEngine';
 import { WORD_PUZZLE_ITEMS_BY_AGE } from '../../data/gameData';
 import { AgeGroup, WordPuzzleItem } from '../../types';
-import { Volume2, RefreshCw, Sparkles, Timer } from 'lucide-react';
+import { Volume2, RefreshCw, Timer } from 'lucide-react';
 
 interface WordPuzzleGameProps {
   buddy: CharacterId;
@@ -39,10 +40,9 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
     : WORD_PUZZLE_ITEMS_BY_AGE.bloom;
 
   const [targetItem, setTargetItem] = useState<WordPuzzleItem>(currentPool[0]);
-  const [lettersPool, setLettersPool] = useState<string[]>([]);
-  const [placedLetters, setPlacedLetters] = useState<string[]>([]);
+  const [lettersPool, setLettersPool] = useState<{ id: string; letter: string }[]>([]);
+  const [placedLetters, setPlacedLetters] = useState<(string | null)[]>([]);
   const [isCompleted, setIsCompleted] = useState(false);
-  const [shakingLetterIdx, setShakingLetterIdx] = useState<number | null>(null);
 
   // 힌트 상태
   const [showHint, setShowHint] = useState(false);
@@ -60,7 +60,6 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
 
     setPlacedLetters([]);
     setIsCompleted(false);
-    setShakingLetterIdx(null);
     setShowHint(false);
     setTimeOut(false);
     setTimeLeft(diffConfig.timeLimit);
@@ -70,10 +69,10 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
 
     // 낱말 글자들 뒤섞어 배치
     const shuffled = [...target.letters].sort(() => Math.random() - 0.5);
-    setLettersPool(shuffled);
+    setLettersPool(shuffled.map((letter, index) => ({ id: String(index), letter })));
 
     if (soundEnabled) {
-      speakText(`글자를 알맞은 순서대로 쏙쏙 모아서 '${target.word}' 단어를 만들어볼까요?`, soundEnabled, { characterId: buddy });
+      speakText(`글자를 잡아 똑같은 글자 칸에 쏙 넣어 '${target.word}' 단어를 만들어볼까요?`, soundEnabled, { characterId: buddy });
     }
 
     // 힌트 타이머 구동
@@ -107,44 +106,34 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
     };
   }, [ageGroup]);
 
-  const handleTapLetter = (letter: string, index: number) => {
-    if (isCompleted || timeOut) return;
-
-    const nextIndexToPlace = placedLetters.length;
-    const expectedLetter = targetItem.letters[nextIndexToPlace];
-
-    if (letter === expectedLetter) {
-      playBubblePop(soundEnabled);
-      const newPlaced = [...placedLetters, letter];
-      setPlacedLetters(newPlaced);
-      
-      // 글자 수 읽기
-      speakText(letter, soundEnabled, { characterId: buddy, playIntroSFX: false });
-
-      // 글자 모음에서 탭한 글자 하나 지우기
-      const newPool = [...lettersPool];
-      newPool.splice(index, 1);
-      setLettersPool(newPool);
-
-      // 단어 완성 체크
-      if (newPlaced.length === targetItem.letters.length) {
-        if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
-        if (gameTimerRef.current) clearInterval(gameTimerRef.current);
-
-        setIsCompleted(true);
-        playCorrectFanfare(soundEnabled);
-        speakText(`와아! 단어가 완성되었어요! ${targetItem.word}!`, soundEnabled, { characterId: buddy });
-        onCompleteQuiz(diffConfig.starsPerCorrect);
-      }
-    } else {
-      setShakingLetterIdx(index);
+  const handleDropLetter = (pieceId: string, slotId: string) => {
+    if (isCompleted || timeOut) return false;
+    const piece = lettersPool.find(letter => letter.id === pieceId);
+    if (!piece) return false;
+    const next = placeMatchingValue(targetItem.letters, placedLetters, piece.letter, Number(slotId));
+    if (!next) {
       playWrongBoing(soundEnabled);
-      speakText(`에구구, 올바른 순서의 글자를 눌러주세요!`, soundEnabled, { characterId: buddy });
-      scheduleGameTimeout(() => setShakingLetterIdx(null), 600);
+      speakText('똑같은 글자가 있는 칸으로 옮겨 볼까?', soundEnabled, { characterId: buddy });
+      return false;
     }
+    playBubblePop(soundEnabled);
+    setPlacedLetters(next);
+    setLettersPool(pool => pool.filter(letter => letter.id !== pieceId));
+    if (next.every(letter => letter !== null)) {
+      if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
+      if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+      setIsCompleted(true);
+      playCorrectFanfare(soundEnabled);
+      speakText(`와아! 단어가 완성되었어요! ${targetItem.word}!`, soundEnabled, { characterId: buddy });
+      onCompleteQuiz(diffConfig.starsPerCorrect);
+    } else {
+      speakText(piece.letter, soundEnabled, { characterId: buddy, playIntroSFX: false });
+    }
+    return true;
   };
 
   return (
+    <DragMatch resetKey={targetItem.word} disabled={isCompleted || timeOut} onDrop={handleDropLetter}>
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#E1BEE7] to-[#F3E5F5] p-3.5 sm:p-4 rounded-3xl border-3 border-[#AB47BC] shadow-sm flex items-center gap-3 sm:gap-4">
@@ -198,49 +187,16 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
         </span>
       </div>
 
-      {/* Word Building Slot Area */}
-      <div className="w-full bg-slate-50 border-3 border-[#E1BEE7] p-3 sm:p-5 rounded-3xl min-h-[64px] flex items-center justify-center gap-2.5 sm:gap-4 shadow-inner mb-4">
-        {targetItem.letters.map((_, idx) => {
-          const letter = placedLetters[idx];
-          return (
-            <motion.div
-              key={idx}
-              className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border-2 flex items-center justify-center text-2xl sm:text-4xl font-black shadow-sm ${
-                letter ? 'bg-[#AB47BC] text-white border-[#7B1FA2]' : 'bg-white border-dashed border-[#E1BEE7] text-transparent'
-              }`}
-            >
-              {letter || ''}
-            </motion.div>
-          );
-        })}
+      <div className="word-drop-row">
+        {targetItem.letters.map((letter, index) => <DropSlot key={index} id={String(index)} label={`${index + 1}번째 ${letter}`} filled={!!placedLetters[index]} className="word-slot">
+          {placedLetters[index] || letter}
+        </DropSlot>)}
       </div>
-
-      {/* Scattered Letter Taps Area */}
-      <div className="flex items-center justify-center gap-3 sm:gap-6 my-2 sm:my-3 min-h-[80px]">
-        <AnimatePresence>
-          {lettersPool.map((letter, index) => {
-            const isShaking = shakingLetterIdx === index;
-            const expectedNextLetter = targetItem.letters[placedLetters.length];
-            const isNextExpected = letter === expectedNextLetter;
-
-            return (
-              <motion.button
-                key={`${letter}-${index}`}
-                initial={{ scale: 0 }}
-                animate={isShaking ? { x: [-8, 8, -6, 6, 0] } : { scale: 1 }}
-                exit={{ scale: 0 }}
-                onClick={() => handleTapLetter(letter, index)}
-                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl text-xl sm:text-3xl font-black flex items-center justify-center shadow-md border-b-4 transition-all cursor-pointer ${
-                  isNextExpected && showHint
-                    ? 'bg-amber-400 border-amber-600 text-white animate-pulse'
-                    : 'bg-white text-[#8E24AA] border-[#E1BEE7] hover:bg-[#F9F2FA]'
-                }`}
-              >
-                {letter}
-              </motion.button>
-            );
-          })}
-        </AnimatePresence>
+      <DragHint>같은 글자 위에 쏙!</DragHint>
+      <div className="word-drop-row min-h-[100px] mb-4">
+        {lettersPool.map(piece => <DragPiece key={piece.id} id={piece.id} label={piece.letter} className={`word-piece ${showHint ? 'word-piece-hint' : ''}`}>
+          {piece.letter}
+        </DragPiece>)}
       </div>
 
       {/* Actions */}
@@ -254,5 +210,6 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
         )}
       </div>
     </div>
+    </DragMatch>
   );
 };

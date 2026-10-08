@@ -1,3 +1,4 @@
+import { DragMatch, DragPiece, DropSlot, DragHint } from '../../components/DragMatch';
 import { RoundContinuation } from '../../components/RoundContinuation';
 import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
@@ -70,14 +71,14 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
     setOptions(roundOptions);
 
     if (soundEnabled) {
-      speakText(`${friend.name}랑 신나는 패턴 놀이! 물음표 상자에는 어떤 친구가 올까요? 규칙을 찾아보아요!`, soundEnabled, { characterId: buddy });
+      speakText(`${friend.name}랑 신나는 패턴 놀이! 알맞은 그림을 물음표 상자로 옮겨 주세요!`, soundEnabled, { characterId: buddy });
     }
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
       hintTimerRef.current = scheduleGameTimeout(() => {
         setShowHint(true);
-        speakText(`여기 반짝이는 친구를 골라봐!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
+        speakText(`반짝이는 그림을 빈칸으로 옮겨 봐!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
       }, diffConfig.hintDelaySec * 1000);
     }
 
@@ -127,6 +128,11 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
   if (!targetItem) return null;
 
   return (
+    <DragMatch resetKey={targetItem.id} disabled={!!selectedCorrectId || timeOut} onDrop={id => {
+      if (selectedCorrectId || timeOut || !options.includes(id)) return false;
+      handleSelectCard(id);
+      return id === targetItem.answer;
+    }}>
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#DCEDC8] to-[#E8F5E9] p-3.5 sm:p-4 rounded-3xl border-3 border-[#66BB6A] shadow-sm flex items-center gap-3 sm:gap-4">
@@ -141,7 +147,7 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
         </div>
         <button
           aria-label="놀이 안내 다시 듣기"
-          onClick={() => speakText(`규칙을 보며 어떤 것이 오는지 맞춰보아요!`, soundEnabled, { characterId: buddy })}
+          onClick={() => speakText(`규칙을 보고 알맞은 그림을 빈칸으로 옮겨 주세요!`, soundEnabled, { characterId: buddy })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#66BB6A] shadow-xs text-[#2E7D32] cursor-pointer shrink-0"
         >
           <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -185,19 +191,13 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
               <ToyArtwork emoji={emoji} />
             </motion.div>
           ))}
-          {/* ❓ Box */}
-          <motion.div
-            animate={selectedCorrectId ? { scale: [1, 1.1, 1] } : {}}
-            transition={{ repeat: Infinity, duration: 1.0 }}
-            className={`w-12 h-12 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center text-2xl sm:text-4xl shadow-md border-2 ${
-              selectedCorrectId ? 'bg-emerald-100 border-emerald-400' : 'bg-amber-100 border-amber-400'
-            }`}
-          >
+          <DropSlot id="pattern" label="빈칸" filled={!!selectedCorrectId} className="pattern-drop-slot rounded-2xl flex items-center justify-center text-3xl sm:text-4xl shadow-inner border-3 border-dashed border-amber-400 bg-amber-50">
             {selectedCorrectId ? <ToyArtwork emoji={targetItem.answer} /> : '?'}
-          </motion.div>
+          </DropSlot>
         </div>
       </div>
 
+      <DragHint>빈칸으로 쏙 옮겨요!</DragHint>
       {/* Options Buttons */}
       <div className="flex items-center justify-center gap-3 sm:gap-6 my-2 sm:my-4 w-full">
         {options.map((ans) => {
@@ -207,7 +207,7 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
           const shouldPulse = showHint && isTarget && !selectedCorrectId;
 
           return (
-            <motion.button
+            <DragPiece
               key={ans}
               animate={
                 isShaking
@@ -219,8 +219,7 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
                   : { scale: 1 }
               }
               transition={{ duration: isShaking ? 0.5 : shouldPulse ? 1.0 : 0.2 }}
-              aria-label={`${ans} 그림 선택`}
-              onClick={() => handleSelectCard(ans)}
+              id={ans} label={`${ans} 그림`}
               className={`game-choice w-16 h-16 sm:w-24 sm:h-24 rounded-3xl text-4xl sm:text-6xl flex items-center justify-center shadow-md border-4 transition-all cursor-pointer ${
                 isSolved
                   ? 'bg-[#E8F5E9] border-[#66BB6A]'
@@ -230,7 +229,7 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
               }`}
             >
               <ToyArtwork emoji={ans} />
-            </motion.button>
+            </DragPiece>
           );
         })}
       </div>
@@ -246,5 +245,6 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
         )}
       </div>
     </div>
+    </DragMatch>
   );
 };

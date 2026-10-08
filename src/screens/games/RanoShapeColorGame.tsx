@@ -1,3 +1,4 @@
+import { DragMatch, DragPiece, DropSlot, DragHint } from '../../components/DragMatch';
 import { RoundContinuation } from '../../components/RoundContinuation';
 import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
@@ -179,14 +180,14 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
     setOptions(roundOptions);
 
     if (soundEnabled) {
-      speakText(`${friend.name}와 함께 알록달록 ${target.colorName} ${target.shape}를 찾아주세요!`, soundEnabled, { characterId: buddy });
+      speakText(`${friend.name}와 함께 알록달록 ${target.colorName} ${target.shape}를 잡아 같은 모양 위에 올려 주세요!`, soundEnabled, { characterId: buddy });
     }
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
       hintTimerRef.current = scheduleGameTimeout(() => {
         setShowHint(true);
-        speakText(`여기 반짝이는 걸 눌러봐!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
+        speakText(`반짝이는 모양을 같은 그림 위에 옮겨 봐!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
       }, diffConfig.hintDelaySec * 1000);
     }
 
@@ -247,6 +248,12 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
   };
 
   return (
+    <DragMatch resetKey={targetItem.id} disabled={!!selectedCorrectId || timeOut} onDrop={(id) => {
+      const item = options.find(option => option.id === id);
+      if (!item || !!selectedCorrectId || timeOut) return false;
+      handleSelectCard(item);
+      return item.id === targetItem.id;
+    }}>
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#DCEDC8] to-[#E8F5E9] p-3.5 sm:p-4 rounded-3xl border-3 border-[#66BB6A] shadow-sm flex items-center gap-3 sm:gap-4 relative">
@@ -307,18 +314,19 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
       )}
 
       {/* Target Slot */}
-      <div className="my-3 sm:my-4 p-4 sm:p-5 bg-white rounded-3xl border-3 sm:border-4 border-dashed border-[#81C784] shadow-inner flex flex-col items-center justify-center">
-        <span className="text-xs font-bold text-[#8C7B79] mb-1">찾아야 할 모양 친구</span>
+      <DropSlot id="shape" label="같은 모양" filled={!!selectedCorrectId} className="my-3 sm:my-4 p-4 sm:p-5 bg-white rounded-3xl border-3 sm:border-4 border-dashed border-[#81C784] shadow-inner flex flex-col items-center justify-center">
+        <span className="text-xs font-bold text-[#8C7B79] mb-1">같은 모양을 여기로 옮겨요</span>
         <div className="p-3 rounded-2xl bg-amber-50/60 border border-amber-200 shadow-sm flex flex-col items-center">
           <ShapeFigure shape={targetItem.shape} color={targetItem.color} className="w-20 h-20 sm:w-24 sm:h-24 drop-shadow-md" />
           <span className="text-xs sm:text-sm font-black text-[#2E7D32] mt-1">
             {targetItem.colorName} {targetItem.shape}
           </span>
         </div>
-      </div>
+      </DropSlot>
+      <DragHint>같은 모양 위에 쏙!</DragHint>
 
       {/* Options */}
-      <div className="game-choice-grid w-full my-3">
+      <div className="drag-options-grid w-full my-3">
         {options.map((item) => {
           const isShaking = shakingCardId === item.id;
           const isSolved = selectedCorrectId === item.id;
@@ -326,7 +334,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
           const shouldPulse = showHint && isTarget && !selectedCorrectId;
 
           return (
-            <motion.button
+            <DragPiece
               key={item.id}
               animate={
                 isShaking
@@ -338,7 +346,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
                   : { scale: 1 }
               }
               transition={{ duration: isShaking ? 0.5 : shouldPulse ? 1.2 : 0.5 }}
-              onClick={() => handleSelectCard(item)}
+              id={item.id} label={`${item.colorName} ${item.shape}`}
               className={`game-choice p-3 sm:p-4 rounded-2xl sm:rounded-3xl border-3 flex flex-col items-center justify-center cursor-pointer transition-all shadow-sm ${
                 isSolved
                   ? 'bg-emerald-50 border-emerald-400 ring-4 ring-emerald-300'
@@ -351,7 +359,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
               <span className="text-xs sm:text-sm font-black text-[#4A3E3D] text-center">
                 {item.colorName} {item.shape}
               </span>
-            </motion.button>
+            </DragPiece>
           );
         })}
       </div>
@@ -367,5 +375,6 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
         )}
       </div>
     </div>
+    </DragMatch>
   );
 };

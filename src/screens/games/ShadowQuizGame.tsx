@@ -1,3 +1,4 @@
+import { DragMatch, DragPiece, DropSlot, DragHint } from '../../components/DragMatch';
 import { RoundContinuation } from '../../components/RoundContinuation';
 import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
@@ -57,7 +58,7 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
     setOptions(roundOptions);
 
     if (soundEnabled) {
-      speakText(`깜깜한 그림자가 나타났어요! 이 그림자의 주인공은 누구일까요?`, soundEnabled, { characterId: buddy });
+      speakText(`그림을 잡아서 똑같은 그림자 위에 쏙 올려 주세요!`, soundEnabled, { characterId: buddy });
     }
   };
 
@@ -100,6 +101,12 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
   if (!targetItem) return null;
 
   return (
+    <DragMatch resetKey={targetItem.id} disabled={isRevealed} onDrop={(id) => {
+      const item = options.find(option => option.id === id);
+      if (!item || isRevealed) return false;
+      handleSelectOption(item);
+      return item.id === targetItem.id;
+    }}>
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#F3E5F5] to-[#EDE7F6] p-3.5 sm:p-4 rounded-3xl border-3 border-[#BA68C8] shadow-sm flex items-center gap-3 sm:gap-4 relative">
@@ -114,7 +121,7 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
         </div>
         <button
           aria-label="놀이 안내 다시 듣기"
-          onClick={() => speakText(`그림자의 윤곽선을 보고 알맞은 친구를 골라보세요!`, soundEnabled, { characterId: buddy })}
+          onClick={() => speakText(`그림을 잡아서 똑같은 그림자 위에 쏙 올려 주세요!`, soundEnabled, { characterId: buddy })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#BA68C8] shadow-xs text-[#8E24AA] cursor-pointer shrink-0"
         >
           <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -137,7 +144,7 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
       </div>
 
       {/* Shadow Reveal Stage */}
-      <div className="my-6 p-6 sm:p-8 w-full bg-gradient-to-b from-slate-900 to-indigo-950 rounded-3xl border-3 border-purple-400 shadow-xl flex flex-col items-center justify-center min-h-[220px] relative overflow-hidden">
+      <DropSlot id="shadow" label="그림자" filled={isRevealed} className="my-4 p-6 sm:p-8 w-full bg-gradient-to-b from-slate-900 to-indigo-950 rounded-3xl border-3 border-purple-400 shadow-xl flex flex-col items-center justify-center min-h-[220px] relative overflow-hidden">
         <div className="absolute top-3 left-4 text-xs font-black text-purple-300 flex items-center gap-1">
           <Eye className="w-4 h-4" /> 실루엣 탐정
         </div>
@@ -168,21 +175,22 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
             </motion.span>
           )}
         </motion.div>
-      </div>
+      </DropSlot>
+      <DragHint>그림자 위에 쏙!</DragHint>
 
       {/* Options */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 w-full mb-4">
+      <div className="drag-options-grid w-full mb-4">
         {options.map((item) => {
           const isShaking = shakingCardId === item.id;
           const isTargetAndRevealed = isRevealed && item.id === targetItem.id;
 
           return (
-            <motion.button
+            <DragPiece
               key={item.id}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               animate={isShaking ? { x: [-8, 8, -6, 6, 0] } : isTargetAndRevealed ? { scale: [1, 1.15, 1] } : {}}
-              onClick={() => handleSelectOption(item)}
+              id={item.id} label={item.koreanName}
               className={`game-choice p-3 sm:p-4 rounded-2xl sm:rounded-3xl border-3 flex flex-col items-center justify-center cursor-pointer transition-all shadow-sm ${
                 isTargetAndRevealed
                   ? 'bg-emerald-50 border-emerald-400 ring-4 ring-emerald-300'
@@ -191,7 +199,7 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
             >
               <span className="text-4xl sm:text-5xl mb-1"><ToyArtwork emoji={item.emoji} /></span>
               <span className="text-xs sm:text-base font-black text-[#4A3E3D]">{item.koreanName}</span>
-            </motion.button>
+            </DragPiece>
           );
         })}
       </div>
@@ -207,5 +215,6 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
         )}
       </div>
     </div>
+    </DragMatch>
   );
 };

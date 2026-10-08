@@ -2,7 +2,7 @@ import React, { useId } from 'react';
 import { templates, type Template } from '../sketch/art';
 import { templateBounds } from '../sketch/template-bounds';
 
-const aliases: Record<string, string> = { '🧸': 'bear', '🦖': 'dinosaur', '🍏': 'apple', '🚗': 'car' };
+const aliases: Record<string, string> = { '🧸': 'bear', '🦖': 'dinosaur', '🍏': 'apple', '🚗': 'car', '🐟': 'fish' };
 const palette: Record<string, string> = {
   apple: '#ed7169', strawberry: '#ef7884', banana: '#f5cf66', grapes: '#a48acb',
   watermelon: '#f18c8b', orange: '#f4ad60', pear: '#ddd477', peach: '#efa099',

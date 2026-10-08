@@ -1,3 +1,5 @@
+import { DragMatch, DragPiece, DropSlot, DragHint } from '../../components/DragMatch';
+import { placeMatchingValue } from '../../utils/dropTarget';
 import { RoundContinuation } from '../../components/RoundContinuation';
 import { pickNextRound, shuffle } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
@@ -37,7 +39,7 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
 
   const [targetItems, setTargetItems] = useState<SizeItem[]>([]);
   const [questionType, setQuestionType] = useState<'find_largest' | 'find_smallest' | 'sort_ascending'>('find_largest');
-  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
+  const [selectedIndices, setSelectedIndices] = useState<(number | null)[]>([]);
   const [isCompleted, setIsCompleted] = useState(false);
   const [shakingIdx, setShakingIdx] = useState<number | null>(null);
 
@@ -85,7 +87,7 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
     } else if (type === 'find_smallest') {
       audioMsg = `${friend.name}와 크기 놀이! 어떤 것이 가장 작을까요? 작은 친구를 찾아보세요!`;
     } else {
-      audioMsg = `작은 것부터 순서대로 하나씩 톡톡 터치해서 차례대로 나열해볼까요?`;
+      audioMsg = `작은 친구는 작은 자리에, 큰 친구는 큰 자리에 옮겨 놓아 주세요!`;
     }
 
     if (soundEnabled) {
@@ -180,38 +182,31 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
         speakText(`더 자그마한 친구를 골라보아요!`, soundEnabled, { characterId: buddy });
         scheduleGameTimeout(() => setShakingIdx(null), 600);
       }
-    } else {
-      // sort_ascending (작은 것부터 순서대로 탭하는 모드)
-      // 선택하지 않은 것들 중 가장 작은 값이 탭한 인덱스와 맞는지 체크
-      const remainingItems = targetItems.filter((_, idx) => !selectedIndices.includes(idx));
-      let minVal = 999;
-      let minIdx = -1;
-      targetItems.forEach((item, idx) => {
-        if (!selectedIndices.includes(idx) && item.displayScale < minVal) {
-          minVal = item.displayScale;
-          minIdx = idx;
-        }
-      });
-
-      if (index === minIdx) {
-        playBubblePop(soundEnabled);
-        const newSelected = [...selectedIndices, index];
-        setSelectedIndices(newSelected);
-
-        // 모두 정렬되었는지 체크
-        if (newSelected.length === targetItems.length) {
-          setIsCompleted(true);
-          playCorrectFanfare(soundEnabled);
-          speakText(`우와! 작은 것부터 차례대로 완벽하게 정렬했어요! 최고예요!`, soundEnabled, { characterId: buddy });
-          onCompleteQuiz(diffConfig.starsPerCorrect);
-        }
-      } else {
-        setShakingIdx(index);
-        playWrongBoing(soundEnabled);
-        speakText(`더 작은 친구를 먼저 골라보아요!`, soundEnabled, { characterId: buddy });
-        scheduleGameTimeout(() => setShakingIdx(null), 600);
-      }
     }
+  };
+
+  const handleSortDrop = (pieceId: string, slotId: string) => {
+    if (isCompleted || timeOut || questionType !== 'sort_ascending') return false;
+    const index = Number(pieceId);
+    if (!targetItems[index] || selectedIndices.includes(index)) return false;
+    const order = targetItems.map((_, i) => i).sort((a, b) => targetItems[a].displayScale - targetItems[b].displayScale);
+    const next = placeMatchingValue(order, selectedIndices, index, Number(slotId));
+    if (!next) {
+      playWrongBoing(soundEnabled);
+      speakText('크기를 보고 알맞은 자리에 옮겨 볼까?', soundEnabled, { characterId: buddy });
+      return false;
+    }
+    setSelectedIndices(next);
+    playBubblePop(soundEnabled);
+    if (next.every(item => item !== null)) {
+      if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
+      if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+      setIsCompleted(true);
+      playCorrectFanfare(soundEnabled);
+      speakText('우와! 작은 것부터 차례대로 모두 놓았어요!', soundEnabled, { characterId: buddy });
+      onCompleteQuiz(diffConfig.starsPerCorrect);
+    }
+    return true;
   };
 
   const isIndexHinted = (idx: number) => {
@@ -233,7 +228,8 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
   if (targetItems.length === 0) return null;
 
   return (
-    <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
+    <DragMatch resetKey={targetItems.map(item => item.id).join()} disabled={isCompleted || timeOut} onDrop={handleSortDrop}>
+    <div className={`game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto ${questionType === 'sort_ascending' ? 'size-sort-board' : ''}`}>
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#FFCCBC] to-[#FBE9E7] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FF7043] shadow-sm flex items-center gap-3 sm:gap-4">
         <CharacterAvatar id={buddy} size="md" mood={isCompleted ? 'happy' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
@@ -244,7 +240,7 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
             {questionType === 'find_largest' && '어떤 것이 가장 클까요?'}
             {questionType === 'find_smallest' && '어떤 것이 가장 작을까요?'}
-            {questionType === 'sort_ascending' && '작은 것부터 순서대로 눌러주세요!'}
+            {questionType === 'sort_ascending' && '크기에 맞는 자리에 쏙!'}
           </h2>
         </div>
         <button
@@ -254,7 +250,7 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
               ? '어떤 것이 가장 큰가요?'
               : questionType === 'find_smallest'
               ? '어떤 것이 가장 작은가요?'
-              : '작은 것부터 순서대로 눌러보아요!';
+              : '크기에 맞는 자리로 옮겨 놓아 주세요!';
             speakText(msg, soundEnabled, { characterId: buddy });
           }}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#FF7043] shadow-xs text-[#F4511E] cursor-pointer shrink-0"
@@ -288,6 +284,15 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
 
       <div className="visual-prompt" aria-hidden="true">{questionType === 'find_smallest' ? <Minimize2 size={36} /> : questionType === 'find_largest' ? <Maximize2 size={36} /> : <ArrowRight size={36} />}<ToyArtwork emoji={targetItems[0].emoji} /></div>
 
+      {questionType === 'sort_ascending' && <>
+        <div className="size-sort-slots">
+          {[...targetItems].sort((a, b) => a.displayScale - b.displayScale).map((item, index) => <DropSlot key={index} id={String(index)} label={`${index + 1}번째 크기`} filled={selectedIndices[index] != null} className="size-sort-slot">
+            <span className="size-toy" style={{ width: `${item.displayScale * 58}%` }}><ToyArtwork emoji={item.emoji} /></span>
+          </DropSlot>)}
+        </div>
+        <DragHint>크기에 맞춰 쏙!</DragHint>
+      </>}
+
       {/* Playground items comparison area */}
       <div className="size-playground my-6 p-3 sm:p-8 w-full bg-white rounded-3xl border-3 border-[#FFCCBC] shadow-inner grid grid-cols-3 gap-2 min-h-[220px] relative">
         {targetItems.map((item, idx) => {
@@ -295,6 +300,11 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
           const isSelectedInSort = selectedIndices.includes(idx);
           const isCorrectAnswer = isCompleted && ((questionType === 'find_largest' && idx === getLargestIdx()) || (questionType === 'find_smallest' && idx === getSmallestIdx()));
           const hasHint = isIndexHinted(idx);
+
+          if (questionType === 'sort_ascending') return <DragPiece key={idx} id={String(idx)} label={item.name} disabled={isSelectedInSort}
+            className={`matching-tile w-full min-h-[100px] sm:min-h-[160px] ${isSelectedInSort ? 'piece-placed' : ''}`}>
+            <span className="size-toy" style={{ width: `${item.displayScale * 58}%` }}><ToyArtwork emoji={item.emoji} /></span>
+          </DragPiece>;
 
           return (
             <motion.button
@@ -345,5 +355,6 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
         )}
       </div>
     </div>
+    </DragMatch>
   );
 };
