@@ -15,6 +15,8 @@ View your app in AI Studio: https://ai.studio/apps/e9b7985c-a0f7-4008-8953-39da2
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+2. Copy [.env.example](.env.example) to `.env.local` and set `GEMINI_API_KEY` to your Gemini API key. Keep the key on the server; do not use a `VITE_` prefix.
 3. Run the app:
    `npm run dev`
+
+The seven character voices use Gemini TTS through the local `/api/speech` endpoint. For a Vercel deployment, set `GEMINI_API_KEY` in the project's server environment and redeploy. Open the parent dashboard to check the connection and preview each voice. Without a configured key, the app uses the device's built-in Korean speech voice.

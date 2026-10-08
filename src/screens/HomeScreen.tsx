@@ -4,6 +4,7 @@ import { CHARACTER_LIST, CHARACTERS } from '../data/characters';
 import { CharacterAvatar } from '../components/CharacterAvatar';
 import { getAgeGroupLabel } from '../utils/ageEngine';
 import { speakText } from '../utils/soundEngine';
+import { isGeminiVoiceAvailable } from '../services/geminiTTS';
 import type { ChildProfile, CharacterId, GameId } from '../types';
 
 interface HomeScreenProps {
@@ -59,6 +60,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
     if (!soundEnabled) setSpeechMessage('');
   }, [soundEnabled]);
 
+  useEffect(() => {
+    void isGeminiVoiceAvailable();
+  }, []);
+
   const games: Array<{ id: GameId; description: string }> = [
     { id: buddy.gameId, description: buddy.gameDesc },
   ];
@@ -81,7 +86,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
       soundEnabled,
       {
         characterId: selectedCharacter,
-        onStart: () => setSpeechMessage('친구가 말하고 있어요.'),
+        onStart: provider => setSpeechMessage(provider === 'ai' ? '친구의 AI 목소리가 들려요.' : '기기 기본 목소리로 말하고 있어요.'),
         onEnd: () => setSpeechMessage(''),
         onError: () => setSpeechMessage('브라우저 음성과 기기 소리 설정을 확인해 주세요.'),
       },

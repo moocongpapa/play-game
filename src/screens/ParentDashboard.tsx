@@ -1,18 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AppState, ChildProfile } from '../types';
 import { JellyButton } from '../components/JellyButton';
 import { Shield, Clock, Volume2, Music, Sparkles, Home, RotateCcw, Mic, Calendar, User, CheckCircle2 } from 'lucide-react';
-import { speakText, setVoiceToneMode } from '../utils/soundEngine';
+import { speakText } from '../utils/soundEngine';
 import { calculateAgeMonths, determineAgeGroup, getAgeGroupLabel, getAgeGroupEmoji, getAgeGroupDescription } from '../utils/ageEngine';
-import { getGeminiApiKey, setGeminiApiKey, isGeminiTTSEnabled, setGeminiTTSEnabled } from '../services/geminiTTS';
-import {
-  getElevenLabsApiKey,
-  setElevenLabsApiKey,
-  getElevenLabsVoiceId,
-  setElevenLabsVoiceId,
-  isElevenLabsTTSEnabled,
-  setElevenLabsTTSEnabled,
-} from '../services/elevenlabsTTS';
+import { isGeminiTTSEnabled, isGeminiVoiceAvailable, setGeminiTTSEnabled } from '../services/geminiTTS';
+import { CHARACTER_VOICES, type CharacterVoiceId } from '../data/characterVoices';
 
 interface ParentDashboardProps {
   appState: AppState;
@@ -39,23 +32,21 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   onGoHome,
   onUpdateProfile,
 }) => {
-  const [activeTone, setActiveTone] = useState<'cheerful' | 'gentle' | 'energetic'>('cheerful');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   
   // 편집용 프로필 상태
   const [editName, setEditName] = useState(appState.childProfile?.name || '유하');
   const [editBirthDate, setEditBirthDate] = useState(appState.childProfile?.birthDate || '2023-01-03');
 
-  // Gemini TTS 상태
   const [geminiEnabled, setGeminiEnabled] = useState(isGeminiTTSEnabled());
-  const [geminiKeyInput, setGeminiKeyInput] = useState(getGeminiApiKey());
-  const [isKeySaved, setIsKeySaved] = useState(false);
+  const [aiAvailable, setAiAvailable] = useState<boolean | null>(null);
+  const [previewStatus, setPreviewStatus] = useState('');
 
-  // ElevenLabs TTS 상태
-  const [elevenLabsEnabled, setElevenLabsEnabled] = useState(isElevenLabsTTSEnabled());
-  const [elevenLabsKeyInput, setElevenLabsKeyInput] = useState(getElevenLabsApiKey());
-  const [elevenLabsVoiceIdInput, setElevenLabsVoiceIdInput] = useState(getElevenLabsVoiceId());
-  const [isElevenLabsKeySaved, setIsElevenLabsKeySaved] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    void isGeminiVoiceAvailable().then(ready => { if (mounted) setAiAvailable(ready); });
+    return () => { mounted = false; };
+  }, []);
 
   const formatSeconds = (sec: number) => {
     const m = Math.floor(sec / 60);
@@ -63,37 +54,19 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
     return `${m}분 ${s}초`;
   };
 
-  const handleSelectTone = (tone: 'cheerful' | 'gentle' | 'energetic') => {
-    setActiveTone(tone);
-    setVoiceToneMode(tone);
-  };
-
-  const handleTestVoice = () => {
-    speakText(`안녕~! 나는 꼬미야! 사람처럼 다정하고 신나게 말하니까 정말 재밌지?`, appState.soundEnabled, {
-      characterId: 'ggomi',
-      playIntroSFX: true,
-    });
-  };
-
-  const handleTestVoiceCharacter = (characterId: string) => {
+  const handleTestVoiceCharacter = (characterId: CharacterVoiceId) => {
     const childName = appState.childProfile?.name || '유하';
-    let sampleMsg = '';
-    switch (characterId) {
-      case 'ggomi':
-        sampleMsg = `안녕 ${childName}야! 나는 꼬미야~ 오늘 나랑 재미있는 사물 퀴즈 놀이 해볼래?`;
-        break;
-      case 'rano':
-        sampleMsg = `크앙! ${childName} 안녕! 나는 힘센 라노야! 알록달록 모양 친구들을 같이 찾아보자!`;
-        break;
-      case 'jelly':
-        sampleMsg = `깡총깡총! ${childName} 안녕? 나는 젤리야! 방울방울 한글 놀이하러 가자!`;
-        break;
-      default:
-        sampleMsg = `안녕 ${childName}야! 반가워!`;
+    const character = CHARACTER_VOICES[characterId];
+    if (!appState.soundEnabled) {
+      setPreviewStatus('먼저 효과음·음성을 켜 주세요.');
+      return;
     }
-    speakText(sampleMsg, appState.soundEnabled, {
+    setPreviewStatus(`${character.name} 목소리를 준비하고 있어요.`);
+    speakText(`${childName}야, 안녕! 나는 ${character.name}야. 우리 같이 신나게 놀자!`, appState.soundEnabled, {
       characterId,
-      playIntroSFX: true,
+      onStart: provider => setPreviewStatus(provider === 'ai' ? `${character.name}의 AI 목소리가 재생 중이에요.` : 'AI 음성을 사용할 수 없어 기기 기본 목소리로 재생 중이에요.'),
+      onEnd: () => setPreviewStatus('미리 듣기가 끝났어요.'),
+      onError: () => setPreviewStatus('음성을 재생하지 못했어요. 기기 소리를 확인해 주세요.'),
     });
   };
 
@@ -241,144 +214,53 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
         </div>
       </div>
 
-      {/* Gemini 2.0 AI Human-like Voice Settings */}
-      <div className="w-full bg-white p-4 sm:p-5 rounded-3xl border-2 sm:border-3 border-purple-300 shadow-sm mb-3">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-base sm:text-lg font-black text-[#4A3E3D] flex items-center gap-2">
-            <Mic className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" /> ✨ Gemini AI 사람 목소리
+      {/* Character AI voice settings */}
+      <section className="w-full bg-white p-4 sm:p-5 rounded-3xl border-2 border-purple-200 shadow-sm mb-3 text-left" aria-labelledby="character-voice-title">
+        <div className="flex items-center justify-between gap-3 mb-2">
+          <h2 id="character-voice-title" className="text-base sm:text-lg font-black text-[#4A3E3D] flex items-center gap-2">
+            <Mic className="w-5 h-5 text-purple-600" /> 캐릭터 AI 목소리
           </h2>
           <button
+            type="button"
             onClick={() => {
               const next = !geminiEnabled;
               setGeminiEnabled(next);
               setGeminiTTSEnabled(next);
             }}
-            className={`px-3 py-1 rounded-full font-black text-xs border cursor-pointer transition-all ${
-              geminiEnabled
-                ? 'bg-purple-600 text-white border-purple-700 shadow-xs'
-                : 'bg-gray-100 text-gray-500 border-gray-300'
-            }`}
+            aria-pressed={geminiEnabled}
+            className={`px-3 py-1.5 rounded-full font-bold text-xs border cursor-pointer ${geminiEnabled ? 'bg-purple-600 text-white border-purple-700' : 'bg-gray-100 text-gray-600 border-gray-300'}`}
           >
-            {geminiEnabled ? 'AI 음성 켜짐' : '기본 음성'}
+            {geminiEnabled ? 'AI 음성 켜짐' : 'AI 음성 꺼짐'}
           </button>
         </div>
-
-        <p className="text-[11px] sm:text-xs font-bold text-[#8C7B79] mb-3 text-left">
-          기계음 대신 Google Gemini 2.0 오디오로 진짜 사람 성우처럼 다정하게 읽어줍니다.
+        <p className="text-xs sm:text-sm text-[#625d67] mb-3">
+          일곱 친구가 서로 다른 목소리와 말투로 유하에게 이야기해요.
         </p>
-
-        {/* Gemini API Key Input */}
-        <div className="p-3 bg-purple-50/60 rounded-2xl border border-purple-200 mb-3 text-left">
-          <label className="text-[11px] sm:text-xs font-black text-purple-900 mb-1 block">
-            Google Gemini API Key
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="password"
-              placeholder="AIzaSy... (API 키를 입력하세요)"
-              value={geminiKeyInput}
-              onChange={(e) => setGeminiKeyInput(e.target.value)}
-              className="flex-1 px-3 py-2 text-xs rounded-xl border border-purple-300 bg-white focus:outline-purple-500 font-mono text-[#4A3E3D]"
-            />
-            <button
-              onClick={() => {
-                setGeminiApiKey(geminiKeyInput.trim());
-                setIsKeySaved(true);
-                setTimeout(() => setIsKeySaved(false), 2000);
-              }}
-              className="px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white font-black text-xs rounded-xl cursor-pointer shrink-0"
-            >
-              {isKeySaved ? '저장됨 ✓' : '저장'}
-            </button>
-          </div>
-          <span className="text-[10px] text-purple-700 mt-1 block">
-            * API 키가 없으면 브라우저 음성 기능으로 바로 읽어줍니다. 음성이 들리지 않으면 상단의 소리와 음성 버튼과 기기 음량을 확인해 주세요.
-          </span>
+        <div className={`rounded-2xl px-3 py-2.5 text-xs font-bold mb-3 ${aiAvailable ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-amber-50 text-amber-900 border border-amber-200'}`} role="status">
+          {aiAvailable === null ? 'AI 음성 연결을 확인하고 있어요.' : aiAvailable ? 'AI 음성 키가 연결됐어요. 아래에서 목소리를 확인해 보세요.' : 'AI 음성이 아직 설정되지 않았어요. 지금은 기기 기본 목소리가 재생돼요.'}
         </div>
-
-        {/* ElevenLabs API Key & Voice ID Input */}
-        <div className="p-3 bg-pink-50/60 rounded-2xl border border-pink-200 mb-3 text-left">
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="text-[11px] sm:text-xs font-black text-pink-900 block">
-              ElevenLabs Voice AI (선택)
-            </label>
+        {!aiAvailable && (
+          <p className="text-[11px] sm:text-xs text-[#625d67] mb-4 break-keep">
+            설정 방법: 로컬은 <code className="font-mono">.env.local</code>, 배포 서버는 환경 변수에 <code className="font-mono">GEMINI_API_KEY</code>를 넣고 다시 실행해 주세요. API 키는 이 화면에 입력하지 않습니다.
+          </p>
+        )}
+        <h3 className="text-xs font-black text-[#4A3E3D] mb-2">캐릭터 목소리 미리 듣기</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {(Object.entries(CHARACTER_VOICES) as [CharacterVoiceId, typeof CHARACTER_VOICES[CharacterVoiceId]][]).map(([id, character]) => (
             <button
-              onClick={() => {
-                const next = !elevenLabsEnabled;
-                setElevenLabsEnabled(next);
-                setElevenLabsTTSEnabled(next);
-              }}
-              className={`px-2.5 py-0.5 rounded-full font-black text-[10px] border cursor-pointer transition-all ${
-                elevenLabsEnabled
-                  ? 'bg-pink-600 text-white border-pink-700 shadow-2xs'
-                  : 'bg-gray-100 text-gray-500 border-gray-300'
-              }`}
+              key={id}
+              type="button"
+              onClick={() => handleTestVoiceCharacter(id)}
+              className="min-h-16 rounded-2xl border border-purple-200 bg-purple-50 px-3 py-2 text-left hover:bg-purple-100 focus-visible:outline-2 focus-visible:outline-purple-600 cursor-pointer"
+              aria-label={`${character.name} 목소리 미리 듣기`}
             >
-              {elevenLabsEnabled ? 'ElevenLabs 켜짐' : '꺼짐'}
+              <span className="block font-black text-sm text-[#4A3E3D]">{character.emoji} {character.name}</span>
+              <span className="block text-[11px] text-purple-700">{character.tone}</span>
             </button>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <input
-              type="password"
-              placeholder="ElevenLabs API Key"
-              value={elevenLabsKeyInput}
-              onChange={(e) => setElevenLabsKeyInput(e.target.value)}
-              className="flex-1 px-3 py-1.5 text-xs rounded-xl border border-pink-300 bg-white font-mono text-[#4A3E3D]"
-            />
-            <input
-              type="text"
-              placeholder="Voice ID (기본: Rachel/유치원)"
-              value={elevenLabsVoiceIdInput}
-              onChange={(e) => setElevenLabsVoiceIdInput(e.target.value)}
-              className="sm:w-44 px-3 py-1.5 text-xs rounded-xl border border-pink-300 bg-white font-mono text-[#4A3E3D]"
-            />
-            <button
-              onClick={() => {
-                setElevenLabsApiKey(elevenLabsKeyInput.trim());
-                setElevenLabsVoiceId(elevenLabsVoiceIdInput.trim());
-                setIsElevenLabsKeySaved(true);
-                setTimeout(() => setIsElevenLabsKeySaved(false), 2000);
-              }}
-              className="px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white font-black text-xs rounded-xl cursor-pointer shrink-0"
-            >
-              {isElevenLabsKeySaved ? '저장됨 ✓' : '저장'}
-            </button>
-          </div>
-          <span className="text-[10px] text-pink-700 mt-1 block">
-            * 초고음질 유치원 선생님 캐릭터 음성을 ElevenLabs로 직접 송출할 수 있습니다.
-          </span>
+          ))}
         </div>
-
-        {/* Character Voice Test Buttons */}
-        <div className="space-y-1.5">
-          <span className="text-[11px] font-black text-[#4A3E3D] block text-left">
-            🎭 캐릭터별 AI 목소리 미리 들어보기
-          </span>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              onClick={() => handleTestVoiceCharacter('ggomi')}
-              className="py-2 px-1 bg-pink-50 hover:bg-pink-100 text-pink-700 font-black text-[11px] sm:text-xs rounded-xl border border-pink-200 cursor-pointer flex flex-col items-center gap-0.5"
-            >
-              <span>🎀 꼬미 (곰)</span>
-              <span className="text-[9px] font-normal text-pink-500">따뜻한 톤</span>
-            </button>
-            <button
-              onClick={() => handleTestVoiceCharacter('rano')}
-              className="py-2 px-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-black text-[11px] sm:text-xs rounded-xl border border-emerald-200 cursor-pointer flex flex-col items-center gap-0.5"
-            >
-              <span>🦖 라노 (공룡)</span>
-              <span className="text-[9px] font-normal text-emerald-500">씩씩한 톤</span>
-            </button>
-            <button
-              onClick={() => handleTestVoiceCharacter('jelly')}
-              className="py-2 px-1 bg-purple-50 hover:bg-purple-100 text-purple-700 font-black text-[11px] sm:text-xs rounded-xl border border-purple-200 cursor-pointer flex flex-col items-center gap-0.5"
-            >
-              <span>🐰 젤리 (토끼)</span>
-              <span className="text-[9px] font-normal text-purple-500">발랄한 톤</span>
-            </button>
-          </div>
-        </div>
-      </div>
+        {previewStatus && <p className="mt-3 text-xs font-bold text-purple-800" role="status">{previewStatus}</p>}
+      </section>
 
       {/* Timer Restriction Settings */}
       <div className="w-full bg-white p-4 sm:p-5 rounded-3xl border-2 sm:border-3 border-amber-200 shadow-sm mb-3">

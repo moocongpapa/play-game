@@ -1,8 +1,7 @@
 // Web Audio API & Multi-Engine Speech Synthesis for Toddlers (Ages 3~4)
 // High-fidelity sound effects, nursery rhyme procedural BGM, and warm kindergarten teacher voices.
 
-import { playGeminiSpeech, stopGeminiAudio, isGeminiTTSEnabled, getGeminiApiKey } from '../services/geminiTTS';
-import { playElevenLabsSpeech, stopElevenLabsAudio, isElevenLabsTTSEnabled, getElevenLabsApiKey } from '../services/elevenlabsTTS';
+import { playGeminiSpeech, stopGeminiAudio, isGeminiTTSEnabled, getCachedGeminiVoiceAvailability } from '../services/geminiTTS';
 
 let audioCtx: AudioContext | null = null;
 let bgmOscillatorInterval: number | null = null;
@@ -594,7 +593,7 @@ export interface SpeakOptions {
   pitch?: number;
   rate?: number;
   playIntroSFX?: boolean;
-  onStart?: () => void;
+  onStart?: (provider: 'ai' | 'browser') => void;
   onEnd?: () => void;
   onError?: () => void;
 }
@@ -647,7 +646,7 @@ function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions
     utterance.onstart = () => {
       if (activeBrowserUtterance !== utterance) return;
       clearBrowserSpeechStartTimer();
-      options.onStart?.();
+      options.onStart?.('browser');
     };
     utterance.onend = () => {
       if (activeBrowserUtterance !== utterance) return;
@@ -681,9 +680,7 @@ function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions
 
 /**
  * Master voice speaker:
- * 1. ElevenLabs API (if configured in Settings/env)
- * 2. Gemini Audio (if configured in Settings/env)
- * 3. Browser speech synthesis, started directly when no API key is configured
+ * Gemini character audio when configured, with browser speech as the fallback.
  */
 export function speakText(text: string, enabled = true, options: SpeakOptions = {}) {
   if (!enabled) return;
@@ -694,33 +691,13 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
   const clean = text.trim();
   if (!clean) return;
 
-  // 1. Try ElevenLabs if configured
-  if (isElevenLabsTTSEnabled() && getElevenLabsApiKey()) {
-    playElevenLabsSpeech(clean, {
-      onStart: options.onStart,
-      onEnd: options.onEnd,
-    }).then((ok) => {
-      if (!ok && requestId === speechRequestId) {
-        fallbackToGeminiOrBrowser(clean, enabled, options, requestId);
-      }
-    }).catch(() => {
-      if (requestId === speechRequestId) fallbackToGeminiOrBrowser(clean, enabled, options, requestId);
-    });
-    return;
-  }
-
-  fallbackToGeminiOrBrowser(clean, enabled, options, requestId);
-}
-
-function fallbackToGeminiOrBrowser(clean: string, enabled: boolean, options: SpeakOptions, requestId: number) {
-  // Try Gemini Audio only when the parent configured it.
-  if (isGeminiTTSEnabled() && getGeminiApiKey()) {
+  if (isGeminiTTSEnabled() && getCachedGeminiVoiceAvailability() !== false) {
     try {
       const ctx = getAudioContext();
       playGeminiSpeech(clean, {
         characterId: options.characterId,
         audioCtx: ctx,
-        onStart: options.onStart,
+        onStart: () => options.onStart?.('ai'),
         onEnd: options.onEnd,
       }).then((ok) => {
         if (!ok && requestId === speechRequestId) speakWithBrowserTTS(clean, enabled, options);
@@ -744,7 +721,6 @@ export function stopAllSpeech() {
   speechRequestId += 1;
   if (typeof window !== 'undefined') clearBrowserSpeechStartTimer();
   activeBrowserUtterance = null;
-  stopElevenLabsAudio();
   stopGeminiAudio();
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
     try {
