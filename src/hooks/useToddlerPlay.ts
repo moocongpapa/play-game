@@ -24,9 +24,11 @@ export function useToddlerPlay(props: ToddlerGameProps, guide: string) {
     if (finished.current) return;
     finished.current = true;
     setCompleted(true);
-    playCorrectFanfare(props.soundEnabled);
-    fireStarExplosion();
-    speakText(praise, props.soundEnabled, { characterId: props.buddy });
+    if (!document.hidden) {
+      playCorrectFanfare(props.soundEnabled);
+      fireStarExplosion();
+      speakText(praise, props.soundEnabled, { characterId: props.buddy });
+    }
     props.onCompleteQuiz(1);
   };
   const next = () => {

@@ -27,18 +27,19 @@ export function PlayProgress({ total, done, label }: { total: number; done: numb
 }
 
 const faceColors: Record<CharacterId, [string, string]> = {
-  ggomi: ['#e7b99c', '#c18c72'], rano: ['#91c593', '#609b70'], jelly: ['#f2e7f5', '#c8abd4'],
+  ggomi: ['#e7b99c', '#c18c72'], rano: ['#91c593', '#609b70'], jelly: ['#fffafa', '#d0b8df'],
   dochi: ['#f6c894', '#b98457'], ggulgguli: ['#f6bfc9', '#cb8c9b'], eumme: ['#fff8e8', '#cfbea6'],
   nurungji: ['#edc084', '#bd9466'], pingu: ['#798ba1', '#566e88'],
 };
 
 /** Close-up play portrait uses each existing friend's ears, fur, accessories and colors. */
-export function CareFriend({ buddy, mouth = 'open', children, className = '', smilingEyes = false }: {
-  buddy: CharacterId; mouth?: 'open' | 'chew' | 'smile'; children?: ReactNode; className?: string; smilingEyes?: boolean;
+export function CareFriend({ buddy, mouth = 'open', children, className = '', smilingEyes = false, gaze, blush = '#ebaaa9' }: {
+  buddy: CharacterId; mouth?: 'open' | 'chew' | 'smile' | 'rest'; children?: ReactNode; className?: string; smilingEyes?: boolean;
+  gaze?: { x: number; y: number }; blush?: string;
 }) {
   const [fur, edge] = faceColors[buddy];
   const happy = mouth === 'smile' || smilingEyes;
-  return <svg viewBox="0 0 300 258" className={`care-friend ${className}`} role="img" aria-label={`${CHARACTERS[buddy].name}${happy ? '의 활짝 웃는 얼굴' : mouth === 'chew' ? '의 냠냠 먹는 얼굴' : '의 아 벌린 입'}`}>
+  return <svg viewBox="0 0 300 258" className={`care-friend ${className}`} role="img" aria-label={`${CHARACTERS[buddy].name}${happy ? '의 활짝 웃는 얼굴' : mouth === 'chew' ? '의 냠냠 먹는 얼굴' : mouth === 'rest' ? '의 배고픈 얼굴' : '의 아 벌린 입'}`}>
     <ellipse cx="150" cy="247" rx="95" ry="8" fill="#a7978020" />
     <path d="M61 232 Q80 213 104 212 H197 Q227 214 240 232 L225 248 H75Z" fill={buddy === 'jelly' ? '#bfaddb' : buddy === 'rano' ? '#f1d995' : '#e4adba'} />
     <g stroke={edge} strokeWidth="3" strokeLinejoin="round">
@@ -51,12 +52,13 @@ export function CareFriend({ buddy, mouth = 'open', children, className = '', sm
       <ellipse cx="150" cy="143" rx="105" ry="94" fill={fur} />
       {buddy === 'eumme' && <path d="M60 111 Q37 81 66 73 Q58 44 91 49 Q102 21 130 42 Q153 18 176 42 Q208 23 217 54 Q250 45 242 79 Q269 98 239 117 Q224 85 204 89 Q173 72 151 89 Q121 73 100 89 Q75 85 60 111" fill="#fffdf5" />}
       {buddy === 'pingu' && <path d="M70 143 Q65 70 118 76 Q144 75 150 102 Q163 74 184 77 Q234 73 231 143 V179 Q224 222 150 226 Q77 222 69 181Z" fill="#fff8eb" stroke="none" />}
+      {buddy === 'jelly' && <g transform="translate(213 71)" fill="#e8acc5" stroke="none"><circle cx="-7" cy="0" r="7" /><circle cx="7" cy="0" r="7" /><circle cx="0" cy="-7" r="7" /><circle cx="0" cy="7" r="7" /><circle r="4" fill="#fff7d7" /></g>}
       {buddy === 'ggomi' && <g fill="#d981a4"><path d="M201 63 Q173 33 176 65 Q179 84 201 72 Q224 91 230 67 Q231 42 201 63" /><circle cx="202" cy="67" r="7" /></g>}
     </g>
     <g fill="#56483f">
-      {happy ? <g stroke="#56483f" strokeWidth="5" fill="none" strokeLinecap="round"><path d="M95 117 Q108 102 121 117 M179 117 Q192 102 205 117" /></g> : <><ellipse cx="109" cy="109" rx="7" ry="10" /><ellipse cx="191" cy="109" rx="7" ry="10" /><circle cx="112" cy="106" r="2.5" fill="white" /><circle cx="194" cy="106" r="2.5" fill="white" /></>}
-      <motion.ellipse cx="73" cy="140" rx="15" ry="9" fill="#ebaaa9" opacity=".7" animate={{ scale: mouth === 'chew' ? [1, 1.3, 1] : 1 }} transition={{ duration: .4, repeat: mouth === 'chew' ? 2 : 0 }} />
-      <motion.ellipse cx="227" cy="140" rx="15" ry="9" fill="#ebaaa9" opacity=".7" animate={{ scale: mouth === 'chew' ? [1, 1.3, 1] : 1 }} transition={{ duration: .4, repeat: mouth === 'chew' ? 2 : 0 }} />
+      <g transform={`translate(${gaze?.x || 0} ${gaze?.y || 0})`} className="care-eyes">{happy ? <g stroke="#56483f" strokeWidth="5" fill="none" strokeLinecap="round"><path d="M95 117 Q108 102 121 117 M179 117 Q192 102 205 117" /></g> : <><ellipse cx="109" cy="109" rx="7" ry="10" /><ellipse cx="191" cy="109" rx="7" ry="10" /><circle cx="112" cy="106" r="2.5" fill="white" /><circle cx="194" cy="106" r="2.5" fill="white" /></>}</g>
+      <motion.ellipse cx="73" cy="140" rx="15" ry="9" fill={blush} opacity=".7" animate={{ scale: mouth === 'chew' ? [1, 1.3, 1] : 1 }} transition={{ duration: .4, repeat: mouth === 'chew' ? 2 : 0 }} />
+      <motion.ellipse cx="227" cy="140" rx="15" ry="9" fill={blush} opacity=".7" animate={{ scale: mouth === 'chew' ? [1, 1.3, 1] : 1 }} transition={{ duration: .4, repeat: mouth === 'chew' ? 2 : 0 }} />
       {buddy === 'ggulgguli' ? <><ellipse cx="150" cy="122" rx="22" ry="12" fill="#de97a5" /><circle cx="142" cy="122" r="3" /><circle cx="158" cy="122" r="3" /></> : buddy === 'pingu' ? <path d="M137 121 Q150 113 163 121 L150 135Z" fill="#edb75c" /> : buddy === 'rano' ? <><circle cx="142" cy="123" r="2.8" /><circle cx="158" cy="123" r="2.8" /></> : <ellipse cx="150" cy="123" rx="7" ry="4.5" />}
     </g>
     {mouth === 'open' ? <><rect x="72" y="130" width="156" height="79" rx="29" fill="#844e59" stroke="#bc8085" strokeWidth="4" /><ellipse cx="150" cy="196" rx="38" ry="11" fill="#d9909d" /></> :

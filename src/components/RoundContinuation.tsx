@@ -1,6 +1,7 @@
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useContext, useEffect, useLayoutEffect, useRef } from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { createRoundContinuation } from '../utils/roundContinuation';
+import { DayContinuationContext } from './PlayFlowContext';
 
 interface RoundContinuationProps {
   onNext: () => void;
@@ -10,6 +11,7 @@ interface RoundContinuationProps {
 
 /** Mount only after a round ends. Leaving the game cancels its next round. */
 export function RoundContinuation({ onNext, delayMs = 3000, label = '곧 다음 놀이가 나와요!' }: RoundContinuationProps) {
+  const day = useContext(DayContinuationContext);
   const nextRef = useRef(onNext);
   const transitionRef = useRef<ReturnType<typeof createRoundContinuation> | null>(null);
 
@@ -17,6 +19,7 @@ export function RoundContinuation({ onNext, delayMs = 3000, label = '곧 다음 
   useLayoutEffect(() => { nextRef.current = onNext; }, [onNext]);
 
   useEffect(() => {
+    if (day) return;
     const transition = createRoundContinuation(() => nextRef.current(), delayMs, window);
     transitionRef.current = transition;
     const syncVisibility = () => {
@@ -30,7 +33,9 @@ export function RoundContinuation({ onNext, delayMs = 3000, label = '곧 다음 
       transition.dispose();
       transitionRef.current = null;
     };
-  }, [delayMs]);
+  }, [delayMs, !!day]);
+
+  if (day) return <div className="day-next"><p>{day.label}</p><button type="button" onClick={day.onNext} aria-label={day.label}>{day.picture}<span><ArrowRight /> 같이 가자!</span></button></div>;
 
   return <div className="round-continuation" role="status">
     <div className="round-continuation-message"><Sparkles aria-hidden="true" size={22} /><span>{label}</span></div>

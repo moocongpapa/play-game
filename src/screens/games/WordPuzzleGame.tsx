@@ -132,8 +132,10 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
     return true;
   };
 
+  const hintSlot = targetItem.letters.findIndex((_, i) => !placedLetters[i]);
+  const hintPiece = lettersPool.find(piece => piece.letter === targetItem.letters[hintSlot]);
   return (
-    <DragMatch resetKey={targetItem.word} disabled={isCompleted || timeOut} onDrop={handleDropLetter}>
+    <DragMatch hint={hintPiece ? { pieceId: hintPiece.id, targetId: String(hintSlot) } : undefined} resetKey={targetItem.word} disabled={isCompleted || timeOut} onDrop={handleDropLetter}>
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#E1BEE7] to-[#F3E5F5] p-3.5 sm:p-4 rounded-3xl border-3 border-[#AB47BC] shadow-sm flex items-center gap-3 sm:gap-4">

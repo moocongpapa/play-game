@@ -3,7 +3,7 @@ import { Home, Music2, Shield, Sparkles, Volume2, VolumeX } from 'lucide-react';
 import { CHARACTERS } from '../data/characters';
 import type { CharacterId } from '../types';
 
-type Screen = 'home' | 'game' | 'stickers' | 'talk' | 'parent' | 'drawing';
+type Screen = 'home' | 'game' | 'day' | 'stickers' | 'talk' | 'parent' | 'drawing';
 
 interface HeaderProps {
   stars: number;
@@ -32,7 +32,7 @@ export const Header: React.FC<HeaderProps> = ({
   currentScreen,
   childName,
 }) => {
-  const pageLabel = currentScreen === 'game'
+  const pageLabel = (currentScreen === 'game' || currentScreen === 'day')
     ? `${CHARACTERS[selectedCharacter]?.name || '친구'}와 놀기`
     : currentScreen === 'drawing'
       ? '색칠하기'

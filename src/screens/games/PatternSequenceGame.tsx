@@ -128,7 +128,7 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
   if (!targetItem) return null;
 
   return (
-    <DragMatch resetKey={targetItem.id} disabled={!!selectedCorrectId || timeOut} onDrop={id => {
+    <DragMatch hint={{ pieceId: targetItem.answer, targetId: 'pattern' }} resetKey={targetItem.id} disabled={!!selectedCorrectId || timeOut} onDrop={id => {
       if (selectedCorrectId || timeOut || !options.includes(id)) return false;
       handleSelectCard(id);
       return id === targetItem.answer;

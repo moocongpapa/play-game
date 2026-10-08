@@ -5,6 +5,7 @@ import { CharacterAvatar } from '../components/CharacterAvatar';
 import { BuddyVideo } from '../components/BuddyVideo';
 import { GameArtwork } from '../components/GameArtwork';
 import { ToyArtwork } from '../components/ToyArtwork';
+import { FRIEND_DAY } from '../data/friendDay';
 import { availableGameIds, GAME_CATALOG } from '../data/gameCatalog';
 import { playJellyTap, speakText, stopAllSpeech } from '../utils/soundEngine';
 import type { ChildProfile, CharacterId, GameId } from '../types';
@@ -14,6 +15,7 @@ interface HomeScreenProps {
   selectedCharacter: CharacterId;
   onSelectCharacter: (id: CharacterId) => void;
   onStartGame: (gameId: GameId, characterId: CharacterId) => void;
+  onStartDay: () => void;
   onOpenDrawing: () => void;
   onOpenStickerRoom: () => void;
   onOpenCharacterTalk: () => void;
@@ -23,7 +25,7 @@ interface HomeScreenProps {
   onChangeStep: (step: HomeStep) => void;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSelectCharacter, onStartGame, onOpenDrawing, onOpenStickerRoom, onOpenCharacterTalk, soundEnabled, childProfile, step, onChangeStep }) => {
+export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSelectCharacter, onStartGame, onStartDay, onOpenDrawing, onOpenStickerRoom, onOpenCharacterTalk, soundEnabled, childProfile, step, onChangeStep }) => {
   const buddy = CHARACTERS[selectedCharacter] || CHARACTERS.ggomi;
   const childName = childProfile?.name || '유하';
   const age = childProfile?.ageGroup || 'sprout';
@@ -68,6 +70,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
       </button>)}</div>
     </section> : <section aria-label="게임 선택" className="games-section">
       <div className="section-heading"><button className="change-friend" onClick={() => { stopAllSpeech(); onChangeStep('friends'); setHasNavigated(true); speakText('다른 친구랑도 놀아볼까?', soundEnabled); }}><ArrowLeft size={20} /><CharacterAvatar id={selectedCharacter} size="sm" /><span>친구 바꾸기</span></button></div>
+      <button className="friend-day-card" onClick={() => { stopAllSpeech(); playJellyTap(soundEnabled); onStartDay(); }} aria-label={`${buddy.name}의 하루 함께 놀기`}>
+        <CharacterAvatar id={selectedCharacter} size="md" mood="waving" /><div className="friend-day-copy"><strong>{buddy.name}의 하루</strong><span>우리 같이 하루를 보내볼까?</span><span className="day-mini-pictures" aria-hidden="true">{FRIEND_DAY.map(item => <GameArtwork key={item.gameId} gameId={item.gameId} buddy={selectedCharacter} />)}</span></div><ArrowRight />
+      </button>
       <div className="game-card-grid" key={selectedCharacter}>{games.map(id => <button key={id} className={`picture-game-card theme-${GAME_CATALOG[id].theme}`} onClick={() => { stopAllSpeech(); playJellyTap(soundEnabled); onStartGame(id, selectedCharacter); }} aria-label={`${GAME_CATALOG[id].title} 시작`}>
         <GameArtwork gameId={id} buddy={selectedCharacter} />
         <span className="game-card-caption"><span>{GAME_CATALOG[id].title}</span><span className="play-medallion"><Play fill="currentColor" size={20} /></span></span>

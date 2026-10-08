@@ -227,8 +227,10 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
 
   if (targetItems.length === 0) return null;
 
+  const hintOrder = targetItems.map((_, i) => i).sort((a, b) => targetItems[a].displayScale - targetItems[b].displayScale);
+  const hintSlot = hintOrder.findIndex((_, i) => selectedIndices[i] == null);
   return (
-    <DragMatch resetKey={targetItems.map(item => item.id).join()} disabled={isCompleted || timeOut} onDrop={handleSortDrop}>
+    <DragMatch hint={questionType === 'sort_ascending' && hintSlot >= 0 ? { pieceId: String(hintOrder[hintSlot]), targetId: String(hintSlot) } : undefined} resetKey={targetItems.map(item => item.id).join()} disabled={isCompleted || timeOut} onDrop={handleSortDrop}>
     <div className={`game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto ${questionType === 'sort_ascending' ? 'size-sort-board' : ''}`}>
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#FFCCBC] to-[#FBE9E7] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FF7043] shadow-sm flex items-center gap-3 sm:gap-4">

@@ -168,10 +168,13 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
             <path d="M 50 57.5 L 50 62 M 46 62 Q 50 65 54 62" stroke="#5D4037" strokeWidth="2" strokeLinecap="round" fill="none" />
 
             {/* Eyes */}
+            <g className="friend-open-eyes">
             <circle cx="36" cy="48" r="4" fill="#3E2723" />
             <circle cx="64" cy="48" r="4" fill="#3E2723" />
             <circle cx="37.5" cy="46.5" r="1.5" fill="#FFFFFF" />
             <circle cx="65.5" cy="46.5" r="1.5" fill="#FFFFFF" />
+            </g>
+            <g className="friend-rest-eyes" fill="none" stroke="#3E2723" strokeWidth="2.5" strokeLinecap="round"><path d="M31 48 Q36 52 41 48 M59 48 Q64 52 69 48" /></g>
 
             {/* Rosy Cheeks */}
             <ellipse cx="30" cy="56" rx="5" ry="3" fill="#FF80AB" opacity="0.6" />
@@ -211,12 +214,15 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
             <circle cx="75" cy="52" r="1.5" fill="#388E3C" />
 
             {/* Big Eyes */}
+            <g className="friend-open-eyes">
             <circle cx="42" cy="42" r="6" fill="#FFFFFF" />
             <circle cx="60" cy="42" r="6" fill="#FFFFFF" />
             <circle cx="43" cy="42" r="3.5" fill="#2E7D32" />
             <circle cx="61" cy="42" r="3.5" fill="#2E7D32" />
             <circle cx="44.5" cy="40.5" r="1" fill="#FFFFFF" />
             <circle cx="62.5" cy="40.5" r="1" fill="#FFFFFF" />
+            </g>
+            <g className="friend-rest-eyes" fill="none" stroke="#2E7D32" strokeWidth="2.5" strokeLinecap="round"><path d="M38 42 Q43 46 48 42 M56 42 Q61 46 66 42" /></g>
 
             {/* Smile */}
             <path d="M 46 56 Q 58 64 68 56" stroke="#2E7D32" strokeWidth="2.5" strokeLinecap="round" fill="none" />
@@ -251,10 +257,13 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
             <path d="M 50 56 L 50 60 M 46 60 Q 50 63 54 60" stroke="#8E24AA" strokeWidth="2" strokeLinecap="round" fill="none" />
 
             {/* Sparkling Eyes */}
+            <g className="friend-open-eyes">
             <ellipse cx="37" cy="52" rx="4" ry="5" fill="#4A148C" />
             <ellipse cx="63" cy="52" rx="4" ry="5" fill="#4A148C" />
             <circle cx="38" cy="50" r="1.8" fill="#FFFFFF" />
             <circle cx="64" cy="50" r="1.8" fill="#FFFFFF" />
+            </g>
+            <g className="friend-rest-eyes" fill="none" stroke="#4A148C" strokeWidth="2.5" strokeLinecap="round"><path d="M32 52 Q37 56 42 52 M58 52 Q63 56 68 52" /></g>
 
             {/* Cheeks */}
             <ellipse cx="30" cy="60" rx="5" ry="3" fill="#FF80AB" opacity="0.6" />
@@ -280,10 +289,13 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
             <path d="M 50 62 Q 46 66 50 68 Q 54 66 50 62" fill="#E65100" />
 
             {/* Cute Eyes */}
+            <g className="friend-open-eyes">
             <circle cx="38" cy="50" r="3.5" fill="#3E2723" />
             <circle cx="62" cy="50" r="3.5" fill="#3E2723" />
             <circle cx="39" cy="48.5" r="1.2" fill="#FFFFFF" />
             <circle cx="63" cy="48.5" r="1.2" fill="#FFFFFF" />
+            </g>
+            <g className="friend-rest-eyes" fill="none" stroke="#3E2723" strokeWidth="2.5" strokeLinecap="round"><path d="M33 50 Q38 54 43 50 M57 50 Q62 54 67 50" /></g>
 
             {/* Cheeks */}
             <ellipse cx="32" cy="58" rx="4" ry="2.5" fill="#FF7043" opacity="0.6" />
@@ -311,10 +323,13 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
             <circle cx="55" cy="58" r="2.5" fill="#C62828" />
 
             {/* Eyes */}
+            <g className="friend-open-eyes">
             <circle cx="36" cy="46" r="3.5" fill="#37474F" />
             <circle cx="64" cy="46" r="3.5" fill="#37474F" />
             <circle cx="37" cy="44.5" r="1.2" fill="#FFFFFF" />
             <circle cx="65" cy="44.5" r="1.2" fill="#FFFFFF" />
+            </g>
+            <g className="friend-rest-eyes" fill="none" stroke="#37474F" strokeWidth="2.5" strokeLinecap="round"><path d="M31 46 Q36 50 41 46 M59 46 Q64 50 69 46" /></g>
 
             {/* Cheeks */}
             <ellipse cx="28" cy="54" rx="5" ry="3" fill="#FF5252" opacity="0.4" />
@@ -344,8 +359,11 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
             <ellipse cx="50" cy="52" rx="22" ry="18" fill="#FFF3E0" />
 
             {/* Eyes */}
+            <g className="friend-open-eyes">
             <circle cx="41" cy="48" r="3" fill="#37474F" />
             <circle cx="59" cy="48" r="3" fill="#37474F" />
+            </g>
+            <g className="friend-rest-eyes" fill="none" stroke="#37474F" strokeWidth="2.5" strokeLinecap="round"><path d="M36 48 Q41 52 46 48 M54 48 Q59 52 64 48" /></g>
 
             {/* Smile & Nose */}
             <path d="M 50 52 Q 47 56 50 58 Q 53 56 50 52" fill="#E57373" />
@@ -367,8 +385,9 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
             <path d="M20 49 Q17 12 50 10 Q83 12 80 49 L83 66 Q82 89 50 89 Q18 89 17 66Z" fill="#526f86" />
             <path d="M25 49 Q22 24 37 23 Q46 22 50 32 Q56 21 66 23 Q80 26 75 49 Q85 80 50 82 Q15 80 25 49Z" fill="#fff8e9" />
             <path d="M42 12 Q45 4 52 10 Q58 4 61 14" fill="#526f86" />
-            <ellipse cx="36" cy="41" rx="3.8" ry="4.6" fill="#35495b" /><ellipse cx="64" cy="41" rx="3.8" ry="4.6" fill="#35495b" />
-            <circle cx="37" cy="39" r="1.3" fill="white" /><circle cx="65" cy="39" r="1.3" fill="white" />
+            <g className="friend-open-eyes"><ellipse cx="36" cy="41" rx="3.8" ry="4.6" fill="#35495b" /><ellipse cx="64" cy="41" rx="3.8" ry="4.6" fill="#35495b" />
+            <circle cx="37" cy="39" r="1.3" fill="white" /><circle cx="65" cy="39" r="1.3" fill="white" /></g>
+            <g className="friend-rest-eyes" fill="none" stroke="#35495b" strokeWidth="2.5" strokeLinecap="round"><path d="M31 41 Q36 45 41 41 M59 41 Q64 45 69 41" /></g>
             <ellipse cx="28" cy="49" rx="5.5" ry="3.2" fill="#eea6a2" /><ellipse cx="72" cy="49" rx="5.5" ry="3.2" fill="#eea6a2" />
             <path d="M43 48 Q50 43 57 48 Q50 59 43 48Z" fill="#eeb36b" stroke="#d19b58" strokeWidth="1" />
             <path d="M24 58 Q50 66 76 58 L75 66 Q50 74 25 66Z" fill="#84c9bb" />
@@ -397,10 +416,13 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
             <path d="M 50 59 L 50 63 M 46 63 Q 50 66 54 63" stroke="#3E2723" strokeWidth="2" strokeLinecap="round" fill="none" />
 
             {/* Eyes */}
+            <g className="friend-open-eyes">
             <circle cx="36" cy="46" r="4" fill="#3E2723" />
             <circle cx="64" cy="46" r="4" fill="#3E2723" />
             <circle cx="37.5" cy="44.5" r="1.5" fill="#FFFFFF" />
             <circle cx="65.5" cy="44.5" r="1.5" fill="#FFFFFF" />
+            </g>
+            <g className="friend-rest-eyes" fill="none" stroke="#3E2723" strokeWidth="2.5" strokeLinecap="round"><path d="M31 46 Q36 50 41 46 M59 46 Q64 50 69 46" /></g>
 
             {/* Cheeks */}
             <ellipse cx="28" cy="54" rx="4" ry="2.5" fill="#FF8A80" opacity="0.6" />

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Volume2, RefreshCw } from 'lucide-react';
 import { RoundContinuation } from '../../components/RoundContinuation';
+import { PlayResultScene } from '../../components/PlayResultScene';
 import { DragMatch, DragPiece, DropSlot, DragHint } from '../../components/DragMatch';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
@@ -61,7 +62,8 @@ export function MemoryCardGame({ buddy, onCompleteQuiz, soundEnabled, ageGroup, 
     return true;
   };
 
-  return <DragMatch onDrop={matchPair} resetKey={round} disabled={isCompleted}>
+  const nextCard = cards.find(card => !matched.includes(card.id));
+  return <DragMatch onDrop={matchPair} resetKey={round} disabled={isCompleted} hint={nextCard ? { pieceId: nextCard.id, targetId: nextCard.id } : undefined}>
     <div className="game-board flex flex-col items-center w-full max-w-2xl mx-auto">
       <div className="game-prompt w-full bg-gradient-to-r from-[#FFE0B2] to-[#FFF3E0] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FFA726] flex items-center gap-3">
         <CharacterAvatar id={buddy} size="md" mood={isCompleted ? 'happy' : 'waving'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
@@ -71,7 +73,7 @@ export function MemoryCardGame({ buddy, onCompleteQuiz, soundEnabled, ageGroup, 
         </div>
         <button aria-label="놀이 안내 다시 듣기" onClick={() => speakText(guide, soundEnabled, { characterId: buddy })} className="p-3 bg-white rounded-full text-orange-600"><Volume2 /></button>
       </div>
-      <div className="matching-playmat">
+      {isCompleted ? <PlayResultScene kind="train" buddy={buddy} toys={cards.map(card => card.emoji)} /> : <div className="matching-playmat">
         <div className="matching-row" style={{ '--match-columns': pairCount } as React.CSSProperties}>
           {cards.map(card => <DropSlot key={card.id} id={card.id} label={card.name} filled={matched.includes(card.id)} className="matching-pocket">
             <ToyArtwork emoji={card.emoji} />
@@ -86,8 +88,8 @@ export function MemoryCardGame({ buddy, onCompleteQuiz, soundEnabled, ageGroup, 
           </DragPiece>)}
         </div>
         <div className="matching-progress" aria-label={`${matched.length}쌍 완성, 모두 ${pairCount}쌍`}>{cards.map(card => <span key={card.id} data-done={matched.includes(card.id)} />)}</div>
-      </div>
-      {isCompleted ? <RoundContinuation onNext={startNewGame} delayMs={4000} /> :
+      </div>}
+      {isCompleted ? <RoundContinuation onNext={startNewGame} delayMs={5500} /> :
         <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={startNewGame}><RefreshCw className="w-5 h-5 mr-2" /> 다른 그림</JellyButton>}
     </div>
   </DragMatch>;

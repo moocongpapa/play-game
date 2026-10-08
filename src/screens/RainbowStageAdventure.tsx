@@ -508,7 +508,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
       {/* LEVEL 2: 색깔 과일 바구니 분류 (드래그 & 원터치) */}
       {/* ========================================================= */}
       {currentLevel === 2 && (
-        <DragMatch resetKey={currentLevel} disabled={l2SortedCount >= 3} onDrop={(id, basketId) => {
+        <DragMatch hint={l2RemainingItems[0] ? { pieceId: l2RemainingItems[0].id, targetId: l2RemainingItems[0].colorId } : undefined} resetKey={currentLevel} disabled={l2SortedCount >= 3} onDrop={(id, basketId) => {
           const fruit = l2RemainingItems.find(item => item.id === id);
           if (!fruit || clearingLevel.current || !['red', 'yellow', 'green'].includes(basketId)) return false;
           handleL2SortFruit(fruit, basketId as BasketSortItem['colorId']);
@@ -638,7 +638,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
       {/* LEVEL 4: 그림자 실루엣 퍼즐 */}
       {/* ========================================================= */}
       {currentLevel === 4 && (
-        <DragMatch resetKey={l4Target.id} disabled={l4Solved} onDrop={id => {
+        <DragMatch hint={{ pieceId: l4Target.id, targetId: 'shadow' }} resetKey={l4Target.id} disabled={l4Solved} onDrop={id => {
           const item = l4Options.find(option => option.id === id);
           if (!item || l4Solved || clearingLevel.current) return false;
           handleL4Match(item);

@@ -17,6 +17,7 @@ import { Moon, Shield } from 'lucide-react';
 import { createChildProfile } from './utils/ageEngine';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
+const FriendDayScreen = lazy(() => import('./screens/FriendDayScreen').then(m => ({ default: m.FriendDayScreen })));
 const TouchEffects = lazy(() => import('./components/TouchEffects').then(module => ({ default: module.TouchEffects })));
 const CharacterTalkScreen = lazy(() => import('./screens/CharacterTalkScreen').then(module => ({ default: module.CharacterTalkScreen })));
 const BugGardenScreen = lazy(() => import('./screens/BugGardenScreen').then(module => ({ default: module.BugGardenScreen })));
@@ -115,7 +116,7 @@ export default function App() {
   const finishSplash = useCallback(() => setShowSplash(false), []);
   const [homeStep, setHomeStep] = useState<'friends' | 'games'>('friends');
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
-  const [currentScreen, setCurrentScreen] = useState<'home' | 'game' | 'stickers' | 'talk' | 'parent' | 'drawing'>('home');
+  const [currentScreen, setCurrentScreen] = useState<'home' | 'game' | 'day' | 'stickers' | 'talk' | 'parent' | 'drawing'>('home');
   const [activeGameId, setActiveGameId] = useState<GameId | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isParentGateOpen, setIsParentGateOpen] = useState(false);
@@ -125,7 +126,7 @@ export default function App() {
   }, [currentScreen, activeGameId, homeStep]);
 
   const handleGoHome = () => {
-    if (currentScreen === 'talk') setHomeStep('games');
+    if (currentScreen === 'talk' || currentScreen === 'day') setHomeStep('games');
     stopAllSpeech();
     stopPlaySounds();
     stopCelebrations();
@@ -200,15 +201,15 @@ export default function App() {
   }, [showSplash, appState.isTimeUp, currentScreen]);
 
   // Play Celebration when a quiz round is completed (점수 누적 없이 순수한 성취 축하)
-  const handleCompleteQuiz = (_starsEarned: number) => {
-    setShowConfetti(true);
-    playStarGain(appState.soundEnabled);
+  const handleCompleteQuiz = (_starsEarned: number, completedGameId: GameId | null = activeGameId) => {
+    setShowConfetti(!document.hidden);
+    playStarGain(appState.soundEnabled && !document.hidden);
 
     setAppState((prev) => {
       // 완료한 게임 카운트만 부모 대시보드 놀이 통계용으로 기록
       const updatedGames = { ...prev.completedGames };
-      if (activeGameId) {
-        updatedGames[activeGameId] = (updatedGames[activeGameId] || 0) + 1;
+      if (completedGameId) {
+        updatedGames[completedGameId] = (updatedGames[completedGameId] || 0) + 1;
       }
 
       return {
@@ -284,6 +285,7 @@ export default function App() {
             selectedCharacter={appState.selectedCharacter}
             onSelectCharacter={(id) => setAppState((prev) => ({ ...prev, selectedCharacter: id }))}
             onStartGame={handleStartGame}
+            onStartDay={() => { setHomeStep('games'); setCurrentScreen('day'); }}
             onOpenDrawing={() => setCurrentScreen('drawing')}
             onOpenStickerRoom={() => setCurrentScreen('stickers')}
             onOpenCharacterTalk={() => setCurrentScreen('talk')}
@@ -291,6 +293,9 @@ export default function App() {
             childProfile={appState.childProfile}
           />
         );
+
+      case 'day':
+        return <FriendDayScreen buddy={appState.selectedCharacter} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} onCompleteGame={id => handleCompleteQuiz(1, id)} onGoHome={handleGoHome} />;
 
       case 'drawing':
         return (
@@ -376,7 +381,7 @@ export default function App() {
             fallbackTitle="앗! 이 놀이에서 동물 친구가 잠시 쉬고 있어요!"
             onReset={handleGoHome}
           >
-            <GameStage gameId={activeGameId || 'object_recognition'} buddy={appState.selectedCharacter}>
+            <GameStage gameId={activeGameId || 'object_recognition'} buddy={appState.selectedCharacter} soundEnabled={soundEnabled}>
             {(() => {
               switch (activeGameId) {
                 // 기존 7개 게임
@@ -562,6 +567,7 @@ export default function App() {
                       selectedCharacter={appState.selectedCharacter}
                       onSelectCharacter={(id) => setAppState((prev) => ({ ...prev, selectedCharacter: id }))}
                       onStartGame={handleStartGame}
+                      onStartDay={() => { setHomeStep('games'); setCurrentScreen('day'); }}
                       onOpenDrawing={() => setCurrentScreen('drawing')}
                       onOpenStickerRoom={() => setCurrentScreen('stickers')}
                       onOpenCharacterTalk={() => setCurrentScreen('talk')}

@@ -4,7 +4,8 @@ import { useReducedMotion } from 'motion/react';
 import { CHARACTER_LIST, CHARACTERS } from '../data/characters';
 import { CHARACTER_GREETINGS } from '../data/characterGreetings';
 import { CharacterAvatar } from '../components/CharacterAvatar';
-import { CharacterGreeting } from '../components/CharacterGreeting';
+import { CompanionTouch } from '../components/CompanionTouch';
+import '../components/CharacterGreeting.css';
 import { speakText, stopAllSpeech } from '../utils/soundEngine';
 import type { CharacterId } from '../types';
 
@@ -58,13 +59,13 @@ export const CharacterTalkScreen: React.FC<CharacterTalkScreenProps> = ({
     <header className="greeting-heading">
       <p className="eyebrow"><Hand size={17} /> 친구와 인사</p>
       <h1>반가워, {childName}야!</h1>
-      <p>친구를 콕! 누르면 나만의 인사를 보여줄게.</p>
+      <p>머리를 쓰담쓰담, 배를 간질간질! 손바닥도 짝!</p>
     </header>
 
     <div className="greeting-layout">
       <section className="greeting-card" aria-label={`${activeChar.name}의 인사 무대`}>
         <h2><span>{activeChar.name}</span>의 {greeting.title}</h2>
-        <CharacterGreeting id={selectedCharacter} playing={playing} replayKey={replayKey} onReplay={() => sayHello(selectedCharacter)} />
+        <CompanionTouch key={selectedCharacter} id={selectedCharacter} playing={playing} replayKey={replayKey} onInteraction={() => setPlaying(false)} soundEnabled={soundEnabled} />
         <p className="greeting-message" aria-live="polite">{greeting.message}</p>
         <div className="greeting-actions">
           <button className="greeting-replay" onClick={() => sayHello(selectedCharacter)} aria-label={`${activeChar.name} 인사 다시 보기`}><RotateCcw size={21} /><span>한 번 더!</span></button>

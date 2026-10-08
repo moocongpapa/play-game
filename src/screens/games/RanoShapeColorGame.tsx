@@ -1,5 +1,6 @@
 import { DragMatch, DragPiece, DropSlot, DragHint } from '../../components/DragMatch';
 import { RoundContinuation } from '../../components/RoundContinuation';
+import { PlayResultScene } from '../../components/PlayResultScene';
 import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
@@ -248,7 +249,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
   };
 
   return (
-    <DragMatch resetKey={targetItem.id} disabled={!!selectedCorrectId || timeOut} onDrop={(id) => {
+    <DragMatch resetKey={targetItem.id} disabled={!!selectedCorrectId || timeOut} hint={{ pieceId: targetItem.id, targetId: 'shape' }} onDrop={(id) => {
       const item = options.find(option => option.id === id);
       if (!item || !!selectedCorrectId || timeOut) return false;
       handleSelectCard(item);
@@ -314,6 +315,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
       )}
 
       {/* Target Slot */}
+      {selectedCorrectId ? <PlayResultScene kind="build" buddy={buddy} color={targetItem.color} keepsake={<ShapeFigure shape={targetItem.shape} color={targetItem.color} className="w-full h-full" />} /> : <>
       <DropSlot id="shape" label="같은 모양" filled={!!selectedCorrectId} className="my-3 sm:my-4 p-4 sm:p-5 bg-white rounded-3xl border-3 sm:border-4 border-dashed border-[#81C784] shadow-inner flex flex-col items-center justify-center">
         <span className="text-xs font-bold text-[#8C7B79] mb-1">같은 모양을 여기로 옮겨요</span>
         <div className="p-3 rounded-2xl bg-amber-50/60 border border-amber-200 shadow-sm flex flex-col items-center">
@@ -365,9 +367,10 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
       </div>
 
       {/* Actions */}
+      </>}
       <div className="flex items-center justify-center gap-3 w-full">
         {selectedCorrectId || timeOut ? (
-          <RoundContinuation onNext={generateRound} />
+          <RoundContinuation onNext={generateRound} delayMs={selectedCorrectId ? 5500 : 3000} />
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">
             <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 다른 모양

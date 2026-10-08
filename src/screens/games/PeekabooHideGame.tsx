@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { PlayGuide, PlayHint, PlayProgress, PlayShell } from '../../components/ToddlerPlay';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
@@ -9,6 +9,9 @@ import { HIDE_FRIENDS } from '../../data/toddlerPlay';
 import { shuffle } from '../../utils/roundDeck';
 import { playBouncyBoing, speakText } from '../../utils/soundEngine';
 import type { CharacterId } from '../../types';
+import { PlayResultScene } from '../../components/PlayResultScene';
+import { useGentleHelp } from '../../hooks/useGentleHelp';
+import { GentleHint } from '../../components/GentleHint';
 
 const GUIDE = '친구들이 어디 숨었지? 살짝 보이는 친구를 찾아 콕 눌러 봐!';
 export function HidingCover({ kind }: { kind: number }) {
@@ -21,6 +24,10 @@ export function HidingCover({ kind }: { kind: number }) {
 }
 export function PeekabooHideGame(props: ToddlerGameProps) {
   const { round, completed, finish, next } = useToddlerPlay(props, GUIDE);
+  const help = useGentleHelp(round, completed);
+  useEffect(() => {
+    if (help.level === 3) speakText('살랑살랑, 저기 친구가 보여! 콕 눌러 볼까?', props.soundEnabled, { characterId: props.buddy, playIntroSFX: false });
+  }, [help.level]);
   const makeFriends = (): CharacterId[] => shuffle([props.buddy, ...shuffle(HIDE_FRIENDS.filter(id => id !== props.buddy)).slice(0, 2)]);
   const [friends, setFriends] = useState(makeFriends);
   const [found, setFound] = useState<number[]>([]);
@@ -28,6 +35,7 @@ export function PeekabooHideGame(props: ToddlerGameProps) {
   const reveal = (index: number) => {
     if (completed || foundRef.current.has(index)) return;
     foundRef.current.add(index);
+    help.progress();
     setFound([...foundRef.current]);
     playBouncyBoing(props.soundEnabled);
     if (foundRef.current.size === 3) finish(`까꿍! ${props.childName}가 친구들을 모두 찾았어! 정말 반가워!`);
@@ -35,17 +43,18 @@ export function PeekabooHideGame(props: ToddlerGameProps) {
   };
   return <PlayShell className="peekaboo-play">
     <PlayGuide {...props} title={completed ? '까꿍! 모두 찾았다!' : '어디 숨었지?'} guide={GUIDE} happy={completed} />
-    <div className={`peekaboo-garden garden-season-${round % 3}`}>
+    {completed ? <PlayResultScene kind="dance" buddy={props.buddy} friends={friends} /> : <div className={`peekaboo-garden garden-season-${round % 3}`}>
       <div className="garden-tree tree-left" aria-hidden="true" /><div className="garden-tree tree-right" aria-hidden="true" />
       <span className="garden-path" aria-hidden="true" />
-      {friends.map((friend, index) => <button key={`${round}-${index}`} type="button" className={`hideout hideout-${index} ${found.includes(index) ? 'is-found' : ''}`} disabled={found.includes(index)} aria-label={found.includes(index) ? `${CHARACTERS[friend].name} 찾았어요` : `숨은 친구 ${index + 1} 찾기`} onClick={() => reveal(index)}>
+      {friends.map((friend, index) => <button key={`${round}-${index}`} type="button" data-help={help.level > 0 && index === friends.findIndex((_, i) => !found.includes(i))} className={`hideout hideout-${index} ${found.includes(index) ? 'is-found' : ''}`} disabled={found.includes(index)} aria-label={found.includes(index) ? `${CHARACTERS[friend].name} 찾았어요` : `숨은 친구 ${index + 1} 찾기`} onClick={() => reveal(index)}>
         <motion.span className="hiding-friend" animate={found.includes(index) ? { y: -35, scale: [1, 1.12, 1] } : { y: [25, 19, 25], rotate: [-3, 3, -3] }} transition={{ duration: found.includes(index) ? .55 : 2.4, repeat: found.includes(index) ? 0 : Infinity, delay: index * .3 }}><CharacterAvatar id={friend} size="xl" mood={found.includes(index) ? 'dancing' : 'still'} /></motion.span>
         <motion.span className="hiding-place" animate={{ y: found.includes(index) ? 32 : 0, opacity: found.includes(index) ? .6 : 1 }}><HidingCover kind={(index + round) % 4} /></motion.span>
         {found.includes(index) && <span className="peekaboo-word">까꿍!</span>}
+        {index === friends.findIndex((_, i) => !found.includes(i)) && <GentleHint level={help.level >= 3 ? 3 : 0} text="여기 콕!" />}
       </button>)}
       <span className="garden-flower flower-one" aria-hidden="true">✿</span><span className="garden-flower flower-two" aria-hidden="true">✿</span>
-    </div>
+    </div>}
     <PlayProgress total={3} done={found.length} label="찾은 친구" />
-    {completed ? <RoundContinuation onNext={() => { foundRef.current.clear(); setFound([]); setFriends(makeFriends()); next(); }} delayMs={4000} /> : <PlayHint>살짝 보이는 친구를 콕!</PlayHint>}
+    {completed ? <RoundContinuation onNext={() => { foundRef.current.clear(); setFound([]); setFriends(makeFriends()); next(); }} delayMs={5500} /> : <PlayHint>살짝 보이는 친구를 콕!</PlayHint>}
   </PlayShell>;
 }
