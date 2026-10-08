@@ -1,3 +1,5 @@
+import { EMOTION_SCENES } from '../../data/playThemes';
+import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
@@ -7,7 +9,7 @@ import { motion } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
-import { getDifficultyConfig, getAgeGroupLabel, pickDistractors, pickRandom } from '../../utils/ageEngine';
+import { getDifficultyConfig, getAgeGroupLabel, pickDistractors } from '../../utils/ageEngine';
 import { EMOTION_ITEMS_BY_AGE } from '../../data/gameData';
 import { AgeGroup, EmotionItem } from '../../types';
 import { Volume2, RefreshCw, Timer } from 'lucide-react';
@@ -33,6 +35,7 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
   const diffConfig = getDifficultyConfig(ageGroup);
   const itemPool = EMOTION_ITEMS_BY_AGE[ageGroup] || EMOTION_ITEMS_BY_AGE.sprout;
 
+  const [scene, setScene] = useState(EMOTION_SCENES.happy[0]);
   const [targetItem, setTargetItem] = useState<EmotionItem>(itemPool[0]);
   const [options, setOptions] = useState<EmotionItem[]>([]);
   const [selectedCorrectId, setSelectedCorrectId] = useState<string | null>(null);
@@ -58,16 +61,18 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
     setTimeOut(false);
     setTimeLeft(diffConfig.timeLimit);
 
-    const target = pickRandom<EmotionItem>(itemPool, 1)[0] || itemPool[0];
+    const target = pickNextRound(itemPool, `EmotionQuizGame:${ageGroup}`);
     if (!target) return;
     setTargetItem(target);
+    const nextScene = pickNextRound(EMOTION_SCENES[target.id], `emotions:${target.id}`);
+    setScene(nextScene);
 
     const distractors = pickDistractors<EmotionItem>(itemPool, target.id, diffConfig.optionCount - 1);
     const roundOptions = [target, ...distractors].sort(() => Math.random() - 0.5);
     setOptions(roundOptions);
 
     if (soundEnabled) {
-      speakText(`동물 친구들의 얼굴 표정을 보세요! '${target.name}' 표정은 어떤 것일까요?`, soundEnabled, { characterId: buddy });
+      speakText(`${nextScene.text} '${target.name}' 표정을 찾아볼까요?`, soundEnabled, { characterId: buddy });
     }
 
     // 힌트 타이머 구동
@@ -138,7 +143,7 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
         </div>
         <button
           aria-label="놀이 안내 다시 듣기"
-          onClick={() => speakText(`친구들의 얼굴을 보고 ${targetItem.name} 표정을 골라보세요!`, soundEnabled, { characterId: buddy })}
+          onClick={() => speakText(`${scene.text} ${targetItem.name} 표정을 골라보세요!`, soundEnabled, { characterId: buddy })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#FF80AB] shadow-xs text-[#FF4081] cursor-pointer shrink-0"
         >
           <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -168,9 +173,9 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
           transition={{ duration: 1.0, repeat: selectedCorrectId ? Infinity : 0 }}
           className="text-6xl sm:text-8xl drop-shadow-md"
         >
-          <ToyArtwork emoji={targetItem.emoji} />
+          <span className="flex items-center gap-4"><ToyArtwork emoji={scene.emoji} /><ToyArtwork emoji={targetItem.emoji} /></span>
         </motion.span>
-        <span className="text-xs font-bold text-[#8C7B79] mt-2 block">친구들의 감정을 맞춰요</span>
+        <span className="text-xs font-bold text-[#8C7B79] mt-2 block">{scene.text}</span>
       </div>
 
       {/* Options Grid */}

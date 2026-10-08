@@ -1,3 +1,5 @@
+import { PLAY_THEMES } from '../../data/playThemes';
+import { pickNextRound, shuffle } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
@@ -28,17 +30,6 @@ interface CardItem {
   isMatched: boolean;
 }
 
-const CARD_POOL = [
-  { pairId: 'bear', emoji: '🧸', name: '곰인형' },
-  { pairId: 'cat', emoji: '🐱', name: '야옹이' },
-  { pairId: 'dog', emoji: '🐶', name: '강아지' },
-  { pairId: 'car', emoji: '🚗', name: '자동차' },
-  { pairId: 'apple', emoji: '🍎', name: '사과' },
-  { pairId: 'star', emoji: '⭐', name: '반짝별' },
-  { pairId: 'banana', emoji: '🍌', name: '바나나' },
-  { pairId: 'dino', emoji: '🦖', name: '공룡' },
-];
-
 export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
   onCompleteQuiz,
   buddy,
@@ -54,6 +45,7 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
   // Pair count based on age: baby: 2 pairs (4 cards), sprout: 3 pairs (6 cards), bloom/star: 4 pairs (8 cards)
   const pairCount = ageGroup === 'baby' ? 2 : ageGroup === 'sprout' ? 3 : 4;
 
+  const [themeName, setThemeName] = useState(PLAY_THEMES[0].name);
   const [cards, setCards] = useState<CardItem[]>([]);
   const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
   const [isChecking, setIsChecking] = useState(false);
@@ -70,7 +62,9 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
     setShowComboBanner(false);
 
     // Pick pairs
-    const pickedPairs = [...CARD_POOL].sort(() => Math.random() - 0.5).slice(0, pairCount);
+    const theme = pickNextRound(PLAY_THEMES, 'memory:themes');
+    setThemeName(theme.name);
+    const pickedPairs = shuffle(theme.items).slice(0, pairCount).map(item => ({ ...item, pairId: item.id }));
     
     // Create card array with 2 copies of each pair
     const cardArray: CardItem[] = [];
@@ -94,11 +88,11 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
     });
 
     // Shuffle cards
-    const shuffled = cardArray.sort(() => Math.random() - 0.5);
+    const shuffled = shuffle(cardArray);
     setCards(shuffled);
 
     if (soundEnabled) {
-      speakText(`${friend.name}와 기억력 카드 놀이! 카드 위치를 잘 기억해두세요!`, soundEnabled, { characterId: buddy });
+      speakText(`${friend.name}와 기억력 카드 놀이! ${theme.name}! 카드 위치를 잘 기억해두세요!`, soundEnabled, { characterId: buddy });
     }
 
     // Hide cards after 2.5 seconds
@@ -191,7 +185,7 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
         <CharacterAvatar id={buddy} size="md" mood={isCompleted ? 'happy' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#E65100] mb-1">
-            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 기억력 카드 뒤집기</span>
+            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; {themeName}</span>
           </div>
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
             똑같은 그림 짝을 찾아주세요! 🎴

@@ -1,3 +1,5 @@
+import { useSoundClue } from '../../hooks/useSoundClue';
+import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
@@ -7,9 +9,9 @@ import { motion } from 'motion/react';
 import { SOUND_ITEMS_BY_AGE } from '../../data/gameData';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
-import { speakText, playCorrectFanfare, playWrongBoing, playAnimalSound, playDingDongDang } from '../../utils/soundEngine';
+import { speakText, playWrongBoing, playDingDongDang } from '../../utils/soundEngine';
 import { fireConfetti } from '../../utils/confetti';
-import { getDifficultyConfig, getAgeGroupLabel, pickDistractors, pickRandom } from '../../utils/ageEngine';
+import { getDifficultyConfig, getAgeGroupLabel, pickDistractors } from '../../utils/ageEngine';
 import { AgeGroup } from '../../types';
 import { Volume2, RefreshCw, Timer } from 'lucide-react';
 
@@ -37,6 +39,7 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
   childName,
 }) => {
   const friend = CHARACTERS[buddy];
+  const { playClue, status: clueStatus } = useSoundClue(soundEnabled, buddy);
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const diffConfig = getDifficultyConfig(ageGroup);
@@ -67,7 +70,7 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
     setTimeOut(false);
     setTimeLeft(diffConfig.timeLimit);
 
-    const target = pickRandom<SoundItem>(itemPool, 1)[0] || itemPool[0];
+    const target = pickNextRound(itemPool, `DochiSoundGame:${ageGroup}`);
     if (!target) return;
     setTargetItem(target);
 
@@ -75,12 +78,7 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
     const roundOptions = [target, ...distractors].sort(() => Math.random() - 0.5);
     setOptions(roundOptions);
 
-    if (soundEnabled) {
-      playAnimalSound(target.name, soundEnabled);
-      scheduleGameTimeout(() => {
-        speakText(`${friend.name}가 소리를 들려줄게요! "${target.soundText}" 이 소리의 주인은 누구일까요?`, soundEnabled, { characterId: buddy });
-      }, 350);
-    }
+    playClue(target.id, target.soundText);
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
@@ -114,12 +112,7 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
     };
   }, [ageGroup]);
 
-  const handlePlaySoundClue = () => {
-    playAnimalSound(targetItem.name, soundEnabled);
-    scheduleGameTimeout(() => {
-      speakText(`"${targetItem.soundText}" 소리를 가진 친구는 누구일까요?`, soundEnabled, { characterId: buddy });
-    }, 300);
-  };
+  const handlePlaySoundClue = () => playClue(targetItem.id, targetItem.soundText);
 
   const handleSelectCard = (item: typeof itemPool[0]) => {
     if (selectedCorrectId || timeOut) return;
@@ -129,7 +122,6 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
       if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
       setSelectedCorrectId(item.id);
-      playAnimalSound(item.name, soundEnabled);
       playDingDongDang(soundEnabled);
       fireConfetti();
       speakText(`딩동댕! 정답이에요! 귀여운 ${item.name}!`, soundEnabled, { characterId: buddy });
@@ -198,14 +190,14 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
           onClick={handlePlaySoundClue}
           className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-tr from-[#FFE0B2] to-[#FFF8EE] rounded-full flex items-center justify-center text-3xl sm:text-4xl shadow-md cursor-pointer border-2 border-[#FFA726]"
         >
-          🔊
+          <Volume2 className="w-9 h-9" />
         </motion.button>
         <p className="text-xs sm:text-sm font-bold text-[#8C7B79] mt-2 break-keep">
-          위 스피커를 누르면 소리를 다시 들을 수 있어요!
+          {clueStatus === 'playing' ? '귀를 쫑긋! 소리를 듣고 있어요' : '톡! 누르면 다시 들려줘요'}
         </p>
       </div>
 
-      {!soundEnabled && <div className="visual-prompt"><ToyArtwork emoji={targetItem.emoji} label="찾을 동물이나 탈것" /><span aria-hidden="true">→ ?</span></div>}
+      {(!soundEnabled || clueStatus === 'fallback') && <div className="visual-prompt"><ToyArtwork emoji={targetItem.emoji} label="찾을 동물이나 탈것" /><span aria-hidden="true">→ ?</span></div>}
 
       {/* Options */}
       <div className="game-choice-grid w-full my-3">

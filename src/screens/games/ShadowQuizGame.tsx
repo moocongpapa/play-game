@@ -1,3 +1,4 @@
+import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
@@ -8,7 +9,7 @@ import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playCorrectFanfare, playWrongBoing, playBubblePop, playSparkleChime, playDingDongDang } from '../../utils/soundEngine';
 import { fireConfetti } from '../../utils/confetti';
-import { getDifficultyConfig, getAgeGroupLabel, pickRandom, pickDistractors } from '../../utils/ageEngine';
+import { getDifficultyConfig, getAgeGroupLabel, pickDistractors } from '../../utils/ageEngine';
 import { OBJECT_ITEMS_BY_AGE } from '../../data/gameData';
 import { AgeGroup, QuizItem } from '../../types';
 import { Volume2, RefreshCw, Sparkles, Flame, Eye } from 'lucide-react';
@@ -46,7 +47,7 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
     setIsRevealed(false);
     setShakingCardId(null);
 
-    const target = pickRandom<QuizItem>(itemPool, 1)[0] || itemPool[0];
+    const target = pickNextRound(itemPool, `ShadowQuizGame:${ageGroup}`);
     if (!target) return;
     setTargetItem(target);
 

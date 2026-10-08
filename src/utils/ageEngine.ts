@@ -1,3 +1,4 @@
+import { shuffle } from './roundDeck';
 /**
  * Age Calculation & Difficulty Engine
  * 아이 생년월일 → 월령 계산 → 연령 그룹 배정 → 난이도 설정 반환
@@ -193,8 +194,7 @@ export function getAgeGroupDescription(group: AgeGroup): string {
  * 배열에서 랜덤으로 N개 항목을 선택합니다 (게임에서 공통 사용).
  */
 export function pickRandom<T>(arr: T[], count: number): T[] {
-  const shuffled = [...arr].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, count);
+  return shuffle(arr).slice(0, count);
 }
 
 /**

@@ -1,3 +1,4 @@
+import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
@@ -8,7 +9,7 @@ import { FOOD_COUNTING_ITEMS } from '../../data/gameData';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
-import { getDifficultyConfig, getAgeGroupLabel, getKoreanCounts, pickRandom } from '../../utils/ageEngine';
+import { getDifficultyConfig, getAgeGroupLabel, getKoreanCounts } from '../../utils/ageEngine';
 import { AgeGroup } from '../../types';
 import { Volume2, RefreshCw, Timer } from 'lucide-react';
 
@@ -61,7 +62,7 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
     setTimeOut(false);
     setTimeLeft(diffConfig.timeLimit);
 
-    const food = pickRandom(FOOD_COUNTING_ITEMS, 1)[0];
+    const food = pickNextRound(FOOD_COUNTING_ITEMS, `GgulgguliCountingGame:${ageGroup}`);
     const [minRange, maxRange] = diffConfig.countingRange;
     // 범위 내에서 랜덤 카운트 선정
     const count = Math.floor(Math.random() * (maxRange - minRange + 1)) + minRange;

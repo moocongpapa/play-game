@@ -1,3 +1,4 @@
+import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
@@ -7,7 +8,7 @@ import { SHAPE_COLOR_ITEMS_BY_AGE } from '../../data/gameData';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
-import { getDifficultyConfig, getAgeGroupLabel, pickDistractors, pickRandom } from '../../utils/ageEngine';
+import { getDifficultyConfig, getAgeGroupLabel, pickDistractors } from '../../utils/ageEngine';
 import { AgeGroup } from '../../types';
 import { Volume2, RefreshCw, Timer, Flame } from 'lucide-react';
 
@@ -169,7 +170,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
     setTimeOut(false);
     setTimeLeft(diffConfig.timeLimit);
 
-    const target = pickRandom<ShapeColorItem>(itemPool, 1)[0];
+    const target = pickNextRound(itemPool, `RanoShapeColorGame:${ageGroup}`);
     setTargetItem(target);
 
     const distractors = pickDistractors<ShapeColorItem>(itemPool, target.id, diffConfig.optionCount - 1);

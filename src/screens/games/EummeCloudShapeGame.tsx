@@ -1,3 +1,4 @@
+import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
@@ -7,7 +8,7 @@ import { motion } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
-import { getDifficultyConfig, getAgeGroupLabel, pickDistractors, pickRandom } from '../../utils/ageEngine';
+import { getDifficultyConfig, getAgeGroupLabel, pickDistractors } from '../../utils/ageEngine';
 import { CLOUD_SHAPES_BY_AGE, CloudItem } from '../../data/gameData';
 import { AgeGroup } from '../../types';
 import { Volume2, RefreshCw, Timer } from 'lucide-react';
@@ -58,7 +59,7 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
     setTimeOut(false);
     setTimeLeft(diffConfig.timeLimit);
 
-    const target = pickRandom<CloudItem>(itemPool, 1)[0] || itemPool[0];
+    const target = pickNextRound(itemPool, `EummeCloudShapeGame:${ageGroup}`);
     if (!target) return;
     setTargetCloud(target);
 

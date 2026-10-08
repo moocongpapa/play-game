@@ -1,3 +1,4 @@
+import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
@@ -7,7 +8,7 @@ import { motion } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
-import { getDifficultyConfig, getAgeGroupLabel, pickRandom } from '../../utils/ageEngine';
+import { getDifficultyConfig, getAgeGroupLabel } from '../../utils/ageEngine';
 import { PATTERN_ITEMS_BY_AGE } from '../../data/gameData';
 import { AgeGroup, PatternItem } from '../../types';
 import { Volume2, RefreshCw, Timer } from 'lucide-react';
@@ -58,7 +59,7 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
     setTimeOut(false);
     setTimeLeft(diffConfig.timeLimit);
 
-    const target = pickRandom<PatternItem>(itemPool, 1)[0] || itemPool[0];
+    const target = pickNextRound(itemPool, `PatternSequenceGame:${ageGroup}`);
     if (!target) return;
     setTargetItem(target);
 

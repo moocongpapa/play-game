@@ -1,3 +1,5 @@
+import { PLAY_THEMES } from '../../data/playThemes';
+import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
@@ -62,6 +64,8 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
   const [popPopups, setPopPopups] = useState<Array<{ id: string; x: number; y: number; text: string; color: string }>>([]);
   const [isCompleted, setIsCompleted] = useState(false);
   const nextIdRef = useRef(1);
+  const themeRef = useRef(PLAY_THEMES[0]);
+  const [theme, setTheme] = useState(PLAY_THEMES[0]);
 
   // Generate balloon
   const spawnBalloon = () => {
@@ -71,7 +75,7 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
       x: 20 + Math.random() * 60,
       color: palette.color,
       bgGradient: palette.bg,
-      emoji: palette.emoji,
+      emoji: pickNextRound(themeRef.current.items, `balloons:${themeRef.current.id}`).emoji,
       speed: 7 + Math.random() * 4,
       size: 88 + Math.floor(Math.random() * 20),
     };
@@ -84,6 +88,8 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
       speakText(`하늘로 떠오르는 알록달록 풍선을 팡팡 터뜨려보자!`, soundEnabled, { characterId: buddy });
     }
 
+    themeRef.current = pickNextRound(PLAY_THEMES, 'balloons:themes');
+    setTheme(themeRef.current);
     // Initial 4 balloons
     setBalloons([]);
     for (let i = 0; i < 4; i++) {
@@ -157,6 +163,8 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
   const resetGame = () => {
     clearGameTimeouts();
     poppedIds.current.clear();
+    themeRef.current = pickNextRound(PLAY_THEMES, 'balloons:themes');
+    setTheme(themeRef.current);
     setPoppedCount(0);
     setIsCompleted(false);
     setBalloons([]);
@@ -167,7 +175,7 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
   };
 
   return (
-    <div className="balloon-board relative w-full max-w-2xl mx-auto h-[68svh] min-h-[460px] bg-gradient-to-b from-[#E0F2FE] via-[#F0F9FF] to-[#FEF3C7] rounded-[36px] border-4 border-amber-300 shadow-xl overflow-hidden select-none flex flex-col justify-between p-4">
+    <div style={{ background: `linear-gradient(${theme.sky}, #FFF9E9)` }} className="balloon-board relative w-full max-w-2xl mx-auto h-[68svh] min-h-[460px] bg-gradient-to-b from-[#E0F2FE] via-[#F0F9FF] to-[#FEF3C7] rounded-[36px] border-4 border-amber-300 shadow-xl overflow-hidden select-none flex flex-col justify-between p-4">
       {/* Top Status Banner */}
       <div className="balloon-status z-20 w-full bg-white/90 backdrop-blur-xs p-3.5 rounded-3xl border-3 border-sky-300 shadow-md flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -175,7 +183,7 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
           <div>
             <span className="text-xs font-black text-sky-600 block">{friend.name}와 풍선 팡팡! 🎈</span>
             <span className="text-sm sm:text-base font-black text-[#4A3E3D]">
-              풍선을 터치해 터뜨려보세요!
+              {theme.name} · 톡톡 팡팡!
             </span>
           </div>
         </div>

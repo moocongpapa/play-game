@@ -1,3 +1,7 @@
+import { BACKGROUND_MUSIC, type MusicTrack } from '../data/backgroundMusic';
+import { ANIMAL_RECORDINGS, resolveAnimalSound } from '../data/animalSounds';
+import { createRoundDeck } from './roundDeck';
+import { createRecordedAudioPlayer, type PlaybackResult } from './recordedAudio';
 // Web Audio API & Multi-Engine Speech Synthesis for Toddlers (Ages 3~4)
 // High-fidelity sound effects, nursery rhyme procedural BGM, and warm kindergarten teacher voices.
 
@@ -29,71 +33,99 @@ export function getAudioContext(): AudioContext {
   return audioCtx;
 }
 
-// BGM Procedural Sweet Nursery Melody (Lullaby / Kindergarten Theme)
-const BGM_MELODY = [
-  { note: 523.25, dur: 0.5 }, { note: 587.33, dur: 0.5 }, { note: 659.25, dur: 0.5 }, { note: 698.46, dur: 0.5 },
-  { note: 783.99, dur: 1.0 }, { note: 783.99, dur: 1.0 },
-  { note: 880.00, dur: 0.5 }, { note: 880.00, dur: 0.5 }, { note: 880.00, dur: 0.5 }, { note: 880.00, dur: 0.5 },
-  { note: 783.99, dur: 2.0 },
-  { note: 698.46, dur: 0.5 }, { note: 698.46, dur: 0.5 }, { note: 659.25, dur: 0.5 }, { note: 659.25, dur: 0.5 },
-  { note: 587.33, dur: 0.5 }, { note: 587.33, dur: 0.5 }, { note: 523.25, dur: 2.0 },
-];
-
+const nextMusic = createRoundDeck();
+let currentTrack: MusicTrack | null = null;
 let noteIndex = 0;
+let phraseCount = 0;
+let requestedBgmVolume = .15;
+const bgmDucks = new Set<string>();
+const bgmNotes = new Set<OscillatorNode>();
 
-export function startBGM(volume = 0.15) {
-  if (isBgmPlaying || !masterSoundEnabled) return;
+function applyBgmVolume() {
+  if (!bgmVolumeNode || !audioCtx) return;
+  const gain = requestedBgmVolume * (bgmDucks.size ? .16 : 1);
+  bgmVolumeNode.gain.cancelScheduledValues(audioCtx.currentTime);
+  bgmVolumeNode.gain.setTargetAtTime(gain, audioCtx.currentTime, .12);
+}
+
+export function setBGMDucked(reason: 'speech' | 'animal' | 'rhythm', ducked: boolean) {
+  if (ducked) bgmDucks.add(reason); else bgmDucks.delete(reason);
+  applyBgmVolume();
+}
+
+function musicNote(ctx: AudioContext, midi: number, duration: number, bass = false) {
+  if (!bgmVolumeNode || !currentTrack || !midi) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const now = ctx.currentTime;
+  osc.type = currentTrack.instrument === 'marimba' && !bass ? 'triangle' : 'sine';
+  osc.frequency.value = 440 * 2 ** ((midi - 69) / 12);
+  const peak = bass ? .09 : .16;
+  const attack = currentTrack.instrument === 'flute' ? .09 : .02;
+  gain.gain.setValueAtTime(.0001, now);
+  gain.gain.linearRampToValueAtTime(peak, now + attack);
+  gain.gain.exponentialRampToValueAtTime(.0001, now + Math.max(.15, duration * .94));
+  osc.connect(gain);
+  gain.connect(bgmVolumeNode);
+  bgmNotes.add(osc);
+  osc.onended = () => { bgmNotes.delete(osc); osc.disconnect(); gain.disconnect(); };
+  osc.start(now);
+  osc.stop(now + duration);
+  if (!bass && currentTrack.instrument === 'musicbox') {
+    musicNote(ctx, midi + 12, duration * .7, true);
+  }
+}
+
+export function startBGM(volume = requestedBgmVolume) {
+  requestedBgmVolume = Math.max(0, Math.min(.3, volume));
+  if (isBgmPlaying || !masterSoundEnabled) { applyBgmVolume(); return; }
   try {
     const ctx = getAudioContext();
     isBgmPlaying = true;
+    currentTrack = nextMusic(BACKGROUND_MUSIC, 'music');
+    noteIndex = 0;
+    phraseCount = 0;
     bgmVolumeNode = ctx.createGain();
-    bgmVolumeNode.gain.setValueAtTime(Math.min(0.3, volume), ctx.currentTime);
+    bgmVolumeNode.gain.setValueAtTime(0, ctx.currentTime);
     bgmVolumeNode.connect(ctx.destination);
-
+    applyBgmVolume();
     const step = () => {
-      if (!isBgmPlaying || !bgmVolumeNode) return;
-      const current = BGM_MELODY[noteIndex];
-      noteIndex = (noteIndex + 1) % BGM_MELODY.length;
-
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = current.note;
-
-      const now = ctx.currentTime;
-      gain.gain.setValueAtTime(0.01, now);
-      gain.gain.exponentialRampToValueAtTime(0.08, now + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + current.dur * 0.4);
-
-      osc.connect(gain);
-      gain.connect(bgmVolumeNode);
-
-      osc.start(now);
-      osc.stop(now + current.dur * 0.42);
-
-      bgmOscillatorInterval = window.setTimeout(step, current.dur * 450);
+      if (!isBgmPlaying || !currentTrack) return;
+      const duration = currentTrack.beats[noteIndex] * 60 / currentTrack.bpm;
+      musicNote(ctx, currentTrack.notes[noteIndex], duration);
+      if (noteIndex % 4 === 0) musicNote(ctx, currentTrack.bass[Math.floor(noteIndex / 4) % currentTrack.bass.length], duration * 1.6, true);
+      noteIndex += 1;
+      let pause = 0;
+      if (noteIndex === currentTrack.notes.length) {
+        noteIndex = 0;
+        phraseCount += 1;
+        if (phraseCount === 2) {
+          currentTrack = nextMusic(BACKGROUND_MUSIC, 'music');
+          phraseCount = 0;
+          pause = .8;
+        }
+      }
+      bgmOscillatorInterval = window.setTimeout(step, (duration + pause) * 1000);
     };
-
     step();
-  } catch (e) {
-    console.warn('BGM initialization deferred to user interaction', e);
+  } catch {
+    stopBGM();
   }
 }
 
 export function stopBGM() {
   isBgmPlaying = false;
+  if (bgmOscillatorInterval !== null) window.clearTimeout(bgmOscillatorInterval);
+  bgmOscillatorInterval = null;
+  for (const osc of bgmNotes) { try { osc.stop(); } catch { /* already ended */ } }
+  bgmNotes.clear();
   bgmVolumeNode?.disconnect();
   bgmVolumeNode = null;
-  if (bgmOscillatorInterval) {
-    clearTimeout(bgmOscillatorInterval);
-    bgmOscillatorInterval = null;
-  }
 }
 
 export function setBGMVolume(vol: number) {
-  if (bgmVolumeNode && audioCtx) {
-    bgmVolumeNode.gain.setValueAtTime(Math.max(0, Math.min(0.3, vol)), audioCtx.currentTime);
-  }
+  requestedBgmVolume = Math.max(0, Math.min(.3, vol));
+  applyBgmVolume();
 }
 
 // ========================================================
@@ -348,126 +380,28 @@ export function playWrongBoing(enabled = true) {
   }
 }
 
-/**
- * 실감나는 동물 울음소리 신시사이저 (Level 1 동물 짝 맞추기 지원)
- */
-export function playAnimalSound(animal: string, enabled = true) {
-  if (!enabled || !masterSoundEnabled) return;
-  try {
-    const ctx = getAudioContext();
-    const now = ctx.currentTime;
-    const a = animal.toLowerCase();
+const animalPlayer = createRecordedAudioPlayer(src => new Audio(src));
+let animalRequest = 0;
 
-    if (a.includes('dog') || a.includes('개') || a.includes('강아지') || a.includes('nurungji')) {
-      // 멍멍! (2번의 스타카토 바운스)
-      [0, 0.16].forEach((offset) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(320, now + offset);
-        osc.frequency.exponentialRampToValueAtTime(620, now + offset + 0.05);
-        osc.frequency.exponentialRampToValueAtTime(280, now + offset + 0.12);
-        gain.gain.setValueAtTime(0.3, now + offset);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.12);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now + offset);
-        osc.stop(now + offset + 0.12);
-      });
-    } else if (a.includes('cat') || a.includes('고양이')) {
-      // 야옹~ (미야옹 글라이드)
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(540, now);
-      osc.frequency.linearRampToValueAtTime(920, now + 0.22);
-      osc.frequency.exponentialRampToValueAtTime(460, now + 0.48);
-      gain.gain.setValueAtTime(0.01, now);
-      gain.gain.linearRampToValueAtTime(0.24, now + 0.15);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.48);
-    } else if (a.includes('duck') || a.includes('오리')) {
-      // 꽥꽥!
-      [0, 0.18].forEach((offset) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(420, now + offset);
-        osc.frequency.linearRampToValueAtTime(310, now + offset + 0.12);
-        gain.gain.setValueAtTime(0.18, now + offset);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.12);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now + offset);
-        osc.stop(now + offset + 0.12);
-      });
-    } else if (a.includes('cow') || a.includes('소') || a.includes('음메') || a.includes('eumme')) {
-      // 음~메~
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(180, now);
-      osc.frequency.linearRampToValueAtTime(240, now + 0.25);
-      osc.frequency.linearRampToValueAtTime(170, now + 0.6);
-      gain.gain.setValueAtTime(0.25, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.6);
-    } else if (a.includes('pig') || a.includes('돼지') || a.includes('꿀꿀') || a.includes('ggulgguli')) {
-      // 꿀꿀!
-      [0, 0.16].forEach((offset) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(190, now + offset);
-        osc.frequency.linearRampToValueAtTime(140, now + offset + 0.12);
-        gain.gain.setValueAtTime(0.15, now + offset);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.12);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now + offset);
-        osc.stop(now + offset + 0.12);
-      });
-    } else if (a.includes('lion') || a.includes('사자') || a.includes('호랑이')) {
-      // 어흥!
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(130, now);
-      osc.frequency.linearRampToValueAtTime(90, now + 0.45);
-      gain.gain.setValueAtTime(0.35, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.45);
-    } else if (a.includes('frog') || a.includes('개구리')) {
-      // 개굴개굴!
-      [0, 0.14].forEach((offset) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(260, now + offset);
-        osc.frequency.exponentialRampToValueAtTime(420, now + offset + 0.08);
-        gain.gain.setValueAtTime(0.22, now + offset);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.1);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now + offset);
-        osc.stop(now + offset + 0.1);
-      });
-    } else {
-      // 기본 귀여운 동물 차임
-      playJellyTap(enabled);
-    }
-  } catch (e) {
-    console.warn(e);
-  }
+export function stopAnimalSound() {
+  animalRequest += 1;
+  animalPlayer.stop();
+  setBGMDucked('animal', false);
+}
+
+/** Real field recordings, stored with the app; never imitate animals with oscillators. */
+export async function playAnimalSound(animal: string, enabled = true): Promise<PlaybackResult> {
+  stopAnimalSound();
+  if (!enabled || !masterSoundEnabled) return 'cancelled';
+  stopAllSpeech();
+  const id = resolveAnimalSound(animal);
+  if (!id) return 'unavailable';
+  const request = ++animalRequest;
+  setBGMDucked('animal', true);
+  const result = await animalPlayer.play(ANIMAL_RECORDINGS[id]);
+  if (request !== animalRequest) return 'cancelled';
+  setBGMDucked('animal', false);
+  return result;
 }
 
 export function playCharacterVoiceSFX(characterId: string, enabled = true) {
@@ -700,9 +634,20 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
 
   stopAllSpeech();
   const requestId = speechRequestId;
+  const originalOptions = options;
+  const finish = (callback?: () => void) => {
+    if (requestId !== speechRequestId) return;
+    setBGMDucked('speech', false);
+    callback?.();
+  };
+  options = { ...originalOptions,
+    onEnd: () => finish(originalOptions.onEnd),
+    onError: () => finish(originalOptions.onError),
+  };
 
   const clean = text.trim();
   if (!clean) return;
+  setBGMDucked('speech', true);
 
   if (isGeminiTTSEnabled() && getCachedGeminiVoiceAvailability() !== false) {
     try {
@@ -731,6 +676,8 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
  * Halts all voice speech across all engines immediately
  */
 export function stopAllSpeech() {
+  stopAnimalSound();
+  setBGMDucked('speech', false);
   speechRequestId += 1;
   if (typeof window !== 'undefined') clearBrowserSpeechStartTimer();
   activeBrowserUtterance = null;

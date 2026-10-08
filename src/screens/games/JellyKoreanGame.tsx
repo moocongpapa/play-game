@@ -1,3 +1,4 @@
+import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
@@ -8,7 +9,7 @@ import { KOREAN_LETTER_ITEMS_BY_AGE } from '../../data/gameData';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
-import { getDifficultyConfig, getAgeGroupLabel, pickDistractors, pickRandom } from '../../utils/ageEngine';
+import { getDifficultyConfig, getAgeGroupLabel, pickDistractors } from '../../utils/ageEngine';
 import { AgeGroup } from '../../types';
 import { Volume2, Sparkles, RefreshCw, Timer, Flame } from 'lucide-react';
 
@@ -70,7 +71,7 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
     setTimeOut(false);
     setTimeLeft(diffConfig.timeLimit);
 
-    const target = pickRandom<KoreanLetterItem>(itemPool, 1)[0] || itemPool[0];
+    const target = pickNextRound(itemPool, `JellyKoreanGame:${ageGroup}`);
     if (!target) return;
     setTargetItem(target);
 

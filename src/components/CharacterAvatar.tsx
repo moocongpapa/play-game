@@ -11,6 +11,44 @@ interface CharacterAvatarProps {
   showBadge?: boolean;
 }
 
+
+const BODY_PALETTE = {
+  ggomi: { fur: '#DDB096', edge: '#C09279', belly: '#FFF0D9', dress: '#ED9CB7' },
+  jelly: { fur: '#F3E5F5', edge: '#D5BADF', belly: '#FFF9FA', dress: '#C4ABE0' },
+  dochi: { fur: '#FFD1A1', edge: '#DBA06F', belly: '#FFF1D6', dress: '#8DC1B4' },
+  ggulgguli: { fur: '#FFCDD2', edge: '#E6A5AB', belly: '#FFF0E9', dress: '#E9BD75' },
+  eumme: { fur: '#F4F3EB', edge: '#D8DAD3', belly: '#FFF9EB', dress: '#9EC5D4' },
+  nurungji: { fur: '#EDBC75', edge: '#C99A64', belly: '#FFF2D8', dress: '#A2BEA0' },
+};
+
+function FriendBody({ id }: { id: keyof typeof BODY_PALETTE }) {
+  const c = BODY_PALETTE[id];
+  return <g data-body="full" stroke={c.edge} strokeWidth="1.3" strokeLinejoin="round">
+    <ellipse cx="50" cy="95" rx="29" ry="3" fill="#88715D" opacity=".12" stroke="none" />
+    {id === 'jelly' && <circle cx="73" cy="78" r="9" fill="white" />}
+    {id === 'nurungji' && <path d="M71 75 Q89 80 85 63 Q98 82 76 85" fill={c.fur} />}
+    {id === 'ggulgguli' && <path d="M72 77 Q91 72 88 83 Q82 90 80 80" fill="none" strokeWidth="3" />}
+    {id === 'dochi' && <path d="M28 79 L23 69 L29 62 L26 52 L38 52 H65 L76 52 L73 63 L79 70 L73 81Z" fill="#DDA16D" />}
+    <path d="M34 77 Q29 85 28 90 Q27 96 37 95 H44 L45 80 M56 80 L56 94 Q73 99 73 91 L66 77" fill={c.fur} />
+    <ellipse cx="36" cy="91" rx="6" ry="3" fill={id === 'eumme' || id === 'ggulgguli' ? '#B49180' : c.belly} stroke="none" />
+    <ellipse cx="64" cy="91" rx="6" ry="3" fill={id === 'eumme' || id === 'ggulgguli' ? '#B49180' : c.belly} stroke="none" />
+    <path d="M35 59 Q24 54 18 66 Q13 75 19 78 Q25 82 33 70 M65 59 Q75 55 80 44 Q84 36 90 41 Q99 52 73 71" fill={c.fur} />
+    <ellipse cx="21" cy="73" rx="3" ry="4" fill={c.belly} stroke="none" />
+    <ellipse cx="87" cy="46" rx="3" ry="4" fill={c.belly} stroke="none" />
+    <path d="M34 53 Q50 46 66 53 Q74 66 73 78 Q72 88 50 89 Q28 88 27 78 Q26 64 34 53Z" fill={c.fur} />
+    {id === 'eumme' && <path d="M31 63 Q23 59 28 69 Q21 78 29 81 Q26 91 38 86 Q46 96 51 89 Q62 94 66 86 Q78 88 72 78 Q80 69 70 65" fill={c.fur} />}
+    <ellipse cx="50" cy="73" rx="15" ry="12" fill={c.belly} stroke="none" />
+    {id === 'ggomi' || id === 'jelly' ? <>
+      <path d="M36 58 Q50 63 64 58 L69 83 Q50 93 31 83Z" fill={c.dress} stroke="none" />
+      <path d="M37 77 Q50 83 64 77" fill="none" stroke="#FFF8EC" strokeWidth="2" />
+      <path d="M50 75 C39 68 44 64 50 68 C56 63 61 69 50 75" fill="#FFF4DC" stroke="none" />
+    </> : <>
+      <path d="M33 56 Q50 63 68 56 L64 63 L51 69 L36 63Z" fill={c.dress} stroke="none" />
+      <circle cx="50" cy="66" r="3" fill={id === 'eumme' ? '#EDCA6A' : '#FFF4DC'} stroke="none" />
+    </>}
+  </g>;
+}
+
 export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
   id,
   size = 'md',
@@ -97,6 +135,8 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
       case 'ggomi': // 꼬미 (여자 곰 - Pink/Brown Bear + Ribbon)
         return (
           <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
+            <FriendBody id={id} />
+            <g transform="translate(13 0) scale(.74)">
             {/* Bear Ears */}
             <circle cx="25" cy="25" r="14" fill="#C48B71" />
             <circle cx="25" cy="25" r="8" fill="#FFB7D5" />
@@ -126,12 +166,18 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
             {/* Rosy Cheeks */}
             <ellipse cx="30" cy="56" rx="5" ry="3" fill="#FF80AB" opacity="0.6" />
             <ellipse cx="70" cy="56" rx="5" ry="3" fill="#FF80AB" opacity="0.6" />
+            </g>
           </svg>
         );
 
       case 'rano': // 라노 (남자 공룡 - Mint Dino with soft yellow belly & back spikes)
         return (
           <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
+            <ellipse cx="50" cy="94" rx="31" ry="3" fill="#628578" opacity=".15" />
+            <path d="M75 66 Q93 71 91 47 Q104 88 72 85Z" fill="#7DB58A" />
+            <path d="M27 73 Q22 59 14 65 Q8 72 23 80 M75 67 Q88 52 92 59 Q97 68 78 77" fill="#81C784" stroke="#68A572" strokeWidth="1.5" />
+            <path d="M28 78 L28 88 Q20 97 36 96 H46 V80 M58 80 V95 H76 Q82 88 71 85 L73 78" fill="#81C784" stroke="#68A572" strokeWidth="1.5" />
+            <path d="M30 91 V95 M36 91 V95 M66 91 V95 M72 91 V95" stroke="#FFF5CD" strokeWidth="2" strokeLinecap="round" />
             {/* Back Spikes */}
             <polygon points="18,35 10,42 20,48" fill="#FFD54F" />
             <polygon points="15,48 6,56 18,62" fill="#FFD54F" />
@@ -167,6 +213,8 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
       case 'jelly': // 젤리 (여자 토끼 - Lavender Bunny + Long Ears + Flower)
         return (
           <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
+            <FriendBody id={id} />
+            <g transform="translate(13 0) scale(.74)">
             {/* Long Bunny Ears */}
             <ellipse cx="35" cy="22" rx="8" ry="20" fill="#E1BEE7" transform="rotate(-10 35 22)" />
             <ellipse cx="35" cy="22" rx="4" ry="14" fill="#F8BBD0" transform="rotate(-10 35 22)" />
@@ -194,12 +242,15 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
             {/* Cheeks */}
             <ellipse cx="30" cy="60" rx="5" ry="3" fill="#FF80AB" opacity="0.6" />
             <ellipse cx="70" cy="60" rx="5" ry="3" fill="#FF80AB" opacity="0.6" />
+            </g>
           </svg>
         );
 
       case 'dochi': // 도치 (남자 고슴도치 - Peach Body + Soft Quills)
         return (
           <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
+            <FriendBody id={id} />
+            <g transform="translate(13 0) scale(.74)">
             {/* Soft Quills Hair */}
             <path d="M 15 45 Q 20 15 50 15 Q 80 15 85 45 Q 90 70 80 80 Q 50 90 20 80 Z" fill="#FFA726" />
             <path d="M 22 45 Q 25 22 50 22 Q 75 22 78 45 Q 82 65 75 74 Q 50 82 25 74 Z" fill="#FB8C00" />
@@ -220,12 +271,15 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
             {/* Cheeks */}
             <ellipse cx="32" cy="58" rx="4" ry="2.5" fill="#FF7043" opacity="0.6" />
             <ellipse cx="68" cy="58" rx="4" ry="2.5" fill="#FF7043" opacity="0.6" />
+            </g>
           </svg>
         );
 
       case 'ggulgguli': // 꿀꿀이 (돼지 - Peach Pink Pig + Cute Snout)
         return (
           <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
+            <FriendBody id={id} />
+            <g transform="translate(13 0) scale(.74)">
             {/* Ears */}
             <path d="M 20 30 Q 15 12 35 20 Z" fill="#FF8A80" />
             <path d="M 80 30 Q 85 12 65 20 Z" fill="#FF8A80" />
@@ -248,12 +302,15 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
             {/* Cheeks */}
             <ellipse cx="28" cy="54" rx="5" ry="3" fill="#FF5252" opacity="0.4" />
             <ellipse cx="72" cy="54" rx="5" ry="3" fill="#FF5252" opacity="0.4" />
+            </g>
           </svg>
         );
 
       case 'eumme': // 음메 (양 - Fluffy White Sheep + Bell)
         return (
           <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
+            <FriendBody id={id} />
+            <g transform="translate(13 0) scale(.74)">
             {/* Tiny Horns */}
             <path d="M 22 30 Q 12 25 18 18 Q 28 20 26 30 Z" fill="#FFE082" />
             <path d="M 78 30 Q 88 25 82 18 Q 72 20 74 30 Z" fill="#FFE082" />
@@ -278,6 +335,7 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
 
             {/* Bell Collar */}
             <circle cx="50" cy="72" r="4" fill="#FFCA28" />
+            </g>
           </svg>
         );
 
@@ -305,6 +363,8 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
       case 'nurungji': // 누룽지 (황토색 강아지 - Golden Ocher Puppy)
         return (
           <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
+            <FriendBody id={id} />
+            <g transform="translate(13 0) scale(.74)">
             {/* Floppy Ears */}
             <path d="M 18 35 C 5 45, 10 70, 24 60 Z" fill="#8D6E63" />
             <path d="M 82 35 C 95 45, 90 70, 76 60 Z" fill="#8D6E63" />
@@ -327,6 +387,7 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
             {/* Cheeks */}
             <ellipse cx="28" cy="54" rx="4" ry="2.5" fill="#FF8A80" opacity="0.6" />
             <ellipse cx="72" cy="54" rx="4" ry="2.5" fill="#FF8A80" opacity="0.6" />
+            </g>
           </svg>
         );
     }

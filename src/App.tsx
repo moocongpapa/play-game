@@ -11,13 +11,13 @@ import { HomeScreen } from './screens/HomeScreen';
 import { SplashLoader } from './components/SplashLoader';
 import { OnboardingScreen } from './screens/OnboardingScreen';
 
-import { startBGM, stopBGM, setBGMVolume, playStarGain, speakText, stopAllSpeech, setAudioPreferences } from './utils/soundEngine';
+import { getAudioContext, startBGM, stopBGM, setBGMVolume, playStarGain, speakText, stopAllSpeech, setAudioPreferences } from './utils/soundEngine';
 import { Moon, Shield } from 'lucide-react';
 import { createChildProfile } from './utils/ageEngine';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 const CharacterTalkScreen = lazy(() => import('./screens/CharacterTalkScreen').then(module => ({ default: module.CharacterTalkScreen })));
-const StickerRoomScreen = lazy(() => import('./screens/StickerRoomScreen').then(module => ({ default: module.StickerRoomScreen })));
+const BugGardenScreen = lazy(() => import('./screens/BugGardenScreen').then(module => ({ default: module.BugGardenScreen })));
 const ParentDashboard = lazy(() => import('./screens/ParentDashboard').then(module => ({ default: module.ParentDashboard })));
 const SketchbookScreen = lazy(() => import('./screens/SketchbookScreen').then(module => ({ default: module.SketchbookScreen })));
 const GgomiObjectGame = lazy(() => import('./screens/games/GgomiObjectGame').then(module => ({ default: module.GgomiObjectGame })));
@@ -59,6 +59,7 @@ export default function App() {
         const finalProfile = savedProfile || parsed.childProfile || createChildProfile('유하', '2023-01-03');
         return {
           ...parsed,
+          stars: 0, // 점수 누적 제거
           childProfile: finalProfile,
           onboardingCompleted: true, // 항상 유지되도록 완료 처리
         };
@@ -69,7 +70,7 @@ export default function App() {
 
     const defaultProf = savedProfile || createChildProfile('유하', '2023-01-03');
     return {
-      stars: 5,
+      stars: 0,
       unlockedStickers: ['stk_ggomi', 'stk_rano', 'stk_jelly', 'stk_dochi', 'stk_star', 'stk_flower'],
       placedStickers: [],
       selectedCharacter: 'ggomi',
@@ -134,15 +135,32 @@ export default function App() {
 
   useEffect(() => { setAudioPreferences(appState.soundEnabled, appState.ttsEnabled !== false); }, [appState.soundEnabled, appState.ttsEnabled]);
 
-  // Handle BGM state
+  // Resume only in a user gesture; stop background audio when the app is hidden.
   useEffect(() => {
-    if (appState.bgmEnabled && appState.soundEnabled && !showSplash && !appState.isTimeUp) {
-      startBGM(appState.bgmVolume);
-    } else {
+    const enabled = appState.bgmEnabled && appState.soundEnabled && !showSplash && !appState.isTimeUp;
+    const syncMusic = () => {
+      if (enabled && !document.hidden) startBGM(); else stopBGM();
+    };
+    const unlockMusic = () => {
+      if (enabled && !document.hidden) { getAudioContext(); startBGM(); }
+    };
+    const onVisibility = () => {
+      if (document.hidden) stopAllSpeech();
+      syncMusic();
+    };
+    syncMusic();
+    window.addEventListener('pointerdown', unlockMusic);
+    window.addEventListener('keydown', unlockMusic);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
       stopBGM();
-    }
-    return () => stopBGM();
-  }, [appState.bgmEnabled, appState.bgmVolume, appState.soundEnabled, showSplash, appState.isTimeUp]);
+      window.removeEventListener('pointerdown', unlockMusic);
+      window.removeEventListener('keydown', unlockMusic);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [appState.bgmEnabled, appState.soundEnabled, showSplash, appState.isTimeUp]);
+
+  useEffect(() => { setBGMVolume(appState.bgmVolume); }, [appState.bgmVolume]);
 
   const soundEnabled = appState.soundEnabled;
 
@@ -169,21 +187,13 @@ export default function App() {
     return () => clearInterval(interval);
   }, [showSplash, appState.isTimeUp, currentScreen]);
 
-  // Reward Handler when a quiz round is completed
-  const handleCompleteQuiz = (starsEarned: number) => {
+  // Play Celebration when a quiz round is completed (점수 누적 없이 순수한 성취 축하)
+  const handleCompleteQuiz = (_starsEarned: number) => {
     setShowConfetti(true);
     playStarGain(appState.soundEnabled);
 
     setAppState((prev) => {
-      const newStars = prev.stars + starsEarned;
-      // Auto unlock extra stickers if star milestones reached
-      const unlocked = [...prev.unlockedStickers];
-      if (newStars >= 10 && !unlocked.includes('stk_ggulgguli')) unlocked.push('stk_ggulgguli');
-      if (newStars >= 15 && !unlocked.includes('stk_eumme')) unlocked.push('stk_eumme');
-      if (newStars >= 20 && !unlocked.includes('stk_nurungji')) unlocked.push('stk_nurungji');
-      if (newStars >= 25 && !unlocked.includes('stk_rainbow')) unlocked.push('stk_rainbow');
-
-      // 활성화된 게임 카운트 증가
+      // 완료한 게임 카운트만 부모 대시보드 놀이 통계용으로 기록
       const updatedGames = { ...prev.completedGames };
       if (activeGameId) {
         updatedGames[activeGameId] = (updatedGames[activeGameId] || 0) + 1;
@@ -191,14 +201,13 @@ export default function App() {
 
       return {
         ...prev,
-        stars: newStars,
-        unlockedStickers: unlocked,
         completedGames: updatedGames,
       };
     });
 
     scheduleGameTimeout(() => setShowConfetti(false), 1800);
   };
+
 
   const handleStartGame = (gameId: GameId, characterId: CharacterId) => {
     stopAllSpeech();
@@ -294,18 +303,14 @@ export default function App() {
 
       case 'stickers':
         return (
-          <StickerRoomScreen
+          <BugGardenScreen
             buddy={appState.selectedCharacter}
-            unlockedStickers={appState.unlockedStickers}
-            placedStickers={appState.placedStickers}
             childName={childName}
-            onUpdatePlacedStickers={(stickers) =>
-              setAppState((prev) => ({ ...prev, placedStickers: stickers }))
-            }
             onGoHome={handleGoHome}
             soundEnabled={soundEnabled}
           />
         );
+
 
       case 'parent':
         return (

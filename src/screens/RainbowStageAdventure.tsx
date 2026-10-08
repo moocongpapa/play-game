@@ -1,3 +1,6 @@
+import { useSoundClue } from '../hooks/useSoundClue';
+import { PLAY_THEMES } from '../data/playThemes';
+import { pickNextRound, shuffle } from '../utils/roundDeck';
 import { CHARACTERS } from '../data/characters';
 import { GameArtwork } from '../components/GameArtwork';
 import { ToyArtwork, BasketArtwork } from '../components/ToyArtwork';
@@ -8,7 +11,6 @@ import { CharacterAvatar } from '../components/CharacterAvatar';
 import { JellyButton } from '../components/JellyButton';
 import {
   speakText,
-  playAnimalSound,
   playDingDongDang,
   playJellyTap,
   playBouncyBoing,
@@ -47,6 +49,10 @@ const ANIMAL_QUIZ_LIST: AnimalQuizItem[] = [
   { id: 'cow', name: '소', soundKey: 'cow', soundPrompt: '음메~', emoji: '🐮', color: '#BBDEFB' },
   { id: 'pig', name: '돼지', soundKey: 'pig', soundPrompt: '꿀꿀!', emoji: '🐷', color: '#F8BBD0' },
   { id: 'frog', name: '개구리', soundKey: 'frog', soundPrompt: '개굴개굴!', emoji: '🐸', color: '#C8E6C9' },
+  { id: 'sheep', name: '양', soundKey: 'sheep', soundPrompt: '매애~', emoji: '🐑', color: '#FFF8E1' },
+  { id: 'horse', name: '말', soundKey: 'horse', soundPrompt: '히이잉~', emoji: '🐴', color: '#EFEBE9' },
+  { id: 'rooster', name: '수탉', soundKey: 'rooster', soundPrompt: '꼬끼오!', emoji: '🐓', color: '#FFE0B2' },
+  { id: 'bird', name: '새', soundKey: 'bird', soundPrompt: '짹짹~', emoji: '🐦', color: '#E1F5FE' },
 ];
 
 // Level 2 Data (Color Basket Sort)
@@ -64,6 +70,9 @@ const SORT_ITEMS: BasketSortItem[] = [
   { id: 'strawberry', name: '딸기', colorId: 'red', emoji: '🍓' },
   { id: 'lemon', name: '레몬', colorId: 'yellow', emoji: '🍋' },
   { id: 'kiwi', name: '키위', colorId: 'green', emoji: '🥝' },
+  { id: 'cherries', name: '체리', colorId: 'red', emoji: '🍒' },
+  { id: 'pineapple', name: '파인애플', colorId: 'yellow', emoji: '🍍' },
+  { id: 'green-apple', name: '초록 사과', colorId: 'green', emoji: '🍏' },
 ];
 
 // Level 4 Data (Shadow Silhouette Puzzle)
@@ -79,6 +88,12 @@ const SHADOW_PUZZLE_LIST: ShadowPuzzleItem[] = [
   { id: 'butterfly', name: '나비', emoji: '🦋', bg: '#F3E5F5' },
   { id: 'rocket', name: '우주선', emoji: '🚀', bg: '#E0F7FA' },
   { id: 'dog', name: '강아지', emoji: '🐶', bg: '#FFF8E1' },
+  { id: 'rabbit', name: '토끼', emoji: '🐰', bg: '#F3E5F5' },
+  { id: 'penguin', name: '펭귄', emoji: '🐧', bg: '#E0F2F1' },
+  { id: 'turtle', name: '거북이', emoji: '🐢', bg: '#E8F5E9' },
+  { id: 'elephant', name: '코끼리', emoji: '🐘', bg: '#E3F2FD' },
+  { id: 'plane', name: '비행기', emoji: '✈️', bg: '#FFF8E1' },
+  { id: 'train', name: '기차', emoji: '🚂', bg: '#FCE4EC' },
 ];
 
 export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
@@ -89,6 +104,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
   childName,
 }) => {
   const friend = CHARACTERS[buddy];
+  const { playClue, status: clueStatus } = useSoundClue(soundEnabled, buddy);
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const reducedMotion = useReducedMotion();
@@ -107,7 +123,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
   const [l1WrongId, setL1WrongId] = useState<string | null>(null);
 
   const initLevel1 = () => {
-    const target = ANIMAL_QUIZ_LIST[Math.floor(Math.random() * ANIMAL_QUIZ_LIST.length)];
+    const target = pickNextRound(ANIMAL_QUIZ_LIST, 'adventure:animals');
     const others = ANIMAL_QUIZ_LIST.filter((a) => a.id !== target.id).sort(() => Math.random() - 0.5).slice(0, 2);
     const opts = [target, ...others].sort(() => Math.random() - 0.5);
 
@@ -116,10 +132,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
     setL1WrongId(null);
 
     scheduleGameTimeout(() => {
-      playAnimalSound(target.soundKey, soundEnabled);
-      speakText(`동물 소리를 들어보자! "${target.soundPrompt}" 누구 소리일까요?`, soundEnabled, {
-        characterId: buddy,
-      });
+      playClue(target.soundKey, target.soundPrompt);
     }, 400);
   };
 
@@ -127,7 +140,6 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
     if (clearingLevel.current) return;
     if (item.id === l1Target.id) {
       // Correct!
-      playAnimalSound(l1Target.soundKey, soundEnabled);
       playDingDongDang(soundEnabled);
       fireConfetti();
       triggerStageClear(1, `정답이에요! 짝짝짝! 귀여운 ${l1Target.name}였어요!`);
@@ -138,7 +150,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
       speakText(`다시 소리를 잘 들어볼까요?`, soundEnabled, { characterId: buddy });
       scheduleGameTimeout(() => {
         setL1WrongId(null);
-        playAnimalSound(l1Target.soundKey, soundEnabled);
+        playClue(l1Target.soundKey, l1Target.soundPrompt);
       }, 700);
     }
   };
@@ -207,12 +219,14 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
       { color: '#60A5FA', bg: '#3B82F6', emoji: '🐬' },
       { color: '#C084FC', bg: '#A855F7', emoji: '🍇' },
     ];
+    const theme = pickNextRound(PLAY_THEMES, 'adventure:balloons');
+    const pictures = shuffle(theme.items);
     const initialBalloons = palettes.map((p, i) => ({
       id: `bal-${i}`,
       x: 15 + i * 16,
       color: p.color,
       bg: p.bg,
-      emoji: p.emoji,
+      emoji: pictures[i].emoji,
       size: 90,
     }));
     setL3Balloons(initialBalloons);
@@ -267,7 +281,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
 
   const initLevel4 = () => {
     setL4Solved(false);
-    const target = SHADOW_PUZZLE_LIST[Math.floor(Math.random() * SHADOW_PUZZLE_LIST.length)];
+    const target = pickNextRound(SHADOW_PUZZLE_LIST, 'adventure:shadows');
     const others = SHADOW_PUZZLE_LIST.filter((s) => s.id !== target.id).sort(() => Math.random() - 0.5).slice(0, 2);
     const opts = [target, ...others].sort(() => Math.random() - 0.5);
 
@@ -454,7 +468,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
               </p>
             </div>
             <button
-              onClick={() => playAnimalSound(l1Target.soundKey, soundEnabled)}
+              onClick={() => playClue(l1Target.soundKey, l1Target.soundPrompt)}
               className="p-3 bg-orange-500 hover:bg-orange-600 text-white rounded-full active:scale-95 shadow-xs cursor-pointer"
               title="다시 듣기"
             >
@@ -462,7 +476,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
             </button>
           </div>
 
-          {!soundEnabled && <div className="visual-prompt"><ToyArtwork emoji={l1Target.emoji} label="찾을 동물" /><span aria-hidden="true">→ ?</span></div>}
+          {(!soundEnabled || clueStatus === 'fallback') && <div className="visual-prompt"><ToyArtwork emoji={l1Target.emoji} label="찾을 동물" /><span aria-hidden="true">→ ?</span></div>}
 
           {/* Large Animal Cards (Jumbo touch targets for 3~4 year olds) */}
           <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full max-w-xl my-2">

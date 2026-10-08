@@ -1,3 +1,4 @@
+import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
@@ -7,7 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
-import { getDifficultyConfig, getAgeGroupLabel, pickRandom } from '../../utils/ageEngine';
+import { getDifficultyConfig, getAgeGroupLabel } from '../../utils/ageEngine';
 import { WORD_PUZZLE_ITEMS_BY_AGE } from '../../data/gameData';
 import { AgeGroup, WordPuzzleItem } from '../../types';
 import { Volume2, RefreshCw, Sparkles, Timer } from 'lucide-react';
@@ -63,7 +64,7 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
     setTimeOut(false);
     setTimeLeft(diffConfig.timeLimit);
 
-    const target = pickRandom<WordPuzzleItem>(currentPool, 1)[0];
+    const target = pickNextRound(currentPool, `WordPuzzleGame:${ageGroup}`);
     setTargetItem(target);
 
     // 낱말 글자들 뒤섞어 배치

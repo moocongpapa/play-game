@@ -37,7 +37,7 @@ export const Header: React.FC<HeaderProps> = ({
     : currentScreen === 'drawing'
       ? '색칠하기'
       : currentScreen === 'stickers'
-        ? '스티커북'
+        ? '곤충 놀이터'
         : currentScreen === 'talk'
           ? '친구 인사'
           : currentScreen === 'parent'
@@ -59,11 +59,12 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <button
             onClick={onOpenStickerRoom}
-            aria-label={`스티커북 열기, 별 ${stars}개`}
-            className="flex min-h-11 items-center gap-1.5 rounded-full bg-[#f8f2df] px-3 font-extrabold text-[#755e3a] hover:bg-[#f3e8c7]"
+            aria-label="곤충 놀이터 열기"
+            className="flex min-h-11 items-center gap-1.5 rounded-full bg-[#e8f5e5] px-3.5 font-black text-[#2e5223] hover:bg-[#dcf0d8] active:scale-95 transition-transform cursor-pointer"
           >
-            <Sparkles className="size-5" /><span>{stars}</span>
+            <span className="text-xl">🐞</span><span>곤충 놀이</span>
           </button>
+
           <button
             onClick={onToggleBGM}
             aria-label={bgmEnabled ? '배경음악 끄기' : '배경음악 켜기'}

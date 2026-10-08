@@ -77,9 +77,10 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
 
     <section className="extra-play" aria-label="자유 놀이">
       <button onClick={onOpenDrawing} className="extra-drawing"><span className="extra-icon"><Palette /></span><span>색칠 놀이</span><ArrowRight size={18} /></button>
-      <button onClick={onOpenStickerRoom} className="extra-stickers"><span className="extra-icon"><BookOpen /></span><span>스티커북</span><ArrowRight size={18} /></button>
+      <button onClick={onOpenStickerRoom} className="extra-stickers"><span className="extra-icon text-2xl">🐞</span><span>곤충 놀이</span><ArrowRight size={18} /></button>
       <button onClick={onOpenCharacterTalk} className="extra-talk"><span className="extra-icon"><MessageCircle /></span><span>친구와 인사</span><ArrowRight size={18} /></button>
     </section>
+
     <p className="home-footnote">작은 손으로 만나는, 커다란 세상</p>
   </div>;
 };

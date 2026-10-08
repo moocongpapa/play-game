@@ -1,3 +1,4 @@
+import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
@@ -6,8 +7,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
-import { speakText, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
-import { getDifficultyConfig, getAgeGroupLabel, pickRandom } from '../../utils/ageEngine';
+import { speakText, stopAllSpeech, setBGMDucked, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
+import { getDifficultyConfig, getAgeGroupLabel } from '../../utils/ageEngine';
 import { RHYTHM_ITEMS_BY_AGE } from '../../data/gameData';
 import { AgeGroup, RhythmItem } from '../../types';
 import { Volume2, RefreshCw, Timer, Sparkles } from 'lucide-react';
@@ -28,6 +29,10 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
   childName,
 }) => {
   const friend = CHARACTERS[buddy];
+  useEffect(() => {
+    setBGMDucked('rhythm', true);
+    return () => setBGMDucked('rhythm', false);
+  }, []);
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const diffConfig = getDifficultyConfig(ageGroup);
@@ -95,6 +100,8 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
     // 리듬 소리가 연주되기 전 가이드
     speakText(`${friend.name}의 연주 리듬을 귀기울여 잘 들어보아요!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
     await new Promise<void>((resolve) => window.setTimeout(resolve, 1500));
+    if (!isMountedRef.current || sequence !== sequenceRef.current) return;
+    stopAllSpeech();
 
     for (let i = 0; i < item.notes.length; i++) {
       if (!isMountedRef.current || sequence !== sequenceRef.current) return;
@@ -138,7 +145,7 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
     setTimeLeft(diffConfig.timeLimit);
     setUserSequence([]);
 
-    const target = pickRandom<RhythmItem>(itemPool, 1)[0] || itemPool[0];
+    const target = pickNextRound(itemPool, `RhythmGame:${ageGroup}`);
     if (!target) return;
     setTargetItem(target);
 

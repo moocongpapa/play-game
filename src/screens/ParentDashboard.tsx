@@ -185,11 +185,14 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
             <span className="text-[11px] sm:text-xs font-bold text-[#8C7B79] block">총 이용 시간</span>
             <span className="text-lg sm:text-2xl font-black text-[#FF9E4A]">{formatSeconds(appState.playTimeSeconds)}</span>
           </div>
-          <div className="p-2.5 sm:p-3 bg-rose-50 rounded-2xl border border-rose-200">
-            <span className="text-[11px] sm:text-xs font-bold text-[#8C7B79] block">모은 🌟 별 개수</span>
-            <span className="text-lg sm:text-2xl font-black text-rose-500">{appState.stars}개</span>
+          <div className="p-2.5 sm:p-3 bg-emerald-50 rounded-2xl border border-emerald-200">
+            <span className="text-[11px] sm:text-xs font-bold text-[#8C7B79] block">완료한 놀이 활동</span>
+            <span className="text-lg sm:text-2xl font-black text-emerald-600">
+              {Object.values(appState.completedGames).reduce((a, b) => a + b, 0)}회
+            </span>
           </div>
         </div>
+
 
         {/* 놀이 통계 시각화 */}
         <h3 className="text-xs font-black text-[#4A3E3D] text-left mb-2 flex items-center gap-1">
@@ -331,6 +334,10 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
       </div>
 
       {/* Quick Actions */}
+      <p className="text-xs text-center text-stone-500 mb-4">
+        배경음악 6곡이 골고루 바뀌어요.{' '}
+        <a href="/audio/CREDITS.html" target="_blank" rel="noreferrer" className="underline">동물 녹음 출처</a>
+      </p>
       <div className="w-full flex gap-2.5 sm:gap-3 mb-4">
         <button
           onClick={onUnlockAllStickers}

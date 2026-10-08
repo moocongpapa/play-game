@@ -1,3 +1,4 @@
+import { pickNextRound, shuffle } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
@@ -71,8 +72,10 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
     }
     setQuestionType(type);
 
-    // 아이템 풀 믹스배치
-    const shuffledItems = [...itemPool].sort(() => Math.random() - 0.5);
+    // Each round compares the same toy at distinct sizes, keeping one clear answer.
+    const themes = itemPool.filter((item, index) => itemPool.findIndex(other => other.emoji === item.emoji) === index);
+    const theme = pickNextRound(themes, `sizes:${ageGroup}`);
+    const shuffledItems = shuffle(itemPool.filter(item => item.emoji === theme.emoji));
     setTargetItems(shuffledItems);
 
     let audioMsg = '';
