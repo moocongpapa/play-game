@@ -6,6 +6,17 @@ export interface DropBounds {
   bottom: number;
 }
 
+/** CSS pixels, independent of screen density. Give tablet fingers a wider landing area. */
+export const magnetTolerance = (viewportWidth: number) => viewportWidth >= 768 ? 90 : 60;
+export const MAGNET_SPRING = { type: 'spring' as const, stiffness: 400, damping: 20, mass: .8 };
+
+/** An explicit drop inside another slot still counts as that choice; nearby valid slots attract. */
+export function findMagnetTarget(x: number, y: number, targets: DropBounds[], tolerance: number, accepts?: (id: string) => boolean) {
+  const direct = findDropTarget(x, y, targets, 0);
+  if (direct) return direct;
+  return findDropTarget(x, y, accepts ? targets.filter(target => accepts(target.id)) : targets, tolerance);
+}
+
 /** Prefer the slot under the finger; forgive small misses without choosing a distant slot. */
 export function findDropTarget(x: number, y: number, targets: DropBounds[], tolerance = 22): string | null {
   const candidates = targets.map(target => {

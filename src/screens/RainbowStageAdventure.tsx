@@ -1,3 +1,5 @@
+import { useIdleScaffolding } from '../hooks/useIdleScaffolding';
+import { ScaffoldingHint } from '../components/ScaffoldingHint';
 import { DragMatch, DragPiece, DropSlot, DragHint } from '../components/DragMatch';
 import { RoundContinuation } from '../components/RoundContinuation';
 import { useSoundClue } from '../hooks/useSoundClue';
@@ -351,6 +353,12 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
     return clearGameTimeouts;
   }, [currentLevel, clearGameTimeouts]);
 
+  const { isIdle } = useIdleScaffolding({
+    resetKey: `${currentLevel}:${l1Target.id}:${l3Popped}`,
+    disabled: stampAnimationLevel !== null || (currentLevel !== 1 && currentLevel !== 3),
+    voice: { text: currentLevel === 1 ? '여기 반짝이는 친구를 눌러보자!' : '반짝이는 풍선을 톡 눌러볼까?', buddy, soundEnabled },
+  });
+
   // Restart Adventure
   const restartAdventure = () => {
     clearGameTimeouts();
@@ -494,6 +502,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
               >
                 <span className="text-6xl sm:text-7xl filter drop-shadow-sm select-none"><ToyArtwork emoji={opt.emoji} /></span>
                 <span className="text-xl sm:text-2xl font-black text-[#4A3E3D]">{opt.name}</span>
+                {isIdle && opt.id === l1Target.id && <ScaffoldingHint />}
               </motion.button>
             ))}
           </div>
@@ -508,7 +517,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
       {/* LEVEL 2: 색깔 과일 바구니 분류 (드래그 & 원터치) */}
       {/* ========================================================= */}
       {currentLevel === 2 && (
-        <DragMatch hint={l2RemainingItems[0] ? { pieceId: l2RemainingItems[0].id, targetId: l2RemainingItems[0].colorId } : undefined} resetKey={currentLevel} disabled={l2SortedCount >= 3} onDrop={(id, basketId) => {
+        <DragMatch canDrop={(id, basket) => l2RemainingItems.find(fruit => fruit.id === id)?.colorId === basket} hint={l2RemainingItems[0] ? { pieceId: l2RemainingItems[0].id, targetId: l2RemainingItems[0].colorId } : undefined} resetKey={currentLevel} disabled={l2SortedCount >= 3} onDrop={(id, basketId) => {
           const fruit = l2RemainingItems.find(item => item.id === id);
           if (!fruit || clearingLevel.current || !['red', 'yellow', 'green'].includes(basketId)) return false;
           handleL2SortFruit(fruit, basketId as BasketSortItem['colorId']);
@@ -622,6 +631,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
               >
                 <div className="absolute top-2 left-3 w-3 h-5 bg-white/70 rounded-full blur-[1px] -rotate-12" />
                 <span className="text-3xl select-none"><ToyArtwork emoji={b.emoji} /></span>
+                {isIdle && <ScaffoldingHint />}
               </motion.button>
             ))}
           </div>
@@ -638,7 +648,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
       {/* LEVEL 4: 그림자 실루엣 퍼즐 */}
       {/* ========================================================= */}
       {currentLevel === 4 && (
-        <DragMatch hint={{ pieceId: l4Target.id, targetId: 'shadow' }} resetKey={l4Target.id} disabled={l4Solved} onDrop={id => {
+        <DragMatch canDrop={id => id === l4Target.id} hint={{ pieceId: l4Target.id, targetId: 'shadow' }} resetKey={l4Target.id} disabled={l4Solved} onDrop={id => {
           const item = l4Options.find(option => option.id === id);
           if (!item || l4Solved || clearingLevel.current) return false;
           handleL4Match(item);

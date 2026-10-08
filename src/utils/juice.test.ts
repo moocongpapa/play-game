@@ -38,3 +38,10 @@ test('effect pitch is bounded and leaving a screen unsubscribes its impacts', ()
   emitJuice({ kind: 'pop' }); stop(); emitJuice({ kind: 'success' });
   assert.equal(count, 1);
 });
+
+test('a magnetic landing delivers one gentle 15ms tick and throttles duplicate impacts', () => {
+  const patterns: (number | number[])[] = [];
+  const haptics = createHaptics(pattern => patterns.push(pattern), () => 0);
+  haptics.play('snap'); haptics.play('snap'); haptics.play('tap');
+  assert.deepEqual(patterns, [[15]]);
+});

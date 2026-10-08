@@ -41,10 +41,6 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
   const [selectedCorrectId, setSelectedCorrectId] = useState<string | null>(null);
   const [shakingCardId, setShakingCardId] = useState<string | null>(null);
 
-  // 힌트 상태
-  const [showHint, setShowHint] = useState(false);
-  const hintTimerRef = useRef<number | null>(null);
-
   // 타이머 상태
   const [timeLeft, setTimeLeft] = useState<number>(diffConfig.timeLimit);
   const [timeOut, setTimeOut] = useState(false);
@@ -52,12 +48,10 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
 
   const generateRound = () => {
     clearGameTimeouts();
-    if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
     setSelectedCorrectId(null);
     setShakingCardId(null);
-    setShowHint(false);
     setTimeOut(false);
     setTimeLeft(diffConfig.timeLimit);
 
@@ -72,14 +66,6 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
 
     if (soundEnabled) {
       speakText(`${friend.name}랑 신나는 패턴 놀이! 알맞은 그림을 물음표 상자로 옮겨 주세요!`, soundEnabled, { characterId: buddy });
-    }
-
-    // 힌트 타이머 구동
-    if (diffConfig.hintEnabled) {
-      hintTimerRef.current = scheduleGameTimeout(() => {
-        setShowHint(true);
-        speakText(`반짝이는 그림을 빈칸으로 옮겨 봐!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
-      }, diffConfig.hintDelaySec * 1000);
     }
 
     // 시간제한 타이머 구동
@@ -101,7 +87,6 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
   useEffect(() => {
     generateRound();
     return () => {
-      if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       if (gameTimerRef.current) clearInterval(gameTimerRef.current);
     };
   }, [ageGroup]);
@@ -110,7 +95,6 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
     if (selectedCorrectId || timeOut) return;
 
     if (ans === targetItem.answer) {
-      if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
       setSelectedCorrectId(ans);
@@ -128,7 +112,7 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
   if (!targetItem) return null;
 
   return (
-    <DragMatch hint={{ pieceId: targetItem.answer, targetId: 'pattern' }} resetKey={targetItem.id} disabled={!!selectedCorrectId || timeOut} onDrop={id => {
+    <DragMatch canDrop={id => id === targetItem.answer} hint={{ pieceId: targetItem.answer, targetId: 'pattern' }} resetKey={targetItem.id} disabled={!!selectedCorrectId || timeOut} onDrop={id => {
       if (selectedCorrectId || timeOut || !options.includes(id)) return false;
       handleSelectCard(id);
       return id === targetItem.answer;
@@ -203,8 +187,6 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
         {options.map((ans) => {
           const isShaking = shakingCardId === ans;
           const isSolved = selectedCorrectId === ans;
-          const isTarget = ans === targetItem.answer;
-          const shouldPulse = showHint && isTarget && !selectedCorrectId;
 
           return (
             <DragPiece
@@ -214,17 +196,13 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
                   ? { x: [-8, 8, -6, 6, 0] }
                   : isSolved
                   ? { scale: 1.15 }
-                  : shouldPulse
-                  ? { scale: [1, 1.12, 1] }
                   : { scale: 1 }
               }
-              transition={{ duration: isShaking ? 0.5 : shouldPulse ? 1.0 : 0.2 }}
+              transition={{ duration: isShaking ? 0.5 : 0.2 }}
               id={ans} label={`${ans} 그림`}
               className={`game-choice w-16 h-16 sm:w-24 sm:h-24 rounded-3xl text-4xl sm:text-6xl flex items-center justify-center shadow-md border-4 transition-all cursor-pointer ${
                 isSolved
                   ? 'bg-[#E8F5E9] border-[#66BB6A]'
-                  : shouldPulse
-                  ? 'bg-amber-50 border-amber-400 ring-4 ring-amber-300'
                   : 'bg-white border-[#C8E6C9] hover:bg-[#F1F8E9]'
               }`}
             >

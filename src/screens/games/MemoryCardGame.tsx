@@ -63,7 +63,7 @@ export function MemoryCardGame({ buddy, onCompleteQuiz, soundEnabled, ageGroup, 
   };
 
   const nextCard = cards.find(card => !matched.includes(card.id));
-  return <DragMatch onDrop={matchPair} resetKey={round} disabled={isCompleted} hint={nextCard ? { pieceId: nextCard.id, targetId: nextCard.id } : undefined}>
+  return <DragMatch canDrop={(id, target) => id === target} onDrop={matchPair} resetKey={round} disabled={isCompleted} hint={nextCard ? { pieceId: nextCard.id, targetId: nextCard.id } : undefined}>
     <div className="game-board flex flex-col items-center w-full max-w-2xl mx-auto">
       <div className="game-prompt w-full bg-gradient-to-r from-[#FFE0B2] to-[#FFF3E0] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FFA726] flex items-center gap-3">
         <CharacterAvatar id={buddy} size="md" mood={isCompleted ? 'happy' : 'waving'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />

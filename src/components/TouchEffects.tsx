@@ -84,7 +84,7 @@ export function TouchEffects({ active, screenKey, hapticsEnabled }: { active: bo
     const resize = () => { reset(); size(); };
     const stop = subscribeJuice(impact => {
       if (document.hidden || reduced || performance.now() - lastImpact < 180) return;
-      lastImpact = performance.now(); haptics.play('success');
+      lastImpact = performance.now(); haptics.play(impact.kind === 'snap' ? 'snap' : 'success');
       if (impact.x !== undefined && impact.y !== undefined) emit(impact.x, impact.y, true);
       if (impact.kind === 'snap') return;
       // Keep navigation and fixed overlays still while the play surface briefly reacts.

@@ -1,0 +1,5 @@
+.scaffolding-hint { position: absolute; inset: 5px; z-index: 5; pointer-events: none; border-radius: inherit; }
+.scaffolding-glow { position: absolute; inset: 0; border-radius: inherit; border: 4px solid #ffd15c; box-shadow: 0 0 0 4px #fff8dcbb, 0 0 20px #ffc44f88, inset 0 0 18px #fff1ad88; }
+.scaffolding-finger { position: absolute; right: 4px; bottom: 0; font-size: clamp(30px, 5vw, 42px); line-height: 1.2; filter: drop-shadow(0 3px 2px #9d67364d); transform-origin: bottom center; }
+.game-choice, .stage-animal-option { position: relative; }
+.drag-piece[data-help='true'], .drop-slot[data-help='true'] { outline: none !important; animation: none; }

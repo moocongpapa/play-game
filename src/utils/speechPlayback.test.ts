@@ -3,7 +3,7 @@ import test from 'node:test';
 import { setImmediate } from 'node:timers/promises';
 
 test('speech playback respects preferences, navigation and uninterrupted repeated taps', async t => {
-  const original = new Map(['window', 'localStorage', 'SpeechSynthesisUtterance', 'fetch'].map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
+  const original = new Map(['window', 'localStorage', 'SpeechSynthesisUtterance', 'fetch', 'Audio'].map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
   const storage = new Map<string, string>();
   let voices = [{ name: 'Korean natural', lang: 'ko-KR' }, { name: 'English natural', lang: 'en-US' }];
   class Utterance {
@@ -252,6 +252,47 @@ test('speech playback respects preferences, navigation and uninterrupted repeate
       engine.speakText('Let us play!', true, { characterId: 'pingu' });
       assert.equal(spoken.length, before.spoken + 2);
       assert.equal(cancelled, before.cancelled + 2);
+    });
+
+    await t.test('idle hints wait for AI loading, playback and browser speech, and respect mute', async () => {
+      engine.stopAllSpeech(); ai.setGeminiTTSEnabled(true); holdRequest = true;
+      engine.speakText('A long, gentle question', true, { characterId: 'pingu' }); await flush();
+      const before = { requests: requests.length, stops, cancelled };
+      assert.equal(engine.trySpeakIdleHint('A helpful hint', true, 'pingu'), false);
+      assert.deepEqual({ requests: requests.length, stops, cancelled }, before);
+      assert.equal(requests.at(-1)?.signal.aborted, false);
+      holdRequest = false; release!(new Response(new Uint8Array(44))); await flush();
+      assert.equal(engine.trySpeakIdleHint('A helpful hint', true, 'pingu'), false);
+      sources.at(-1)?.onended?.();
+      ai.setGeminiTTSEnabled(false);
+      assert.equal(engine.trySpeakIdleHint('A helpful hint', true, 'pingu'), true);
+      const count = spoken.length;
+      assert.equal(engine.trySpeakIdleHint('Another hint', true, 'jelly'), false);
+      assert.equal(spoken.length, count);
+      spoken.at(-1)?.onend?.();
+      engine.setAudioPreferences(true, false);
+      assert.equal(engine.trySpeakIdleHint('Muted hint', true, 'pingu'), true);
+      engine.setAudioPreferences(true, true);
+      assert.equal(engine.trySpeakIdleHint('Muted hint', false, 'pingu'), true);
+      assert.equal(spoken.length, count);
+    });
+
+    await t.test('idle hints leave recorded animal clues intact and become available after completion', async () => {
+      let ended: (() => void) | null = null;
+      let pauses = 0;
+      Object.defineProperty(globalThis, 'Audio', { configurable: true, value: class {
+        set onended(callback: (() => void) | null) { ended = callback; }
+        async play() {} pause() { pauses++; } removeAttribute() {} load() {}
+      } });
+      const clue = engine.playAnimalSound('dog', true);
+      const before = spoken.length;
+      assert.equal(engine.trySpeakIdleHint('A gentle hint', true, 'jelly'), false);
+      assert.equal(pauses, 0); assert.equal(spoken.length, before);
+      (ended as (() => void) | null)?.();
+      assert.equal(await clue, 'ended');
+      assert.equal(engine.trySpeakIdleHint('A gentle hint', true, 'jelly'), true);
+      assert.equal(spoken.length, before + 1);
+      engine.stopAllSpeech();
     });
   } finally {
     engine.stopAllSpeech(); ai.clearGeminiAudioCache();

@@ -44,10 +44,6 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
   const [placedLetters, setPlacedLetters] = useState<(string | null)[]>([]);
   const [isCompleted, setIsCompleted] = useState(false);
 
-  // 힌트 상태
-  const [showHint, setShowHint] = useState(false);
-  const hintTimerRef = useRef<number | null>(null);
-
   // 타이머 상태
   const [timeLeft, setTimeLeft] = useState<number>(diffConfig.timeLimit);
   const [timeOut, setTimeOut] = useState(false);
@@ -55,12 +51,10 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
 
   const generateRound = () => {
     clearGameTimeouts();
-    if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
     setPlacedLetters([]);
     setIsCompleted(false);
-    setShowHint(false);
     setTimeOut(false);
     setTimeLeft(diffConfig.timeLimit);
 
@@ -73,13 +67,6 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
 
     if (soundEnabled) {
       speakText(`글자를 잡아 똑같은 글자 칸에 쏙 넣어 '${target.word}' 단어를 만들어볼까요?`, soundEnabled, { characterId: buddy });
-    }
-
-    // 힌트 타이머 구동
-    if (diffConfig.hintEnabled) {
-      hintTimerRef.current = scheduleGameTimeout(() => {
-        setShowHint(true);
-      }, diffConfig.hintDelaySec * 1000);
     }
 
     // 시간제한 타이머 구동
@@ -101,7 +88,6 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
   useEffect(() => {
     generateRound();
     return () => {
-      if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       if (gameTimerRef.current) clearInterval(gameTimerRef.current);
     };
   }, [ageGroup]);
@@ -120,7 +106,6 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
     setPlacedLetters(next);
     setLettersPool(pool => pool.filter(letter => letter.id !== pieceId));
     if (next.every(letter => letter !== null)) {
-      if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       if (gameTimerRef.current) clearInterval(gameTimerRef.current);
       setIsCompleted(true);
       playCorrectFanfare(soundEnabled);
@@ -135,7 +120,7 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
   const hintSlot = targetItem.letters.findIndex((_, i) => !placedLetters[i]);
   const hintPiece = lettersPool.find(piece => piece.letter === targetItem.letters[hintSlot]);
   return (
-    <DragMatch hint={hintPiece ? { pieceId: hintPiece.id, targetId: String(hintSlot) } : undefined} resetKey={targetItem.word} disabled={isCompleted || timeOut} onDrop={handleDropLetter}>
+    <DragMatch canDrop={(id, slot) => !placedLetters[Number(slot)] && lettersPool.find(piece => piece.id === id)?.letter === targetItem.letters[Number(slot)]} hint={hintPiece ? { pieceId: hintPiece.id, targetId: String(hintSlot) } : undefined} resetKey={targetItem.word} disabled={isCompleted || timeOut} onDrop={handleDropLetter}>
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#E1BEE7] to-[#F3E5F5] p-3.5 sm:p-4 rounded-3xl border-3 border-[#AB47BC] shadow-sm flex items-center gap-3 sm:gap-4">
@@ -196,7 +181,7 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
       </div>
       <DragHint>같은 글자 위에 쏙!</DragHint>
       <div className="word-drop-row min-h-[100px] mb-4">
-        {lettersPool.map(piece => <DragPiece key={piece.id} id={piece.id} label={piece.letter} className={`word-piece ${showHint ? 'word-piece-hint' : ''}`}>
+        {lettersPool.map(piece => <DragPiece key={piece.id} id={piece.id} label={piece.letter} className="word-piece">
           {piece.letter}
         </DragPiece>)}
       </div>

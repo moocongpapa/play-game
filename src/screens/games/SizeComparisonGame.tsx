@@ -1,3 +1,5 @@
+import { useIdleScaffolding } from '../../hooks/useIdleScaffolding';
+import { ScaffoldingHint } from '../../components/ScaffoldingHint';
 import { DragMatch, DragPiece, DropSlot, DragHint } from '../../components/DragMatch';
 import { placeMatchingValue } from '../../utils/dropTarget';
 import { RoundContinuation } from '../../components/RoundContinuation';
@@ -43,24 +45,24 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
   const [isCompleted, setIsCompleted] = useState(false);
   const [shakingIdx, setShakingIdx] = useState<number | null>(null);
 
-  // 힌트 상태
-  const [showHint, setShowHint] = useState(false);
-  const hintTimerRef = useRef<number | null>(null);
-
   // 타이머 상태
   const [timeLeft, setTimeLeft] = useState<number>(diffConfig.timeLimit);
   const [timeOut, setTimeOut] = useState(false);
   const gameTimerRef = useRef<number | null>(null);
 
+  const { isIdle: showHint, reset: resetHint } = useIdleScaffolding({
+    resetKey: targetItems.map(item => item.id).join(), disabled: isCompleted || timeOut || questionType === 'sort_ascending' || !targetItems.length,
+    voice: { text: '여기 반짝이는 친구를 골라봐!', buddy, soundEnabled },
+  });
+
   const generateRound = () => {
+    resetHint();
     clearGameTimeouts();
-    if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
     setIsCompleted(false);
     setSelectedIndices([]);
     setShakingIdx(null);
-    setShowHint(false);
     setTimeOut(false);
     setTimeLeft(diffConfig.timeLimit);
 
@@ -94,14 +96,6 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
       speakText(audioMsg, soundEnabled, { characterId: buddy });
     }
 
-    // 힌트 타이머 구동
-    if (diffConfig.hintEnabled) {
-      hintTimerRef.current = scheduleGameTimeout(() => {
-        setShowHint(true);
-        speakText(`여기 반짝이는 친구를 골라봐!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
-      }, diffConfig.hintDelaySec * 1000);
-    }
-
     // 시간제한 타이머 구동
     if (diffConfig.timeLimit > 0) {
       gameTimerRef.current = window.setInterval(() => {
@@ -121,7 +115,6 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
   useEffect(() => {
     generateRound();
     return () => {
-      if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       if (gameTimerRef.current) clearInterval(gameTimerRef.current);
     };
   }, [ageGroup]);
@@ -199,7 +192,6 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
     setSelectedIndices(next);
     playBubblePop(soundEnabled);
     if (next.every(item => item !== null)) {
-      if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       if (gameTimerRef.current) clearInterval(gameTimerRef.current);
       setIsCompleted(true);
       playCorrectFanfare(soundEnabled);
@@ -230,7 +222,7 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
   const hintOrder = targetItems.map((_, i) => i).sort((a, b) => targetItems[a].displayScale - targetItems[b].displayScale);
   const hintSlot = hintOrder.findIndex((_, i) => selectedIndices[i] == null);
   return (
-    <DragMatch hint={questionType === 'sort_ascending' && hintSlot >= 0 ? { pieceId: String(hintOrder[hintSlot]), targetId: String(hintSlot) } : undefined} resetKey={targetItems.map(item => item.id).join()} disabled={isCompleted || timeOut} onDrop={handleSortDrop}>
+    <DragMatch canDrop={(id, slot) => hintOrder[Number(slot)] === Number(id) && selectedIndices[Number(slot)] == null} hint={questionType === 'sort_ascending' && hintSlot >= 0 ? { pieceId: String(hintOrder[hintSlot]), targetId: String(hintSlot) } : undefined} resetKey={targetItems.map(item => item.id).join()} disabled={isCompleted || timeOut} onDrop={handleSortDrop}>
     <div className={`game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto ${questionType === 'sort_ascending' ? 'size-sort-board' : ''}`}>
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#FFCCBC] to-[#FBE9E7] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FF7043] shadow-sm flex items-center gap-3 sm:gap-4">
@@ -341,6 +333,7 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
                   {selectedIndices.indexOf(idx) + 1}
                 </span>
               )}
+              {hasHint && <ScaffoldingHint />}
             </motion.button>
           );
         })}

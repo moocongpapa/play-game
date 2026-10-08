@@ -13,12 +13,12 @@ export function createHaptics(vibrate: (pattern: number | number[]) => unknown, 
   let blockedUntil = 0;
   let lastBurst = -Infinity;
   return {
-    play(kind: 'tap' | 'success') {
+    play(kind: 'tap' | 'success' | 'snap') {
       const now = clock();
       if (kind === 'tap' ? now < blockedUntil : now - lastBurst < 180) return;
-      try { vibrate(kind === 'tap' ? 12 : [20, 30, 40]); } catch { /* Unsupported or denied. */ }
+      try { vibrate(kind === 'tap' ? 12 : kind === 'snap' ? [15] : [20, 30, 40]); } catch { /* Unsupported or denied. */ }
       blockedUntil = now + (kind === 'tap' ? 45 : 120);
-      if (kind === 'success') lastBurst = now;
+      if (kind !== 'tap') lastBurst = now;
     },
     stop() { try { vibrate(0); } catch { /* No vibration support. */ } blockedUntil = 0; },
   };

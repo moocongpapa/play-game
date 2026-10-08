@@ -1,3 +1,5 @@
+import { useIdleScaffolding } from '../../hooks/useIdleScaffolding';
+import { ScaffoldingHint } from '../../components/ScaffoldingHint';
 import { RoundContinuation } from '../../components/RoundContinuation';
 import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
@@ -40,10 +42,6 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
   const [shakingCardId, setShakingCardId] = useState<string | null>(null);
   const [selectedCorrectId, setSelectedCorrectId] = useState<string | null>(null);
   
-  // 힌트 상태
-  const [showHint, setShowHint] = useState(false);
-  const hintTimerRef = useRef<number | null>(null);
-
   // 콤보 스트릭 상태
   const [streak, setStreak] = useState(0);
   const [showComboBanner, setShowComboBanner] = useState(false);
@@ -54,15 +52,19 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
   const [timeOut, setTimeOut] = useState(false);
   const gameTimerRef = useRef<number | null>(null);
 
+  const { isIdle: showHint, reset: resetHint } = useIdleScaffolding({
+    resetKey: targetItem.id, disabled: !!selectedCorrectId || timeOut || !options.length,
+    voice: { text: '여기 반짝이는 걸 눌러봐!', buddy, soundEnabled },
+  });
+
   const generateRound = () => {
+    resetHint();
     clearGameTimeouts();
     // 기존 타이머 클리어
-    if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
     setSelectedCorrectId(null);
     setShakingCardId(null);
-    setShowHint(false);
     setTimeOut(false);
     setTimeLeft(diffConfig.timeLimit);
 
@@ -95,14 +97,6 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
       speakText(promptText, soundEnabled, { characterId: buddy });
     }
 
-    // 힌트 타이머 구동
-    if (diffConfig.hintEnabled) {
-      hintTimerRef.current = scheduleGameTimeout(() => {
-        setShowHint(true);
-        speakText(`여기 반짝이는 걸 눌러봐!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
-      }, diffConfig.hintDelaySec * 1000);
-    }
-
     // 시간제한 타이머 구동
     if (diffConfig.timeLimit > 0) {
       gameTimerRef.current = window.setInterval(() => {
@@ -122,7 +116,6 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
   useEffect(() => {
     generateRound();
     return () => {
-      if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       if (gameTimerRef.current) clearInterval(gameTimerRef.current);
     };
   }, [ageGroup]);
@@ -131,7 +124,6 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
     if (selectedCorrectId || timeOut) return;
 
     if (item.id === targetItem.id) {
-      if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       if (gameTimerRef.current) clearInterval(gameTimerRef.current);
       
       setSelectedCorrectId(item.id);
@@ -242,12 +234,10 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
                   ? { x: [-10, 10, -8, 8, -4, 4, 0] }
                   : isSolved
                   ? { scale: [1, 1.12, 1], rotate: [0, 5, -5, 0] }
-                  : shouldPulse
-                  ? { scale: [1, 1.05, 1], filter: ['brightness(1)', 'brightness(1.15)', 'brightness(1)'] }
                   : { y: [0, -4, 0] }
               }
               transition={{
-                duration: isShaking ? 0.5 : shouldPulse ? 1.2 : 2,
+                duration: isShaking ? 0.5 : 2,
                 repeat: isShaking ? 0 : Infinity,
               }}
               onClick={() => handleSelectCard(item)}
@@ -255,12 +245,13 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
                 isSolved
                   ? 'bg-[#E8F5E9] border-[#81C784] ring-4 ring-[#81C784]/30'
                   : shouldPulse
-                  ? 'bg-amber-50 border-amber-400 ring-4 ring-amber-300/50 animate-pulse'
+                  ? 'bg-amber-50 border-amber-400 ring-4 ring-amber-300/50'
                   : 'bg-white hover:bg-[#FFF5F8] border-[#FFB7D5] hover:border-[#FF80AB]'
               }`}
             >
               <span className="text-5xl sm:text-7xl mb-1 sm:mb-2 drop-shadow-sm"><ToyArtwork emoji={item.emoji} /></span>
               <span className="text-xl sm:text-2xl font-black text-[#4A3E3D]">{item.koreanName}</span>
+              {shouldPulse && <ScaffoldingHint />}
             </motion.button>
           );
         })}

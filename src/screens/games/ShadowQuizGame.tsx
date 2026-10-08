@@ -101,7 +101,7 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
   if (!targetItem) return null;
 
   return (
-    <DragMatch hint={{ pieceId: targetItem.id, targetId: 'shadow' }} resetKey={targetItem.id} disabled={isRevealed} onDrop={(id) => {
+    <DragMatch canDrop={id => id === targetItem.id} hint={{ pieceId: targetItem.id, targetId: 'shadow' }} resetKey={targetItem.id} disabled={isRevealed} onDrop={(id) => {
       const item = options.find(option => option.id === id);
       if (!item || isRevealed) return false;
       handleSelectOption(item);

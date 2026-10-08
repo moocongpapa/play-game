@@ -1,3 +1,5 @@
+import { useIdleScaffolding } from '../../hooks/useIdleScaffolding';
+import { ScaffoldingHint } from '../../components/ScaffoldingHint';
 import { RoundContinuation } from '../../components/RoundContinuation';
 import { useSoundClue } from '../../hooks/useSoundClue';
 import { pickNextRound } from '../../utils/roundDeck';
@@ -51,23 +53,23 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
   const [shakingCardId, setShakingCardId] = useState<string | null>(null);
   const [selectedCorrectId, setSelectedCorrectId] = useState<string | null>(null);
 
-  // 힌트 상태
-  const [showHint, setShowHint] = useState(false);
-  const hintTimerRef = useRef<number | null>(null);
-
   // 타이머 상태 (꽃잎반/별님반)
   const [timeLeft, setTimeLeft] = useState<number>(diffConfig.timeLimit);
   const [timeOut, setTimeOut] = useState(false);
   const gameTimerRef = useRef<number | null>(null);
 
+  const { isIdle: showHint, reset: resetHint } = useIdleScaffolding({
+    resetKey: targetItem.id, disabled: !!selectedCorrectId || timeOut || !options.length,
+    voice: { text: '여기 반짝이는 친구를 눌러보자!', buddy, soundEnabled },
+  });
+
   const generateRound = () => {
+    resetHint();
     clearGameTimeouts();
-    if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
     setSelectedCorrectId(null);
     setShakingCardId(null);
-    setShowHint(false);
     setTimeOut(false);
     setTimeLeft(diffConfig.timeLimit);
 
@@ -80,14 +82,6 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
     setOptions(roundOptions);
 
     playClue(target.id, target.soundText);
-
-    // 힌트 타이머 구동
-    if (diffConfig.hintEnabled) {
-      hintTimerRef.current = scheduleGameTimeout(() => {
-        setShowHint(true);
-        speakText(`여기 반짝이는 친구를 눌러보자!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
-      }, diffConfig.hintDelaySec * 1000);
-    }
 
     // 시간제한 타이머 구동
     if (diffConfig.timeLimit > 0) {
@@ -108,7 +102,6 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
   useEffect(() => {
     generateRound();
     return () => {
-      if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       if (gameTimerRef.current) clearInterval(gameTimerRef.current);
     };
   }, [ageGroup]);
@@ -119,7 +112,6 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
     if (selectedCorrectId || timeOut) return;
 
     if (item.id === targetItem.id) {
-      if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
       setSelectedCorrectId(item.id);
@@ -216,11 +208,9 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
                   ? { x: [-10, 10, -8, 8, 0] }
                   : isSolved
                   ? { scale: 1.05 }
-                  : shouldPulse
-                  ? { scale: [1, 1.06, 1], filter: ['brightness(1)', 'brightness(1.15)', 'brightness(1)'] }
                   : { scale: 1 }
               }
-              transition={{ duration: isShaking ? 0.5 : shouldPulse ? 1.2 : 0.5 }}
+              transition={{ duration: 0.5 }}
               onClick={() => handleSelectCard(item)}
               className={`game-choice flex flex-col items-center justify-center p-4 sm:p-5 rounded-3xl border-3 sm:border-4 cursor-pointer select-none transition-all shadow-md touch-manipulation min-h-[130px] sm:min-h-[160px] ${
                 isSolved
@@ -232,6 +222,7 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
             >
               <span className="text-5xl sm:text-6xl mb-1 sm:mb-2"><ToyArtwork emoji={item.emoji} /></span>
               <span className="text-lg sm:text-xl font-black text-[#4A3E3D]">{item.name}</span>
+              {shouldPulse && <ScaffoldingHint />}
             </motion.button>
           );
         })}

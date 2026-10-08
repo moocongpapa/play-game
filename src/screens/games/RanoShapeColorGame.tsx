@@ -153,10 +153,6 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
   const [streak, setStreak] = useState(0);
   const [showComboBanner, setShowComboBanner] = useState(false);
 
-  // 힌트 상태
-  const [showHint, setShowHint] = useState(false);
-  const hintTimerRef = useRef<number | null>(null);
-
   // 타이머 상태 (꽃잎반/별님반)
   const [timeLeft, setTimeLeft] = useState<number>(diffConfig.timeLimit);
   const [timeOut, setTimeOut] = useState(false);
@@ -164,12 +160,10 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
 
   const generateRound = () => {
     clearGameTimeouts();
-    if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
     setSelectedCorrectId(null);
     setShakingCardId(null);
-    setShowHint(false);
     setTimeOut(false);
     setTimeLeft(diffConfig.timeLimit);
 
@@ -182,14 +176,6 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
 
     if (soundEnabled) {
       speakText(`${friend.name}와 함께 알록달록 ${target.colorName} ${target.shape}를 잡아 같은 모양 위에 올려 주세요!`, soundEnabled, { characterId: buddy });
-    }
-
-    // 힌트 타이머 구동
-    if (diffConfig.hintEnabled) {
-      hintTimerRef.current = scheduleGameTimeout(() => {
-        setShowHint(true);
-        speakText(`반짝이는 모양을 같은 그림 위에 옮겨 봐!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
-      }, diffConfig.hintDelaySec * 1000);
     }
 
     // 시간제한 타이머 구동
@@ -212,7 +198,6 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
   useEffect(() => {
     generateRound();
     return () => {
-      if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       if (gameTimerRef.current) clearInterval(gameTimerRef.current);
     };
   }, [ageGroup]);
@@ -221,7 +206,6 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
     if (selectedCorrectId || timeOut) return;
 
     if (item.id === targetItem.id) {
-      if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
       setSelectedCorrectId(item.id);
@@ -249,7 +233,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
   };
 
   return (
-    <DragMatch resetKey={targetItem.id} disabled={!!selectedCorrectId || timeOut} hint={{ pieceId: targetItem.id, targetId: 'shape' }} onDrop={(id) => {
+    <DragMatch canDrop={id => id === targetItem.id} resetKey={targetItem.id} disabled={!!selectedCorrectId || timeOut} hint={{ pieceId: targetItem.id, targetId: 'shape' }} onDrop={(id) => {
       const item = options.find(option => option.id === id);
       if (!item || !!selectedCorrectId || timeOut) return false;
       handleSelectCard(item);
@@ -332,8 +316,6 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
         {options.map((item) => {
           const isShaking = shakingCardId === item.id;
           const isSolved = selectedCorrectId === item.id;
-          const isTarget = item.id === targetItem.id;
-          const shouldPulse = showHint && isTarget && !selectedCorrectId;
 
           return (
             <DragPiece
@@ -343,17 +325,13 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
                   ? { x: [-10, 10, -8, 8, 0] }
                   : isSolved
                   ? { scale: 1.08 }
-                  : shouldPulse
-                  ? { scale: [1, 1.08, 1], filter: ['brightness(1)', 'brightness(1.15)', 'brightness(1)'] }
                   : { scale: 1 }
               }
-              transition={{ duration: isShaking ? 0.5 : shouldPulse ? 1.2 : 0.5 }}
+              transition={{ duration: 0.5 }}
               id={item.id} label={`${item.colorName} ${item.shape}`}
               className={`game-choice p-3 sm:p-4 rounded-2xl sm:rounded-3xl border-3 flex flex-col items-center justify-center cursor-pointer transition-all shadow-sm ${
                 isSolved
                   ? 'bg-emerald-50 border-emerald-400 ring-4 ring-emerald-300'
-                  : shouldPulse
-                  ? 'bg-amber-50 border-amber-400 ring-4 ring-amber-300'
                   : 'bg-white border-green-200 hover:border-green-400 hover:bg-emerald-50/50'
               }`}
             >

@@ -1,3 +1,4 @@
+import { PlayHintsPausedContext } from './components/PlayFlowContext';
 import { normalizeSpeechLanguage } from './utils/speechLanguage';
 import React, { useState, useEffect, useLayoutEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { AppState, CharacterId, GameId, ChildProfile } from './types';
@@ -659,9 +660,11 @@ export default function App() {
       />
 
       <main ref={mainRef} className="app-main w-full px-3 py-5 pb-12 sm:px-6 sm:py-7" data-scroll-region>
-        <ErrorBoundary onReset={handleGoHome}>
-          <Suspense fallback={<div className="game-loading" role="status"><CharacterAvatar id={appState.selectedCharacter} size="xl" mood="waving" /><p>놀이를 꺼내오는 중이에요</p></div>}>{renderContent()}</Suspense>
-        </ErrorBoundary>
+        <PlayHintsPausedContext.Provider value={isParentGateOpen || appState.isTimeUp || !appState.onboardingCompleted}>
+          <ErrorBoundary onReset={handleGoHome}>
+            <Suspense fallback={<div className="game-loading" role="status"><CharacterAvatar id={appState.selectedCharacter} size="xl" mood="waving" /><p>놀이를 꺼내오는 중이에요</p></div>}>{renderContent()}</Suspense>
+          </ErrorBoundary>
+        </PlayHintsPausedContext.Provider>
       </main>
       </>}
 

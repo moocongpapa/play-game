@@ -423,9 +423,11 @@ export function playWrongBoing(enabled = true) {
 
 const animalPlayer = createRecordedAudioPlayer(src => new Audio(src));
 let animalRequest = 0;
+let animalClueActive = false;
 
 export function stopAnimalSound() {
   animalRequest += 1;
+  animalClueActive = false;
   animalPlayer.stop();
   setBGMDucked('animal', false);
 }
@@ -438,9 +440,11 @@ export async function playAnimalSound(animal: string, enabled = true): Promise<P
   const id = resolveAnimalSound(animal);
   if (!id) return 'unavailable';
   const request = ++animalRequest;
+  animalClueActive = true;
   setBGMDucked('animal', true);
   const result = await animalPlayer.play(ANIMAL_RECORDINGS[id]);
   if (request !== animalRequest) return 'cancelled';
+  animalClueActive = false;
   setBGMDucked('animal', false);
   return result;
 }
@@ -460,6 +464,14 @@ let pendingBrowserSpeech: (() => void) | null = null;
 let currentVoiceToneMode: 'cheerful' | 'gentle' | 'energetic' = 'cheerful';
 let speechRequestId = 0;
 let activeSpeech: { key: string; provider?: 'ai' | 'browser' } | null = null;
+
+/** False means busy; the idle hook may try again if the child is still resting. */
+export function trySpeakIdleHint(text: string, enabled: boolean, characterId: string): boolean {
+  if (!enabled || !masterSoundEnabled || !speechEnabled) return true;
+  if (activeSpeech || animalClueActive) return false;
+  speakText(text, enabled, { characterId, playIntroSFX: false });
+  return true;
+}
 
 function clearBrowserSpeechStartTimer() {
   if (browserSpeechStartTimer === null) return;
