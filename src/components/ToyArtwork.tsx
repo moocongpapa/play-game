@@ -81,6 +81,36 @@ export function ToyArtwork({ emoji, className = '', label }: { emoji: string; cl
         <ellipse cx="26" cy="58" rx="5" ry="3" fill="#eaa49b" stroke="none" /><ellipse cx="74" cy="58" rx="5" ry="3" fill="#eaa49b" stroke="none" />
         {animal === 'pig' || animal === 'cow' ? <><ellipse cx="50" cy="62" rx="16" ry="11" fill="#e99eaa" /><circle cx="44" cy="62" r="2" fill="#9e6765" /><circle cx="56" cy="62" r="2" fill="#9e6765" /></> : animal === 'duck' ? <ellipse cx="50" cy="63" rx="19" ry="8" fill="#eaa65f" /> : <path d="M37 63 Q50 77 63 63" fill="none" />}
       </g>;
+    } else if (['🐴', '🐐', '🐦', '🐓', '🦉', '🐒'].includes(emoji)) {
+      const bird = ['🐦', '🐓', '🦉'].includes(emoji);
+      const fill = emoji === '🐦' ? '#94BBC8' : emoji === '🐐' ? '#F3E8D1' : '#D6AE87';
+      drawing = <g stroke="#80634F" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round">
+        {bird ? <>
+          <path d="M32 78 L29 93 M68 78 L71 93 M22 93 H36 M64 93 H78" fill="none" stroke="#D9A45E" strokeWidth="4" />
+          <ellipse cx="50" cy="56" rx="32" ry="33" fill={fill} />
+          <path d="M24 46 Q5 48 17 72 Q25 78 31 68 M76 46 Q95 48 83 72 Q75 78 69 68" fill={emoji === '🐦' ? '#77A6B8' : '#BC9069'} />
+          {emoji === '🦉' && <><path d="M21 35 L17 10 L40 25 M60 25 L83 10 L79 35" fill={fill} /><circle cx="36" cy="43" r="17" fill="#FFF3D9" /><circle cx="64" cy="43" r="17" fill="#FFF3D9" /></>}
+          {emoji === '🐓' && <path d="M35 25 Q24 9 37 11 Q43 -1 50 12 Q64 2 64 22" fill="#E79890" />}
+          <circle cx="36" cy="43" r="4" fill="#625043" /><circle cx="64" cy="43" r="4" fill="#625043" />
+          <path d="M43 55 L50 64 L57 55Z" fill="#F1C166" />
+          {emoji === '🐓' && <path d="M49 63 Q62 71 52 77 Q40 75 49 63" fill="#E79890" />}
+          <path d="M40 74 Q44 78 47 74 M53 74 Q57 78 60 74" fill="none" stroke="#FFF4D5" />
+        </> : <>
+          {emoji === '🐒' ? <><circle cx="16" cy="46" r="13" fill={fill} /><circle cx="84" cy="46" r="13" fill={fill} /></> : <>
+            <ellipse cx="30" cy="22" rx="10" ry="18" fill={fill} transform="rotate(-22 30 22)" /><ellipse cx="70" cy="22" rx="10" ry="18" fill={fill} transform="rotate(22 70 22)" />
+            {emoji === '🐐' && <path d="M36 28 Q22 1 36 9 L43 28 M57 28 L64 9 Q78 1 64 28" fill="#C5B18C" />}
+          </>}
+          <ellipse cx="50" cy="57" rx="32" ry="34" fill={fill} />
+          {emoji === '🐴' && <path d="M36 27 Q39 7 60 20 L55 48 L45 34Z" fill="#926D54" />}
+          {emoji === '🐒' && <path d="M24 48 Q20 25 37 29 Q48 28 50 40 Q53 26 66 29 Q83 32 76 51 L75 72 Q50 95 25 72Z" fill="#F6D9AB" />}
+          <circle cx="37" cy="49" r="3.5" fill="#625043" /><circle cx="63" cy="49" r="3.5" fill="#625043" />
+          <ellipse cx="50" cy="70" rx="22" ry="14" fill="#F3D3AA" />
+          <circle cx="42" cy="65" r="2" fill="#87644E" /><circle cx="58" cy="65" r="2" fill="#87644E" />
+          <path d="M40 73 Q50 81 60 73" fill="none" />
+          {emoji === '🐐' && <path d="M43 82 L50 96 L57 82" fill="#F4EFE4" />}
+        </>}
+        <circle cx="37" cy={bird ? 42 : 48} r="1.2" fill="white" stroke="none" /><circle cx="64" cy={bird ? 42 : 48} r="1.2" fill="white" stroke="none" />
+      </g>;
     } else if (emoji === '🚗') {
       drawing = <g stroke="#716151" strokeWidth="2.5" strokeLinejoin="round"><path d="M12 52 L23 30 Q27 24 36 24 H64 Q71 24 77 36 L85 52 Q94 52 94 63 V76 H6 V61 Q6 53 12 52Z" fill="#e98c7a" /><path d="M28 32 H46 V49 H20 Z M53 32 H65 L77 49 H53Z" fill="#c7e2df" /><circle cx="25" cy="76" r="12" fill="#6e8189" /><circle cx="75" cy="76" r="12" fill="#6e8189" /><circle cx="25" cy="76" r="5" fill="#fff5db" /><circle cx="75" cy="76" r="5" fill="#fff5db" /><path d="M43 61 H58" /></g>;
     } else if (['⭐','🌟','☀️','🌙','❤️','💖','🔴','🔵','🟡','🟢','🟦','🔺','🔷','⬜','☁️'].includes(emoji)) {

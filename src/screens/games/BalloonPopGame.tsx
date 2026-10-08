@@ -142,17 +142,27 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
     // Voice count out loud
     speakText(numberText, soundEnabled, { characterId: buddy, playIntroSFX: false });
 
-    // Check complete
-    if (nextCount >= targetCount) {
+    // Sound / Voice praise occasionally (every 5 pops)
+    if (nextCount % 5 === 0) {
+      playDingDongDang(soundEnabled);
+      playSparkleChime(soundEnabled);
+      speakText(`와아! 풍선을 정말 잘 터뜨려요! 팡팡!`, soundEnabled, {
+        characterId: buddy,
+        playIntroSFX: false,
+      });
+    }
+
+    // In stage mode (multi-stage adventure), keep targetCount clearance logic if passed
+    if (isStageMode && targetCount && nextCount >= targetCount) {
       setIsCompleted(true);
       scheduleGameTimeout(() => {
         playDingDongDang(soundEnabled);
         playSparkleChime(soundEnabled);
         fireConfetti();
-        speakText(`우와! ${childName}야, 풍선 ${targetCount}개를 모두 팡팡 터뜨렸어요! 최고야!`, soundEnabled, {
+        speakText(`우와! ${childName}야, 풍선을 모두 팡팡 터뜨렸어요! 최고야!`, soundEnabled, {
           characterId: buddy,
         });
-        onCompleteQuiz(3);
+        onCompleteQuiz(1);
         if (onStageClear) {
           scheduleGameTimeout(onStageClear, 1800);
         }
@@ -176,30 +186,26 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
 
   return (
     <div style={{ background: `linear-gradient(${theme.sky}, #FFF9E9)` }} className="balloon-board relative w-full max-w-2xl mx-auto h-[68svh] min-h-[460px] bg-gradient-to-b from-[#E0F2FE] via-[#F0F9FF] to-[#FEF3C7] rounded-[36px] border-4 border-amber-300 shadow-xl overflow-hidden select-none flex flex-col justify-between p-4">
-      {/* Top Status Banner */}
+      {/* Top Status Banner - 개수 카운트 없이 즐거운 타이틀만 표시 */}
       <div className="balloon-status z-20 w-full bg-white/90 backdrop-blur-xs p-3.5 rounded-3xl border-3 border-sky-300 shadow-md flex items-center justify-between">
         <div className="flex items-center gap-3">
           <CharacterAvatar id={buddy} size="sm" mood="happy" className="!w-12 !h-12 shadow-xs" />
           <div>
             <span className="text-xs font-black text-sky-600 block">{friend.name}와 풍선 팡팡! 🎈</span>
             <span className="text-sm sm:text-base font-black text-[#4A3E3D]">
-              {theme.name} · 톡톡 팡팡!
+              {theme.name} · 무제한 팡팡 놀이!
             </span>
           </div>
         </div>
 
-        {/* Count Progress Badges */}
-        <div className="flex items-center gap-1.5 bg-amber-100 px-3.5 py-1.5 rounded-full border-2 border-amber-300 shadow-2xs">
-          <span className="text-xs font-black text-amber-800">터뜨린 개수:</span>
-          <span className="text-lg font-black text-rose-500">
-            {poppedCount} / {targetCount}
-          </span>
-          <span className="text-base">🎈</span>
+        <div className="flex items-center gap-1.5 bg-sky-50 px-3.5 py-1.5 rounded-full border-2 border-sky-200 shadow-2xs">
+          <span className="text-xs font-black text-sky-700">마음껏 팡팡!</span>
+          <span className="text-base animate-pulse">🎈</span>
         </div>
       </div>
 
       {/* Floating Balloons Field */}
-      <div className="absolute inset-x-0 top-28 bottom-0 z-10 overflow-hidden">
+      <div className="absolute inset-x-0 top-24 bottom-0 z-10 overflow-hidden">
         {balloons.map((b) => (
           <motion.button
             key={b.id}
@@ -251,8 +257,8 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
         </AnimatePresence>
       </div>
 
-      {/* Completion Modal / Overlay */}
-      {isCompleted && !isStageMode && (
+      {/* Stage mode only clearance overlay */}
+      {isCompleted && isStageMode && (
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -261,20 +267,18 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
           <div className="text-6xl mb-2 animate-bounce">🎉</div>
           <h3 className="text-2xl font-black text-[#4A3E3D] mb-1">참 잘했어요!</h3>
           <p className="text-sm font-bold text-[#8C7B79] mb-4">
-            풍선 {targetCount}개를 모두 신나게 터뜨렸어요! ⭐ 별 스탬프 획득!
+            풍선을 모두 신나게 터뜨렸어요!
           </p>
-          <JellyButton soundEnabled={soundEnabled} onClick={resetGame} variant="primary" size="lg" className="w-full">
-            <RefreshCw className="w-5 h-5 mr-1" /> 다시 터뜨리기!
-          </JellyButton>
         </motion.div>
       )}
 
       {/* Bottom Hint */}
       <div className="relative z-20 w-full text-center py-1">
         <p className="text-xs font-bold text-sky-700/80 bg-white/60 py-1.5 px-4 rounded-full inline-flex items-center gap-1 shadow-2xs">
-          <Sparkles className="w-3.5 h-3.5 text-amber-500" /> 화면에 떠다니는 풍선을 손가락으로 콕 찔러보세요!
+          <Sparkles className="w-3.5 h-3.5 text-amber-500" /> 화면에 떠다니는 풍선을 손가락으로 계속 콕콕 찔러보세요!
         </p>
       </div>
     </div>
   );
 };
+
