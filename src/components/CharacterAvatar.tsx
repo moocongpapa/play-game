@@ -5,7 +5,7 @@ import { CharacterId } from '../types';
 interface CharacterAvatarProps {
   id: CharacterId;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
-  mood?: 'happy' | 'dancing' | 'talking' | 'waving' | 'excited' | 'thinking';
+  mood?: 'happy' | 'dancing' | 'talking' | 'waving' | 'excited' | 'thinking' | 'still';
   onClick?: () => void;
   className?: string;
   showBadge?: boolean;
@@ -24,17 +24,19 @@ const BODY_PALETTE = {
 function FriendBody({ id }: { id: keyof typeof BODY_PALETTE }) {
   const c = BODY_PALETTE[id];
   return <g data-body="full" stroke={c.edge} strokeWidth="1.3" strokeLinejoin="round">
-    <ellipse cx="50" cy="95" rx="29" ry="3" fill="#88715D" opacity=".12" stroke="none" />
+    <ellipse className="friend-ground-shadow" cx="50" cy="95" rx="29" ry="3" fill="#88715D" opacity=".12" stroke="none" />
     {id === 'jelly' && <circle cx="73" cy="78" r="9" fill="white" />}
-    {id === 'nurungji' && <path d="M71 75 Q89 80 85 63 Q98 82 76 85" fill={c.fur} />}
+    {id === 'nurungji' && <path className="friend-tail" d="M71 75 Q89 80 85 63 Q98 82 76 85" fill={c.fur} />}
     {id === 'ggulgguli' && <path d="M72 77 Q91 72 88 83 Q82 90 80 80" fill="none" strokeWidth="3" />}
     {id === 'dochi' && <path d="M28 79 L23 69 L29 62 L26 52 L38 52 H65 L76 52 L73 63 L79 70 L73 81Z" fill="#DDA16D" />}
-    <path d="M34 77 Q29 85 28 90 Q27 96 37 95 H44 L45 80 M56 80 L56 94 Q73 99 73 91 L66 77" fill={c.fur} />
+    <g className="friend-leg friend-leg-left">
+    <path d="M34 77 Q29 85 28 90 Q27 96 37 95 H44 L45 80" fill={c.fur} />
     <ellipse cx="36" cy="91" rx="6" ry="3" fill={id === 'eumme' || id === 'ggulgguli' ? '#B49180' : c.belly} stroke="none" />
+    </g>
+    <g className="friend-leg friend-leg-right">
+    <path d="M56 80 L56 94 Q73 99 73 91 L66 77" fill={c.fur} />
     <ellipse cx="64" cy="91" rx="6" ry="3" fill={id === 'eumme' || id === 'ggulgguli' ? '#B49180' : c.belly} stroke="none" />
-    <path d="M35 59 Q24 54 18 66 Q13 75 19 78 Q25 82 33 70 M65 59 Q75 55 80 44 Q84 36 90 41 Q99 52 73 71" fill={c.fur} />
-    <ellipse cx="21" cy="73" rx="3" ry="4" fill={c.belly} stroke="none" />
-    <ellipse cx="87" cy="46" rx="3" ry="4" fill={c.belly} stroke="none" />
+    </g>
     <path d="M34 53 Q50 46 66 53 Q74 66 73 78 Q72 88 50 89 Q28 88 27 78 Q26 64 34 53Z" fill={c.fur} />
     {id === 'eumme' && <path d="M31 63 Q23 59 28 69 Q21 78 29 81 Q26 91 38 86 Q46 96 51 89 Q62 94 66 86 Q78 88 72 78 Q80 69 70 65" fill={c.fur} />}
     <ellipse cx="50" cy="73" rx="15" ry="12" fill={c.belly} stroke="none" />
@@ -46,6 +48,14 @@ function FriendBody({ id }: { id: keyof typeof BODY_PALETTE }) {
       <path d="M33 56 Q50 63 68 56 L64 63 L51 69 L36 63Z" fill={c.dress} stroke="none" />
       <circle cx="50" cy="66" r="3" fill={id === 'eumme' ? '#EDCA6A' : '#FFF4DC'} stroke="none" />
     </>}
+    <g className="friend-arm friend-arm-left">
+      <path d="M35 59 Q24 54 18 66 Q13 75 19 78 Q25 82 33 70" fill={c.fur} />
+      <ellipse cx="21" cy="73" rx="3" ry="4" fill={c.belly} stroke="none" />
+    </g>
+    <g className="friend-arm friend-arm-right">
+      <path d="M65 59 Q75 55 80 44 Q84 36 90 41 Q99 52 73 71" fill={c.fur} />
+      <ellipse cx="87" cy="46" rx="3" ry="4" fill={c.belly} stroke="none" />
+    </g>
   </g>;
 }
 
@@ -127,7 +137,7 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
   };
 
   const reduceMotion = useReducedMotion();
-  const motionProps = reduceMotion ? {} : getMotionVariant();
+  const motionProps = reduceMotion || mood === 'still' ? {} : getMotionVariant();
 
   // Render vector character artwork based on character id
   const renderSVG = () => {
@@ -173,11 +183,18 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
       case 'rano': // 라노 (남자 공룡 - Mint Dino with soft yellow belly & back spikes)
         return (
           <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
-            <ellipse cx="50" cy="94" rx="31" ry="3" fill="#628578" opacity=".15" />
-            <path d="M75 66 Q93 71 91 47 Q104 88 72 85Z" fill="#7DB58A" />
-            <path d="M27 73 Q22 59 14 65 Q8 72 23 80 M75 67 Q88 52 92 59 Q97 68 78 77" fill="#81C784" stroke="#68A572" strokeWidth="1.5" />
-            <path d="M28 78 L28 88 Q20 97 36 96 H46 V80 M58 80 V95 H76 Q82 88 71 85 L73 78" fill="#81C784" stroke="#68A572" strokeWidth="1.5" />
-            <path d="M30 91 V95 M36 91 V95 M66 91 V95 M72 91 V95" stroke="#FFF5CD" strokeWidth="2" strokeLinecap="round" />
+            <ellipse className="friend-ground-shadow" cx="50" cy="94" rx="31" ry="3" fill="#628578" opacity=".15" />
+            <path className="friend-tail" d="M75 66 Q93 71 91 47 Q104 88 72 85Z" fill="#7DB58A" />
+            <path className="friend-arm friend-arm-left" d="M27 73 Q22 59 14 65 Q8 72 23 80" fill="#81C784" stroke="#68A572" strokeWidth="1.5" />
+            <path className="friend-arm friend-arm-right" d="M75 67 Q88 52 92 59 Q97 68 78 77" fill="#81C784" stroke="#68A572" strokeWidth="1.5" />
+            <g className="friend-leg friend-leg-left">
+              <path d="M28 78 L28 88 Q20 97 36 96 H46 V80" fill="#81C784" stroke="#68A572" strokeWidth="1.5" />
+              <path d="M30 91 V95 M36 91 V95" stroke="#FFF5CD" strokeWidth="2" strokeLinecap="round" />
+            </g>
+            <g className="friend-leg friend-leg-right">
+              <path d="M58 80 V95 H76 Q82 88 71 85 L73 78" fill="#81C784" stroke="#68A572" strokeWidth="1.5" />
+              <path d="M66 91 V95 M72 91 V95" stroke="#FFF5CD" strokeWidth="2" strokeLinecap="round" />
+            </g>
             {/* Back Spikes */}
             <polygon points="18,35 10,42 20,48" fill="#FFD54F" />
             <polygon points="15,48 6,56 18,62" fill="#FFD54F" />
@@ -342,10 +359,11 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
       case 'pingu':
         return (
           <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md" aria-hidden="true">
-            <ellipse cx="50" cy="90" rx="31" ry="4" fill="#7395a3" opacity=".15" />
-            <ellipse cx="34" cy="85" rx="13" ry="6" fill="#edb66b" transform="rotate(-12 34 85)" />
-            <ellipse cx="66" cy="85" rx="13" ry="6" fill="#edb66b" transform="rotate(12 66 85)" />
-            <path d="M24 47 Q10 43 9 65 Q11 73 26 60 M76 47 Q89 33 94 43 Q94 54 77 64" fill="#405c73" stroke="#365168" strokeWidth="2" strokeLinejoin="round" />
+            <ellipse className="friend-ground-shadow" cx="50" cy="90" rx="31" ry="4" fill="#7395a3" opacity=".15" />
+            <g className="friend-leg friend-leg-left"><ellipse cx="34" cy="85" rx="13" ry="6" fill="#edb66b" transform="rotate(-12 34 85)" /></g>
+            <g className="friend-leg friend-leg-right"><ellipse cx="66" cy="85" rx="13" ry="6" fill="#edb66b" transform="rotate(12 66 85)" /></g>
+            <path className="friend-arm friend-arm-left" d="M24 47 Q10 43 9 65 Q11 73 26 60" fill="#405c73" stroke="#365168" strokeWidth="2" strokeLinejoin="round" />
+            <path className="friend-arm friend-arm-right" d="M76 47 Q89 33 94 43 Q94 54 77 64" fill="#405c73" stroke="#365168" strokeWidth="2" strokeLinejoin="round" />
             <path d="M20 49 Q17 12 50 10 Q83 12 80 49 L83 66 Q82 89 50 89 Q18 89 17 66Z" fill="#526f86" />
             <path d="M25 49 Q22 24 37 23 Q46 22 50 32 Q56 21 66 23 Q80 26 75 49 Q85 80 50 82 Q15 80 25 49Z" fill="#fff8e9" />
             <path d="M42 12 Q45 4 52 10 Q58 4 61 14" fill="#526f86" />

@@ -115,6 +115,7 @@ export default function App() {
   }, [currentScreen]);
 
   const handleGoHome = () => {
+    if (currentScreen === 'talk') setHomeStep('games');
     stopAllSpeech();
     stopCelebrations();
     clearGameTimeouts();
