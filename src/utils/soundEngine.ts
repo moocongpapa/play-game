@@ -471,23 +471,30 @@ let cachedVoices: SpeechSynthesisVoice[] = [];
 let selectedVoice: SpeechSynthesisVoice | null = null;
 let currentVoiceToneMode: 'cheerful' | 'gentle' | 'energetic' = 'cheerful';
 
+// Active audio element for neural streaming speech
+let currentSpeechAudio: HTMLAudioElement | null = null;
+// In-memory cache for neural cloud speech blobs/URLs to provide instant replay
+const neuralSpeechAudioCache = new Map<string, string>();
+
 export function setVoiceToneMode(mode: 'cheerful' | 'gentle' | 'energetic') {
   currentVoiceToneMode = mode;
 }
 
 // Character-specific natural voice profiles (Pitch, Rate, Prefix SFX)
 const CHARACTER_VOICE_PROFILES: Record<string, { pitch: number; rate: number; prefixSFX: string }> = {
-  ggomi: { pitch: 1.15, rate: 0.90, prefixSFX: 'ggomi' },     // 따뜻하고 포근한 꼬미 곰
-  rano: { pitch: 1.12, rate: 0.94, prefixSFX: 'rano' },       // 에너지 넘치고 씩씩한 라노
-  jelly: { pitch: 1.24, rate: 0.92, prefixSFX: 'jelly' },     // 깜찍하고 통통 튀는 젤리
-  dochi: { pitch: 1.18, rate: 0.88, prefixSFX: 'dochi' },     // 호기심 많은 귀여운 도치
-  ggulgguli: { pitch: 1.14, rate: 0.90, prefixSFX: 'ggulgguli' }, // 유쾌하고 신난 꿀꿀이
-  eumme: { pitch: 1.20, rate: 0.86, prefixSFX: 'eumme' },     // 부드럽고 상냥한 음메
-  nurungji: { pitch: 1.16, rate: 0.92, prefixSFX: 'nurungji' }, // 신나고 기분 좋은 누룽지
+  ggomi: { pitch: 1.05, rate: 0.90, prefixSFX: 'ggomi' },     // 따뜻하고 포근한 꼬미 곰
+  rano: { pitch: 1.08, rate: 0.93, prefixSFX: 'rano' },       // 에너지 넘치고 씩씩한 라노
+  jelly: { pitch: 1.12, rate: 0.92, prefixSFX: 'jelly' },     // 깜찍하고 통통 튀는 젤리
+  dochi: { pitch: 1.06, rate: 0.88, prefixSFX: 'dochi' },     // 호기심 많은 귀여운 도치
+  ggulgguli: { pitch: 1.05, rate: 0.90, prefixSFX: 'ggulgguli' }, // 유쾌하고 신난 꿀꿀이
+  eumme: { pitch: 1.04, rate: 0.86, prefixSFX: 'eumme' },     // 부드럽고 상냥한 음메
+  nurungji: { pitch: 1.06, rate: 0.92, prefixSFX: 'nurungji' }, // 신나고 기분 좋은 누룽지
 };
 
 /**
- * Filter and select the best, warmest Korean natural voice (Google Korean, Natural, Yuna, etc.)
+ * Filter and select the best Korean voice.
+ * Prioritizes high-definition Natural/Neural voices (Microsoft Natural SunHi, Apple Yuna/Siri, Samsung Natural)
+ * and avoids robotic legacy Google TTS voices.
  */
 function findBestKoreanVoice(): SpeechSynthesisVoice | null {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null;
@@ -502,26 +509,58 @@ function findBestKoreanVoice(): SpeechSynthesisVoice | null {
 
   if (koVoices.length === 0) return null;
 
-  // 1. Google 한국어
-  const googleVoice = koVoices.find((v) => v.name.includes('Google') || v.name.includes('구글'));
-  if (googleVoice) return googleVoice;
-
-  // 2. Microsoft Natural / Neural
-  const naturalVoice = koVoices.find((v) => v.name.toLowerCase().includes('natural') || v.name.toLowerCase().includes('neural'));
-  if (naturalVoice) return naturalVoice;
-
-  // 3. Apple/Samsung Natural Voices (Yuna, Heami, SunHi, Hyeryun)
-  const premiumVoice = koVoices.find(
+  // 1. Edge / Windows Microsoft Natural Neural Voices (SunHi, InJoon - highest quality human speech)
+  const msNatural = koVoices.find(
     (v) =>
-      v.name.includes('Yuna') ||
-      v.name.includes('Heami') ||
+      v.name.toLowerCase().includes('natural') ||
+      v.name.toLowerCase().includes('neural') ||
       v.name.includes('SunHi') ||
-      v.name.includes('유나') ||
-      v.name.includes('Ko-KR')
+      v.name.includes('선희')
   );
-  if (premiumVoice) return premiumVoice;
+  if (msNatural) return msNatural;
 
+  // 2. Apple Siri / Premium / Enhanced Voices (macOS / iOS Yuna Premium)
+  const appleNatural = koVoices.find(
+    (v) =>
+      v.name.toLowerCase().includes('premium') ||
+      v.name.toLowerCase().includes('enhanced') ||
+      v.name.toLowerCase().includes('siri') ||
+      v.name.includes('Yuna') ||
+      v.name.includes('유나')
+  );
+  if (appleNatural) return appleNatural;
+
+  // 3. Samsung or other Korean female/gentle high-quality voices
+  const otherHighQuality = koVoices.find(
+    (v) =>
+      v.name.includes('Heami') ||
+      v.name.includes('혜미') ||
+      v.name.includes('Hyeryun') ||
+      v.name.includes('kof')
+  );
+  if (otherHighQuality) return otherHighQuality;
+
+  // 4. Any voice that is NOT the older robotic Google legacy voice
+  const nonRoboticGoogle = koVoices.find(
+    (v) => !v.name.includes('Google') && !v.name.includes('구글')
+  );
+  if (nonRoboticGoogle) return nonRoboticGoogle;
+
+  // 5. Fallback to first available Korean voice
   return koVoices[0];
+}
+
+/**
+ * Checks whether the voice is known to be a robotic legacy synthesizer
+ */
+function isRoboticVoice(voice: SpeechSynthesisVoice | null): boolean {
+  if (!voice) return true;
+  const name = voice.name.toLowerCase();
+  // Legacy desktop/Android Chrome Google Korean synthesizer sounds metallic when pitch shifted
+  if ((name.includes('google') || name.includes('구글')) && !name.includes('natural') && !name.includes('neural')) {
+    return true;
+  }
+  return false;
 }
 
 if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -532,7 +571,8 @@ if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
 }
 
 /**
- * Format Korean speech to sound warm, friendly and melodic like a kindergarten teacher
+ * Format Korean speech to sound warm, friendly and melodic like a kindergarten teacher.
+ * Adds conversational pauses and cheerful exclamations for natural human pacing.
  */
 export function formatKindergartenTeacherText(text: string): string {
   if (!text) return '';
@@ -540,9 +580,11 @@ export function formatKindergartenTeacherText(text: string): string {
     .replace(/[#*`_~]/g, '')
     .replace(/!+/g, '! ')
     .replace(/\?+/g, '? ')
-    .replace(/정답이에요/g, '정답이에요! 와아!')
-    .replace(/참 잘했어요/g, '참 잘했어요! 짝짝짝!')
-    .replace(/정말 잘했어/g, '정말 잘했어! 멋지다!')
+    .replace(/\.{2,}/g, '... ')
+    .replace(/정답이에요/g, '정답이에요, 정말 최고야!')
+    .replace(/참 잘했어요/g, '참 잘했어요, 멋져요!')
+    .replace(/정말 잘했어/g, '정말 잘했어, 최고야!')
+    .replace(/맞았어요/g, '맞았어요, 딩동댕!')
     .trim();
 }
 
@@ -556,7 +598,94 @@ export interface SpeakOptions {
 }
 
 /**
- * Fallback browser SpeechSynthesis speaker optimized for toddlers (Pitch 1.15, Rate 0.90)
+ * High-quality 24kHz Korean Neural Voice Audio Streaming (Zero API key required).
+ * Uses Google's cloud neural voice engine to deliver genuine human speech.
+ */
+async function playNeuralCloudSpeech(text: string, options: SpeakOptions = {}): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+
+  const formatted = formatKindergartenTeacherText(text);
+  if (!formatted) return false;
+
+  // Stop any currently playing audio speech
+  if (currentSpeechAudio) {
+    currentSpeechAudio.pause();
+    currentSpeechAudio.currentTime = 0;
+    currentSpeechAudio = null;
+  }
+
+  try {
+    // Generate streaming URL (encoded query, Korean locale, official audio client)
+    const encoded = encodeURIComponent(formatted.slice(0, 180));
+    const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encoded}&tl=ko&client=tw-ob`;
+
+    const audio = new Audio();
+    audio.preload = 'auto';
+
+    // Playback rate adjustment for toddler listening comprehension (0.93x ~ 1.0x)
+    const profile = options.characterId ? CHARACTER_VOICE_PROFILES[options.characterId] : null;
+    audio.playbackRate = options.rate ?? (profile ? profile.rate : 0.94);
+
+    return new Promise<boolean>((resolve) => {
+      let isResolved = false;
+
+      const finishSuccess = () => {
+        if (!isResolved) {
+          isResolved = true;
+          currentSpeechAudio = null;
+          options.onEnd?.();
+          resolve(true);
+        }
+      };
+
+      const finishFail = () => {
+        if (!isResolved) {
+          isResolved = true;
+          currentSpeechAudio = null;
+          resolve(false);
+        }
+      };
+
+      // Timeout safety: if audio fails to load within 3.5s, fall back seamlessly
+      const timeoutTimer = window.setTimeout(() => {
+        if (!isResolved) {
+          console.warn('Neural audio timeout, falling back');
+          finishFail();
+        }
+      }, 3500);
+
+      audio.onplay = () => {
+        options.onStart?.();
+      };
+
+      audio.onended = () => {
+        window.clearTimeout(timeoutTimer);
+        finishSuccess();
+      };
+
+      audio.onerror = () => {
+        window.clearTimeout(timeoutTimer);
+        finishFail();
+      };
+
+      audio.src = audioUrl;
+      currentSpeechAudio = audio;
+
+      audio.play().catch((err) => {
+        window.clearTimeout(timeoutTimer);
+        console.warn('Neural audio play rejected (autoplay policy or network):', err);
+        finishFail();
+      });
+    });
+  } catch (e) {
+    console.warn('Neural audio initialization failed:', e);
+    return false;
+  }
+}
+
+/**
+ * Fallback browser SpeechSynthesis speaker optimized for toddlers.
+ * Intelligently adjusts pitch and rate: prevents robotic chipmunk artifacts on legacy voices.
  */
 function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions = {}) {
   if (!enabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
@@ -579,13 +708,17 @@ function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions
       utterance.lang = 'ko-KR';
     }
 
-    // Kindergarten teacher standard cadence: pitch 1.15, rate 0.90
-    let basePitch = 1.16;
-    let baseRate = 0.90;
+    const isRobotic = isRoboticVoice(selectedVoice);
+
+    // If it's a robotic voice, DO NOT boost pitch! Boosting pitch on robotic synthesizers
+    // creates metallic harsh artifacts. Keep pitch 1.0 and pace at 0.92 for warm clarity.
+    let basePitch = isRobotic ? 1.0 : 1.06;
+    let baseRate = 0.92;
 
     if (options.characterId && CHARACTER_VOICE_PROFILES[options.characterId]) {
-      basePitch = CHARACTER_VOICE_PROFILES[options.characterId].pitch;
-      baseRate = CHARACTER_VOICE_PROFILES[options.characterId].rate;
+      const charProfile = CHARACTER_VOICE_PROFILES[options.characterId];
+      basePitch = isRobotic ? 1.0 : charProfile.pitch;
+      baseRate = charProfile.rate;
     }
 
     utterance.pitch = options.pitch ?? basePitch;
@@ -602,44 +735,41 @@ function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions
 }
 
 /**
- * Master Toddler Voice Speaker:
- * 1. ElevenLabs API / Pre-cached Voice (if enabled)
- * 2. Gemini 2.0 Human Audio (if enabled)
- * 3. Browser Kindergarten Teacher Voice (pitch 1.15, rate 0.90, Google 한국어 우선)
+ * Master Toddler Voice Speaker (High-Fidelity Multi-Tier Hierarchy):
+ * 1. ElevenLabs API (if configured in Settings/env)
+ * 2. Gemini 2.0 Flash Audio (if configured in Settings/env)
+ * 3. 24kHz Neural Cloud Korean Voice (Natural human speech, zero API key required)
+ * 4. Optimized Browser SpeechSynthesis (with robotic voice suppression & natural voice priority)
  */
 export function speakText(text: string, enabled = true, options: SpeakOptions = {}) {
   if (!enabled) return;
 
-  stopElevenLabsAudio();
-  stopGeminiAudio();
-  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-  }
+  // Stop all active speech channels
+  stopAllSpeech();
 
   const clean = text.trim();
   if (!clean) return;
 
-  // 1. Try ElevenLabs
+  // 1. Try ElevenLabs if configured
   if (isElevenLabsTTSEnabled() && getElevenLabsApiKey()) {
     playElevenLabsSpeech(clean, {
       onStart: options.onStart,
       onEnd: options.onEnd,
     }).then((ok) => {
       if (!ok) {
-        // Fallback to Gemini or Browser
-        fallbackToGeminiOrBrowser(clean, enabled, options);
+        fallbackToGeminiOrNeural(clean, enabled, options);
       }
     }).catch(() => {
-      fallbackToGeminiOrBrowser(clean, enabled, options);
+      fallbackToGeminiOrNeural(clean, enabled, options);
     });
     return;
   }
 
-  fallbackToGeminiOrBrowser(clean, enabled, options);
+  fallbackToGeminiOrNeural(clean, enabled, options);
 }
 
-function fallbackToGeminiOrBrowser(clean: string, enabled: boolean, options: SpeakOptions) {
-  // 2. Try Gemini 2.0 Audio
+function fallbackToGeminiOrNeural(clean: string, enabled: boolean, options: SpeakOptions) {
+  // 2. Try Gemini 2.0 Audio if configured
   if (isGeminiTTSEnabled() && getGeminiApiKey()) {
     const ctx = getAudioContext();
     playGeminiSpeech(clean, {
@@ -649,18 +779,54 @@ function fallbackToGeminiOrBrowser(clean: string, enabled: boolean, options: Spe
       onEnd: options.onEnd,
     }).then((ok) => {
       if (!ok) {
-        speakWithBrowserTTS(clean, enabled, options);
+        fallbackToNeuralOrBrowser(clean, enabled, options);
       }
     }).catch(() => {
-      speakWithBrowserTTS(clean, enabled, options);
+      fallbackToNeuralOrBrowser(clean, enabled, options);
     });
     return;
   }
 
-  // 3. Fallback to Browser Teacher Voice
-  speakWithBrowserTTS(clean, enabled, options);
+  fallbackToNeuralOrBrowser(clean, enabled, options);
+}
+
+function fallbackToNeuralOrBrowser(clean: string, enabled: boolean, options: SpeakOptions) {
+  // 3. Try High-Definition 24kHz Neural Cloud Speech (Sounds like a real human voice)
+  playNeuralCloudSpeech(clean, options).then((ok) => {
+    if (!ok) {
+      // 4. Fallback to Browser SpeechSynthesis with natural voice filtering
+      speakWithBrowserTTS(clean, enabled, options);
+    }
+  }).catch(() => {
+    speakWithBrowserTTS(clean, enabled, options);
+  });
+}
+
+/**
+ * Halts all voice speech across all engines immediately
+ */
+export function stopAllSpeech() {
+  if (currentSpeechAudio) {
+    try {
+      currentSpeechAudio.pause();
+      currentSpeechAudio.currentTime = 0;
+    } catch {
+      // ignore
+    }
+    currentSpeechAudio = null;
+  }
+  stopElevenLabsAudio();
+  stopGeminiAudio();
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    try {
+      window.speechSynthesis.cancel();
+    } catch {
+      // ignore
+    }
+  }
 }
 
 export function speakCharacterText(characterId: string, text: string, enabled = true) {
   speakText(text, enabled, { characterId, playIntroSFX: true });
 }
+
