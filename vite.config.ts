@@ -4,7 +4,7 @@ import path from 'path';
 import {defineConfig, loadEnv, type Plugin} from 'vite';
 import { handleSpeechRequest } from './src/server/speech';
 
-function localSpeechApi(apiKey: string | undefined): Plugin {
+function localSpeechApi(keys: { geminiApiKey?: string; elevenLabsApiKey?: string }): Plugin {
   return {
     name: 'local-speech-api',
     configureServer(server) {
@@ -19,7 +19,7 @@ function localSpeechApi(apiKey: string | undefined): Plugin {
             }
           }
           const body = chunks.length ? JSON.parse(Buffer.concat(chunks).toString('utf8')) : undefined;
-          const response = await handleSpeechRequest(req.method || 'GET', body, apiKey);
+          const response = await handleSpeechRequest(req.method || 'GET', body, keys);
           res.writeHead(response.status, Object.fromEntries(response.headers));
           res.end(Buffer.from(await response.arrayBuffer()));
         } catch {
@@ -31,9 +31,11 @@ function localSpeechApi(apiKey: string | undefined): Plugin {
 }
 
 export default defineConfig(({ mode }) => {
-  const apiKey = process.env.GEMINI_API_KEY || loadEnv(mode, process.cwd(), '').GEMINI_API_KEY;
+  const env = loadEnv(mode, process.cwd(), '');
+  const geminiApiKey = process.env.GEMINI_API_KEY || env.GEMINI_API_KEY;
+  const elevenLabsApiKey = process.env.ELEVENLABS_API_KEY || env.ELEVENLABS_API_KEY;
   return {
-    plugins: [react(), tailwindcss(), localSpeechApi(apiKey)],
+    plugins: [react(), tailwindcss(), localSpeechApi({ geminiApiKey, elevenLabsApiKey })],
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),

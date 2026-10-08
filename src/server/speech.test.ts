@@ -38,9 +38,41 @@ test('speech endpoint keeps the key server-side and selects a distinct voice for
   }
 });
 
-test('speech endpoint reports missing configuration without calling Gemini', async () => {
+test('speech endpoint reports missing configuration without calling Gemini or ElevenLabs', async () => {
   const status = await handleSpeechRequest('GET', undefined, undefined);
   assert.deepEqual(await status.json(), { available: false });
   const response = await handleSpeechRequest('POST', { text: '안녕' }, undefined);
   assert.equal(response.status, 503);
 });
+
+test('speech endpoint uses ElevenLabs when configured and falls back properly', async () => {
+  const originalFetch = globalThis.fetch;
+  const mp3Data = Buffer.alloc(150);
+  mp3Data.fill(0x55);
+  let calledUrl = '';
+  let calledHeaders: Record<string, string> = {};
+
+  globalThis.fetch = async (url, init) => {
+    calledUrl = String(url);
+    calledHeaders = (init?.headers || {}) as Record<string, string>;
+    return new Response(mp3Data, {
+      status: 200,
+      headers: { 'Content-Type': 'audio/mpeg' },
+    });
+  };
+
+  try {
+    const response = await handleSpeechRequest(
+      'POST',
+      { text: '안녕, 유하야!', characterId: 'ggomi' },
+      { elevenLabsApiKey: 'test-eleven-key' }
+    );
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('Content-Type'), 'audio/mpeg');
+    assert.ok(calledUrl.includes('https://api.elevenlabs.io/v1/text-to-speech/'));
+    assert.equal(calledHeaders['xi-api-key'], 'test-eleven-key');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
