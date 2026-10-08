@@ -28,6 +28,8 @@ import { RhythmGame } from './screens/games/RhythmGame';
 import { SizeComparisonGame } from './screens/games/SizeComparisonGame';
 import { MemoryCardGame } from './screens/games/MemoryCardGame';
 import { ShadowQuizGame } from './screens/games/ShadowQuizGame';
+import { BalloonPopGame } from './screens/games/BalloonPopGame';
+import { RainbowStageAdventure } from './screens/RainbowStageAdventure';
 
 import { startBGM, stopBGM, setBGMVolume, playStarGain, speakText } from './utils/soundEngine';
 import { initAuth, fetchDriveFolderVideos, GOOGLE_DRIVE_FOLDER_ID } from './services/googleDrive';
@@ -460,6 +462,25 @@ export default function App() {
                 case 'shadow_quiz':
                   return (
                     <ShadowQuizGame
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={appState.soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'stage_adventure':
+                  return (
+                    <RainbowStageAdventure
+                      onCompleteQuiz={handleCompleteQuiz}
+                      onGoHome={() => setCurrentScreen('home')}
+                      soundEnabled={appState.soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'balloon_pop':
+                  return (
+                    <BalloonPopGame
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={appState.soundEnabled}
                       ageGroup={ageGroup}

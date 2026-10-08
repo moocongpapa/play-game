@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
-import { speakText, playCorrectFanfare, playWrongBoing, playBubblePop } from '../../utils/soundEngine';
+import { speakText, playCorrectFanfare, playWrongBoing, playBubblePop, playSparkleChime, playDingDongDang } from '../../utils/soundEngine';
+import { fireConfetti } from '../../utils/confetti';
 import { getDifficultyConfig, getAgeGroupLabel, pickRandom, pickDistractors } from '../../utils/ageEngine';
 import { OBJECT_ITEMS_BY_AGE } from '../../data/gameData';
 import { AgeGroup, QuizItem } from '../../types';
@@ -58,7 +59,9 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
     if (item.id === targetItem.id) {
       // Correct!
       setIsRevealed(true);
-      playCorrectFanfare(soundEnabled);
+      playSparkleChime(soundEnabled);
+      playDingDongDang(soundEnabled);
+      fireConfetti();
 
       const nextStreak = streak + 1;
       setStreak(nextStreak);

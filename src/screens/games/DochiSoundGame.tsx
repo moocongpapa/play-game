@@ -3,7 +3,8 @@ import { motion } from 'motion/react';
 import { SOUND_ITEMS_BY_AGE } from '../../data/gameData';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
-import { speakText, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
+import { speakText, playCorrectFanfare, playWrongBoing, playAnimalSound, playDingDongDang } from '../../utils/soundEngine';
+import { fireConfetti } from '../../utils/confetti';
 import { getDifficultyConfig, getAgeGroupLabel, pickDistractors, pickRandom } from '../../utils/ageEngine';
 import { AgeGroup } from '../../types';
 import { Volume2, RefreshCw, Timer } from 'lucide-react';
@@ -65,7 +66,10 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
     setOptions(roundOptions);
 
     if (soundEnabled) {
-      speakText(`도치가 소리를 들려줄게요! "${target.soundText}" 이 소리의 주인은 누구일까요?`, soundEnabled, { characterId: 'dochi' });
+      playAnimalSound(target.name, soundEnabled);
+      setTimeout(() => {
+        speakText(`도치가 소리를 들려줄게요! "${target.soundText}" 이 소리의 주인은 누구일까요?`, soundEnabled, { characterId: 'dochi' });
+      }, 350);
     }
 
     // 힌트 타이머 구동
@@ -101,7 +105,10 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
   }, [ageGroup]);
 
   const handlePlaySoundClue = () => {
-    speakText(`"${targetItem.soundText}" 소리를 가진 친구는 누구일까요?`, soundEnabled, { characterId: 'dochi' });
+    playAnimalSound(targetItem.name, soundEnabled);
+    setTimeout(() => {
+      speakText(`"${targetItem.soundText}" 소리를 가진 친구는 누구일까요?`, soundEnabled, { characterId: 'dochi' });
+    }, 300);
   };
 
   const handleSelectCard = (item: typeof itemPool[0]) => {
@@ -112,8 +119,10 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
       if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
       setSelectedCorrectId(item.id);
-      playCorrectFanfare(soundEnabled);
-      speakText(`딩동댕! 정답이에요! ${item.name}!`, soundEnabled, { characterId: 'dochi' });
+      playAnimalSound(item.name, soundEnabled);
+      playDingDongDang(soundEnabled);
+      fireConfetti();
+      speakText(`딩동댕! 정답이에요! 귀여운 ${item.name}!`, soundEnabled, { characterId: 'dochi' });
       onCompleteQuiz(diffConfig.starsPerCorrect);
     } else {
       setShakingCardId(item.id);

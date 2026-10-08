@@ -107,6 +107,41 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
         </div>
       </div>
 
+      {/* 🌈 Grand 4-Stage Rainbow Adventure Banner */}
+      <motion.div
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => onStartGame('stage_adventure', 'ggomi')}
+        className="w-full bg-gradient-to-r from-[#FF80AB] via-[#FFD15C] via-[#81C784] to-[#64B5F6] p-1 sm:p-1.5 rounded-[32px] shadow-lg cursor-pointer transition-transform"
+      >
+        <div className="bg-white/95 rounded-[26px] p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="text-3xl sm:text-4xl bg-amber-100 p-2 sm:p-2.5 rounded-2xl border-2 border-amber-300 shadow-2xs">
+              🌈
+            </div>
+            <div className="text-left">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="bg-rose-500 text-white text-[11px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+                  만 3~4세 추천
+                </span>
+                <span className="text-xs font-black text-amber-700">Level 1 ~ 4 다단계 모험</span>
+              </div>
+              <h2 className="text-base sm:text-xl font-black text-[#4A3E3D]">
+                무지개 스테이지 놀이 시작하기! ⭐
+              </h2>
+              <p className="text-xs font-bold text-[#8C7B79] hidden sm:block">
+                동물소리 ➔ 색깔분류 ➔ 풍선팡팡 ➔ 그림자퍼즐 ➔ 황금 트로피 파티!
+              </p>
+            </div>
+          </div>
+
+          <div className="shrink-0 flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-orange-400 text-white px-4 py-2.5 rounded-full font-black text-sm shadow-md border-b-2 border-orange-600 active:scale-95">
+            <Play className="w-4 h-4 fill-white" />
+            <span>출발!</span>
+          </div>
+        </div>
+      </motion.div>
+
       {/* 7 Characters Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
         {CHARACTER_LIST.map((char) => {

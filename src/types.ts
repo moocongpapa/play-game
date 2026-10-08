@@ -15,7 +15,9 @@ export type GameId =
   | 'rhythm_game'        // 도치의 리듬 따라하기
   | 'size_comparison'    // 꿀꿀이의 크기 비교 놀이
   | 'memory_card'        // 누룽지의 기억력 카드 뒤집기
-  | 'shadow_quiz';       // 꼬미의 그림자 실루엣 퀴즈
+  | 'shadow_quiz'        // 꼬미의 그림자 실루엣 퀴즈
+  | 'stage_adventure'    // 3~4세 무지개 다단계 스테이지 모험
+  | 'balloon_pop';       // 꿀꿀이의 둥둥 풍선 팡팡 놀이
 
 // 연령 그룹 (4단계)
 export type AgeGroup = 'baby' | 'sprout' | 'bloom' | 'star';

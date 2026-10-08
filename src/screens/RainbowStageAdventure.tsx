@@ -1,0 +1,766 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { CharacterAvatar } from '../components/CharacterAvatar';
+import { JellyButton } from '../components/JellyButton';
+import {
+  speakText,
+  playAnimalSound,
+  playDingDongDang,
+  playJellyTap,
+  playBouncyBoing,
+  playWrongBoing,
+  playSparkleChime,
+  playCelebrationFanfare,
+  playBalloonPop,
+} from '../utils/soundEngine';
+import { fireConfetti, fireStarExplosion, fireCelebrationFireworks, fireBalloonPopParticle } from '../utils/confetti';
+import { AgeGroup, CharacterId } from '../types';
+import { Sparkles, Trophy, Home, RotateCcw, Volume2, Star } from 'lucide-react';
+
+interface RainbowStageAdventureProps {
+  onCompleteQuiz: (starsEarned: number) => void;
+  onGoHome: () => void;
+  soundEnabled: boolean;
+  ageGroup: AgeGroup;
+  childName: string;
+}
+
+// Level 1 Data (Animal Sounds)
+interface AnimalQuizItem {
+  id: string;
+  name: string;
+  soundKey: string;
+  soundPrompt: string;
+  emoji: string;
+  color: string;
+}
+
+const ANIMAL_QUIZ_LIST: AnimalQuizItem[] = [
+  { id: 'dog', name: '강아지', soundKey: 'dog', soundPrompt: '멍멍!', emoji: '🐶', color: '#FFE0B2' },
+  { id: 'cat', name: '고양이', soundKey: 'cat', soundPrompt: '야옹~', emoji: '🐱', color: '#FFCDD2' },
+  { id: 'duck', name: '오리', soundKey: 'duck', soundPrompt: '꽥꽥!', emoji: '🦆', color: '#FFF9C4' },
+  { id: 'cow', name: '소', soundKey: 'cow', soundPrompt: '음메~', emoji: '🐮', color: '#BBDEFB' },
+  { id: 'pig', name: '돼지', soundKey: 'pig', soundPrompt: '꿀꿀!', emoji: '🐷', color: '#F8BBD0' },
+  { id: 'frog', name: '개구리', soundKey: 'frog', soundPrompt: '개굴개굴!', emoji: '🐸', color: '#C8E6C9' },
+];
+
+// Level 2 Data (Color Basket Sort)
+interface BasketSortItem {
+  id: string;
+  name: string;
+  colorId: 'red' | 'yellow' | 'green';
+  emoji: string;
+}
+
+const SORT_ITEMS: BasketSortItem[] = [
+  { id: 'apple', name: '사과', colorId: 'red', emoji: '🍎' },
+  { id: 'banana', name: '바나나', colorId: 'yellow', emoji: '🍌' },
+  { id: 'watermelon', name: '수박', colorId: 'green', emoji: '🍉' },
+  { id: 'strawberry', name: '딸기', colorId: 'red', emoji: '🍓' },
+  { id: 'lemon', name: '레몬', colorId: 'yellow', emoji: '🍋' },
+  { id: 'kiwi', name: '키위', colorId: 'green', emoji: '🥝' },
+];
+
+// Level 4 Data (Shadow Silhouette Puzzle)
+interface ShadowPuzzleItem {
+  id: string;
+  name: string;
+  emoji: string;
+  bg: string;
+}
+
+const SHADOW_PUZZLE_LIST: ShadowPuzzleItem[] = [
+  { id: 'car', name: '자동차', emoji: '🚗', bg: '#FFEBEE' },
+  { id: 'butterfly', name: '나비', emoji: '🦋', bg: '#F3E5F5' },
+  { id: 'rocket', name: '우주선', emoji: '🚀', bg: '#E0F7FA' },
+  { id: 'dog', name: '강아지', emoji: '🐶', bg: '#FFF8E1' },
+];
+
+export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
+  onCompleteQuiz,
+  onGoHome,
+  soundEnabled,
+  childName,
+}) => {
+  // Current Stage (1, 2, 3, 4, 5=Trophy Party)
+  const [currentLevel, setCurrentLevel] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [clearedLevels, setClearedLevels] = useState<number[]>([]);
+  const [stampAnimationLevel, setStampAnimationLevel] = useState<number | null>(null);
+
+  // -------------------------------------------------------------
+  // LEVEL 1 State: Animal Sound Match
+  // -------------------------------------------------------------
+  const [l1Target, setL1Target] = useState<AnimalQuizItem>(ANIMAL_QUIZ_LIST[0]);
+  const [l1Options, setL1Options] = useState<AnimalQuizItem[]>([]);
+  const [l1WrongId, setL1WrongId] = useState<string | null>(null);
+
+  const initLevel1 = () => {
+    const target = ANIMAL_QUIZ_LIST[Math.floor(Math.random() * ANIMAL_QUIZ_LIST.length)];
+    const others = ANIMAL_QUIZ_LIST.filter((a) => a.id !== target.id).sort(() => Math.random() - 0.5).slice(0, 2);
+    const opts = [target, ...others].sort(() => Math.random() - 0.5);
+
+    setL1Target(target);
+    setL1Options(opts);
+    setL1WrongId(null);
+
+    setTimeout(() => {
+      playAnimalSound(target.soundKey, soundEnabled);
+      speakText(`동물 소리를 들어보자! "${target.soundPrompt}" 누구 소리일까요?`, soundEnabled, {
+        characterId: 'dochi',
+      });
+    }, 400);
+  };
+
+  const handleL1Select = (item: AnimalQuizItem) => {
+    if (item.id === l1Target.id) {
+      // Correct!
+      playAnimalSound(l1Target.soundKey, soundEnabled);
+      playDingDongDang(soundEnabled);
+      fireConfetti();
+      triggerStageClear(1, `정답이에요! 짝짝짝! 귀여운 ${l1Target.name}였어요!`);
+    } else {
+      // Wrong boing
+      setL1WrongId(item.id);
+      playWrongBoing(soundEnabled);
+      speakText(`다시 소리를 잘 들어볼까요?`, soundEnabled, { characterId: 'dochi' });
+      setTimeout(() => {
+        setL1WrongId(null);
+        playAnimalSound(l1Target.soundKey, soundEnabled);
+      }, 700);
+    }
+  };
+
+  // -------------------------------------------------------------
+  // LEVEL 2 State: Color Basket Sort
+  // -------------------------------------------------------------
+  const [l2SortedCount, setL2SortedCount] = useState(0);
+  const [l2RemainingItems, setL2RemainingItems] = useState<BasketSortItem[]>([]);
+  const [l2SelectedFruit, setL2SelectedFruit] = useState<BasketSortItem | null>(null);
+  const [l2BasketBounce, setL2BasketBounce] = useState<'red' | 'yellow' | 'green' | null>(null);
+
+  const initLevel2 = () => {
+    setL2SortedCount(0);
+    setL2SelectedFruit(null);
+    const selected = [...SORT_ITEMS].sort(() => Math.random() - 0.5).slice(0, 3);
+    setL2RemainingItems(selected);
+
+    setTimeout(() => {
+      speakText(`알록달록 과일을 같은 색깔 바구니에 쏙 넣어주세요!`, soundEnabled, { characterId: 'rano' });
+    }, 400);
+  };
+
+  const handleL2SortFruit = (fruit: BasketSortItem, basketColor: 'red' | 'yellow' | 'green') => {
+    if (fruit.colorId === basketColor) {
+      // Correct match
+      playJellyTap(soundEnabled);
+      playSparkleChime(soundEnabled);
+      setL2BasketBounce(basketColor);
+      setTimeout(() => setL2BasketBounce(null), 500);
+
+      const nextRemaining = l2RemainingItems.filter((f) => f.id !== fruit.id);
+      setL2RemainingItems(nextRemaining);
+      setL2SelectedFruit(null);
+      const nextCount = l2SortedCount + 1;
+      setL2SortedCount(nextCount);
+
+      if (nextCount >= 3) {
+        playDingDongDang(soundEnabled);
+        fireConfetti();
+        triggerStageClear(2, `우와! 과일들을 바구니에 예쁘게 다 모았어요! 멋지다!`);
+      } else {
+        speakText(`쏙! 참 잘했어요!`, soundEnabled, { characterId: 'rano', playIntroSFX: false });
+      }
+    } else {
+      // Wrong basket
+      playWrongBoing(soundEnabled);
+      speakText(`다른 색깔 바구니를 찾아볼까요?`, soundEnabled, { characterId: 'rano' });
+    }
+  };
+
+  // -------------------------------------------------------------
+  // LEVEL 3 State: Floating Balloon Pop
+  // -------------------------------------------------------------
+  const [l3Balloons, setL3Balloons] = useState<
+    Array<{ id: string; x: number; color: string; bg: string; emoji: string; size: number }>
+  >([]);
+  const [l3Popped, setL3Popped] = useState(0);
+
+  const initLevel3 = () => {
+    setL3Popped(0);
+    const palettes = [
+      { color: '#FF6B8B', bg: '#FF4081', emoji: '🍓' },
+      { color: '#FFD15C', bg: '#FFA000', emoji: '⭐' },
+      { color: '#4ADE80', bg: '#22C55E', emoji: '🍏' },
+      { color: '#60A5FA', bg: '#3B82F6', emoji: '🐬' },
+      { color: '#C084FC', bg: '#A855F7', emoji: '🍇' },
+    ];
+    const initialBalloons = palettes.map((p, i) => ({
+      id: `bal-${i}`,
+      x: 15 + i * 16,
+      color: p.color,
+      bg: p.bg,
+      emoji: p.emoji,
+      size: 90,
+    }));
+    setL3Balloons(initialBalloons);
+
+    setTimeout(() => {
+      speakText(`꿀꿀이와 함께 둥둥 떠오르는 풍선 5개를 팡팡 터뜨려보자!`, soundEnabled, {
+        characterId: 'ggulgguli',
+      });
+    }, 400);
+  };
+
+  const handleL3Pop = (id: string, color: string, e: React.MouseEvent | React.TouchEvent) => {
+    playBalloonPop(soundEnabled);
+
+    let cx = window.innerWidth * 0.5;
+    let cy = window.innerHeight * 0.5;
+    if ('clientX' in e && e.clientX) {
+      cx = e.clientX;
+      cy = e.clientY;
+    } else if ('touches' in e && e.touches[0]) {
+      cx = e.touches[0].clientX;
+      cy = e.touches[0].clientY;
+    }
+
+    fireBalloonPopParticle(cx, cy, color);
+    setL3Balloons((prev) => prev.filter((b) => b.id !== id));
+
+    const nextCount = l3Popped + 1;
+    setL3Popped(nextCount);
+
+    const koreanNumbers = ['하나!', '둘!', '셋!', '넷!', '다섯!'];
+    speakText(koreanNumbers[nextCount - 1] || `${nextCount}!`, soundEnabled, {
+      characterId: 'ggulgguli',
+      playIntroSFX: false,
+    });
+
+    if (nextCount >= 5) {
+      playDingDongDang(soundEnabled);
+      fireConfetti();
+      triggerStageClear(3, `와아! 풍선 5개를 모두 팡팡 터뜨렸어요!`);
+    }
+  };
+
+  // -------------------------------------------------------------
+  // LEVEL 4 State: Shadow Silhouette Puzzle
+  // -------------------------------------------------------------
+  const [l4Target, setL4Target] = useState<ShadowPuzzleItem>(SHADOW_PUZZLE_LIST[0]);
+  const [l4Options, setL4Options] = useState<ShadowPuzzleItem[]>([]);
+  const [l4Solved, setL4Solved] = useState(false);
+
+  const initLevel4 = () => {
+    setL4Solved(false);
+    const target = SHADOW_PUZZLE_LIST[Math.floor(Math.random() * SHADOW_PUZZLE_LIST.length)];
+    const others = SHADOW_PUZZLE_LIST.filter((s) => s.id !== target.id).sort(() => Math.random() - 0.5).slice(0, 2);
+    const opts = [target, ...others].sort(() => Math.random() - 0.5);
+
+    setL4Target(target);
+    setL4Options(opts);
+
+    setTimeout(() => {
+      speakText(`깜깜한 그림자가 나타났어요! 이 그림자에 꼭 맞는 친구를 맞춰주세요!`, soundEnabled, {
+        characterId: 'ggomi',
+      });
+    }, 400);
+  };
+
+  const handleL4Match = (item: ShadowPuzzleItem) => {
+    if (l4Solved) return;
+
+    if (item.id === l4Target.id) {
+      setL4Solved(true);
+      playSparkleChime(soundEnabled);
+      playDingDongDang(soundEnabled);
+      fireConfetti();
+      fireStarExplosion();
+      triggerStageClear(4, `정답이에요! 그림자에 쏙 들어맞았어요!`);
+    } else {
+      playWrongBoing(soundEnabled);
+      speakText(`그림자 모양을 다시 한번 살펴볼까요?`, soundEnabled, { characterId: 'ggomi' });
+    }
+  };
+
+  // -------------------------------------------------------------
+  // Stage Clearance & Progression
+  // -------------------------------------------------------------
+  const triggerStageClear = (levelNumber: number, praiseMessage: string) => {
+    setStampAnimationLevel(levelNumber);
+    setClearedLevels((prev) => (prev.includes(levelNumber) ? prev : [...prev, levelNumber]));
+    onCompleteQuiz(2);
+
+    speakText(`와, 정말 잘했어! 멋지다! ${praiseMessage}`, soundEnabled);
+
+    setTimeout(() => {
+      setStampAnimationLevel(null);
+      if (levelNumber === 4) {
+        // Grand Final Celebration!
+        setCurrentLevel(5);
+        playCelebrationFanfare(soundEnabled);
+        fireCelebrationFireworks(4000);
+        speakText(`축하합니다! ${childName}야, 모든 단계를 완료하고 황금 트로피를 받았어요! 최고야!`, soundEnabled);
+      } else {
+        const next = (levelNumber + 1) as 2 | 3 | 4;
+        setCurrentLevel(next);
+      }
+    }, 2200);
+  };
+
+  // Init levels whenever currentLevel changes
+  useEffect(() => {
+    if (currentLevel === 1) initLevel1();
+    if (currentLevel === 2) initLevel2();
+    if (currentLevel === 3) initLevel3();
+    if (currentLevel === 4) initLevel4();
+    if (currentLevel === 5) {
+      playCelebrationFanfare(soundEnabled);
+      fireCelebrationFireworks(4000);
+    }
+  }, [currentLevel]);
+
+  // Restart Adventure
+  const restartAdventure = () => {
+    setClearedLevels([]);
+    setCurrentLevel(1);
+    speakText(`신나는 무지개 모험을 처음부터 다시 시작해요!`, soundEnabled);
+  };
+
+  return (
+    <div className="relative w-full max-w-3xl mx-auto flex flex-col items-center select-none overflow-hidden pb-8">
+      {/* Top Header & Stage Badges */}
+      <div className="w-full bg-white/95 backdrop-blur-xs p-3.5 sm:p-4 rounded-[32px] border-3 border-amber-300 shadow-md mb-3 flex flex-col gap-2.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onGoHome}
+              className="p-2 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-full cursor-pointer transition-transform active:scale-95 border border-amber-300"
+              title="홈으로"
+            >
+              <Home className="w-5 h-5" />
+            </button>
+            <h1 className="text-base sm:text-xl font-black text-[#4A3E3D] flex items-center gap-1.5">
+              <span>🌈 {childName}의 무지개 스테이지 모험</span>
+              <Sparkles className="w-4 h-4 text-amber-500 animate-spin" />
+            </h1>
+          </div>
+
+          <button
+            onClick={restartAdventure}
+            className="px-3 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs font-black rounded-full flex items-center gap-1 border border-rose-300 active:scale-95 cursor-pointer"
+          >
+            <RotateCcw className="w-3.5 h-3.5" /> 처음부터
+          </button>
+        </div>
+
+        {/* 4 Stage Stepper Bar */}
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+          {[
+            { lvl: 1, label: '동물소리', emoji: '🐶' },
+            { lvl: 2, label: '색깔분류', emoji: '🍎' },
+            { lvl: 3, label: '풍선팡팡', emoji: '🎈' },
+            { lvl: 4, label: '그림자', emoji: '🧩' },
+          ].map((s) => {
+            const isCleared = clearedLevels.includes(s.lvl);
+            const isCurrent = currentLevel === s.lvl;
+
+            return (
+              <motion.div
+                key={`stage-step-${s.lvl}`}
+                animate={{ scale: isCurrent ? [1, 1.04, 1] : 1 }}
+                transition={{ duration: 1.5, repeat: isCurrent ? Infinity : 0 }}
+                className={`py-1.5 px-2 rounded-2xl flex flex-col items-center justify-center border-2 transition-all ${
+                  isCurrent
+                    ? 'bg-amber-100 border-amber-400 shadow-xs'
+                    : isCleared
+                    ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                    : 'bg-gray-100/70 border-gray-200 text-gray-400 opacity-70'
+                }`}
+              >
+                <div className="flex items-center gap-1">
+                  <span className="text-sm">{s.emoji}</span>
+                  <span className="text-xs font-black">{s.lvl}단계</span>
+                  {isCleared && <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />}
+                </div>
+                <span className="text-[10px] font-bold truncate">{s.label}</span>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* STAMP CLEAR POPUP OVERLAY */}
+      <AnimatePresence>
+        {stampAnimationLevel && (
+          <motion.div
+            initial={{ scale: 0.2, opacity: 0, rotate: -20 }}
+            animate={{ scale: [0.5, 1.25, 1], opacity: 1, rotate: [-15, 5, 0] }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 350, damping: 18 }}
+            className="fixed inset-0 m-auto z-50 pointer-events-none flex flex-col items-center justify-center"
+          >
+            <div className="bg-white/95 border-4 border-amber-400 rounded-[40px] p-8 shadow-2xl flex flex-col items-center text-center max-w-xs">
+              <motion.div
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 0.8 }}
+                className="text-7xl mb-2 filter drop-shadow-md"
+              >
+                ⭐
+              </motion.div>
+              <span className="text-3xl font-black text-amber-600 mb-1">
+                {stampAnimationLevel}단계 클리어!
+              </span>
+              <span className="text-sm font-bold text-gray-600">
+                별 스탬프를 쾅 찍었어요! 🌟
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ========================================================= */}
+      {/* LEVEL 1: 동물/사물 소리 짝 맞추기 */}
+      {/* ========================================================= */}
+      {currentLevel === 1 && (
+        <motion.div
+          key="stage-1"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full bg-[#FFF3E0] rounded-[36px] border-4 border-[#FFA726] p-4 sm:p-6 shadow-lg flex flex-col items-center text-center gap-4"
+        >
+          {/* Character & Question Banner */}
+          <div className="flex items-center gap-3 bg-white/90 p-3 sm:p-4 rounded-3xl border-2 border-orange-200 shadow-xs w-full max-w-md">
+            <CharacterAvatar id="dochi" size="md" mood="talking" className="!w-16 !h-16 shrink-0" />
+            <div className="text-left flex-1 min-w-0">
+              <span className="text-xs font-black text-orange-600 block">Level 1 &bull; 소리 듣고 동물 찾기</span>
+              <p className="text-base sm:text-lg font-black text-[#4A3E3D] leading-snug">
+                "{l1Target.soundPrompt}" 소리의 주인은 누구일까요?
+              </p>
+            </div>
+            <button
+              onClick={() => playAnimalSound(l1Target.soundKey, soundEnabled)}
+              className="p-3 bg-orange-500 hover:bg-orange-600 text-white rounded-full active:scale-95 shadow-xs cursor-pointer"
+              title="다시 듣기"
+            >
+              <Volume2 className="w-6 h-6 animate-pulse" />
+            </button>
+          </div>
+
+          {/* Large Animal Cards (Jumbo touch targets for 3~4 year olds) */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4 w-full max-w-xl my-2">
+            {l1Options.map((opt) => (
+              <motion.button
+                key={opt.id}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.9, rotate: -2 }}
+                animate={{
+                  x: l1WrongId === opt.id ? [-8, 8, -8, 8, 0] : 0,
+                }}
+                transition={{ type: 'spring', stiffness: 350, damping: 15 }}
+                onClick={() => handleL1Select(opt)}
+                style={{ backgroundColor: opt.color }}
+                className="p-6 rounded-[32px] border-4 border-amber-300 shadow-md flex flex-col items-center justify-center gap-2 cursor-pointer touch-manipulation min-h-[140px]"
+              >
+                <span className="text-6xl sm:text-7xl filter drop-shadow-sm select-none">{opt.emoji}</span>
+                <span className="text-xl sm:text-2xl font-black text-[#4A3E3D]">{opt.name}</span>
+              </motion.button>
+            ))}
+          </div>
+
+          <p className="text-xs font-bold text-orange-800/80 bg-white/70 py-1.5 px-4 rounded-full">
+            💡 소리 버튼을 누르면 울음소리를 다시 들을 수 있어요!
+          </p>
+        </motion.div>
+      )}
+
+      {/* ========================================================= */}
+      {/* LEVEL 2: 색깔 과일 바구니 분류 (드래그 & 원터치) */}
+      {/* ========================================================= */}
+      {currentLevel === 2 && (
+        <motion.div
+          key="stage-2"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full bg-[#E8F5E9] rounded-[36px] border-4 border-[#66BB6A] p-4 sm:p-6 shadow-lg flex flex-col items-center text-center gap-4"
+        >
+          {/* Guide Banner */}
+          <div className="flex items-center gap-3 bg-white/90 p-3 sm:p-4 rounded-3xl border-2 border-emerald-200 shadow-xs w-full max-w-md">
+            <CharacterAvatar id="rano" size="md" mood="happy" className="!w-16 !h-16 shrink-0" />
+            <div className="text-left flex-1 min-w-0">
+              <span className="text-xs font-black text-emerald-600 block">Level 2 &bull; 색깔 바구니 분류</span>
+              <p className="text-base sm:text-lg font-black text-[#4A3E3D] leading-snug">
+                과일을 같은 색깔 바구니에 쏙 넣어주세요! ({l2SortedCount}/3)
+              </p>
+            </div>
+          </div>
+
+          {/* Fruit Selection Deck */}
+          <div className="w-full max-w-md bg-white/80 p-3.5 rounded-3xl border-2 border-emerald-200 shadow-xs flex items-center justify-center gap-4 min-h-[100px]">
+            {l2RemainingItems.length === 0 ? (
+              <span className="text-sm font-black text-emerald-700 animate-pulse">
+                모든 과일을 다 넣었어요! 짝짝짝! 👏
+              </span>
+            ) : (
+              l2RemainingItems.map((fruit) => {
+                const isSelected = l2SelectedFruit?.id === fruit.id;
+                return (
+                  <motion.div
+                    key={fruit.id}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => {
+                      playJellyTap(soundEnabled);
+                      setL2SelectedFruit(isSelected ? null : fruit);
+                    }}
+                    className={`p-3 sm:p-4 rounded-3xl border-3 cursor-pointer shadow-xs flex flex-col items-center bg-white transition-all ${
+                      isSelected ? 'ring-4 ring-amber-400 scale-105 border-amber-500' : 'border-gray-200'
+                    }`}
+                  >
+                    <span className="text-5xl sm:text-6xl drop-shadow-sm select-none">{fruit.emoji}</span>
+                    <span className="text-xs font-black text-[#4A3E3D] mt-1">{fruit.name}</span>
+                  </motion.div>
+                );
+              })
+            )}
+          </div>
+
+          {/* 3 Color Baskets (Red, Yellow, Green) */}
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-4 w-full max-w-xl">
+            {[
+              { colorId: 'red' as const, label: '빨강 바구니', bg: '#FFEBEE', border: '#EF5350', basketEmoji: '🧺 🔴' },
+              { colorId: 'yellow' as const, label: '노랑 바구니', bg: '#FFFDE7', border: '#FBC02D', basketEmoji: '🧺 🟡' },
+              { colorId: 'green' as const, label: '초록 바구니', bg: '#E8F5E9', border: '#4CAF50', basketEmoji: '🧺 🟢' },
+            ].map((basket) => {
+              const isBouncing = l2BasketBounce === basket.colorId;
+
+              return (
+                <motion.div
+                  key={basket.colorId}
+                  animate={{ scale: isBouncing ? [1, 1.15, 1] : 1 }}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    if (l2SelectedFruit) {
+                      handleL2SortFruit(l2SelectedFruit, basket.colorId);
+                    } else {
+                      playBouncyBoing(soundEnabled);
+                      speakText(`먼저 위에서 과일을 선택한 후 바구니를 눌러주세요!`, soundEnabled);
+                    }
+                  }}
+                  style={{ backgroundColor: basket.bg, borderColor: basket.border }}
+                  className="p-4 sm:p-5 rounded-[32px] border-4 shadow-md flex flex-col items-center justify-center gap-1.5 cursor-pointer touch-manipulation min-h-[130px]"
+                >
+                  <span className="text-4xl sm:text-5xl filter drop-shadow-sm">{basket.basketEmoji}</span>
+                  <span className="text-xs sm:text-sm font-black text-[#4A3E3D]">{basket.label}</span>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          <p className="text-xs font-bold text-emerald-800/80 bg-white/70 py-1.5 px-4 rounded-full">
+            💡 과일을 터치하고 맞는 색깔 바구니를 콕 눌러주세요!
+          </p>
+        </motion.div>
+      )}
+
+      {/* ========================================================= */}
+      {/* LEVEL 3: 둥둥 풍선 터뜨리기 (숫자 카운트와 함께 팡!) */}
+      {/* ========================================================= */}
+      {currentLevel === 3 && (
+        <motion.div
+          key="stage-3"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative w-full h-[520px] bg-gradient-to-b from-[#E0F2FE] via-[#F0F9FF] to-[#FEF3C7] rounded-[36px] border-4 border-sky-400 p-4 shadow-lg overflow-hidden flex flex-col justify-between"
+        >
+          {/* Top Banner */}
+          <div className="z-20 w-full bg-white/90 p-3 rounded-2xl border-2 border-sky-300 shadow-xs flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CharacterAvatar id="ggulgguli" size="sm" mood="happy" className="!w-10 !h-10" />
+              <span className="text-sm font-black text-[#4A3E3D]">
+                풍선을 터치해 팡팡! ({l3Popped}/5)
+              </span>
+            </div>
+            <span className="text-xl">🎈</span>
+          </div>
+
+          {/* Floating Balloons */}
+          <div className="absolute inset-0 z-10 overflow-hidden pointer-events-auto">
+            {l3Balloons.map((b) => (
+              <motion.div
+                key={b.id}
+                initial={{ y: 460, x: `${b.x}%`, scale: 0.8 }}
+                animate={{
+                  y: -50,
+                  x: [`${b.x}%`, `${b.x + (Math.random() * 8 - 4)}%`, `${b.x}%`],
+                  scale: 1,
+                }}
+                transition={{
+                  y: { duration: 6, ease: 'linear', repeat: Infinity },
+                  x: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' },
+                }}
+                onClick={(e) => handleL3Pop(b.id, b.color, e)}
+                onTouchStart={(e) => handleL3Pop(b.id, b.color, e)}
+                whileTap={{ scale: 0.8 }}
+                style={{
+                  width: b.size,
+                  height: b.size * 1.25,
+                  background: `radial-gradient(circle at 35% 35%, #FFFFFF 0%, ${b.color} 50%, ${b.bg} 100%)`,
+                }}
+                className="absolute rounded-full cursor-pointer shadow-lg flex items-center justify-center border-2 border-white/60 active:scale-90 touch-manipulation"
+              >
+                <div className="absolute top-2 left-3 w-3 h-5 bg-white/70 rounded-full blur-[1px] -rotate-12" />
+                <span className="text-3xl select-none">{b.emoji}</span>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="z-20 text-center">
+            <span className="text-xs font-bold text-sky-800 bg-white/80 py-1 px-4 rounded-full">
+              떠오르는 풍선을 손가락으로 콕 찔러보세요!
+            </span>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ========================================================= */}
+      {/* LEVEL 4: 그림자 실루엣 퍼즐 */}
+      {/* ========================================================= */}
+      {currentLevel === 4 && (
+        <motion.div
+          key="stage-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full bg-[#EDE7F6] rounded-[36px] border-4 border-[#BA68C8] p-4 sm:p-6 shadow-lg flex flex-col items-center text-center gap-4"
+        >
+          {/* Guide Banner */}
+          <div className="flex items-center gap-3 bg-white/90 p-3 sm:p-4 rounded-3xl border-2 border-purple-200 shadow-xs w-full max-w-md">
+            <CharacterAvatar id="ggomi" size="md" mood="talking" className="!w-16 !h-16 shrink-0" />
+            <div className="text-left flex-1 min-w-0">
+              <span className="text-xs font-black text-purple-600 block">Level 4 &bull; 그림자 실루엣 퍼즐</span>
+              <p className="text-base sm:text-lg font-black text-[#4A3E3D] leading-snug">
+                그림자와 꼭 맞는 모양의 친구를 찾아주세요!
+              </p>
+            </div>
+          </div>
+
+          {/* Central Silhouette Display Frame */}
+          <div className="w-52 h-52 sm:w-60 sm:h-60 rounded-[36px] bg-white border-4 border-dashed border-purple-400 flex flex-col items-center justify-center shadow-inner relative overflow-hidden">
+            <motion.span
+              animate={l4Solved ? { scale: [1, 1.3, 1], rotate: [0, 10, -10, 0] } : {}}
+              transition={{ duration: 0.6 }}
+              className={`text-8xl sm:text-9xl transition-all duration-500 select-none ${
+                l4Solved ? 'filter-none' : 'filter brightness-0 contrast-200 opacity-80'
+              }`}
+            >
+              {l4Target.emoji}
+            </motion.span>
+            {l4Solved && (
+              <span className="text-base font-black text-purple-700 mt-2 animate-bounce">
+                {l4Target.name} 완성! ✨
+              </span>
+            )}
+          </div>
+
+          {/* Object Choice Cards */}
+          <div className="grid grid-cols-3 gap-3 w-full max-w-md">
+            {l4Options.map((opt) => (
+              <motion.button
+                key={opt.id}
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => handleL4Match(opt)}
+                className="p-4 rounded-3xl bg-white border-3 border-purple-300 shadow-md flex flex-col items-center justify-center cursor-pointer active:scale-95 touch-manipulation min-h-[100px]"
+              >
+                <span className="text-5xl sm:text-6xl drop-shadow-xs select-none">{opt.emoji}</span>
+                <span className="text-sm font-black text-[#4A3E3D] mt-1">{opt.name}</span>
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* ========================================================= */}
+      {/* LEVEL 5: 최종 완료 축하 트로피 & 인터랙티브 축하 파티 화면 */}
+      {/* ========================================================= */}
+      {currentLevel === 5 && (
+        <motion.div
+          key="stage-trophy-party"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+          className="w-full bg-gradient-to-b from-[#FFF9C4] via-[#FFE082] to-[#FFCC80] rounded-[40px] border-4 border-amber-400 p-6 sm:p-8 shadow-2xl flex flex-col items-center text-center gap-5 relative overflow-hidden"
+          onClick={() => {
+            // Interactive party screen: tapping throws confetti!
+            playSparkleChime(soundEnabled);
+            fireConfetti();
+          }}
+        >
+          {/* Trophy Header */}
+          <motion.div
+            animate={{ rotate: [0, -5, 5, 0], scale: [1, 1.05, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-amber-400/30 border-4 border-amber-500 flex items-center justify-center shadow-lg"
+          >
+            <Trophy className="w-14 h-14 sm:w-16 sm:h-16 text-amber-600 drop-shadow-md" />
+          </motion.div>
+
+          <div>
+            <h2 className="text-2xl sm:text-4xl font-black text-[#4A3E3D] mb-1">
+              🏆 축하합니다! 트로피 획득! 🏆
+            </h2>
+            <p className="text-base sm:text-xl font-black text-amber-800">
+              {childName}야, 4가지 무지개 모험을 모두 멋지게 해냈어요!
+            </p>
+          </div>
+
+          {/* Dancing Animal Avatars Party Row */}
+          <div className="flex items-center justify-center gap-2 sm:gap-4 flex-wrap my-2">
+            {(['ggomi', 'rano', 'jelly', 'dochi', 'ggulgguli', 'eumme', 'nurungji'] as CharacterId[]).map((cid, i) => (
+              <motion.div
+                key={`party-char-${cid}`}
+                animate={{
+                  y: [0, -18, 0],
+                  rotate: [0, i % 2 === 0 ? 8 : -8, 0],
+                }}
+                transition={{
+                  duration: 0.8 + (i % 3) * 0.2,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                  delay: i * 0.1,
+                }}
+              >
+                <CharacterAvatar id={cid} size="sm" mood="happy" className="!w-12 !h-12 sm:!w-14 sm:!h-14 shadow-md" />
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Interactive touch hint */}
+          <div className="bg-white/80 py-2 px-5 rounded-full border-2 border-amber-300 text-xs sm:text-sm font-black text-amber-900 animate-pulse">
+            ✨ 화면을 콕콕 누르면 축하 폭죽이 팡팡 터져요! ✨
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-sm mt-2">
+            <JellyButton
+              onClick={restartAdventure}
+              variant="primary"
+              size="lg"
+              className="w-full"
+            >
+              <RotateCcw className="w-5 h-5 mr-1.5" /> 다시 모험하기
+            </JellyButton>
+            <JellyButton
+              onClick={onGoHome}
+              variant="secondary"
+              size="lg"
+              className="w-full"
+            >
+              <Home className="w-5 h-5 mr-1.5" /> 홈으로 가기
+            </JellyButton>
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+};

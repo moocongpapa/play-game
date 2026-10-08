@@ -5,6 +5,14 @@ import { Shield, Clock, Volume2, Music, Sparkles, Home, RotateCcw, Mic, Calendar
 import { speakText, setVoiceToneMode } from '../utils/soundEngine';
 import { calculateAgeMonths, determineAgeGroup, getAgeGroupLabel, getAgeGroupEmoji, getAgeGroupDescription } from '../utils/ageEngine';
 import { getGeminiApiKey, setGeminiApiKey, isGeminiTTSEnabled, setGeminiTTSEnabled } from '../services/geminiTTS';
+import {
+  getElevenLabsApiKey,
+  setElevenLabsApiKey,
+  getElevenLabsVoiceId,
+  setElevenLabsVoiceId,
+  isElevenLabsTTSEnabled,
+  setElevenLabsTTSEnabled,
+} from '../services/elevenlabsTTS';
 
 interface ParentDashboardProps {
   appState: AppState;
@@ -42,6 +50,12 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   const [geminiEnabled, setGeminiEnabled] = useState(isGeminiTTSEnabled());
   const [geminiKeyInput, setGeminiKeyInput] = useState(getGeminiApiKey());
   const [isKeySaved, setIsKeySaved] = useState(false);
+
+  // ElevenLabs TTS 상태
+  const [elevenLabsEnabled, setElevenLabsEnabled] = useState(isElevenLabsTTSEnabled());
+  const [elevenLabsKeyInput, setElevenLabsKeyInput] = useState(getElevenLabsApiKey());
+  const [elevenLabsVoiceIdInput, setElevenLabsVoiceIdInput] = useState(getElevenLabsVoiceId());
+  const [isElevenLabsKeySaved, setIsElevenLabsKeySaved] = useState(false);
 
   const formatSeconds = (sec: number) => {
     const m = Math.floor(sec / 60);
@@ -278,7 +292,60 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
             </button>
           </div>
           <span className="text-[10px] text-purple-700 mt-1 block">
-            * 키가 없거나 네트워크 오류 시 자동으로 기본 음성으로 안전하게 재생됩니다.
+            * 키가 없거나 네트워크 오류 시 자동으로 다정한 유치원 선생님 톤(Google 한국어 / Natural)으로 안전하게 재생됩니다.
+          </span>
+        </div>
+
+        {/* ElevenLabs API Key & Voice ID Input */}
+        <div className="p-3 bg-pink-50/60 rounded-2xl border border-pink-200 mb-3 text-left">
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-[11px] sm:text-xs font-black text-pink-900 block">
+              ElevenLabs Voice AI (선택)
+            </label>
+            <button
+              onClick={() => {
+                const next = !elevenLabsEnabled;
+                setElevenLabsEnabled(next);
+                setElevenLabsTTSEnabled(next);
+              }}
+              className={`px-2.5 py-0.5 rounded-full font-black text-[10px] border cursor-pointer transition-all ${
+                elevenLabsEnabled
+                  ? 'bg-pink-600 text-white border-pink-700 shadow-2xs'
+                  : 'bg-gray-100 text-gray-500 border-gray-300'
+              }`}
+            >
+              {elevenLabsEnabled ? 'ElevenLabs 켜짐' : '꺼짐'}
+            </button>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="password"
+              placeholder="ElevenLabs API Key"
+              value={elevenLabsKeyInput}
+              onChange={(e) => setElevenLabsKeyInput(e.target.value)}
+              className="flex-1 px-3 py-1.5 text-xs rounded-xl border border-pink-300 bg-white font-mono text-[#4A3E3D]"
+            />
+            <input
+              type="text"
+              placeholder="Voice ID (기본: Rachel/유치원)"
+              value={elevenLabsVoiceIdInput}
+              onChange={(e) => setElevenLabsVoiceIdInput(e.target.value)}
+              className="sm:w-44 px-3 py-1.5 text-xs rounded-xl border border-pink-300 bg-white font-mono text-[#4A3E3D]"
+            />
+            <button
+              onClick={() => {
+                setElevenLabsApiKey(elevenLabsKeyInput.trim());
+                setElevenLabsVoiceId(elevenLabsVoiceIdInput.trim());
+                setIsElevenLabsKeySaved(true);
+                setTimeout(() => setIsElevenLabsKeySaved(false), 2000);
+              }}
+              className="px-3 py-1.5 bg-pink-600 hover:bg-pink-700 text-white font-black text-xs rounded-xl cursor-pointer shrink-0"
+            >
+              {isElevenLabsKeySaved ? '저장됨 ✓' : '저장'}
+            </button>
+          </div>
+          <span className="text-[10px] text-pink-700 mt-1 block">
+            * 초고음질 유치원 선생님 캐릭터 음성을 ElevenLabs로 직접 송출할 수 있습니다.
           </span>
         </div>
 
