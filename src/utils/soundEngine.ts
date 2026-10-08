@@ -91,6 +91,11 @@ export function startBGM(volume = requestedBgmVolume) {
     applyBgmVolume();
     const step = () => {
       if (!isBgmPlaying || !currentTrack) return;
+      // Do not queue notes at time zero while autoplay is awaiting the first tap.
+      if (ctx.state !== 'running') {
+        bgmOscillatorInterval = window.setTimeout(step, 250);
+        return;
+      }
       const duration = currentTrack.beats[noteIndex] * 60 / currentTrack.bpm;
       musicNote(ctx, currentTrack.notes[noteIndex], duration);
       if (noteIndex % 4 === 0) musicNote(ctx, currentTrack.bass[Math.floor(noteIndex / 4) % currentTrack.bass.length], duration * 1.6, true);

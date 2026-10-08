@@ -74,7 +74,11 @@ export function ToyArtwork({ emoji, className = '', label }: { emoji: string; cl
     if (faces[emoji]) {
       const [fill, animal] = faces[emoji];
       drawing = <g stroke="#76614e" strokeWidth="2" strokeLinejoin="round">
-        {animal === 'sheep' ? <path d="M20 30 Q10 10 30 13 Q50 -1 67 14 Q93 10 83 35 Q104 53 85 69 Q89 89 66 87 Q48 101 32 85 Q6 86 16 62 Q0 41 20 30" fill={fill} /> : <><ellipse cx="24" cy="25" rx="14" ry="19" fill={fill} /><ellipse cx="76" cy="25" rx="14" ry="19" fill={fill} /></>}
+        {animal === 'sheep' ? <path d="M20 30 Q10 10 30 13 Q50 -1 67 14 Q93 10 83 35 Q104 53 85 69 Q89 89 66 87 Q48 101 32 85 Q6 86 16 62 Q0 41 20 30" fill={fill} /> :
+          animal === 'duck' ? <path d="M38 26 Q34 12 44 19 Q50 3 56 22 L64 27" fill={fill} /> :
+          animal === 'pig' ? <path d="M22 41 Q6 7 30 15 L41 31 M59 31 L70 15 Q94 7 78 41" fill="#E5A6A6" /> :
+          animal === 'frog' ? <><circle cx="32" cy="29" r="16" fill={fill} /><circle cx="68" cy="29" r="16" fill={fill} /></> :
+          <><path d="M30 25 L27 9 L41 22 M59 22 L73 9 L70 25" fill="#E7C58D" /><ellipse cx="18" cy="32" rx="15" ry="9" fill={fill} /><ellipse cx="82" cy="32" rx="15" ry="9" fill={fill} /></>}
         <ellipse cx="50" cy="54" rx="34" ry="32" fill={fill} />
         {animal === 'cow' && <ellipse cx="30" cy="39" rx="12" ry="15" fill="#8c7968" />}
         <circle cx="36" cy="47" r="3" fill="#625043" /><circle cx="64" cy="47" r="3" fill="#625043" />
