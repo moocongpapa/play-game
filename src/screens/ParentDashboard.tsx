@@ -292,7 +292,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
             </button>
           </div>
           <span className="text-[10px] text-purple-700 mt-1 block">
-            * 키가 없거나 네트워크 오류 시 자동으로 다정한 유치원 선생님 톤(Google 한국어 / Natural)으로 안전하게 재생됩니다.
+            * API 키가 없으면 브라우저 음성 기능으로 바로 읽어줍니다. 음성이 들리지 않으면 상단의 소리와 음성 버튼과 기기 음량을 확인해 주세요.
           </span>
         </div>
 

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ArrowRight, BookOpen, MessageCircle, Palette, Play, Sparkles, Volume2 } from 'lucide-react';
 import { CHARACTER_LIST, CHARACTERS } from '../data/characters';
 import { CharacterAvatar } from '../components/CharacterAvatar';
@@ -49,10 +49,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   childProfile,
 }) => {
   const gamesRef = useRef<HTMLElement>(null);
+  const [speechMessage, setSpeechMessage] = useState('');
   const buddy = CHARACTERS[selectedCharacter] || CHARACTERS.ggomi;
   const childName = childProfile?.name || '유하';
   const ageGroup = childProfile?.ageGroup || 'sprout';
   const currentRank = AGE_RANK[ageGroup];
+
+  useEffect(() => {
+    if (!soundEnabled) setSpeechMessage('');
+  }, [soundEnabled]);
+
   const games: Array<{ id: GameId; description: string }> = [
     { id: buddy.gameId, description: buddy.gameDesc },
   ];
@@ -68,10 +74,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   }
 
   const sayHello = () => {
+    if (!soundEnabled) return;
+    setSpeechMessage('목소리를 준비하고 있어요.');
     speakText(
       buddy.greetingTemplate.replace('{name}', childName),
       soundEnabled,
-      { characterId: selectedCharacter },
+      {
+        characterId: selectedCharacter,
+        onStart: () => setSpeechMessage('친구가 말하고 있어요.'),
+        onEnd: () => setSpeechMessage(''),
+        onError: () => setSpeechMessage('브라우저 음성과 기기 소리 설정을 확인해 주세요.'),
+      },
     );
   };
 
@@ -161,6 +174,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             <button onClick={sayHello} className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-4 text-sm font-bold text-[#4d5562] shadow-sm hover:bg-[#eceff2]">
               <Volume2 className="size-4" /> 인사 듣기
             </button>
+            <p role="status" className="mt-2 min-h-5 text-sm text-[#777980]">{soundEnabled ? speechMessage : '오른쪽 위에서 소리와 음성을 켜 주세요.'}</p>
           </div>
         </div>
         <div className="p-5 sm:p-7">

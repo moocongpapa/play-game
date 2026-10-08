@@ -31,7 +31,7 @@ import { ShadowQuizGame } from './screens/games/ShadowQuizGame';
 import { BalloonPopGame } from './screens/games/BalloonPopGame';
 import { RainbowStageAdventure } from './screens/RainbowStageAdventure';
 
-import { startBGM, stopBGM, setBGMVolume, playStarGain, speakText } from './utils/soundEngine';
+import { startBGM, stopBGM, setBGMVolume, playStarGain, speakText, stopAllSpeech } from './utils/soundEngine';
 import { Moon, Shield } from 'lucide-react';
 import { createChildProfile, DEFAULT_CHILD_PROFILE } from './utils/ageEngine';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -183,6 +183,11 @@ export default function App() {
     setCurrentScreen('game');
   };
 
+  const handleToggleSound = () => {
+    if (appState.soundEnabled) stopAllSpeech();
+    setAppState((prev) => ({ ...prev, soundEnabled: !prev.soundEnabled }));
+  };
+
   const handleCompleteOnboarding = (profile: ChildProfile) => {
     try {
       localStorage.setItem('ITSME_CHILD_PROFILE', JSON.stringify(profile));
@@ -287,9 +292,7 @@ export default function App() {
             onUpdateSfxVolume={(vol) =>
               setAppState((prev) => ({ ...prev, sfxVolume: vol }))
             }
-            onToggleSound={() =>
-              setAppState((prev) => ({ ...prev, soundEnabled: !prev.soundEnabled }))
-            }
+            onToggleSound={handleToggleSound}
             onToggleBGM={() =>
               setAppState((prev) => ({ ...prev, bgmEnabled: !prev.bgmEnabled }))
             }
@@ -302,7 +305,7 @@ export default function App() {
                   'stk_crown', 'stk_rainbow', 'stk_flower', 'stk_candy',
                 ],
               }));
-              speakText('모든 스티커 잠금이 해제되었습니다!');
+              speakText('모든 스티커 잠금이 해제되었습니다!', appState.soundEnabled);
             }}
             onResetProgress={() => {
               localStorage.removeItem('ITSME_APP_STATE');
@@ -511,9 +514,7 @@ export default function App() {
         onToggleBGM={() =>
           setAppState((prev) => ({ ...prev, bgmEnabled: !prev.bgmEnabled }))
         }
-        onToggleSound={() =>
-          setAppState((prev) => ({ ...prev, soundEnabled: !prev.soundEnabled }))
-        }
+        onToggleSound={handleToggleSound}
         onOpenParentGate={() => setIsParentGateOpen(true)}
         onOpenStickerRoom={() => setCurrentScreen('stickers')}
         onGoHome={() => {

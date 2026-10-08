@@ -72,7 +72,7 @@ export const Header: React.FC<HeaderProps> = ({
           ><Music2 className="size-5" /></button>
           <button
             onClick={onToggleSound}
-            aria-label={soundEnabled ? '효과음 끄기' : '효과음 켜기'}
+            aria-label={soundEnabled ? '소리와 음성 끄기' : '소리와 음성 켜기'}
             aria-pressed={soundEnabled}
             className={`grid size-11 place-items-center rounded-xl transition-colors ${soundEnabled ? 'text-[#607861] hover:bg-[#eaf0e7]' : 'text-[#a0a3aa] hover:bg-[#f3f3f3]'}`}
           >{soundEnabled ? <Volume2 className="size-5" /> : <VolumeX className="size-5" />}</button>

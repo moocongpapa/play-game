@@ -467,14 +467,17 @@ export function playCharacterVoiceSFX(characterId: string, enabled = true) {
 // Kindergarten Teacher Voice & Speech Engine (TTS)
 // ========================================================
 
-let cachedVoices: SpeechSynthesisVoice[] = [];
 let selectedVoice: SpeechSynthesisVoice | null = null;
+let activeBrowserUtterance: SpeechSynthesisUtterance | null = null;
+let browserSpeechStartTimer: number | null = null;
 let currentVoiceToneMode: 'cheerful' | 'gentle' | 'energetic' = 'cheerful';
+let speechRequestId = 0;
 
-// Active audio element for neural streaming speech
-let currentSpeechAudio: HTMLAudioElement | null = null;
-// In-memory cache for neural cloud speech blobs/URLs to provide instant replay
-const neuralSpeechAudioCache = new Map<string, string>();
+function clearBrowserSpeechStartTimer() {
+  if (browserSpeechStartTimer === null) return;
+  window.clearTimeout(browserSpeechStartTimer);
+  browserSpeechStartTimer = null;
+}
 
 export function setVoiceToneMode(mode: 'cheerful' | 'gentle' | 'energetic') {
   currentVoiceToneMode = mode;
@@ -500,8 +503,6 @@ function findBestKoreanVoice(): SpeechSynthesisVoice | null {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null;
   const voices = window.speechSynthesis.getVoices();
   if (!voices || voices.length === 0) return null;
-
-  cachedVoices = voices;
 
   const koVoices = voices.filter(
     (v) => v.lang.includes('ko') || v.lang.includes('KO') || v.lang.toLowerCase().includes('korean')
@@ -595,92 +596,7 @@ export interface SpeakOptions {
   playIntroSFX?: boolean;
   onStart?: () => void;
   onEnd?: () => void;
-}
-
-/**
- * High-quality 24kHz Korean Neural Voice Audio Streaming (Zero API key required).
- * Uses Google's cloud neural voice engine to deliver genuine human speech.
- */
-async function playNeuralCloudSpeech(text: string, options: SpeakOptions = {}): Promise<boolean> {
-  if (typeof window === 'undefined') return false;
-
-  const formatted = formatKindergartenTeacherText(text);
-  if (!formatted) return false;
-
-  // Stop any currently playing audio speech
-  if (currentSpeechAudio) {
-    currentSpeechAudio.pause();
-    currentSpeechAudio.currentTime = 0;
-    currentSpeechAudio = null;
-  }
-
-  try {
-    // Generate streaming URL (encoded query, Korean locale, official audio client)
-    const encoded = encodeURIComponent(formatted.slice(0, 180));
-    const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encoded}&tl=ko&client=tw-ob`;
-
-    const audio = new Audio();
-    audio.preload = 'auto';
-
-    // Playback rate adjustment for toddler listening comprehension (0.93x ~ 1.0x)
-    const profile = options.characterId ? CHARACTER_VOICE_PROFILES[options.characterId] : null;
-    audio.playbackRate = options.rate ?? (profile ? profile.rate : 0.94);
-
-    return new Promise<boolean>((resolve) => {
-      let isResolved = false;
-
-      const finishSuccess = () => {
-        if (!isResolved) {
-          isResolved = true;
-          currentSpeechAudio = null;
-          options.onEnd?.();
-          resolve(true);
-        }
-      };
-
-      const finishFail = () => {
-        if (!isResolved) {
-          isResolved = true;
-          currentSpeechAudio = null;
-          resolve(false);
-        }
-      };
-
-      // Timeout safety: if audio fails to load within 3.5s, fall back seamlessly
-      const timeoutTimer = window.setTimeout(() => {
-        if (!isResolved) {
-          console.warn('Neural audio timeout, falling back');
-          finishFail();
-        }
-      }, 3500);
-
-      audio.onplay = () => {
-        options.onStart?.();
-      };
-
-      audio.onended = () => {
-        window.clearTimeout(timeoutTimer);
-        finishSuccess();
-      };
-
-      audio.onerror = () => {
-        window.clearTimeout(timeoutTimer);
-        finishFail();
-      };
-
-      audio.src = audioUrl;
-      currentSpeechAudio = audio;
-
-      audio.play().catch((err) => {
-        window.clearTimeout(timeoutTimer);
-        console.warn('Neural audio play rejected (autoplay policy or network):', err);
-        finishFail();
-      });
-    });
-  } catch (e) {
-    console.warn('Neural audio initialization failed:', e);
-    return false;
-  }
+  onError?: () => void;
 }
 
 /**
@@ -688,15 +604,18 @@ async function playNeuralCloudSpeech(text: string, options: SpeakOptions = {}): 
  * Intelligently adjusts pitch and rate: prevents robotic chipmunk artifacts on legacy voices.
  */
 function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions = {}) {
-  if (!enabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+  if (!enabled) return;
+  if (typeof window === 'undefined' || !('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
+    options.onError?.();
+    return;
+  }
 
   try {
-    window.speechSynthesis.cancel();
-
     const formatted = formatKindergartenTeacherText(text);
     if (!formatted) return;
 
     const utterance = new SpeechSynthesisUtterance(formatted);
+    activeBrowserUtterance = utterance;
 
     if (!selectedVoice) {
       selectedVoice = findBestKoreanVoice();
@@ -725,27 +644,52 @@ function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions
     utterance.rate = options.rate ?? baseRate;
     utterance.volume = 1.0;
 
-    if (options.onStart) utterance.onstart = () => options.onStart?.();
-    if (options.onEnd) utterance.onend = () => options.onEnd?.();
+    utterance.onstart = () => {
+      if (activeBrowserUtterance !== utterance) return;
+      clearBrowserSpeechStartTimer();
+      options.onStart?.();
+    };
+    utterance.onend = () => {
+      if (activeBrowserUtterance !== utterance) return;
+      clearBrowserSpeechStartTimer();
+      activeBrowserUtterance = null;
+      options.onEnd?.();
+    };
+    utterance.onerror = (event) => {
+      if (activeBrowserUtterance !== utterance) return;
+      clearBrowserSpeechStartTimer();
+      activeBrowserUtterance = null;
+      if (event.error === 'canceled' || event.error === 'interrupted') return;
+      console.warn('Browser speech synthesis failed:', event.error);
+      options.onError?.();
+    };
 
+    browserSpeechStartTimer = window.setTimeout(() => {
+      if (activeBrowserUtterance !== utterance) return;
+      activeBrowserUtterance = null;
+      window.speechSynthesis.cancel();
+      options.onError?.();
+    }, 8000);
     window.speechSynthesis.speak(utterance);
   } catch (e) {
+    clearBrowserSpeechStartTimer();
+    activeBrowserUtterance = null;
     console.warn('Speech synthesis error:', e);
+    options.onError?.();
   }
 }
 
 /**
- * Master Toddler Voice Speaker (High-Fidelity Multi-Tier Hierarchy):
+ * Master voice speaker:
  * 1. ElevenLabs API (if configured in Settings/env)
- * 2. Gemini 2.0 Flash Audio (if configured in Settings/env)
- * 3. 24kHz Neural Cloud Korean Voice (Natural human speech, zero API key required)
- * 4. Optimized Browser SpeechSynthesis (with robotic voice suppression & natural voice priority)
+ * 2. Gemini Audio (if configured in Settings/env)
+ * 3. Browser speech synthesis, started directly when no API key is configured
  */
 export function speakText(text: string, enabled = true, options: SpeakOptions = {}) {
   if (!enabled) return;
 
-  // Stop all active speech channels
   stopAllSpeech();
+  const requestId = speechRequestId;
 
   const clean = text.trim();
   if (!clean) return;
@@ -756,65 +700,50 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
       onStart: options.onStart,
       onEnd: options.onEnd,
     }).then((ok) => {
-      if (!ok) {
-        fallbackToGeminiOrNeural(clean, enabled, options);
+      if (!ok && requestId === speechRequestId) {
+        fallbackToGeminiOrBrowser(clean, enabled, options, requestId);
       }
     }).catch(() => {
-      fallbackToGeminiOrNeural(clean, enabled, options);
+      if (requestId === speechRequestId) fallbackToGeminiOrBrowser(clean, enabled, options, requestId);
     });
     return;
   }
 
-  fallbackToGeminiOrNeural(clean, enabled, options);
+  fallbackToGeminiOrBrowser(clean, enabled, options, requestId);
 }
 
-function fallbackToGeminiOrNeural(clean: string, enabled: boolean, options: SpeakOptions) {
-  // 2. Try Gemini 2.0 Audio if configured
+function fallbackToGeminiOrBrowser(clean: string, enabled: boolean, options: SpeakOptions, requestId: number) {
+  // Try Gemini Audio only when the parent configured it.
   if (isGeminiTTSEnabled() && getGeminiApiKey()) {
-    const ctx = getAudioContext();
-    playGeminiSpeech(clean, {
-      characterId: options.characterId,
-      audioCtx: ctx,
-      onStart: options.onStart,
-      onEnd: options.onEnd,
-    }).then((ok) => {
-      if (!ok) {
-        fallbackToNeuralOrBrowser(clean, enabled, options);
-      }
-    }).catch(() => {
-      fallbackToNeuralOrBrowser(clean, enabled, options);
-    });
+    try {
+      const ctx = getAudioContext();
+      playGeminiSpeech(clean, {
+        characterId: options.characterId,
+        audioCtx: ctx,
+        onStart: options.onStart,
+        onEnd: options.onEnd,
+      }).then((ok) => {
+        if (!ok && requestId === speechRequestId) speakWithBrowserTTS(clean, enabled, options);
+      }).catch(() => {
+        if (requestId === speechRequestId) speakWithBrowserTTS(clean, enabled, options);
+      });
+    } catch (error) {
+      console.warn('Gemini audio unavailable:', error);
+      if (requestId === speechRequestId) speakWithBrowserTTS(clean, enabled, options);
+    }
     return;
   }
 
-  fallbackToNeuralOrBrowser(clean, enabled, options);
-}
-
-function fallbackToNeuralOrBrowser(clean: string, enabled: boolean, options: SpeakOptions) {
-  // 3. Try High-Definition 24kHz Neural Cloud Speech (Sounds like a real human voice)
-  playNeuralCloudSpeech(clean, options).then((ok) => {
-    if (!ok) {
-      // 4. Fallback to Browser SpeechSynthesis with natural voice filtering
-      speakWithBrowserTTS(clean, enabled, options);
-    }
-  }).catch(() => {
-    speakWithBrowserTTS(clean, enabled, options);
-  });
+  speakWithBrowserTTS(clean, enabled, options);
 }
 
 /**
  * Halts all voice speech across all engines immediately
  */
 export function stopAllSpeech() {
-  if (currentSpeechAudio) {
-    try {
-      currentSpeechAudio.pause();
-      currentSpeechAudio.currentTime = 0;
-    } catch {
-      // ignore
-    }
-    currentSpeechAudio = null;
-  }
+  speechRequestId += 1;
+  if (typeof window !== 'undefined') clearBrowserSpeechStartTimer();
+  activeBrowserUtterance = null;
   stopElevenLabsAudio();
   stopGeminiAudio();
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -829,4 +758,3 @@ export function stopAllSpeech() {
 export function speakCharacterText(characterId: string, text: string, enabled = true) {
   speakText(text, enabled, { characterId, playIntroSFX: true });
 }
-
