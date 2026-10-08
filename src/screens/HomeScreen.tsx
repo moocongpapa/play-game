@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, BookOpen, Check, Hand, MessageCircle, Palette, Play, Volume2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, Bug, Check, Fish, Hand, MessageCircle, Palette, Play, Volume2 } from 'lucide-react';
 import { CHARACTER_LIST, CHARACTERS } from '../data/characters';
 import { CharacterAvatar } from '../components/CharacterAvatar';
 import { BuddyVideo } from '../components/BuddyVideo';
@@ -18,6 +18,7 @@ interface HomeScreenProps {
   onStartDay: () => void;
   onOpenDrawing: () => void;
   onOpenStickerRoom: () => void;
+  onOpenAquarium: () => void;
   onOpenCharacterTalk: () => void;
   soundEnabled: boolean;
   childProfile: ChildProfile | null;
@@ -25,7 +26,7 @@ interface HomeScreenProps {
   onChangeStep: (step: HomeStep) => void;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSelectCharacter, onStartGame, onStartDay, onOpenDrawing, onOpenStickerRoom, onOpenCharacterTalk, soundEnabled, childProfile, step, onChangeStep }) => {
+export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSelectCharacter, onStartGame, onStartDay, onOpenDrawing, onOpenStickerRoom, onOpenAquarium, onOpenCharacterTalk, soundEnabled, childProfile, step, onChangeStep }) => {
   const buddy = CHARACTERS[selectedCharacter] || CHARACTERS.ggomi;
   const childName = childProfile?.name || '유하';
   const age = childProfile?.ageGroup || 'sprout';
@@ -82,7 +83,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
 
     <section className="extra-play" aria-label="자유 놀이">
       <button onClick={onOpenDrawing} className="extra-drawing"><span className="extra-icon"><Palette /></span><span>색칠 놀이</span><ArrowRight size={18} /></button>
-      <button onClick={onOpenStickerRoom} className="extra-stickers"><span className="extra-icon text-2xl">🐞</span><span>곤충 놀이</span><ArrowRight size={18} /></button>
+      <button onClick={onOpenStickerRoom} className="extra-stickers"><span className="extra-icon"><Bug /></span><span>곤충 놀이</span><ArrowRight size={18} /></button>
+      <button onClick={onOpenAquarium} className="extra-aquarium"><span className="extra-icon"><Fish /></span><span>수족관 놀이</span><ArrowRight size={18} /></button>
       <button onClick={onOpenCharacterTalk} className="extra-talk"><span className="extra-icon"><MessageCircle /></span><span>친구와 인사</span><ArrowRight size={18} /></button>
     </section>
 

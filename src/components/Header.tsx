@@ -1,9 +1,9 @@
 import React from 'react';
-import { Home, Music2, Shield, Sparkles, Volume2, VolumeX } from 'lucide-react';
+import { Bug, Fish, Home, Music2, Shield, Volume2, VolumeX } from 'lucide-react';
 import { CHARACTERS } from '../data/characters';
 import type { CharacterId } from '../types';
 
-type Screen = 'home' | 'game' | 'day' | 'stickers' | 'talk' | 'parent' | 'drawing';
+type Screen = 'home' | 'game' | 'day' | 'stickers' | 'aquarium' | 'talk' | 'parent' | 'drawing';
 
 interface HeaderProps {
   stars: number;
@@ -14,6 +14,7 @@ interface HeaderProps {
   onToggleSound: () => void;
   onOpenParentGate: () => void;
   onOpenStickerRoom: () => void;
+  onOpenAquarium: () => void;
   onGoHome: () => void;
   currentScreen: Screen;
   childName: string;
@@ -28,6 +29,7 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleSound,
   onOpenParentGate,
   onOpenStickerRoom,
+  onOpenAquarium,
   onGoHome,
   currentScreen,
   childName,
@@ -38,11 +40,13 @@ export const Header: React.FC<HeaderProps> = ({
       ? '색칠하기'
       : currentScreen === 'stickers'
         ? '곤충 놀이터'
-        : currentScreen === 'talk'
-          ? '친구 인사'
-          : currentScreen === 'parent'
-            ? '부모님 설정'
-            : `${childName}의 놀이터`;
+        : currentScreen === 'aquarium'
+          ? '바다 친구 수족관'
+          : currentScreen === 'talk'
+            ? '친구 인사'
+            : currentScreen === 'parent'
+              ? '부모님 설정'
+              : `${childName}의 놀이터`;
 
   return (
     <header className="app-header sticky top-0 z-30 w-full">
@@ -57,13 +61,10 @@ export const Header: React.FC<HeaderProps> = ({
 
         <span className="header-page-label hidden min-w-0 truncate font-bold sm:block">{pageLabel}</span>
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-          <button
-            onClick={onOpenStickerRoom}
-            aria-label="곤충 놀이터 열기"
-            className="flex min-h-11 items-center gap-1.5 rounded-full bg-[#e8f5e5] px-3.5 font-black text-[#2e5223] hover:bg-[#dcf0d8] active:scale-95 transition-transform cursor-pointer"
-          >
-            <span className="text-xl">🐞</span><span className="hidden min-[360px]:inline">곤충 놀이</span>
-          </button>
+          <div className="habitat-shortcuts">
+            <button onClick={onOpenStickerRoom} aria-label="곤충 놀이터 열기" aria-current={currentScreen === 'stickers' ? 'page' : undefined}><Bug aria-hidden="true" /><span>곤충</span></button>
+            <button onClick={onOpenAquarium} aria-label="수족관 열기" aria-current={currentScreen === 'aquarium' ? 'page' : undefined}><Fish aria-hidden="true" /><span>수족관</span></button>
+          </div>
 
           <button
             onClick={onToggleBGM}
