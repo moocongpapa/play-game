@@ -1,11 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'motion/react';
 import { STICKER_LIST } from '../data/gameData';
-import { JellyButton } from '../components/JellyButton';
 import { playStarGain, speakText, playBubblePop } from '../utils/soundEngine';
 import { Trash2, Sparkles, Home, Move } from 'lucide-react';
 
 interface StickerRoomScreenProps {
+  childName: string;
   unlockedStickers: string[];
   placedStickers: Array<{
     id: string;
@@ -26,6 +26,7 @@ interface StickerRoomScreenProps {
 }
 
 export const StickerRoomScreen: React.FC<StickerRoomScreenProps> = ({
+  childName,
   unlockedStickers,
   placedStickers,
   onUpdatePlacedStickers,
@@ -40,7 +41,7 @@ export const StickerRoomScreen: React.FC<StickerRoomScreenProps> = ({
     if (!sticker) return;
 
     playStarGain(soundEnabled);
-    speakText(`${sticker.name} 스티커를 방에 붙였어요! 자유롭게 끌어서 옮겨보세요!`);
+    speakText(`${sticker.name} 스티커를 방에 붙였어요! 자유롭게 끌어서 옮겨보세요!`, soundEnabled);
 
     // Add with random comfortable offset within canvas
     const newPlaced = {
@@ -84,25 +85,25 @@ export const StickerRoomScreen: React.FC<StickerRoomScreenProps> = ({
 
   const handleClearRoom = () => {
     onUpdatePlacedStickers([]);
-    speakText('방을 깨끗하게 정리했어요!');
+    speakText('방을 깨끗하게 정리했어요!', soundEnabled);
   };
 
   return (
-    <div className="flex flex-col items-center justify-between w-full max-w-4xl mx-auto p-2.5 sm:p-4 min-h-[85vh] overflow-hidden">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-5 pb-8">
       {/* Top Banner */}
-      <div className="w-full text-center bg-white/80 p-3 sm:p-4 rounded-3xl border-2 sm:border-3 border-[#FFB7D5] shadow-sm mb-2 break-keep">
-        <h1 className="text-xl sm:text-3xl font-black text-[#4A3E3D] flex items-center justify-center gap-2">
-          <span>🎨</span> 유하의 스티커북 & 놀이방 꾸미기
+      <div className="w-full break-keep">
+        <h1 className="text-[28px] font-extrabold tracking-tight text-[#292c33] sm:text-4xl">
+          {childName}의 스티커북
         </h1>
-        <p className="text-xs sm:text-base font-bold text-[#8C7B79] mt-0.5 flex items-center justify-center gap-1">
-          <Move className="w-4 h-4 text-purple-500 inline" /> 스티커를 손가락으로 잡고 마음껏 끌어서 방을 꾸며보세요!
+        <p className="mt-2 flex items-center gap-1.5 text-sm text-[#777980] sm:text-base">
+          <Move className="size-4" /> 스티커를 골라 붙이고 손가락으로 옮겨 보세요.
         </p>
       </div>
 
       {/* Main Sticker Canvas */}
       <div
         ref={canvasRef}
-        className="relative w-full h-[320px] sm:h-[450px] bg-gradient-to-b from-[#FFF9E6] to-[#FFE082]/30 rounded-[28px] sm:rounded-[36px] border-3 sm:border-4 border-[#FFA000] shadow-lg overflow-hidden my-2 touch-none"
+        className="relative h-[340px] w-full touch-none overflow-hidden rounded-[28px] border border-[#e9e7e2] bg-[#f7f5ef] sm:h-[450px]"
       >
         {/* Room Decorations */}
         <div className="absolute top-3 left-4 text-3xl sm:text-4xl opacity-30 select-none pointer-events-none">🎈</div>
@@ -112,9 +113,9 @@ export const StickerRoomScreen: React.FC<StickerRoomScreenProps> = ({
 
         {placedStickers.length === 0 && (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 text-[#8C7B79] break-keep pointer-events-none">
-            <Sparkles className="w-10 h-10 sm:w-12 sm:h-12 text-[#FFD15C] mb-2 animate-bounce" />
-            <p className="text-lg sm:text-xl font-black text-[#4A3E3D]">아직 유하의 방에 붙인 스티커가 없어요!</p>
-            <p className="text-xs sm:text-sm font-bold">아래 스티커 목록에서 원하는 스티커를 톡 터치해보세요!</p>
+            <Sparkles className="mb-3 size-10 text-[#9a806b]" />
+            <p className="text-lg font-extrabold text-[#30343c]">첫 스티커를 붙여 볼까?</p>
+            <p className="mt-1 text-sm">아래에서 마음에 드는 스티커를 골라 주세요.</p>
           </div>
         )}
 
@@ -160,10 +161,10 @@ export const StickerRoomScreen: React.FC<StickerRoomScreenProps> = ({
       </div>
 
       {/* Unlocked Sticker Tray */}
-      <div className="w-full bg-white/90 p-3 sm:p-4 rounded-2xl sm:rounded-3xl border-2 sm:border-3 border-[#FFD15C] my-2 shadow-xs">
+      <div className="w-full rounded-[24px] border border-[#e9e7e2] bg-white p-4 sm:p-5">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-base sm:text-lg font-black text-[#4A3E3D] flex items-center gap-1 break-keep">
-            <span>✨</span> 스티커 목록 ({unlockedStickers.length}개 보유)
+          <h3 className="flex items-center gap-1 break-keep text-base font-extrabold text-[#30343c] sm:text-lg">
+            스티커 고르기 <span className="ml-1 text-sm font-semibold text-[#777980]">{unlockedStickers.length}개</span>
           </h3>
           {placedStickers.length > 0 && (
             <button
@@ -187,8 +188,8 @@ export const StickerRoomScreen: React.FC<StickerRoomScreenProps> = ({
                 disabled={!isUnlocked}
                 className={`flex flex-col items-center justify-center p-2 sm:p-3 rounded-2xl border-2 min-w-[75px] sm:min-w-[90px] shrink-0 cursor-pointer transition-all ${
                   isUnlocked
-                    ? 'bg-[#FFF9E6] border-[#FFA000] hover:scale-105 shadow-sm'
-                    : 'bg-gray-100 border-gray-300 opacity-40 cursor-not-allowed'
+                    ? 'bg-[#f7f7f5] border-[#e9e7e2] hover:border-[#9bb09a] hover:bg-[#f0f5ed]'
+                    : 'bg-[#f7f7f5] border-[#e9e7e2] opacity-40 cursor-not-allowed'
                 }`}
               >
                 <span className="text-3xl sm:text-4xl mb-0.5 sm:mb-1">{isUnlocked ? stk.emoji : '🔒'}</span>
@@ -201,9 +202,9 @@ export const StickerRoomScreen: React.FC<StickerRoomScreenProps> = ({
         </div>
       </div>
 
-      <JellyButton variant="primary" size="lg" onClick={onGoHome} className="w-full sm:w-auto mt-1">
-        <Home className="w-5 h-5 sm:w-6 sm:h-6 mr-1.5" /> 메인으로 돌아가기
-      </JellyButton>
+      <button onClick={onGoHome} className="inline-flex min-h-12 items-center justify-center gap-2 self-center rounded-xl px-5 font-bold text-[#4d5562] hover:bg-[#ecece9]">
+        <Home className="size-5" /> 다른 놀이 보기
+      </button>
     </div>
   );
 };

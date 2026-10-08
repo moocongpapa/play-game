@@ -1,10 +1,9 @@
 import React from 'react';
-import { Volume2, VolumeX, Music, Shield, Sparkles, Home } from 'lucide-react';
-import { JellyButton } from './JellyButton';
-import { CharacterAvatar } from './CharacterAvatar';
-import { CharacterId, AgeGroup } from '../types';
+import { Home, Music2, Shield, Sparkles, Volume2, VolumeX } from 'lucide-react';
 import { CHARACTERS } from '../data/characters';
-import { getAgeGroupEmoji, getAgeGroupLabel } from '../utils/ageEngine';
+import type { CharacterId } from '../types';
+
+type Screen = 'home' | 'game' | 'stickers' | 'talk' | 'parent' | 'drawing';
 
 interface HeaderProps {
   stars: number;
@@ -15,12 +14,9 @@ interface HeaderProps {
   onToggleSound: () => void;
   onOpenParentGate: () => void;
   onOpenStickerRoom: () => void;
-  onOpenCharacterSelect: () => void;
-  onOpenDrawing?: () => void;
   onGoHome: () => void;
-  currentScreen: 'home' | 'game' | 'stickers' | 'talk' | 'parent' | 'drawing';
+  currentScreen: Screen;
   childName: string;
-  ageGroup: AgeGroup;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -32,113 +28,60 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleSound,
   onOpenParentGate,
   onOpenStickerRoom,
-  onOpenCharacterSelect,
-  onOpenDrawing,
   onGoHome,
   currentScreen,
   childName,
-  ageGroup,
 }) => {
-  const currentBuddy = CHARACTERS[selectedCharacter];
+  const pageLabel = currentScreen === 'game'
+    ? `${CHARACTERS[selectedCharacter]?.name || '친구'}와 놀기`
+    : currentScreen === 'drawing'
+      ? '색칠하기'
+      : currentScreen === 'stickers'
+        ? '스티커북'
+        : currentScreen === 'talk'
+          ? '친구 인사'
+          : currentScreen === 'parent'
+            ? '부모님 설정'
+            : `${childName}의 놀이터`;
 
   return (
-    <header className="sticky top-0 z-30 w-full bg-[#FFF9E6]/95 backdrop-blur-md px-2.5 sm:px-4 py-2 border-b-2 border-[#FFE082]/60 shadow-xs flex items-center justify-between gap-1.5 max-w-full overflow-hidden">
-      {/* Left: Home button & Buddy Avatar */}
-      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-        {currentScreen !== 'home' && (
-          <JellyButton
-            size="sm"
-            variant="white"
-            onClick={onGoHome}
-            className="!px-2.5 !py-1.5 sm:!px-3 sm:!py-2 bg-amber-100 hover:bg-amber-200 border-amber-300"
+    <header className="sticky top-0 z-30 w-full border-b border-[#e9e7e2] bg-white/95 backdrop-blur-md">
+      <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center justify-between gap-2 px-3 sm:px-6">
+        <button
+          onClick={onGoHome}
+          aria-label="홈으로 가기"
+          className="flex min-h-11 min-w-0 items-center gap-2 rounded-xl px-2 text-left text-[#30343c] transition-colors hover:bg-[#f5f4f0]"
+        >
+          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#eaf0e7] text-[#607861]"><Home className="size-5" /></span>
+          <span className="truncate text-base font-extrabold sm:text-lg">{pageLabel}</span>
+        </button>
+
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+          <button
+            onClick={onOpenStickerRoom}
+            aria-label={`스티커북 열기, 별 ${stars}개`}
+            className="flex min-h-11 items-center gap-1.5 rounded-full bg-[#f8f2df] px-3 font-extrabold text-[#755e3a] hover:bg-[#f3e8c7]"
           >
-            <Home className="w-5 h-5 sm:w-6 sm:h-6 text-[#4A3E3D]" />
-          </JellyButton>
-        )}
-
-        <button
-          onClick={onOpenCharacterSelect}
-          className="flex items-center gap-1.5 sm:gap-2 bg-white/90 hover:bg-white rounded-full px-2 py-1 sm:px-3 sm:py-1 border-2 border-[#FFD15C] shadow-xs cursor-pointer transition-all active:scale-95 shrink-0"
-        >
-          <CharacterAvatar id={selectedCharacter} size="sm" mood="happy" className="!w-9 !h-9 sm:!w-12 sm:!h-12" />
-          <div className="text-left hidden sm:block">
-            <span className="text-[10px] text-[#8C7B79] block leading-none">{childName}의 친구</span>
-            <span className="text-base font-black text-[#4A3E3D]">{currentBuddy?.name}</span>
-          </div>
-        </button>
-      </div>
-
-      {/* Middle: Stars / Rewards & Age Badge */}
-      <div className="flex items-center gap-1.5 sm:gap-3">
-        <div
-          onClick={onOpenStickerRoom}
-          className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-[#FFF59D] to-[#FFD54F] px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full border-2 border-[#FFA000] shadow-sm cursor-pointer hover:scale-105 transition-transform shrink-0"
-        >
-          <span className="text-lg sm:text-2xl animate-bounce">🌟</span>
-          <span className="text-base sm:text-xl font-black text-[#4A3E3D]">{stars}개</span>
-          <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#E65100]" />
+            <Sparkles className="size-4" /><span>{stars}</span>
+          </button>
+          <button
+            onClick={onToggleBGM}
+            aria-label={bgmEnabled ? '배경음악 끄기' : '배경음악 켜기'}
+            aria-pressed={bgmEnabled}
+            className={`grid size-11 place-items-center rounded-xl transition-colors ${bgmEnabled ? 'text-[#607861] hover:bg-[#eaf0e7]' : 'text-[#a0a3aa] hover:bg-[#f3f3f3]'}`}
+          ><Music2 className="size-5" /></button>
+          <button
+            onClick={onToggleSound}
+            aria-label={soundEnabled ? '효과음 끄기' : '효과음 켜기'}
+            aria-pressed={soundEnabled}
+            className={`grid size-11 place-items-center rounded-xl transition-colors ${soundEnabled ? 'text-[#607861] hover:bg-[#eaf0e7]' : 'text-[#a0a3aa] hover:bg-[#f3f3f3]'}`}
+          >{soundEnabled ? <Volume2 className="size-5" /> : <VolumeX className="size-5" />}</button>
+          <button
+            onClick={onOpenParentGate}
+            aria-label="부모님 설정"
+            className="grid size-11 place-items-center rounded-xl text-[#73777f] hover:bg-[#f3f3f3]"
+          ><Shield className="size-5" /></button>
         </div>
-
-        {/* Age Group Badge */}
-        <div className="hidden xs:flex items-center gap-1 bg-[#FFF9E6] border-2 border-[#FFD15C] rounded-full px-3 py-1 text-xs font-black text-[#6D4C41] shadow-2xs">
-          <span>{getAgeGroupEmoji(ageGroup)}</span>
-          <span>{getAgeGroupLabel(ageGroup)}</span>
-        </div>
-      </div>
-
-      {/* Right: Sound, Music, Sticker Room, Parent Gate */}
-      <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-        <button
-          onClick={onToggleBGM}
-          title={bgmEnabled ? "배경음악 끄기" : "배경음악 켜기"}
-          className={`p-1.5 sm:p-2.5 rounded-2xl border-2 transition-all cursor-pointer ${
-            bgmEnabled
-              ? 'bg-[#E3F2FD] border-[#42A5F5] text-[#1E88E5]'
-              : 'bg-gray-100 border-gray-300 text-gray-400'
-          }`}
-        >
-          <Music className="w-4 h-4 sm:w-5 sm:h-5" />
-        </button>
-
-        <button
-          onClick={onToggleSound}
-          title={soundEnabled ? "효과음 끄기" : "효과음 켜기"}
-          className={`p-1.5 sm:p-2.5 rounded-2xl border-2 transition-all cursor-pointer ${
-            soundEnabled
-              ? 'bg-[#FFF3E0] border-[#FFA726] text-[#FB8C00]'
-              : 'bg-gray-100 border-gray-300 text-gray-400'
-          }`}
-        >
-          {soundEnabled ? <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" /> : <VolumeX className="w-4 h-4 sm:w-5 sm:h-5" />}
-        </button>
-
-        {onOpenDrawing && (
-          <JellyButton
-            size="sm"
-            variant="purple"
-            onClick={onOpenDrawing}
-            className="!px-2.5 !py-1.5 sm:!px-3 sm:!py-2 font-bold text-xs sm:text-sm bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-xs"
-          >
-            🖌️ <span className="hidden xs:inline">스케치북</span>
-          </JellyButton>
-        )}
-
-        <JellyButton
-          size="sm"
-          variant="pink"
-          onClick={onOpenStickerRoom}
-          className="!px-2.5 !py-1.5 sm:!px-3 sm:!py-2 font-bold text-xs sm:text-sm"
-        >
-          ✨ <span className="hidden xs:inline">스티커북</span>
-        </JellyButton>
-
-        <button
-          onClick={onOpenParentGate}
-          title="부모님 설정"
-          className="p-1.5 sm:p-2.5 rounded-2xl bg-amber-100 hover:bg-amber-200 border-2 border-amber-300 text-[#4A3E3D] transition-all cursor-pointer"
-        >
-          <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
-        </button>
       </div>
     </header>
   );

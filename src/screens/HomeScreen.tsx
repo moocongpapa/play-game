@@ -1,267 +1,205 @@
-import React from 'react';
-import { motion } from 'motion/react';
+import React, { useRef } from 'react';
+import { ArrowRight, BookOpen, MessageCircle, Palette, Play, Sparkles, Volume2 } from 'lucide-react';
 import { CHARACTER_LIST, CHARACTERS } from '../data/characters';
-import { CharacterId, GameId, ChildProfile } from '../types';
 import { CharacterAvatar } from '../components/CharacterAvatar';
-import { CHARACTER_THEMES } from '../theme/colors';
+import { getAgeGroupLabel } from '../utils/ageEngine';
 import { speakText } from '../utils/soundEngine';
-import { getAgeGroupEmoji, getAgeGroupLabel } from '../utils/ageEngine';
-import { Play, Palette, MessageCircleHeart, Film, Volume2, Sparkles, Lock } from 'lucide-react';
+import type { ChildProfile, CharacterId, GameId } from '../types';
 
 interface HomeScreenProps {
   selectedCharacter: CharacterId;
   onSelectCharacter: (id: CharacterId) => void;
   onStartGame: (gameId: GameId, characterId: CharacterId) => void;
+  onOpenDrawing: () => void;
   onOpenStickerRoom: () => void;
   onOpenCharacterTalk: () => void;
-  onOpenCharmVideo: (characterId?: CharacterId) => void;
-  onOpenDrawing?: () => void;
   soundEnabled: boolean;
   childProfile: ChildProfile | null;
 }
+
+const AGE_RANK = { baby: 0, sprout: 1, bloom: 2, star: 3 };
+
+const GAME_LABELS: Record<GameId, string> = {
+  object_recognition: '이름 찾기',
+  shape_color: '모양과 색 찾기',
+  korean_letters: '한글 비누방울',
+  sound_quiz: '소리 듣고 찾기',
+  counting_food: '맛있는 수 세기',
+  cloud_shapes: '구름 모양 찾기',
+  treasure_hunt: '숨은 보물 찾기',
+  emotion_quiz: '표정 맞히기',
+  pattern_sequence: '무늬 이어 보기',
+  word_puzzle: '단어 만들기',
+  rhythm_game: '리듬 따라 하기',
+  size_comparison: '큰 것, 작은 것',
+  memory_card: '같은 그림 찾기',
+  shadow_quiz: '그림자 찾기',
+  stage_adventure: '무지개 모험',
+  balloon_pop: '풍선 팡팡',
+};
 
 export const HomeScreen: React.FC<HomeScreenProps> = ({
   selectedCharacter,
   onSelectCharacter,
   onStartGame,
+  onOpenDrawing,
   onOpenStickerRoom,
   onOpenCharacterTalk,
-  onOpenCharmVideo,
-  onOpenDrawing,
   soundEnabled,
   childProfile,
 }) => {
-  const currentBuddy = CHARACTERS[selectedCharacter] || CHARACTERS.ggomi;
+  const gamesRef = useRef<HTMLElement>(null);
+  const buddy = CHARACTERS[selectedCharacter] || CHARACTERS.ggomi;
   const childName = childProfile?.name || '유하';
   const ageGroup = childProfile?.ageGroup || 'sprout';
-
-  const AGE_RANK: Record<string, number> = { baby: 0, sprout: 1, bloom: 2, star: 3 };
   const currentRank = AGE_RANK[ageGroup];
+  const games: Array<{ id: GameId; description: string }> = [
+    { id: buddy.gameId, description: buddy.gameDesc },
+  ];
 
-  const handleBuddyGreeting = () => {
-    const greeting = currentBuddy.greetingTemplate.replace('{name}', childName);
-    speakText(greeting, soundEnabled, { characterId: selectedCharacter });
+  if (buddy.subGameId && currentRank >= AGE_RANK[buddy.subGameMinAgeGroup || 'baby']) {
+    games.push({ id: buddy.subGameId, description: buddy.subGameDesc || '' });
+  }
+  if (selectedCharacter === 'ggulgguli') {
+    games.push({ id: 'balloon_pop', description: '떠오르는 풍선을 손가락으로 터뜨려요.' });
+  }
+  if (selectedCharacter === 'ggomi' && currentRank >= AGE_RANK.sprout) {
+    games.push({ id: 'stage_adventure', description: '친구들과 네 가지 놀이를 차례로 해봐요.' });
+  }
+
+  const sayHello = () => {
+    speakText(
+      buddy.greetingTemplate.replace('{name}', childName),
+      soundEnabled,
+      { characterId: selectedCharacter },
+    );
   };
 
   return (
-    <div className="flex flex-col items-center w-full max-w-4xl mx-auto p-2 sm:p-3 space-y-2.5 sm:space-y-3 overflow-hidden select-none">
-      {/* Top Welcome Title Banner for Child */}
-      <div className="w-full text-center bg-white/90 py-3 px-4 rounded-2xl border-2 border-amber-300 shadow-2xs flex flex-col sm:flex-row items-center justify-center gap-2">
-        <div className="flex items-center gap-1.5">
-          <span className="text-xl">{getAgeGroupEmoji(ageGroup)}</span>
-          <span className="bg-amber-100 text-amber-800 text-xs font-black px-2 py-0.5 rounded-md">
-            {getAgeGroupLabel(ageGroup)}
-          </span>
-        </div>
-        <h1 className="text-base sm:text-lg font-black text-[#4A3E3D] flex items-center gap-1">
-          <span>{childName}야, 어떤 동물 친구와 놀아볼까?</span>
-          <Sparkles className="w-4 h-4 text-amber-500 animate-pulse" />
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 pb-8 sm:gap-10">
+      <section className="rounded-[28px] bg-[#f3f0e9] px-5 py-7 sm:px-9 sm:py-9">
+        <span className="inline-flex items-center rounded-full bg-white px-3 py-1 text-sm font-bold text-[#77705f]">
+          {getAgeGroupLabel(ageGroup)} · {childName}의 놀이터
+        </span>
+        <h1 className="mt-4 text-[28px] font-extrabold leading-tight tracking-tight text-[#292c33] sm:text-4xl">
+          {childName}야, 오늘은 뭐 하고 놀까?
         </h1>
-      </div>
+        <p className="mt-2 text-base text-[#6e7077] sm:text-lg">좋아하는 친구를 고르고, 놀이를 시작해 봐.</p>
+      </section>
 
-      {/* Compact Top Action Bar */}
-      <div className="w-full bg-gradient-to-r from-amber-200 via-orange-200 to-amber-300 p-2 sm:p-3 rounded-2xl sm:rounded-3xl border-2 sm:border-3 border-amber-400 shadow-sm flex items-center justify-between gap-2">
-        {/* Active Buddy Avatar & Sound Touch */}
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={handleBuddyGreeting}
-          className="flex items-center gap-2 cursor-pointer bg-white/80 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full border border-amber-300 shadow-2xs"
-        >
-          <CharacterAvatar id={selectedCharacter} size="sm" mood="happy" className="!w-9 !h-9 sm:!w-11 sm:!h-11" />
-          <span className="text-base sm:text-xl font-black text-[#4A3E3D] flex items-center gap-1">
-            {currentBuddy.badge} {currentBuddy.name}
-            <Volume2 className="w-4 h-4 text-amber-600 animate-pulse" />
-          </span>
-        </motion.div>
-
-        {/* Action Icon Buttons */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* Active Buddy Video Button */}
+      <section aria-labelledby="quick-play-title">
+        <div className="mb-4 flex items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold tracking-[0.12em] text-[#9a806b]">{childName}를 위한 놀이</p>
+            <h2 id="quick-play-title" className="mt-1 text-xl font-extrabold text-[#292c33] sm:text-2xl">바로 놀기</h2>
+          </div>
+          <span className="text-sm text-[#777980]">손으로 톡, 쉽게 시작해요</span>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
           <button
-            onClick={() => onOpenCharmVideo(selectedCharacter)}
-            className="p-2 sm:px-3 sm:py-1.5 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-full font-black text-xs sm:text-sm shadow-xs flex items-center gap-1 cursor-pointer active:scale-95 transition-transform"
-            title="영상 보기"
+            onClick={() => onStartGame('balloon_pop', 'ggulgguli')}
+            className="group flex min-h-28 items-center gap-4 rounded-[24px] bg-[#fceee7] p-5 text-left transition-transform hover:-translate-y-0.5 active:scale-[0.98]"
           >
-            <Film className="w-4 h-4 text-pink-200" />
-            <span className="hidden sm:inline">🎬 영상</span>
+            <span aria-hidden="true" className="grid size-16 shrink-0 place-items-center rounded-2xl bg-white text-4xl">🎈</span>
+            <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-[#99634f]">꿀꿀이와</span><span className="mt-1 block text-xl font-extrabold text-[#292c33]">풍선 팡팡</span></span>
+            <ArrowRight className="size-5 shrink-0 text-[#99634f]" />
           </button>
+          <button
+            onClick={() => onStartGame(ageGroup === 'baby' ? 'object_recognition' : 'stage_adventure', 'ggomi')}
+            className="group flex min-h-28 items-center gap-4 rounded-[24px] bg-[#edf2eb] p-5 text-left transition-transform hover:-translate-y-0.5 active:scale-[0.98]"
+          >
+            <span aria-hidden="true" className="grid size-16 shrink-0 place-items-center rounded-2xl bg-white text-4xl">{ageGroup === 'baby' ? '🍎' : '🌈'}</span>
+            <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-[#5c8068]">꼬미와</span><span className="mt-1 block text-xl font-extrabold text-[#292c33]">{ageGroup === 'baby' ? '이름 찾기' : '무지개 모험'}</span></span>
+            <ArrowRight className="size-5 shrink-0 text-[#5c8068]" />
+          </button>
+          <button
+            onClick={onOpenDrawing}
+            className="group flex min-h-28 items-center gap-4 rounded-[24px] bg-[#eeeefa] p-5 text-left transition-transform hover:-translate-y-0.5 active:scale-[0.98]"
+          >
+            <span aria-hidden="true" className="grid size-16 shrink-0 place-items-center rounded-2xl bg-white"><Palette className="size-8 text-[#7770ae]" /></span>
+            <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-[#7770ae]">마음대로</span><span className="mt-1 block text-xl font-extrabold text-[#292c33]">색칠하기</span></span>
+            <ArrowRight className="size-5 shrink-0 text-[#7770ae]" />
+          </button>
+        </div>
+      </section>
 
-          {/* Sketchbook & Coloring Button */}
-          {onOpenDrawing && (
-            <button
-              onClick={onOpenDrawing}
-              className="p-2 sm:px-3 sm:py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-full font-black text-xs sm:text-sm shadow-xs flex items-center gap-1 cursor-pointer active:scale-95 transition-transform"
-              title="알록달록 스케치북"
-            >
-              <Palette className="w-4 h-4 text-amber-200" />
-              <span className="hidden sm:inline">🖌️ 스케치북</span>
+      <section aria-labelledby="friends-title">
+        <div className="mb-4">
+          <h2 id="friends-title" className="text-xl font-extrabold text-[#292c33] sm:text-2xl">친구를 골라요</h2>
+          <p className="mt-1 text-sm text-[#777980]">친구마다 다른 놀이가 있어요.</p>
+        </div>
+        <div className="grid grid-cols-4 gap-2 sm:grid-cols-7 sm:gap-3">
+          {CHARACTER_LIST.map((char) => {
+            const selected = char.id === selectedCharacter;
+            return (
+              <button
+                key={char.id}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => {
+                  onSelectCharacter(char.id);
+                  if (window.innerWidth < 640) {
+                    requestAnimationFrame(() => gamesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+                  }
+                }}
+                className={`flex min-h-26 flex-col items-center justify-center gap-1.5 rounded-[20px] border-2 px-1 py-3 transition-all active:scale-95 ${selected ? 'border-[#343943] bg-white shadow-md' : 'border-transparent bg-[#f4f4f2] hover:bg-white'}`}
+              >
+                <CharacterAvatar id={char.id} size="sm" mood="happy" className="!size-14 sm:!size-16" />
+                <span className="text-sm font-bold text-[#343943]">{char.name}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      <section ref={gamesRef} aria-live="polite" className="grid scroll-mt-20 overflow-hidden rounded-[28px] border border-[#e9e7e2] bg-white lg:grid-cols-[280px_1fr]">
+        <div className="flex items-center gap-5 bg-[#f8f6f2] p-6 lg:flex-col lg:justify-center lg:p-8">
+          <CharacterAvatar id={buddy.id} size="xl" mood="happy" className="!size-24 shrink-0 sm:!size-32" />
+          <div className="min-w-0 lg:text-center">
+            <p className="text-sm font-semibold text-[#777980]">오늘의 친구</p>
+            <h2 className="mt-1 text-2xl font-extrabold text-[#292c33]">{buddy.name}</h2>
+            <button onClick={sayHello} className="mt-3 inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-4 text-sm font-bold text-[#4d5562] shadow-sm hover:bg-[#eceff2]">
+              <Volume2 className="size-4" /> 인사 듣기
             </button>
-          )}
-
-          {/* Sticker Book Button */}
-          <button
-            onClick={onOpenStickerRoom}
-            className="p-2 sm:px-3 sm:py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-full font-black text-xs sm:text-sm shadow-xs flex items-center gap-1 cursor-pointer active:scale-95 transition-transform"
-            title="스티커북"
-          >
-            <Sparkles className="w-4 h-4 text-purple-200" />
-            <span className="hidden sm:inline">✨ 스티커</span>
-          </button>
-
-          {/* Character Talk Button */}
-          <button
-            onClick={onOpenCharacterTalk}
-            className="p-2 sm:px-3 sm:py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-black text-xs sm:text-sm shadow-xs flex items-center gap-1 cursor-pointer active:scale-95 transition-transform"
-            title="친구 대화"
-          >
-            <MessageCircleHeart className="w-4 h-4 text-emerald-200" />
-            <span className="hidden sm:inline">💬 대화</span>
-          </button>
+          </div>
         </div>
-      </div>
-
-      {/* 🌈 Grand 4-Stage Rainbow Adventure Banner */}
-      <motion.div
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        onClick={() => onStartGame('stage_adventure', 'ggomi')}
-        className="w-full bg-gradient-to-r from-[#FF80AB] via-[#FFD15C] via-[#81C784] to-[#64B5F6] p-1 sm:p-1.5 rounded-[32px] shadow-lg cursor-pointer transition-transform"
-      >
-        <div className="bg-white/95 rounded-[26px] p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="text-3xl sm:text-4xl bg-amber-100 p-2 sm:p-2.5 rounded-2xl border-2 border-amber-300 shadow-2xs">
-              🌈
-            </div>
-            <div className="text-left">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="bg-rose-500 text-white text-[11px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
-                  만 3~4세 추천
+        <div className="p-5 sm:p-7">
+          <div className="mb-4 flex items-center gap-2">
+            <BookOpen className="size-5 text-[#6b7567]" />
+            <h3 className="text-lg font-extrabold text-[#292c33]">{buddy.name}와 하는 놀이</h3>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {games.map((game, index) => (
+              <button
+                key={game.id}
+                onClick={() => onStartGame(game.id, buddy.id)}
+                className="group flex min-h-23 items-center gap-4 rounded-[18px] border border-[#e8e7e3] bg-white px-4 py-3 text-left transition-colors hover:border-[#b5baa9] hover:bg-[#fbfcf8] active:bg-[#f3f5ef]"
+              >
+                <span className={`grid size-12 shrink-0 place-items-center rounded-xl text-sm font-extrabold ${index === 0 ? 'bg-[#e8efe6] text-[#57765a]' : 'bg-[#f4eee8] text-[#936b50]'}`}>
+                  {String(index + 1).padStart(2, '0')}
                 </span>
-                <span className="text-xs font-black text-amber-700">Level 1 ~ 4 다단계 모험</span>
-              </div>
-              <h2 className="text-base sm:text-xl font-black text-[#4A3E3D]">
-                무지개 스테이지 놀이 시작하기! ⭐
-              </h2>
-              <p className="text-xs font-bold text-[#8C7B79] hidden sm:block">
-                동물소리 ➔ 색깔분류 ➔ 풍선팡팡 ➔ 그림자퍼즐 ➔ 황금 트로피 파티!
-              </p>
-            </div>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base font-extrabold text-[#292c33]">{GAME_LABELS[game.id]}</span>
+                  <span className="mt-0.5 block text-sm leading-snug text-[#777980]">{game.description}</span>
+                </span>
+                <Play className="size-4 shrink-0 fill-current text-[#737c71]" />
+              </button>
+            ))}
           </div>
-
-          <div className="shrink-0 flex items-center gap-1.5 bg-gradient-to-r from-amber-400 to-orange-400 text-white px-4 py-2.5 rounded-full font-black text-sm shadow-md border-b-2 border-orange-600 active:scale-95">
-            <Play className="w-4 h-4 fill-white" />
-            <span>출발!</span>
-          </div>
+          {buddy.subGameId && currentRank < AGE_RANK[buddy.subGameMinAgeGroup || 'baby'] && (
+            <p className="mt-4 text-sm text-[#8b8d92]">{GAME_LABELS[buddy.subGameId]}는 {getAgeGroupLabel(buddy.subGameMinAgeGroup || 'baby')}부터 만날 수 있어요.</p>
+          )}
         </div>
-      </motion.div>
+      </section>
 
-      {/* 7 Characters Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
-        {CHARACTER_LIST.map((char) => {
-          const theme = CHARACTER_THEMES[char.id as keyof typeof CHARACTER_THEMES] || CHARACTER_THEMES.ggomi;
-          const isSelected = char.id === selectedCharacter;
-          
-          // 서브 게임 해금 여부 계산
-          const hasSubGame = !!char.subGameId;
-          const minRank = AGE_RANK[char.subGameMinAgeGroup || 'baby'];
-          const isSubGameUnlocked = currentRank >= minRank;
-
-          return (
-            <motion.div
-              key={`compact-card-${char.id}`}
-              whileHover={{ scale: 1.02 }}
-              style={{ backgroundColor: theme.light, borderColor: isSelected ? theme.main : theme.border }}
-              className={`relative p-3 rounded-[32px] border-3 shadow-xs flex flex-col justify-between cursor-pointer transition-all ${
-                isSelected ? 'ring-3 ring-amber-400' : ''
-              }`}
-              onClick={() => {
-                onSelectCharacter(char.id);
-                const greeting = char.greetingTemplate.replace('{name}', childName);
-                speakText(greeting, soundEnabled, { characterId: char.id });
-              }}
-            >
-              {/* Character Header Info */}
-              <div className="flex items-center gap-3 w-full">
-                <CharacterAvatar id={char.id} size="md" mood="happy" className="!w-16 !h-16 shrink-0 shadow-xs rounded-full bg-white/50" />
-                <div className="text-left min-w-0">
-                  <span className="text-xs font-bold text-[#8C7B79] block leading-none mb-0.5">{char.badge} {char.name}</span>
-                  <span className="text-sm font-black text-[#4A3E3D] block truncate">{char.gameTitle}</span>
-                </div>
-              </div>
-
-              {/* Main Game Description */}
-              <p className="text-xs text-[#8C7B79] text-left mt-2 leading-relaxed bg-white/60 p-2 rounded-xl border border-amber-100">
-                {char.gameDesc}
-              </p>
-
-              {/* Action Buttons: Main Game / Video / Sub Game */}
-              <div className="flex flex-col gap-1.5 mt-3 pt-2 border-t border-amber-200/60">
-                <div className="flex gap-1 w-full">
-                  {/* Watch Video Button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onOpenCharmVideo(char.id);
-                    }}
-                    className="flex-1 py-2 bg-white hover:bg-rose-50 text-rose-600 font-black text-xs rounded-xl border border-rose-200 shadow-2xs flex items-center justify-center gap-1 cursor-pointer active:scale-95 transition-transform"
-                    title="10초 매력 쇼츠 영상"
-                  >
-                    <Film className="w-3.5 h-3.5" />
-                    <span>🎬 영상</span>
-                  </button>
-
-                  {/* Play Main Game Button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectCharacter(char.id);
-                      onStartGame(char.gameId, char.id);
-                    }}
-                    style={{ backgroundColor: theme.main }}
-                    className="flex-1 py-2 text-white font-black text-xs rounded-xl shadow-2xs flex items-center justify-center gap-1 cursor-pointer active:scale-95 transition-transform hover:brightness-105"
-                    title="기본 놀이 시작"
-                  >
-                    <Play className="w-3.5 h-3.5 fill-current" />
-                    <span>🎮 기본놀이</span>
-                  </button>
-                </div>
-
-                {/* Sub Game Button (연령에 따라 잠금 여부 분기) */}
-                {hasSubGame && (
-                  <button
-                    disabled={!isSubGameUnlocked}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (char.subGameId) {
-                        onSelectCharacter(char.id);
-                        onStartGame(char.subGameId, char.id);
-                      }
-                    }}
-                    className={`w-full py-2 font-black text-xs rounded-xl shadow-2xs flex items-center justify-center gap-1 transition-all cursor-pointer border ${
-                      isSubGameUnlocked
-                        ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-purple-600 hover:brightness-110 active:scale-98'
-                        : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                    }`}
-                  >
-                    {isSubGameUnlocked ? (
-                      <>
-                        <Sparkles className="w-3.5 h-3.5 animate-pulse text-amber-300" />
-                        <span>🧩 맞춤놀이: {char.subGameTitle}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="w-3.5 h-3.5 text-gray-400" />
-                        <span>🔒 {getAgeGroupLabel(char.subGameMinAgeGroup || 'baby')} 이상 가능</span>
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
+      <nav aria-label="다른 놀이" className="grid gap-3 sm:grid-cols-2">
+        <button onClick={onOpenStickerRoom} className="flex min-h-16 items-center gap-3 rounded-[20px] bg-white px-5 text-left font-bold text-[#3d424b] shadow-sm hover:bg-[#f8f6f2]">
+          <Sparkles className="size-5 text-[#9a806b]" /> 내 스티커북 <ArrowRight className="ml-auto size-4 text-[#9a806b]" />
+        </button>
+        <button onClick={onOpenCharacterTalk} className="flex min-h-16 items-center gap-3 rounded-[20px] bg-white px-5 text-left font-bold text-[#3d424b] shadow-sm hover:bg-[#f8f6f2]">
+          <MessageCircle className="size-5 text-[#738871]" /> 친구와 인사하기 <ArrowRight className="ml-auto size-4 text-[#738871]" />
+        </button>
+      </nav>
     </div>
   );
 };

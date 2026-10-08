@@ -7,7 +7,6 @@ import { HomeScreen } from './screens/HomeScreen';
 import { CharacterTalkScreen } from './screens/CharacterTalkScreen';
 import { StickerRoomScreen } from './screens/StickerRoomScreen';
 import { ParentDashboard } from './screens/ParentDashboard';
-import { CharacterCharmVideoModal } from './components/CharacterCharmVideoModal';
 import { SplashLoader } from './components/SplashLoader';
 import { OnboardingScreen } from './screens/OnboardingScreen';
 import { SketchbookScreen } from './screens/SketchbookScreen';
@@ -33,7 +32,6 @@ import { BalloonPopGame } from './screens/games/BalloonPopGame';
 import { RainbowStageAdventure } from './screens/RainbowStageAdventure';
 
 import { startBGM, stopBGM, setBGMVolume, playStarGain, speakText } from './utils/soundEngine';
-import { initAuth, fetchDriveFolderVideos, GOOGLE_DRIVE_FOLDER_ID } from './services/googleDrive';
 import { Moon, Shield } from 'lucide-react';
 import { createChildProfile, DEFAULT_CHILD_PROFILE } from './utils/ageEngine';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -106,29 +104,10 @@ export default function App() {
   const [activeGameId, setActiveGameId] = useState<GameId | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isParentGateOpen, setIsParentGateOpen] = useState(false);
-  const [isCharmVideoModalOpen, setIsCharmVideoModalOpen] = useState(false);
-  const [charmVideoCharId, setCharmVideoCharId] = useState<CharacterId>('ggomi');
 
-  const handleOpenCharmVideo = (charId?: CharacterId) => {
-    if (charId) setCharmVideoCharId(charId);
-    else setCharmVideoCharId(appState.selectedCharacter);
-    setIsCharmVideoModalOpen(true);
-  };
-
-  // Auto initialize Google Drive on app start
   useEffect(() => {
-    const unsubscribe = initAuth(
-      (currentUser, token) => {
-        fetchDriveFolderVideos(GOOGLE_DRIVE_FOLDER_ID, token).catch((e) => {
-          console.warn('Auto fetch drive videos error:', e);
-        });
-      },
-      () => {
-        // Not logged in on startup
-      }
-    );
-    return () => unsubscribe();
-  }, []);
+    window.scrollTo(0, 0);
+  }, [currentScreen]);
 
   // Save state to localStorage
   useEffect(() => {
@@ -252,10 +231,9 @@ export default function App() {
             selectedCharacter={appState.selectedCharacter}
             onSelectCharacter={(id) => setAppState((prev) => ({ ...prev, selectedCharacter: id }))}
             onStartGame={handleStartGame}
+            onOpenDrawing={() => setCurrentScreen('drawing')}
             onOpenStickerRoom={() => setCurrentScreen('stickers')}
             onOpenCharacterTalk={() => setCurrentScreen('talk')}
-            onOpenCharmVideo={handleOpenCharmVideo}
-            onOpenDrawing={() => setCurrentScreen('drawing')}
             soundEnabled={appState.soundEnabled}
             childProfile={appState.childProfile}
           />
@@ -276,7 +254,6 @@ export default function App() {
             selectedCharacter={appState.selectedCharacter}
             onSelectCharacter={(id) => setAppState((prev) => ({ ...prev, selectedCharacter: id }))}
             onGoHome={() => setCurrentScreen('home')}
-            onOpenCharmVideo={handleOpenCharmVideo}
             soundEnabled={appState.soundEnabled}
             childName={childName}
           />
@@ -287,6 +264,7 @@ export default function App() {
           <StickerRoomScreen
             unlockedStickers={appState.unlockedStickers}
             placedStickers={appState.placedStickers}
+            childName={childName}
             onUpdatePlacedStickers={(stickers) =>
               setAppState((prev) => ({ ...prev, placedStickers: stickers }))
             }
@@ -348,6 +326,7 @@ export default function App() {
             fallbackTitle="앗! 이 놀이에서 동물 친구가 잠시 쉬고 있어요!"
             onReset={() => setCurrentScreen('home')}
           >
+            <div className="game-surface">
             {(() => {
               switch (activeGameId) {
                 // 기존 7개 게임
@@ -505,22 +484,23 @@ export default function App() {
                       selectedCharacter={appState.selectedCharacter}
                       onSelectCharacter={(id) => setAppState((prev) => ({ ...prev, selectedCharacter: id }))}
                       onStartGame={handleStartGame}
+                      onOpenDrawing={() => setCurrentScreen('drawing')}
                       onOpenStickerRoom={() => setCurrentScreen('stickers')}
                       onOpenCharacterTalk={() => setCurrentScreen('talk')}
-                      onOpenCharmVideo={handleOpenCharmVideo}
                       soundEnabled={appState.soundEnabled}
                       childProfile={appState.childProfile}
                     />
                   );
               }
             })()}
+            </div>
           </ErrorBoundary>
         );
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#FFF9E6] text-[#4A3E3D] font-sans antialiased selection:bg-[#FFD15C]">
+    <div className="min-h-screen bg-[#faf9f6] text-[#30343c] font-sans antialiased selection:bg-[#dbe8d7]">
       <ConfettiEffect active={showConfetti} />
 
       <Header
@@ -536,15 +516,15 @@ export default function App() {
         }
         onOpenParentGate={() => setIsParentGateOpen(true)}
         onOpenStickerRoom={() => setCurrentScreen('stickers')}
-        onOpenCharacterSelect={() => setCurrentScreen('talk')}
-        onOpenDrawing={() => setCurrentScreen('drawing')}
-        onGoHome={() => setCurrentScreen('home')}
+        onGoHome={() => {
+          setCurrentScreen('home');
+          window.scrollTo(0, 0);
+        }}
         currentScreen={currentScreen}
         childName={childName}
-        ageGroup={ageGroup}
       />
 
-      <main className="container mx-auto px-4 py-4 pb-12">
+      <main className="mx-auto w-full max-w-7xl px-3 py-5 pb-12 sm:px-6 sm:py-7">
         <ErrorBoundary onReset={() => setCurrentScreen('home')}>
           {renderContent()}
         </ErrorBoundary>
@@ -558,14 +538,6 @@ export default function App() {
           setAppState((prev) => ({ ...prev, isTimeUp: false }));
           setCurrentScreen('parent');
         }}
-      />
-
-      <CharacterCharmVideoModal
-        isOpen={isCharmVideoModalOpen}
-        onClose={() => setIsCharmVideoModalOpen(false)}
-        initialCharacterId={charmVideoCharId}
-        soundEnabled={appState.soundEnabled}
-        onRewardStar={() => handleCompleteQuiz(1)}
       />
 
       {showSplash && (

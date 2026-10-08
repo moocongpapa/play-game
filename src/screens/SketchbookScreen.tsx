@@ -14,7 +14,7 @@ import {
   type Brush,
   type History,
 } from '../sketch/model';
-import { templates } from '../sketch/art';
+import { templates, templateUrl } from '../sketch/art';
 import { renderArtwork, renderCharacterSprite } from '../sketch/render';
 import { playDrawingSound, playSound } from '../sketch/sound';
 import { loadDraft, saveDraft, saveGallery, listGallery, deleteGallery, type SavedArt } from '../sketch/storage';
@@ -92,7 +92,7 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
   const [size, setSize] = useState(1);
   const [glitter, setGlitter] = useState(false);
   const [panel, setPanel] = useState<Panel>(null);
-  const [category, setCategory] = useState('동물');
+  const [category, setCategory] = useState('친구들');
   const [stickerKind, setStickerKind] = useState('heart');
   const [selectedSticker, setSelectedSticker] = useState<string | null>(null);
   const [gallery, setGallery] = useState<SavedArt[]>([]);
@@ -205,34 +205,23 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
   }
 
   return (
-    <div className="relative w-full h-[85vh] sm:h-[88vh] bg-[#FFFBF0] rounded-[36px] border-4 border-amber-300 shadow-2xl overflow-hidden select-none flex flex-col justify-between">
+    <div className="relative flex h-[calc(100dvh-8rem)] min-h-[540px] w-full select-none flex-col overflow-hidden rounded-[28px] border border-[#e8e7e3] bg-white shadow-sm">
       {/* Top Header Bar */}
-      <div className="z-30 w-full bg-white/95 backdrop-blur-xs p-2.5 sm:p-3 rounded-t-[32px] border-b-2 border-amber-200 shadow-xs flex items-center justify-between gap-2">
+      <div className="z-30 flex w-full items-center justify-between gap-2 border-b border-[#e8e7e3] bg-white px-3 py-3 sm:px-5">
         {/* Left: Home & Back */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <button
             onClick={onGoHome}
-            className="p-2 sm:px-3 sm:py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-full font-black text-xs sm:text-sm flex items-center gap-1 border border-amber-300 active:scale-95 cursor-pointer"
+            className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#f4f4f2] text-[#4d5562] hover:bg-[#eaeae6]"
             title="홈으로 가기"
           >
             <Home className="w-4 h-4" />
-            <span className="hidden sm:inline">홈으로</span>
           </button>
 
-          {/* Template Indicator */}
-          {currentTemplate && (
-            <div className="flex items-center gap-1 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 text-xs font-black text-amber-800">
-              <span>{currentTemplate.emoji}</span>
-              <span>{currentTemplate.name} 색칠하기</span>
-            </div>
-          )}
-        </div>
-
-        {/* Center Title */}
-        <div className="text-center">
-          <h1 className="text-sm sm:text-base font-black text-[#4A3E3D] flex items-center gap-1">
-            <span>🎨 {childName}의 알록달록 스케치북</span>
-          </h1>
+          <div className="min-w-0">
+            <h1 className="truncate text-base font-extrabold text-[#30343c] sm:text-xl">{childName}의 스케치북</h1>
+            <p className="truncate text-xs text-[#777980]">{currentTemplate ? `${currentTemplate.name} 색칠하기` : '도안을 고르거나 자유롭게 그려요'}</p>
+          </div>
         </div>
 
         {/* Right: Living Character & Action Buttons */}
@@ -242,27 +231,27 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleLaunchLivingCharacter}
-            className="px-3.5 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 text-white font-black text-xs sm:text-sm rounded-full shadow-md flex items-center gap-1.5 border-2 border-purple-300 active:scale-95 cursor-pointer animate-pulse"
+            aria-label="색칠한 캐릭터 움직이기"
+            className="flex min-h-11 items-center gap-1.5 rounded-xl bg-[#eaf0e7] px-3 text-sm font-bold text-[#48634d] hover:bg-[#dfe9db]"
             title="색칠한 캐릭터를 살아 움직이게 만들기!"
           >
-            <Sparkles className="w-4 h-4 text-amber-200" />
-            <span>살아 움직이기! 🪄</span>
+            <Sparkles className="size-4" />
+            <span className="hidden sm:inline">살아 움직이기</span>
           </motion.button>
 
           {/* Download Photo */}
           <button
             onClick={handleDownloadPng}
-            className="p-2 sm:px-3 sm:py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded-full font-black text-xs sm:text-sm flex items-center gap-1 border border-emerald-300 active:scale-95 cursor-pointer"
+            className="grid size-11 place-items-center rounded-xl bg-[#f4f4f2] text-[#4d5562] hover:bg-[#eaeae6]"
             title="사진으로 저장"
           >
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">저장</span>
           </button>
         </div>
       </div>
 
       {/* Main Drawing Canvas Area */}
-      <div className="relative flex-1 w-full h-full overflow-hidden bg-white">
+      <div className="relative min-h-0 w-full flex-1 overflow-hidden bg-white">
         {art && (
           <DrawingCanvas
             artwork={art}
@@ -369,9 +358,9 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
       </AnimatePresence>
 
       {/* Bottom Floating Control Bar */}
-      <div className="z-30 w-full bg-white/95 backdrop-blur-xs p-2 sm:p-3 rounded-b-[32px] border-t-2 border-amber-200 shadow-md flex items-center justify-between gap-1.5 sm:gap-2">
+      <div className="z-30 flex w-full flex-wrap items-center gap-2 border-t border-[#e8e7e3] bg-white p-2.5 sm:flex-nowrap sm:justify-between sm:px-4">
         {/* Left Undo / Redo */}
-        <div className="flex items-center gap-1">
+        <div className="order-2 flex items-center gap-1 sm:order-1">
           <button
             onClick={() => {
               if (history && history.past.length > 0) {
@@ -401,27 +390,27 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
         </div>
 
         {/* Center Main Tools */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
+        <div className="order-1 grid w-full grid-cols-5 gap-1.5 sm:order-2 sm:flex sm:w-auto sm:items-center sm:gap-2">
           {/* Tool Picker Button */}
           <button
             onClick={() => setPanel('tools')}
-            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl font-black text-xs sm:text-sm flex items-center gap-1.5 border-2 transition-all cursor-pointer ${
+            className={`min-h-11 justify-center px-1 py-1.5 sm:px-4 sm:py-2 rounded-xl font-bold text-[11px] sm:text-sm flex items-center gap-1 border transition-all ${
               panel === 'tools'
-                ? 'bg-amber-400 text-amber-950 border-amber-500 shadow-xs'
-                : 'bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300'
+                ? 'bg-[#eaf0e7] text-[#48634d] border-[#b9cdb6]'
+                : 'bg-[#f7f7f5] hover:bg-[#eeeee9] text-[#4d5562] border-[#e8e7e3]'
             }`}
           >
-            <Paintbrush className="w-4 h-4 text-amber-700" />
+            <Paintbrush className="w-4 h-4" />
             <span>도구</span>
           </button>
 
           {/* Color Picker Button */}
           <button
             onClick={() => setPanel('colors')}
-            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl font-black text-xs sm:text-sm flex items-center gap-1.5 border-2 transition-all cursor-pointer ${
+            className={`min-h-11 justify-center px-1 py-1.5 sm:px-4 sm:py-2 rounded-xl font-bold text-[11px] sm:text-sm flex items-center gap-1 border transition-all ${
               panel === 'colors'
-                ? 'bg-amber-400 text-amber-950 border-amber-500 shadow-xs'
-                : 'bg-white hover:bg-amber-50 text-[#4A3E3D] border-amber-300'
+                ? 'bg-[#eaf0e7] text-[#48634d] border-[#b9cdb6]'
+                : 'bg-[#f7f7f5] hover:bg-[#eeeee9] text-[#4d5562] border-[#e8e7e3]'
             }`}
           >
             <div className="w-4 h-4 rounded-full border border-gray-400" style={{ backgroundColor: color }} />
@@ -431,10 +420,10 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
           {/* Template Coloring Book Button */}
           <button
             onClick={() => setPanel('templates')}
-            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl font-black text-xs sm:text-sm flex items-center gap-1.5 border-2 transition-all cursor-pointer ${
+            className={`min-h-11 justify-center px-1 py-1.5 sm:px-4 sm:py-2 rounded-xl font-bold text-[11px] sm:text-sm flex items-center gap-1 border transition-all ${
               panel === 'templates'
-                ? 'bg-rose-400 text-white border-rose-500 shadow-xs'
-                : 'bg-rose-100 hover:bg-rose-200 text-rose-900 border-rose-300'
+                ? 'bg-[#eaf0e7] text-[#48634d] border-[#b9cdb6]'
+                : 'bg-[#f7f7f5] hover:bg-[#eeeee9] text-[#4d5562] border-[#e8e7e3]'
             }`}
           >
             <span>📖</span>
@@ -444,33 +433,33 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
           {/* Sticker Button */}
           <button
             onClick={() => setPanel('stickers')}
-            className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-2xl font-black text-xs sm:text-sm flex items-center gap-1.5 border-2 transition-all cursor-pointer ${
+            className={`min-h-11 justify-center px-1 py-1.5 sm:px-4 sm:py-2 rounded-xl font-bold text-[11px] sm:text-sm flex items-center gap-1 border transition-all ${
               panel === 'stickers'
-                ? 'bg-purple-400 text-white border-purple-500 shadow-xs'
-                : 'bg-purple-100 hover:bg-purple-200 text-purple-900 border-purple-300'
+                ? 'bg-[#eaf0e7] text-[#48634d] border-[#b9cdb6]'
+                : 'bg-[#f7f7f5] hover:bg-[#eeeee9] text-[#4d5562] border-[#e8e7e3]'
             }`}
           >
-            <StickerIcon className="w-4 h-4 text-purple-700" />
+            <StickerIcon className="w-4 h-4" />
             <span>스티커</span>
           </button>
 
           {/* Paper Background Button */}
           <button
             onClick={() => setPanel('background')}
-            className={`px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-2xl font-black text-xs sm:text-sm flex items-center gap-1 border-2 transition-all cursor-pointer ${
+            className={`min-h-11 justify-center px-1 py-1.5 sm:px-3 sm:py-2 rounded-xl font-bold text-[11px] sm:text-sm flex items-center gap-1 border transition-all ${
               panel === 'background'
-                ? 'bg-sky-400 text-white border-sky-500 shadow-xs'
-                : 'bg-sky-100 hover:bg-sky-200 text-sky-900 border-sky-300'
+                ? 'bg-[#eaf0e7] text-[#48634d] border-[#b9cdb6]'
+                : 'bg-[#f7f7f5] hover:bg-[#eeeee9] text-[#4d5562] border-[#e8e7e3]'
             }`}
             title="도화지 변경"
           >
             <span>📄</span>
-            <span className="hidden sm:inline">도화지</span>
+            <span>도화지</span>
           </button>
         </div>
 
         {/* Right Reset / Gallery */}
-        <div className="flex items-center gap-1">
+        <div className="order-3 ml-auto flex items-center gap-1">
           <button
             onClick={() => setPanel('gallery')}
             className="p-2 sm:p-2.5 rounded-full hover:bg-indigo-50 text-indigo-700 cursor-pointer active:scale-95 border border-indigo-200"
@@ -482,7 +471,7 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
           <button
             onClick={() => {
               if (window.confirm('도화지를 깨끗하게 비울까요?')) {
-                commit(freshArtwork(art?.background));
+                commit({ ...freshArtwork(), background: art?.background || 'white' });
                 sound('clear');
               }
             }}
@@ -499,12 +488,12 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
       {/* ========================================================= */}
       <AnimatePresence>
         {panel && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-2xs">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#252b31]/40 p-4 backdrop-blur-2xs">
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-full max-w-lg bg-white rounded-[32px] border-4 border-amber-300 shadow-2xl p-4 sm:p-6 max-h-[85vh] flex flex-col justify-between overflow-hidden"
+              className="relative flex max-h-[85vh] w-full max-w-lg flex-col justify-between overflow-hidden rounded-[26px] border border-[#e8e7e3] bg-white p-4 shadow-2xl sm:p-6"
             >
               {/* Close Button */}
               <button
@@ -639,14 +628,14 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
                   <h3 className="text-lg font-black text-[#4A3E3D] mb-1">📖 색칠할 도안을 골라보세요!</h3>
                   {/* Category Filter */}
                   <div className="flex gap-1.5 overflow-x-auto pb-1">
-                    {['동물', '과일', '탈것', '친구들'].map((cat) => (
+                    {['친구들', '동물', '과일', '탈것'].map((cat) => (
                       <button
                         key={cat}
                         onClick={() => setCategory(cat)}
                         className={`px-3 py-1 rounded-full text-xs font-black cursor-pointer border ${
                           category === cat
-                            ? 'bg-rose-500 text-white border-rose-600 shadow-xs'
-                            : 'bg-gray-100 text-gray-600 border-gray-200'
+                            ? 'bg-[#4e6953] text-white border-[#4e6953]'
+                            : 'bg-[#f5f5f2] text-[#626973] border-[#e8e7e3]'
                         }`}
                       >
                         {cat}
@@ -663,10 +652,7 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
                           key={t.id}
                           onClick={() => {
                             if (art) {
-                              commit({
-                                ...freshArtwork(art.background),
-                                template: t.id,
-                              });
+                              commit({ ...freshArtwork(), background: art.background, template: t.id });
                               setTool('fill');
                               sound('magic');
                               setPanel(null);
@@ -674,10 +660,10 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
                             }
                           }}
                           className={`p-3 rounded-2xl border-2 flex flex-col items-center gap-1 cursor-pointer transition-all ${
-                            art?.template === t.id ? 'bg-rose-50 border-rose-500 ring-2 ring-rose-300' : 'border-gray-200 hover:bg-gray-50'
+                            art?.template === t.id ? 'bg-[#f4f8f2] border-[#7c9b7c] ring-2 ring-[#dbe8d7]' : 'border-[#e8e7e3] hover:bg-[#f7f7f5]'
                           }`}
                         >
-                          <span className="text-4xl filter drop-shadow-xs">{t.emoji}</span>
+                          <img src={templateUrl(t)} alt="" className="h-16 w-full object-contain" />
                           <span className="text-xs font-black text-[#4A3E3D] truncate w-full text-center">{t.name}</span>
                         </button>
                       ))}

@@ -11,7 +11,7 @@
 
 ## Git workflow
 
-- Commit and push only when the user explicitly asks. That request authorizes both actions; do not ask for confirmation again.
+- After each repository change request, review the finished changes, then commit and push the intended files. The user has authorized this as a standing workflow unless they explicitly say otherwise; do not ask for confirmation again.
 - Before staging, inspect `git status`, the diff, and untracked files. Preserve changes outside the requested scope and never include secrets or local `.env` files.
 - Run `npm run lint` and `npm run build` for code changes. Report any failure instead of claiming the change was verified.
 - Stage only the intended files, review the staged diff, then commit with a concise message describing the change.

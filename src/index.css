@@ -1,5 +1,27 @@
 @import "tailwindcss";
 
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 3px solid #657f69;
+  outline-offset: 3px;
+}
+
+/* Keep each game's prompt card consistent with the quieter shared screens. */
+.game-surface > div > div:first-child {
+  background: #ffffff;
+  border: 1px solid #e9e7e2;
+  border-radius: 24px;
+  box-shadow: none;
+}
+
 @layer utilities {
   .break-keep {
     word-break: keep-all;

@@ -468,6 +468,7 @@ export default function DrawingCanvas(props: Props) {
   return (
     <canvas
       ref={canvas}
+      className="block h-full w-full touch-none"
       aria-label="그림 그리는 도화지"
       data-testid="drawing-canvas"
       onPointerDown={down}

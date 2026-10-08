@@ -103,13 +103,13 @@ export const stickerKinds = [
   { id: 'paw', emoji: '🐾', label: '발자국' },
   { id: 'music', emoji: '🎵', label: '음표' },
 ];
-export function freshArtwork(template: string | null = null): Artwork {
+export function freshArtwork(): Artwork {
   return {
     version: 1,
     id: crypto.randomUUID(),
     updatedAt: Date.now(),
     background: 'white',
-    template,
+    template: null,
     fills: {},
     strokes: [],
     stickers: [],
