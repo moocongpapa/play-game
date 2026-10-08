@@ -3,7 +3,7 @@ import { Bug, Fish, Home, Music2, Shield, Volume2, VolumeX } from 'lucide-react'
 import { CHARACTERS } from '../data/characters';
 import type { CharacterId } from '../types';
 
-type Screen = 'home' | 'game' | 'day' | 'stickers' | 'aquarium' | 'talk' | 'parent' | 'drawing';
+type Screen = 'home' | 'game' | 'day' | 'stickers' | 'aquarium' | 'park' | 'talk' | 'parent' | 'drawing';
 
 interface HeaderProps {
   stars: number;
@@ -42,6 +42,8 @@ export const Header: React.FC<HeaderProps> = ({
         ? '곤충 놀이터'
         : currentScreen === 'aquarium'
           ? '바다 친구 수족관'
+          : currentScreen === 'park'
+            ? '친구 놀이터'
           : currentScreen === 'talk'
             ? '친구 인사'
             : currentScreen === 'parent'

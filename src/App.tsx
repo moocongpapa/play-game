@@ -21,6 +21,7 @@ const FriendDayScreen = lazy(() => import('./screens/FriendDayScreen').then(m =>
 const TouchEffects = lazy(() => import('./components/TouchEffects').then(module => ({ default: module.TouchEffects })));
 const CharacterTalkScreen = lazy(() => import('./screens/CharacterTalkScreen').then(module => ({ default: module.CharacterTalkScreen })));
 const AquariumScreen = lazy(() => import('./screens/AquariumScreen').then(module => ({ default: module.AquariumScreen })));
+const CharacterParkScreen = lazy(() => import('./screens/CharacterParkScreen').then(module => ({ default: module.CharacterParkScreen })));
 const BugGardenScreen = lazy(() => import('./screens/BugGardenScreen').then(module => ({ default: module.BugGardenScreen })));
 const ParentDashboard = lazy(() => import('./screens/ParentDashboard').then(module => ({ default: module.ParentDashboard })));
 const SketchbookScreen = lazy(() => import('./screens/SketchbookScreen').then(module => ({ default: module.SketchbookScreen })));
@@ -128,7 +129,7 @@ export default function App() {
   const finishSplash = useCallback(() => setShowSplash(false), []);
   const [homeStep, setHomeStep] = useState<'friends' | 'games'>('friends');
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
-  const [currentScreen, setCurrentScreen] = useState<'home' | 'game' | 'day' | 'stickers' | 'aquarium' | 'talk' | 'parent' | 'drawing'>('home');
+  const [currentScreen, setCurrentScreen] = useState<'home' | 'game' | 'day' | 'stickers' | 'aquarium' | 'park' | 'talk' | 'parent' | 'drawing'>('home');
   const [activeGameId, setActiveGameId] = useState<GameId | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isParentGateOpen, setIsParentGateOpen] = useState(false);
@@ -138,7 +139,7 @@ export default function App() {
   }, [currentScreen, activeGameId, homeStep]);
 
   const handleGoHome = () => {
-    if (['talk', 'day', 'stickers', 'aquarium'].includes(currentScreen)) setHomeStep('games');
+    if (['talk', 'day', 'stickers', 'aquarium', 'park'].includes(currentScreen)) setHomeStep('games');
     stopAllSpeech();
     stopPlaySounds();
     stopCelebrations();
@@ -309,6 +310,7 @@ export default function App() {
             onOpenDrawing={() => setCurrentScreen('drawing')}
             onOpenStickerRoom={() => setCurrentScreen('stickers')}
             onOpenAquarium={() => setCurrentScreen('aquarium')}
+            onOpenCharacterPark={() => setCurrentScreen('park')}
             onOpenCharacterTalk={() => setCurrentScreen('talk')}
             soundEnabled={soundEnabled}
             childProfile={appState.childProfile}
@@ -351,6 +353,9 @@ export default function App() {
 
       case 'aquarium':
         return <AquariumScreen buddy={appState.selectedCharacter} childName={childName} soundEnabled={soundEnabled} />;
+
+      case 'park':
+        return <CharacterParkScreen buddy={appState.selectedCharacter} soundEnabled={soundEnabled} />;
 
       case 'parent':
         return (
@@ -614,6 +619,7 @@ export default function App() {
                       onOpenDrawing={() => setCurrentScreen('drawing')}
                       onOpenStickerRoom={() => setCurrentScreen('stickers')}
                       onOpenAquarium={() => setCurrentScreen('aquarium')}
+                      onOpenCharacterPark={() => setCurrentScreen('park')}
                       onOpenCharacterTalk={() => setCurrentScreen('talk')}
                       soundEnabled={soundEnabled}
                       childProfile={appState.childProfile}

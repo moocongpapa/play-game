@@ -19,6 +19,7 @@ interface HomeScreenProps {
   onOpenDrawing: () => void;
   onOpenStickerRoom: () => void;
   onOpenAquarium: () => void;
+  onOpenCharacterPark: () => void;
   onOpenCharacterTalk: () => void;
   soundEnabled: boolean;
   childProfile: ChildProfile | null;
@@ -26,7 +27,7 @@ interface HomeScreenProps {
   onChangeStep: (step: HomeStep) => void;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSelectCharacter, onStartGame, onStartDay, onOpenDrawing, onOpenStickerRoom, onOpenAquarium, onOpenCharacterTalk, soundEnabled, childProfile, step, onChangeStep }) => {
+export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSelectCharacter, onStartGame, onStartDay, onOpenDrawing, onOpenStickerRoom, onOpenAquarium, onOpenCharacterPark, onOpenCharacterTalk, soundEnabled, childProfile, step, onChangeStep }) => {
   const buddy = CHARACTERS[selectedCharacter] || CHARACTERS.ggomi;
   const childName = childProfile?.name || '유하';
   const age = childProfile?.ageGroup || 'sprout';
@@ -55,6 +56,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
         {GAME_CATALOG[id].badge && <span className="picture-game-badge">{GAME_CATALOG[id].badge}</span>}
       </button>;
 
+  const parkCard = <button onClick={() => { stopAllSpeech(); playJellyTap(soundEnabled); onOpenCharacterPark(); }} className="extra-character-park" aria-label="친구 놀이터 열기">
+    <span className="park-card-friends" aria-hidden="true"><CharacterAvatar id="jelly" mood="still" /><CharacterAvatar id="pingu" mood="still" /><CharacterAvatar id="dochi" mood="still" /></span>
+    <span className="park-card-copy"><strong>친구 놀이터</strong><small>폴짝폴짝 · 데굴데굴 · 다 같이!</small></span><span className="play-medallion"><Play size={20} fill="currentColor" /></span>
+  </button>;
+
   return <div className={`storybook-home home-${step}`}>
     <section className="welcome-scene">
       <div className="welcome-copy">
@@ -77,6 +83,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
       </button>)}</div>
     </section> : <section aria-label="게임 선택" className="games-section">
       <div className="section-heading"><button className="change-friend" onClick={() => { stopAllSpeech(); onChangeStep('friends'); setHasNavigated(true); speakText('다른 친구랑도 놀아볼까?', soundEnabled); }}><ArrowLeft size={20} /><CharacterAvatar id={selectedCharacter} size="sm" /><span>친구 바꾸기</span></button></div>
+      <div className="extra-play park-menu-entry">{parkCard}</div>
       <button className="friend-day-card" onClick={() => { stopAllSpeech(); playJellyTap(soundEnabled); onStartDay(); }} aria-label={`${buddy.name}의 하루 함께 놀기`}>
         <CharacterAvatar id={selectedCharacter} size="md" mood="waving" /><div className="friend-day-copy"><strong>{buddy.name}의 하루</strong><span>우리 같이 하루를 보내볼까?</span><span className="day-mini-pictures" aria-hidden="true">{FRIEND_DAY.map(item => <GameArtwork key={item.gameId} gameId={item.gameId} buddy={selectedCharacter} />)}</span></div><ArrowRight />
       </button>
@@ -86,6 +93,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
     </section>}
 
     <section className="extra-play" aria-label="자유 놀이">
+      {step === 'friends' && parkCard}
       <button onClick={onOpenDrawing} className="extra-drawing"><span className="extra-icon"><Palette /></span><span>색칠 놀이</span><ArrowRight size={18} /></button>
       <button onClick={onOpenStickerRoom} className="extra-stickers"><span className="extra-icon"><Bug /></span><span>곤충 놀이</span><ArrowRight size={18} /></button>
       <button onClick={onOpenAquarium} className="extra-aquarium"><span className="extra-icon"><Fish /></span><span>수족관 놀이</span><ArrowRight size={18} /></button>

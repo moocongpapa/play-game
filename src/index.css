@@ -271,3 +271,8 @@ h1:focus { outline: none; }
 .size-sort-board > .size-playground { margin-top: 0; padding: 12px 8px; min-height: 0; }
 
 .extra-aquarium .extra-icon { background: #cce8e9; color: #468587; }
+.extra-play .extra-character-park { grid-column: 1 / -1; flex-direction: row; min-height: 118px; padding: 12px 20px; gap: 18px; border: 2px solid #ccd9ac; background: linear-gradient(95deg,#f5f6d7ed,#edf3d9d9),url('/art/playground-meadow.jpg') center 60% / cover; box-shadow: 0 4px 0 #d0dbb7; }
+.extra-play.park-menu-entry { margin: 0 0 22px; padding: 0; border: 0; }
+.park-card-friends { display: flex; align-items: center; flex-shrink: 0; }.park-card-friends > div { width: 76px; height: 76px; }.park-card-friends > div + div { margin-left: -17px; }.park-card-friends > div:nth-child(2) { translate: 0 9px; }
+.park-card-copy { display: flex; flex-direction: column; gap: 5px; text-align: left; color: #587254; }.park-card-copy > strong { font-size: 21px; font-weight: 900; }.park-card-copy > small { font-size: 12px; font-weight: 650; color: #889274; }.extra-character-park > .play-medallion { margin-left: auto; flex-shrink: 0; background: #d1e2ba; color: #60835f; }
+@media (max-width: 599px) { .extra-play .extra-character-park { min-height: 112px; padding: 12px; gap: 9px; }.park-card-friends > div { width: 60px; height: 60px; }.park-card-friends > div + div { margin-left: -23px; }.park-card-copy > strong { font-size: 17px; }.park-card-copy > small { font-size: 10px; } }
