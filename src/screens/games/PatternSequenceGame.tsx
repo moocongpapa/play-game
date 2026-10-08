@@ -1,3 +1,5 @@
+import { ToyArtwork } from '../../components/ToyArtwork';
+import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
@@ -21,6 +23,8 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
   ageGroup,
   childName,
 }) => {
+  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+
   const diffConfig = getDifficultyConfig(ageGroup);
   const itemPool = PATTERN_ITEMS_BY_AGE[ageGroup] || PATTERN_ITEMS_BY_AGE.sprout;
 
@@ -39,6 +43,7 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
   const gameTimerRef = useRef<number | null>(null);
 
   const generateRound = () => {
+    clearGameTimeouts();
     if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
@@ -63,7 +68,7 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
-      hintTimerRef.current = window.setTimeout(() => {
+      hintTimerRef.current = scheduleGameTimeout(() => {
         setShowHint(true);
         speakText(`여기 반짝이는 친구를 골라봐!`, soundEnabled, { characterId: 'rano', playIntroSFX: false });
       }, diffConfig.hintDelaySec * 1000);
@@ -108,16 +113,16 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
       setShakingCardId(ans);
       playWrongBoing(soundEnabled);
       speakText(`다시 순서를 곰곰이 살펴볼까요?`, soundEnabled, { characterId: 'rano' });
-      setTimeout(() => setShakingCardId(null), 600);
+      scheduleGameTimeout(() => setShakingCardId(null), 600);
     }
   };
 
   if (!targetItem) return null;
 
   return (
-    <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[80vh] overflow-hidden">
+    <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
-      <div className="w-full bg-gradient-to-r from-[#DCEDC8] to-[#E8F5E9] p-3.5 sm:p-4 rounded-3xl border-3 border-[#66BB6A] shadow-sm flex items-center gap-3 sm:gap-4">
+      <div className="game-prompt w-full bg-gradient-to-r from-[#DCEDC8] to-[#E8F5E9] p-3.5 sm:p-4 rounded-3xl border-3 border-[#66BB6A] shadow-sm flex items-center gap-3 sm:gap-4">
         <CharacterAvatar id="rano" size="md" mood={selectedCorrectId ? 'excited' : 'waving'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#2E7D32] mb-1">
@@ -128,6 +133,7 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
           </h2>
         </div>
         <button
+          aria-label="놀이 안내 다시 듣기"
           onClick={() => speakText(`규칙을 보며 어떤 것이 오는지 맞춰보아요!`, soundEnabled, { characterId: 'rano' })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#66BB6A] shadow-xs text-[#2E7D32] cursor-pointer shrink-0"
         >
@@ -169,7 +175,7 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
               animate={{ scale: 1 }}
               className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-2xl sm:text-4xl shadow-xs"
             >
-              {emoji}
+              <ToyArtwork emoji={emoji} />
             </motion.div>
           ))}
           {/* ❓ Box */}
@@ -180,7 +186,7 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
               selectedCorrectId ? 'bg-emerald-100 border-emerald-400' : 'bg-amber-100 border-amber-400'
             }`}
           >
-            {selectedCorrectId ? targetItem.answer : '❓'}
+            {selectedCorrectId ? <ToyArtwork emoji={targetItem.answer} /> : '?'}
           </motion.div>
         </div>
       </div>
@@ -206,8 +212,9 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
                   : { scale: 1 }
               }
               transition={{ duration: isShaking ? 0.5 : shouldPulse ? 1.0 : 0.2 }}
+              aria-label={`${ans} 그림 선택`}
               onClick={() => handleSelectCard(ans)}
-              className={`w-16 h-16 sm:w-24 sm:h-24 rounded-3xl text-4xl sm:text-6xl flex items-center justify-center shadow-md border-4 transition-all cursor-pointer ${
+              className={`game-choice w-16 h-16 sm:w-24 sm:h-24 rounded-3xl text-4xl sm:text-6xl flex items-center justify-center shadow-md border-4 transition-all cursor-pointer ${
                 isSolved
                   ? 'bg-[#E8F5E9] border-[#66BB6A]'
                   : shouldPulse
@@ -215,7 +222,7 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
                   : 'bg-white border-[#C8E6C9] hover:bg-[#F1F8E9]'
               }`}
             >
-              {ans}
+              <ToyArtwork emoji={ans} />
             </motion.button>
           );
         })}
@@ -224,11 +231,11 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
       {/* Actions */}
       <div className="flex items-center justify-center gap-3 w-full">
         {selectedCorrectId || timeOut ? (
-          <JellyButton variant="green" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 패턴 완성하기 🦖
+          <JellyButton soundEnabled={soundEnabled} variant="green" size="lg" onClick={generateRound} className="w-full sm:w-auto">
+            다음 패턴 완성하기 🦖 <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
-          <JellyButton variant="white" size="md" onClick={generateRound} className="!px-4">
+          <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">
             <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 다른 문제
           </JellyButton>
         )}

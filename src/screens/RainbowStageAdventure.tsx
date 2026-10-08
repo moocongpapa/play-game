@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { GameArtwork } from '../components/GameArtwork';
+import { ToyArtwork, BasketArtwork } from '../components/ToyArtwork';
+import { useGameTimeouts } from '../hooks/useGameTimeouts';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { CharacterAvatar } from '../components/CharacterAvatar';
 import { JellyButton } from '../components/JellyButton';
 import {
@@ -82,6 +85,11 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
   soundEnabled,
   childName,
 }) => {
+  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+
+  const reducedMotion = useReducedMotion();
+  const clearingLevel = useRef(false);
+  const poppedIds = useRef(new Set<string>());
   // Current Stage (1, 2, 3, 4, 5=Trophy Party)
   const [currentLevel, setCurrentLevel] = useState<1 | 2 | 3 | 4 | 5>(1);
   const [clearedLevels, setClearedLevels] = useState<number[]>([]);
@@ -103,7 +111,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
     setL1Options(opts);
     setL1WrongId(null);
 
-    setTimeout(() => {
+    scheduleGameTimeout(() => {
       playAnimalSound(target.soundKey, soundEnabled);
       speakText(`동물 소리를 들어보자! "${target.soundPrompt}" 누구 소리일까요?`, soundEnabled, {
         characterId: 'dochi',
@@ -112,6 +120,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
   };
 
   const handleL1Select = (item: AnimalQuizItem) => {
+    if (clearingLevel.current) return;
     if (item.id === l1Target.id) {
       // Correct!
       playAnimalSound(l1Target.soundKey, soundEnabled);
@@ -123,7 +132,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
       setL1WrongId(item.id);
       playWrongBoing(soundEnabled);
       speakText(`다시 소리를 잘 들어볼까요?`, soundEnabled, { characterId: 'dochi' });
-      setTimeout(() => {
+      scheduleGameTimeout(() => {
         setL1WrongId(null);
         playAnimalSound(l1Target.soundKey, soundEnabled);
       }, 700);
@@ -144,7 +153,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
     const selected = [...SORT_ITEMS].sort(() => Math.random() - 0.5).slice(0, 3);
     setL2RemainingItems(selected);
 
-    setTimeout(() => {
+    scheduleGameTimeout(() => {
       speakText(`알록달록 과일을 같은 색깔 바구니에 쏙 넣어주세요!`, soundEnabled, { characterId: 'rano' });
     }, 400);
   };
@@ -155,7 +164,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
       playJellyTap(soundEnabled);
       playSparkleChime(soundEnabled);
       setL2BasketBounce(basketColor);
-      setTimeout(() => setL2BasketBounce(null), 500);
+      scheduleGameTimeout(() => setL2BasketBounce(null), 500);
 
       const nextRemaining = l2RemainingItems.filter((f) => f.id !== fruit.id);
       setL2RemainingItems(nextRemaining);
@@ -204,7 +213,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
     }));
     setL3Balloons(initialBalloons);
 
-    setTimeout(() => {
+    scheduleGameTimeout(() => {
       speakText(`꿀꿀이와 함께 둥둥 떠오르는 풍선 5개를 팡팡 터뜨려보자!`, soundEnabled, {
         characterId: 'ggulgguli',
       });
@@ -212,6 +221,8 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
   };
 
   const handleL3Pop = (id: string, color: string, e: React.MouseEvent | React.TouchEvent) => {
+    if (clearingLevel.current || poppedIds.current.has(id)) return;
+    poppedIds.current.add(id);
     playBalloonPop(soundEnabled);
 
     let cx = window.innerWidth * 0.5;
@@ -259,7 +270,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
     setL4Target(target);
     setL4Options(opts);
 
-    setTimeout(() => {
+    scheduleGameTimeout(() => {
       speakText(`깜깜한 그림자가 나타났어요! 이 그림자에 꼭 맞는 친구를 맞춰주세요!`, soundEnabled, {
         characterId: 'ggomi',
       });
@@ -286,19 +297,19 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
   // Stage Clearance & Progression
   // -------------------------------------------------------------
   const triggerStageClear = (levelNumber: number, praiseMessage: string) => {
+    if (clearingLevel.current) return;
+    clearingLevel.current = true;
     setStampAnimationLevel(levelNumber);
     setClearedLevels((prev) => (prev.includes(levelNumber) ? prev : [...prev, levelNumber]));
     onCompleteQuiz(2);
 
     speakText(`와, 정말 잘했어! 멋지다! ${praiseMessage}`, soundEnabled);
 
-    setTimeout(() => {
+    scheduleGameTimeout(() => {
       setStampAnimationLevel(null);
       if (levelNumber === 4) {
         // Grand Final Celebration!
         setCurrentLevel(5);
-        playCelebrationFanfare(soundEnabled);
-        fireCelebrationFireworks(4000);
         speakText(`축하합니다! ${childName}야, 모든 단계를 완료하고 황금 트로피를 받았어요! 최고야!`, soundEnabled);
       } else {
         const next = (levelNumber + 1) as 2 | 3 | 4;
@@ -309,39 +320,40 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
 
   // Init levels whenever currentLevel changes
   useEffect(() => {
+    clearingLevel.current = false;
+    poppedIds.current.clear();
     if (currentLevel === 1) initLevel1();
     if (currentLevel === 2) initLevel2();
     if (currentLevel === 3) initLevel3();
     if (currentLevel === 4) initLevel4();
     if (currentLevel === 5) {
       playCelebrationFanfare(soundEnabled);
-      fireCelebrationFireworks(4000);
+      fireCelebrationFireworks(1600);
     }
-  }, [currentLevel]);
+    return clearGameTimeouts;
+  }, [currentLevel, clearGameTimeouts]);
 
   // Restart Adventure
   const restartAdventure = () => {
+    clearGameTimeouts();
     setClearedLevels([]);
-    setCurrentLevel(1);
+    setStampAnimationLevel(null);
+    clearingLevel.current = false;
+    if (currentLevel === 1) initLevel1();
+    else setCurrentLevel(1);
     speakText(`신나는 무지개 모험을 처음부터 다시 시작해요!`, soundEnabled);
   };
 
   return (
-    <div className="relative w-full max-w-3xl mx-auto flex flex-col items-center select-none overflow-hidden pb-8">
+    <div className="adventure-board relative w-full max-w-3xl mx-auto flex flex-col items-center select-none overflow-hidden pb-8">
       {/* Top Header & Stage Badges */}
       <div className="w-full bg-white/95 backdrop-blur-xs p-3.5 sm:p-4 rounded-[32px] border-3 border-amber-300 shadow-md mb-3 flex flex-col gap-2.5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <button
-              onClick={onGoHome}
-              className="p-2 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-full cursor-pointer transition-transform active:scale-95 border border-amber-300"
-              title="홈으로"
-            >
-              <Home className="w-5 h-5" />
-            </button>
+
             <h1 className="text-base sm:text-xl font-black text-[#4A3E3D] flex items-center gap-1.5">
               <span>🌈 {childName}의 무지개 스테이지 모험</span>
-              <Sparkles className="w-4 h-4 text-amber-500 animate-spin" />
+              <Sparkles className="w-4 h-4 text-amber-500" />
             </h1>
           </div>
 
@@ -354,12 +366,12 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
         </div>
 
         {/* 4 Stage Stepper Bar */}
-        <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+        <div className="stage-steps grid grid-cols-4 gap-1.5 sm:gap-2">
           {[
-            { lvl: 1, label: '동물소리', emoji: '🐶' },
-            { lvl: 2, label: '색깔분류', emoji: '🍎' },
-            { lvl: 3, label: '풍선팡팡', emoji: '🎈' },
-            { lvl: 4, label: '그림자', emoji: '🧩' },
+            { lvl: 1, label: '동물소리', game: 'sound_quiz' as const },
+            { lvl: 2, label: '색깔분류', game: 'counting_food' as const },
+            { lvl: 3, label: '풍선팡팡', game: 'balloon_pop' as const },
+            { lvl: 4, label: '그림자', game: 'shadow_quiz' as const },
           ].map((s) => {
             const isCleared = clearedLevels.includes(s.lvl);
             const isCurrent = currentLevel === s.lvl;
@@ -377,8 +389,8 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
                     : 'bg-gray-100/70 border-gray-200 text-gray-400 opacity-70'
                 }`}
               >
+                <div className="w-full mb-1"><GameArtwork gameId={s.game} /></div>
                 <div className="flex items-center gap-1">
-                  <span className="text-sm">{s.emoji}</span>
                   <span className="text-xs font-black">{s.lvl}단계</span>
                   {isCleared && <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />}
                 </div>
@@ -446,8 +458,10 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
             </button>
           </div>
 
+          {!soundEnabled && <div className="visual-prompt"><ToyArtwork emoji={l1Target.emoji} label="찾을 동물" /><span aria-hidden="true">→ ?</span></div>}
+
           {/* Large Animal Cards (Jumbo touch targets for 3~4 year olds) */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4 w-full max-w-xl my-2">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full max-w-xl my-2">
             {l1Options.map((opt) => (
               <motion.button
                 key={opt.id}
@@ -459,9 +473,9 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
                 transition={{ type: 'spring', stiffness: 350, damping: 15 }}
                 onClick={() => handleL1Select(opt)}
                 style={{ backgroundColor: opt.color }}
-                className="p-6 rounded-[32px] border-4 border-amber-300 shadow-md flex flex-col items-center justify-center gap-2 cursor-pointer touch-manipulation min-h-[140px]"
+                className="stage-animal-option p-2 sm:p-6 rounded-[24px] border-4 border-amber-300 shadow-md flex flex-col items-center justify-center gap-2 cursor-pointer touch-manipulation min-h-[140px]"
               >
-                <span className="text-6xl sm:text-7xl filter drop-shadow-sm select-none">{opt.emoji}</span>
+                <span className="text-6xl sm:text-7xl filter drop-shadow-sm select-none"><ToyArtwork emoji={opt.emoji} /></span>
                 <span className="text-xl sm:text-2xl font-black text-[#4A3E3D]">{opt.name}</span>
               </motion.button>
             ))}
@@ -495,7 +509,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
           </div>
 
           {/* Fruit Selection Deck */}
-          <div className="w-full max-w-md bg-white/80 p-3.5 rounded-3xl border-2 border-emerald-200 shadow-xs flex items-center justify-center gap-4 min-h-[100px]">
+          <div className="fruit-tray w-full max-w-md bg-white/80 p-3.5 rounded-3xl border-2 border-emerald-200 shadow-xs flex items-center justify-center gap-4 min-h-[100px]">
             {l2RemainingItems.length === 0 ? (
               <span className="text-sm font-black text-emerald-700 animate-pulse">
                 모든 과일을 다 넣었어요! 짝짝짝! 👏
@@ -504,7 +518,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
               l2RemainingItems.map((fruit) => {
                 const isSelected = l2SelectedFruit?.id === fruit.id;
                 return (
-                  <motion.div
+                  <motion.button
                     key={fruit.id}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
@@ -516,9 +530,9 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
                       isSelected ? 'ring-4 ring-amber-400 scale-105 border-amber-500' : 'border-gray-200'
                     }`}
                   >
-                    <span className="text-5xl sm:text-6xl drop-shadow-sm select-none">{fruit.emoji}</span>
+                    <span className="text-5xl sm:text-6xl drop-shadow-sm select-none"><ToyArtwork emoji={fruit.id === 'watermelon' ? 'watermelon-whole' : fruit.emoji} /></span>
                     <span className="text-xs font-black text-[#4A3E3D] mt-1">{fruit.name}</span>
-                  </motion.div>
+                  </motion.button>
                 );
               })
             )}
@@ -534,7 +548,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
               const isBouncing = l2BasketBounce === basket.colorId;
 
               return (
-                <motion.div
+                <motion.button
                   key={basket.colorId}
                   animate={{ scale: isBouncing ? [1, 1.15, 1] : 1 }}
                   whileHover={{ scale: 1.03 }}
@@ -548,11 +562,11 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
                     }
                   }}
                   style={{ backgroundColor: basket.bg, borderColor: basket.border }}
-                  className="p-4 sm:p-5 rounded-[32px] border-4 shadow-md flex flex-col items-center justify-center gap-1.5 cursor-pointer touch-manipulation min-h-[130px]"
+                  className="color-basket p-2 sm:p-5 rounded-[24px] border-3 shadow-md flex flex-col items-center justify-center gap-1.5 cursor-pointer touch-manipulation min-h-[130px]"
                 >
-                  <span className="text-4xl sm:text-5xl filter drop-shadow-sm">{basket.basketEmoji}</span>
+                  <BasketArtwork color={basket.border} />
                   <span className="text-xs sm:text-sm font-black text-[#4A3E3D]">{basket.label}</span>
-                </motion.div>
+                </motion.button>
               );
             })}
           </div>
@@ -587,22 +601,16 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
           {/* Floating Balloons */}
           <div className="absolute inset-0 z-10 overflow-hidden pointer-events-auto">
             {l3Balloons.map((b) => (
-              <motion.div
+              <motion.button
                 key={b.id}
-                initial={{ y: 460, x: `${b.x}%`, scale: 0.8 }}
-                animate={{
-                  y: -50,
-                  x: [`${b.x}%`, `${b.x + (Math.random() * 8 - 4)}%`, `${b.x}%`],
-                  scale: 1,
-                }}
-                transition={{
-                  y: { duration: 6, ease: 'linear', repeat: Infinity },
-                  x: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' },
-                }}
+                aria-label="풍선 터뜨리기"
+                initial={reducedMotion ? false : { y: 460, scale: 0.8 }}
+                animate={reducedMotion ? { y: 150 + (l3Balloons.indexOf(b) % 3) * 95, scale: 1 } : { y: -140, scale: 1 }}
+                transition={reducedMotion ? { duration: 0 } : { y: { duration: 9, delay: l3Balloons.indexOf(b) * 0.6, ease: 'linear', repeat: Infinity } }}
                 onClick={(e) => handleL3Pop(b.id, b.color, e)}
-                onTouchStart={(e) => handleL3Pop(b.id, b.color, e)}
                 whileTap={{ scale: 0.8 }}
                 style={{
+                  left: `calc(${Math.max(22, Math.min(78, b.x))}% - ${b.size / 2}px)`,
                   width: b.size,
                   height: b.size * 1.25,
                   background: `radial-gradient(circle at 35% 35%, #FFFFFF 0%, ${b.color} 50%, ${b.bg} 100%)`,
@@ -610,8 +618,8 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
                 className="absolute rounded-full cursor-pointer shadow-lg flex items-center justify-center border-2 border-white/60 active:scale-90 touch-manipulation"
               >
                 <div className="absolute top-2 left-3 w-3 h-5 bg-white/70 rounded-full blur-[1px] -rotate-12" />
-                <span className="text-3xl select-none">{b.emoji}</span>
-              </motion.div>
+                <span className="text-3xl select-none"><ToyArtwork emoji={b.emoji} /></span>
+              </motion.button>
             ))}
           </div>
 
@@ -653,7 +661,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
                 l4Solved ? 'filter-none' : 'filter brightness-0 contrast-200 opacity-80'
               }`}
             >
-              {l4Target.emoji}
+              <ToyArtwork emoji={l4Target.emoji} />
             </motion.span>
             {l4Solved && (
               <span className="text-base font-black text-purple-700 mt-2 animate-bounce">
@@ -672,7 +680,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
                 onClick={() => handleL4Match(opt)}
                 className="p-4 rounded-3xl bg-white border-3 border-purple-300 shadow-md flex flex-col items-center justify-center cursor-pointer active:scale-95 touch-manipulation min-h-[100px]"
               >
-                <span className="text-5xl sm:text-6xl drop-shadow-xs select-none">{opt.emoji}</span>
+                <span className="text-5xl sm:text-6xl drop-shadow-xs select-none"><ToyArtwork emoji={opt.emoji} /></span>
                 <span className="text-sm font-black text-[#4A3E3D] mt-1">{opt.name}</span>
               </motion.button>
             ))}
@@ -690,20 +698,20 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ type: 'spring', stiffness: 300, damping: 20 }}
           className="w-full bg-gradient-to-b from-[#FFF9C4] via-[#FFE082] to-[#FFCC80] rounded-[40px] border-4 border-amber-400 p-6 sm:p-8 shadow-2xl flex flex-col items-center text-center gap-5 relative overflow-hidden"
-          onClick={() => {
-            // Interactive party screen: tapping throws confetti!
-            playSparkleChime(soundEnabled);
-            fireConfetti();
-          }}
         >
           {/* Trophy Header */}
-          <motion.div
+          <motion.button
+            aria-label="트로피 축하하기"
+            onClick={() => {
+              playSparkleChime(soundEnabled);
+              fireConfetti();
+            }}
             animate={{ rotate: [0, -5, 5, 0], scale: [1, 1.05, 1] }}
             transition={{ duration: 2, repeat: Infinity }}
             className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-amber-400/30 border-4 border-amber-500 flex items-center justify-center shadow-lg"
           >
             <Trophy className="w-14 h-14 sm:w-16 sm:h-16 text-amber-600 drop-shadow-md" />
-          </motion.div>
+          </motion.button>
 
           <div>
             <h2 className="text-2xl sm:text-4xl font-black text-[#4A3E3D] mb-1">
@@ -737,12 +745,13 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
 
           {/* Interactive touch hint */}
           <div className="bg-white/80 py-2 px-5 rounded-full border-2 border-amber-300 text-xs sm:text-sm font-black text-amber-900 animate-pulse">
-            ✨ 화면을 콕콕 누르면 축하 폭죽이 팡팡 터져요! ✨
+            ✨ 트로피를 콕 누르면 축하 꽃가루가 날려요! ✨
           </div>
 
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-sm mt-2">
             <JellyButton
+              soundEnabled={soundEnabled}
               onClick={restartAdventure}
               variant="primary"
               size="lg"
@@ -751,6 +760,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
               <RotateCcw className="w-5 h-5 mr-1.5" /> 다시 모험하기
             </JellyButton>
             <JellyButton
+              soundEnabled={soundEnabled}
               onClick={onGoHome}
               variant="secondary"
               size="lg"

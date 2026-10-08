@@ -1,3 +1,4 @@
+import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { SHAPE_COLOR_ITEMS_BY_AGE } from '../../data/gameData';
@@ -38,21 +39,21 @@ const ShapeFigure: React.FC<{ shape: string; color: string; className?: string }
     case 'circle':
       return (
         <svg viewBox="0 0 100 100" className={className}>
-          <circle cx="50" cy="50" r="44" fill={color} stroke="#333" strokeWidth="4" />
+          <circle cx="50" cy="50" r="44" fill={color} stroke="#725e4b" strokeOpacity="0.55" strokeWidth="4" />
         </svg>
       );
     case '세모':
     case 'triangle':
       return (
         <svg viewBox="0 0 100 100" className={className}>
-          <polygon points="50,10 92,88 8,88" fill={color} stroke="#333" strokeWidth="4" strokeLinejoin="round" />
+          <polygon points="50,10 92,88 8,88" fill={color} stroke="#725e4b" strokeOpacity="0.55" strokeWidth="4" strokeLinejoin="round" />
         </svg>
       );
     case '네모':
     case 'square':
       return (
         <svg viewBox="0 0 100 100" className={className}>
-          <rect x="12" y="12" width="76" height="76" rx="8" fill={color} stroke="#333" strokeWidth="4" />
+          <rect x="12" y="12" width="76" height="76" rx="8" fill={color} stroke="#725e4b" strokeOpacity="0.55" strokeWidth="4" />
         </svg>
       );
     case '별':
@@ -62,7 +63,7 @@ const ShapeFigure: React.FC<{ shape: string; color: string; className?: string }
           <polygon
             points="50,8 62,36 92,36 68,54 77,82 50,65 23,82 32,54 8,36 38,36"
             fill={color}
-            stroke="#333"
+            stroke="#725e4b" strokeOpacity="0.55"
             strokeWidth="4"
             strokeLinejoin="round"
           />
@@ -75,7 +76,7 @@ const ShapeFigure: React.FC<{ shape: string; color: string; className?: string }
           <path
             d="M 50,86 C 25,60 10,40 10,25 C 10,12 20,8 32,8 C 42,8 48,15 50,22 C 52,15 58,8 68,8 C 80,8 90,12 90,25 C 90,40 75,60 50,86 Z"
             fill={color}
-            stroke="#333"
+            stroke="#725e4b" strokeOpacity="0.55"
             strokeWidth="4"
             strokeLinejoin="round"
           />
@@ -85,41 +86,41 @@ const ShapeFigure: React.FC<{ shape: string; color: string; className?: string }
     case 'diamond':
       return (
         <svg viewBox="0 0 100 100" className={className}>
-          <polygon points="50,10 88,50 50,90 12,50" fill={color} stroke="#333" strokeWidth="4" strokeLinejoin="round" />
+          <polygon points="50,10 88,50 50,90 12,50" fill={color} stroke="#725e4b" strokeOpacity="0.55" strokeWidth="4" strokeLinejoin="round" />
         </svg>
       );
     case '오각형':
     case 'pentagon':
       return (
         <svg viewBox="0 0 100 100" className={className}>
-          <polygon points="50,10 90,40 75,88 25,88 10,40" fill={color} stroke="#333" strokeWidth="4" strokeLinejoin="round" />
+          <polygon points="50,10 90,40 75,88 25,88 10,40" fill={color} stroke="#725e4b" strokeOpacity="0.55" strokeWidth="4" strokeLinejoin="round" />
         </svg>
       );
     case '타원':
     case 'oval':
       return (
         <svg viewBox="0 0 100 100" className={className}>
-          <ellipse cx="50" cy="50" rx="44" ry="30" fill={color} stroke="#333" strokeWidth="4" />
+          <ellipse cx="50" cy="50" rx="44" ry="30" fill={color} stroke="#725e4b" strokeOpacity="0.55" strokeWidth="4" />
         </svg>
       );
     case '육각형':
     case 'hexagon':
       return (
         <svg viewBox="0 0 100 100" className={className}>
-          <polygon points="50,10 88,30 88,70 50,90 12,70 12,30" fill={color} stroke="#333" strokeWidth="4" strokeLinejoin="round" />
+          <polygon points="50,10 88,30 88,70 50,90 12,70 12,30" fill={color} stroke="#725e4b" strokeOpacity="0.55" strokeWidth="4" strokeLinejoin="round" />
         </svg>
       );
     case '초승달':
     case 'crescent':
       return (
         <svg viewBox="0 0 100 100" className={className}>
-          <path d="M 50,10 A 40,40 0 1,0 90,50 A 30,30 0 1,1 50,10 Z" fill={color} stroke="#333" strokeWidth="4" />
+          <path d="M 50,10 A 40,40 0 1,0 90,50 A 30,30 0 1,1 50,10 Z" fill={color} stroke="#725e4b" strokeOpacity="0.55" strokeWidth="4" />
         </svg>
       );
     default:
       return (
         <svg viewBox="0 0 100 100" className={className}>
-          <circle cx="50" cy="50" r="40" fill={color} stroke="#333" strokeWidth="4" />
+          <circle cx="50" cy="50" r="40" fill={color} stroke="#725e4b" strokeOpacity="0.55" strokeWidth="4" />
         </svg>
       );
   }
@@ -131,6 +132,8 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
   ageGroup,
   childName,
 }) => {
+  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+
   const diffConfig = getDifficultyConfig(ageGroup);
   const itemPool = SHAPE_COLOR_ITEMS_BY_AGE[ageGroup] || SHAPE_COLOR_ITEMS_BY_AGE.sprout;
 
@@ -151,6 +154,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
   const gameTimerRef = useRef<number | null>(null);
 
   const generateRound = () => {
+    clearGameTimeouts();
     if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
@@ -173,7 +177,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
-      hintTimerRef.current = window.setTimeout(() => {
+      hintTimerRef.current = scheduleGameTimeout(() => {
         setShowHint(true);
         speakText(`여기 반짝이는 걸 눌러봐!`, soundEnabled, { characterId: 'rano', playIntroSFX: false });
       }, diffConfig.hintDelaySec * 1000);
@@ -219,7 +223,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
 
       if (nextStreak >= 2) {
         setShowComboBanner(true);
-        setTimeout(() => setShowComboBanner(false), 1500);
+        scheduleGameTimeout(() => setShowComboBanner(false), 1500);
         speakText(`크앙! ${nextStreak}연속 정답! ${item.colorName} ${item.shape}를 완벽하게 맞췄어요!`, soundEnabled, { characterId: 'rano' });
       } else {
         speakText(`크앙! 정답이에요! ${item.colorName} ${item.shape}!`, soundEnabled, { characterId: 'rano' });
@@ -231,14 +235,14 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
       setStreak(0);
       playWrongBoing(soundEnabled);
       speakText(`모양과 색깔을 다시 한번 잘 살펴보아요!`, soundEnabled, { characterId: 'rano' });
-      setTimeout(() => setShakingCardId(null), 600);
+      scheduleGameTimeout(() => setShakingCardId(null), 600);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[80vh] overflow-hidden">
+    <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
-      <div className="w-full bg-gradient-to-r from-[#DCEDC8] to-[#E8F5E9] p-3.5 sm:p-4 rounded-3xl border-3 border-[#66BB6A] shadow-sm flex items-center gap-3 sm:gap-4 relative">
+      <div className="game-prompt w-full bg-gradient-to-r from-[#DCEDC8] to-[#E8F5E9] p-3.5 sm:p-4 rounded-3xl border-3 border-[#66BB6A] shadow-sm flex items-center gap-3 sm:gap-4 relative">
         <CharacterAvatar id="rano" size="md" mood={selectedCorrectId ? 'excited' : 'waving'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#2E7D32] mb-1">
@@ -249,6 +253,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
           </h2>
         </div>
         <button
+          aria-label="놀이 안내 다시 듣기"
           onClick={() => speakText(`${targetItem.colorName} ${targetItem.shape}를 찾아보아요!`, soundEnabled, { characterId: 'rano' })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#66BB6A] shadow-xs text-[#2E7D32] cursor-pointer shrink-0"
         >
@@ -306,9 +311,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
       </div>
 
       {/* Options */}
-      <div className={`grid gap-3 sm:gap-4 w-full my-2 sm:my-3 ${
-        options.length === 2 ? 'grid-cols-2' : options.length === 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'
-      }`}>
+      <div className="game-choice-grid w-full my-3">
         {options.map((item) => {
           const isShaking = shakingCardId === item.id;
           const isSolved = selectedCorrectId === item.id;
@@ -316,7 +319,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
           const shouldPulse = showHint && isTarget && !selectedCorrectId;
 
           return (
-            <motion.div
+            <motion.button
               key={item.id}
               animate={
                 isShaking
@@ -329,7 +332,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
               }
               transition={{ duration: isShaking ? 0.5 : shouldPulse ? 1.2 : 0.5 }}
               onClick={() => handleSelectCard(item)}
-              className={`p-3 sm:p-4 rounded-2xl sm:rounded-3xl border-3 flex flex-col items-center justify-center cursor-pointer transition-all shadow-sm ${
+              className={`game-choice p-3 sm:p-4 rounded-2xl sm:rounded-3xl border-3 flex flex-col items-center justify-center cursor-pointer transition-all shadow-sm ${
                 isSolved
                   ? 'bg-emerald-50 border-emerald-400 ring-4 ring-emerald-300'
                   : shouldPulse
@@ -341,7 +344,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
               <span className="text-xs sm:text-sm font-black text-[#4A3E3D] text-center">
                 {item.colorName} {item.shape}
               </span>
-            </motion.div>
+            </motion.button>
           );
         })}
       </div>
@@ -349,11 +352,11 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
       {/* Actions */}
       <div className="flex items-center justify-center gap-3 w-full">
         {selectedCorrectId || timeOut ? (
-          <JellyButton variant="primary" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 모양 놀이 🦖
+          <JellyButton soundEnabled={soundEnabled} variant="primary" size="lg" onClick={generateRound} className="w-full sm:w-auto">
+            다음 모양 놀이 🦖 <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
-          <JellyButton variant="white" size="md" onClick={generateRound} className="!px-4">
+          <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">
             <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 다른 모양
           </JellyButton>
         )}

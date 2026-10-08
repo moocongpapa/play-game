@@ -1,3 +1,5 @@
+import { ToyArtwork } from '../../components/ToyArtwork';
+import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
@@ -22,6 +24,8 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
   ageGroup,
   childName,
 }) => {
+  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+
   const diffConfig = getDifficultyConfig(ageGroup);
   const itemPool = (OBJECT_ITEMS_BY_AGE[ageGroup] || OBJECT_ITEMS_BY_AGE.sprout) as QuizItem[];
 
@@ -33,6 +37,7 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
   const [showComboBanner, setShowComboBanner] = useState(false);
 
   const generateRound = () => {
+    clearGameTimeouts();
     setIsRevealed(false);
     setShakingCardId(null);
 
@@ -68,7 +73,7 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
 
       if (nextStreak >= 2) {
         setShowComboBanner(true);
-        setTimeout(() => setShowComboBanner(false), 1500);
+        scheduleGameTimeout(() => setShowComboBanner(false), 1500);
         speakText(`와우! ${nextStreak}연속 정답! 정답은 바로 귀여운 ${targetItem.koreanName}였어요!`, soundEnabled, { characterId: 'ggomi' });
       } else {
         speakText(`정답이에요! 그림자의 주인공은 ${targetItem.koreanName}였어요!`, soundEnabled, { characterId: 'ggomi' });
@@ -81,16 +86,16 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
       setStreak(0);
       playWrongBoing(soundEnabled);
       speakText(`그림자의 모양을 다시 한번 잘 살펴보아요!`, soundEnabled, { characterId: 'ggomi' });
-      setTimeout(() => setShakingCardId(null), 600);
+      scheduleGameTimeout(() => setShakingCardId(null), 600);
     }
   };
 
   if (!targetItem) return null;
 
   return (
-    <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[80vh] overflow-hidden">
+    <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
-      <div className="w-full bg-gradient-to-r from-[#F3E5F5] to-[#EDE7F6] p-3.5 sm:p-4 rounded-3xl border-3 border-[#BA68C8] shadow-sm flex items-center gap-3 sm:gap-4 relative">
+      <div className="game-prompt w-full bg-gradient-to-r from-[#F3E5F5] to-[#EDE7F6] p-3.5 sm:p-4 rounded-3xl border-3 border-[#BA68C8] shadow-sm flex items-center gap-3 sm:gap-4 relative">
         <CharacterAvatar id="ggomi" size="md" mood={isRevealed ? 'happy' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#8E24AA] mb-1">
@@ -101,6 +106,7 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
           </h2>
         </div>
         <button
+          aria-label="놀이 안내 다시 듣기"
           onClick={() => speakText(`그림자의 윤곽선을 보고 알맞은 친구를 골라보세요!`, soundEnabled, { characterId: 'ggomi' })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#BA68C8] shadow-xs text-[#8E24AA] cursor-pointer shrink-0"
         >
@@ -143,7 +149,7 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
                 : 'brightness-0 invert opacity-90 drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]'
             }`}
           >
-            {targetItem.emoji}
+            <ToyArtwork emoji={targetItem.emoji} />
           </span>
           {isRevealed && (
             <motion.span
@@ -170,13 +176,13 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
               whileTap={{ scale: 0.95 }}
               animate={isShaking ? { x: [-8, 8, -6, 6, 0] } : isTargetAndRevealed ? { scale: [1, 1.15, 1] } : {}}
               onClick={() => handleSelectOption(item)}
-              className={`p-3 sm:p-4 rounded-2xl sm:rounded-3xl border-3 flex flex-col items-center justify-center cursor-pointer transition-all shadow-sm ${
+              className={`game-choice p-3 sm:p-4 rounded-2xl sm:rounded-3xl border-3 flex flex-col items-center justify-center cursor-pointer transition-all shadow-sm ${
                 isTargetAndRevealed
                   ? 'bg-emerald-50 border-emerald-400 ring-4 ring-emerald-300'
                   : 'bg-white border-purple-200 hover:border-purple-400 hover:bg-purple-50/50'
               }`}
             >
-              <span className="text-4xl sm:text-5xl mb-1">{item.emoji}</span>
+              <span className="text-4xl sm:text-5xl mb-1"><ToyArtwork emoji={item.emoji} /></span>
               <span className="text-xs sm:text-base font-black text-[#4A3E3D]">{item.koreanName}</span>
             </motion.button>
           );
@@ -186,11 +192,11 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
       {/* Actions */}
       <div className="flex items-center justify-center gap-3 w-full">
         {isRevealed ? (
-          <JellyButton variant="primary" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            <Sparkles className="w-5 h-5 mr-1" /> 다음 그림자 찾기 👥
+          <JellyButton soundEnabled={soundEnabled} variant="primary" size="lg" onClick={generateRound} className="w-full sm:w-auto">
+            <Sparkles className="w-5 h-5 mr-1" /> 다음 그림자 찾기 👥 <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
-          <JellyButton variant="white" size="md" onClick={generateRound} className="!px-4">
+          <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">
             <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 다른 그림자
           </JellyButton>
         )}

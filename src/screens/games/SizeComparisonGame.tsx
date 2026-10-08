@@ -1,3 +1,5 @@
+import { ToyArtwork } from '../../components/ToyArtwork';
+import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
@@ -6,7 +8,7 @@ import { speakText, playCorrectFanfare, playWrongBoing, playBubblePop } from '..
 import { getDifficultyConfig, getAgeGroupLabel, pickRandom } from '../../utils/ageEngine';
 import { SIZE_ITEMS_BY_AGE } from '../../data/gameData';
 import { AgeGroup, SizeItem } from '../../types';
-import { Volume2, RefreshCw, Timer } from 'lucide-react';
+import { Maximize2, Minimize2, ArrowRight, Volume2, RefreshCw, Timer } from 'lucide-react';
 
 interface SizeComparisonGameProps {
   onCompleteQuiz: (starsEarned: number) => void;
@@ -21,6 +23,8 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
   ageGroup,
   childName,
 }) => {
+  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+
   const diffConfig = getDifficultyConfig(ageGroup);
   const itemPool = SIZE_ITEMS_BY_AGE[ageGroup] || SIZE_ITEMS_BY_AGE.sprout;
 
@@ -40,6 +44,7 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
   const gameTimerRef = useRef<number | null>(null);
 
   const generateRound = () => {
+    clearGameTimeouts();
     if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
@@ -80,7 +85,7 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
-      hintTimerRef.current = window.setTimeout(() => {
+      hintTimerRef.current = scheduleGameTimeout(() => {
         setShowHint(true);
         speakText(`여기 반짝이는 친구를 골라봐!`, soundEnabled, { characterId: 'ggulgguli', playIntroSFX: false });
       }, diffConfig.hintDelaySec * 1000);
@@ -151,7 +156,7 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
         setShakingIdx(index);
         playWrongBoing(soundEnabled);
         speakText(`더 커다란 친구가 있는 것 같아요!`, soundEnabled, { characterId: 'ggulgguli' });
-        setTimeout(() => setShakingIdx(null), 600);
+        scheduleGameTimeout(() => setShakingIdx(null), 600);
       }
     } else if (questionType === 'find_smallest') {
       const correctIdx = getSmallestIdx();
@@ -164,7 +169,7 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
         setShakingIdx(index);
         playWrongBoing(soundEnabled);
         speakText(`더 자그마한 친구를 골라보아요!`, soundEnabled, { characterId: 'ggulgguli' });
-        setTimeout(() => setShakingIdx(null), 600);
+        scheduleGameTimeout(() => setShakingIdx(null), 600);
       }
     } else {
       // sort_ascending (작은 것부터 순서대로 탭하는 모드)
@@ -195,7 +200,7 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
         setShakingIdx(index);
         playWrongBoing(soundEnabled);
         speakText(`더 작은 친구를 먼저 골라보아요!`, soundEnabled, { characterId: 'ggulgguli' });
-        setTimeout(() => setShakingIdx(null), 600);
+        scheduleGameTimeout(() => setShakingIdx(null), 600);
       }
     }
   };
@@ -219,9 +224,9 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
   if (targetItems.length === 0) return null;
 
   return (
-    <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[80vh] overflow-hidden">
+    <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
-      <div className="w-full bg-gradient-to-r from-[#FFCCBC] to-[#FBE9E7] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FF7043] shadow-sm flex items-center gap-3 sm:gap-4">
+      <div className="game-prompt w-full bg-gradient-to-r from-[#FFCCBC] to-[#FBE9E7] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FF7043] shadow-sm flex items-center gap-3 sm:gap-4">
         <CharacterAvatar id="ggulgguli" size="md" mood={isCompleted ? 'happy' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#F4511E] mb-1">
@@ -234,6 +239,7 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
           </h2>
         </div>
         <button
+          aria-label="놀이 안내 다시 듣기"
           onClick={() => {
             const msg = questionType === 'find_largest'
               ? '어떤 것이 가장 큰가요?'
@@ -271,8 +277,10 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
         </div>
       )}
 
+      <div className="visual-prompt" aria-hidden="true">{questionType === 'find_smallest' ? <Minimize2 size={36} /> : questionType === 'find_largest' ? <Maximize2 size={36} /> : <ArrowRight size={36} />}<ToyArtwork emoji={targetItems[0].emoji} /></div>
+
       {/* Playground items comparison area */}
-      <div className="my-6 p-4 sm:p-8 w-full bg-white rounded-3xl border-3 border-[#FFCCBC] shadow-inner flex items-center justify-around gap-2 min-h-[220px] relative overflow-hidden flex-wrap">
+      <div className="size-playground my-6 p-3 sm:p-8 w-full bg-white rounded-3xl border-3 border-[#FFCCBC] shadow-inner grid grid-cols-3 gap-2 min-h-[220px] relative">
         {targetItems.map((item, idx) => {
           const isShaking = shakingIdx === idx;
           const isSelectedInSort = selectedIndices.includes(idx);
@@ -280,23 +288,24 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
           const hasHint = isIndexHinted(idx);
 
           return (
-            <motion.div
+            <motion.button
               key={idx}
               animate={
                 isShaking
                   ? { x: [-8, 8, -6, 6, 0] }
                   : isCorrectAnswer || isSelectedInSort
-                  ? { scale: [item.displayScale, item.displayScale * 1.1, item.displayScale] }
+                  ? { scale: [1, 1.03, 1] }
                   : hasHint
-                  ? { scale: [item.displayScale, item.displayScale * 1.08, item.displayScale] }
-                  : { scale: item.displayScale }
+                  ? { scale: [1, 1.03, 1] }
+                  : { scale: 1 }
               }
               transition={{
                 duration: isShaking ? 0.5 : 1.2,
                 repeat: hasHint ? Infinity : 0,
               }}
+              aria-label={item.name}
               onClick={() => handleSelectCard(idx)}
-              className={`p-3 sm:p-5 rounded-2xl border-3 flex flex-col items-center justify-center cursor-pointer select-none transition-all shadow-xs w-28 sm:w-36 min-h-[120px] sm:min-h-[150px] ${
+              className={`game-choice p-3 sm:p-5 rounded-2xl border-3 flex flex-col items-center justify-center cursor-pointer select-none transition-all shadow-xs w-full min-h-[150px] sm:min-h-[190px] ${
                 isSelectedInSort || isCorrectAnswer
                   ? 'bg-emerald-50 border-emerald-400 opacity-60'
                   : hasHint
@@ -304,14 +313,14 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
                   : 'bg-slate-55 border-amber-100 hover:bg-[#FFF8EE]'
               }`}
             >
-              <span className="text-5xl sm:text-7xl mb-1 drop-shadow-xs">{item.emoji}</span>
+              <span className="size-toy" style={{ width: `${item.displayScale * 58}%` }}><ToyArtwork emoji={item.emoji} /></span>
               {/* 순서 표시 */}
               {isSelectedInSort && (
                 <span className="absolute top-2 left-2 bg-[#81C784] text-white w-6 h-6 rounded-full flex items-center justify-center font-black text-sm shadow-xs">
                   {selectedIndices.indexOf(idx) + 1}
                 </span>
               )}
-            </motion.div>
+            </motion.button>
           );
         })}
       </div>
@@ -319,11 +328,11 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
       {/* Actions */}
       <div className="flex items-center justify-center gap-3 w-full">
         {isCompleted || timeOut ? (
-          <JellyButton variant="primary" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 크기 놀이 🐷
+          <JellyButton soundEnabled={soundEnabled} variant="primary" size="lg" onClick={generateRound} className="w-full sm:w-auto">
+            다음 크기 놀이 🐷 <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
-          <JellyButton variant="white" size="md" onClick={generateRound} className="!px-4">
+          <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">
             <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 다른 문제
           </JellyButton>
         )}

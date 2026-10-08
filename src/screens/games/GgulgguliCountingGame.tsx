@@ -1,3 +1,5 @@
+import { ToyArtwork } from '../../components/ToyArtwork';
+import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { FOOD_COUNTING_ITEMS } from '../../data/gameData';
@@ -21,6 +23,8 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
   ageGroup,
   childName,
 }) => {
+  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+
   const diffConfig = getDifficultyConfig(ageGroup);
   const countsKorean = getKoreanCounts(ageGroup);
 
@@ -41,6 +45,7 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
   const gameTimerRef = useRef<number | null>(null);
 
   const generateRound = () => {
+    clearGameTimeouts();
     if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
@@ -79,7 +84,7 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
-      hintTimerRef.current = window.setTimeout(() => {
+      hintTimerRef.current = scheduleGameTimeout(() => {
         setShowHint(true);
         speakText(`여기 숫자를 눌러봐!`, soundEnabled, { characterId: 'ggulgguli', playIntroSFX: false });
       }, diffConfig.hintDelaySec * 1000);
@@ -136,14 +141,14 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
       setShakingNumber(num);
       playWrongBoing(soundEnabled);
       speakText(`다시 하나, 둘, 셋 세어보아요!`, soundEnabled, { characterId: 'ggulgguli' });
-      setTimeout(() => setShakingNumber(null), 600);
+      scheduleGameTimeout(() => setShakingNumber(null), 600);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[80vh] overflow-hidden">
+    <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
-      <div className="w-full bg-gradient-to-r from-[#FFCCBC] to-[#FBE9E7] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FF7043] shadow-sm flex items-center gap-3 sm:gap-4">
+      <div className="game-prompt w-full bg-gradient-to-r from-[#FFCCBC] to-[#FBE9E7] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FF7043] shadow-sm flex items-center gap-3 sm:gap-4">
         <CharacterAvatar id="ggulgguli" size="md" mood={selectedCorrectNumber ? 'happy' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#F4511E] mb-1">
@@ -154,6 +159,7 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
           </h2>
         </div>
         <button
+          aria-label="놀이 안내 다시 듣기"
           onClick={() => speakText(`${targetFood.name}가 몇 개 있는지 세어보아요!`, soundEnabled, { characterId: 'ggulgguli' })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#FF7043] shadow-xs text-[#F4511E] cursor-pointer shrink-0"
         >
@@ -195,16 +201,17 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
             const isTapped = tappedIndices.includes(idx);
 
             return (
-              <motion.div
+              <motion.button
                 key={idx}
                 whileTap={{ scale: 0.85 }}
+                aria-label={`${targetFood.name} ${idx + 1}번째 세기`}
                 onClick={() => handleTapFoodItem(idx)}
                 className={`w-14 h-14 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl flex items-center justify-center text-2xl sm:text-4xl cursor-pointer select-none shadow-md border-2 sm:border-3 transition-transform ${
                   isTapped ? 'bg-[#FFE0B2] border-[#FB8C00]' : 'bg-[#FFF8EE] border-[#FFCCBC]'
                 }`}
               >
-                {targetFood.emoji}
-              </motion.div>
+                <ToyArtwork emoji={targetFood.emoji} />
+              </motion.button>
             );
           })}
         </div>
@@ -231,7 +238,7 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
               }
               transition={{ duration: isShaking ? 0.5 : shouldPulse ? 1.0 : 0.2 }}
               onClick={() => handleSelectNumber(num)}
-              className={`w-12 h-12 sm:w-16 sm:h-16 rounded-2xl text-xl sm:text-3xl font-black flex items-center justify-center shadow-md border-b-4 transition-all cursor-pointer ${
+              className={`count-answer min-w-16 min-h-20 px-3 py-2 rounded-2xl text-xl sm:text-3xl font-black flex flex-col items-center justify-center shadow-md border-b-4 transition-all cursor-pointer ${
                 isCorrect
                   ? 'bg-[#81C784] text-white border-[#388E3C]'
                   : shouldPulse
@@ -239,7 +246,8 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
                   : 'bg-[#FF9E4A] text-white border-[#E07A26] hover:bg-[#FFA726]'
               }`}
             >
-              {num}
+              <span>{num}</span>
+              <span className="count-dots" aria-hidden="true">{Array.from({ length: num }, (_, i) => <i key={i} />)}</span>
             </motion.button>
           );
         })}
@@ -248,11 +256,11 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
       {/* Actions */}
       <div className="flex items-center justify-center gap-3 w-full mt-2 sm:mt-4">
         {selectedCorrectNumber || timeOut ? (
-          <JellyButton variant="primary" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 수 세기 🐷
+          <JellyButton soundEnabled={soundEnabled} variant="primary" size="lg" onClick={generateRound} className="w-full sm:w-auto">
+            다음 수 세기 🐷 <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
-          <JellyButton variant="white" size="md" onClick={generateRound} className="!px-4">
+          <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">
             <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 다른 음식
           </JellyButton>
         )}

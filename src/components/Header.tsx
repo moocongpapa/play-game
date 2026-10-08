@@ -45,24 +45,24 @@ export const Header: React.FC<HeaderProps> = ({
             : `${childName}의 놀이터`;
 
   return (
-    <header className="sticky top-0 z-30 w-full border-b border-[#e9e7e2] bg-white/95 backdrop-blur-md">
-      <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center justify-between gap-2 px-3 sm:px-6">
+    <header className="app-header sticky top-0 z-30 w-full">
+      <div className="mx-auto flex min-h-20 w-full max-w-7xl items-center justify-between gap-2 px-3 sm:px-6">
         <button
           onClick={onGoHome}
           aria-label="홈으로 가기"
-          className="flex min-h-11 min-w-0 items-center gap-2 rounded-xl px-2 text-left text-[#30343c] transition-colors hover:bg-[#f5f4f0]"
+          className="home-button"
         >
-          <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#eaf0e7] text-[#607861]"><Home className="size-5" /></span>
-          <span className="truncate text-base font-extrabold sm:text-lg">{pageLabel}</span>
+          <Home aria-hidden="true" className="home-button-icon" /><span>우리 집</span>
         </button>
 
+        <span className="header-page-label hidden min-w-0 truncate font-bold sm:block">{pageLabel}</span>
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <button
             onClick={onOpenStickerRoom}
             aria-label={`스티커북 열기, 별 ${stars}개`}
             className="flex min-h-11 items-center gap-1.5 rounded-full bg-[#f8f2df] px-3 font-extrabold text-[#755e3a] hover:bg-[#f3e8c7]"
           >
-            <Sparkles className="size-4" /><span>{stars}</span>
+            <Sparkles className="size-5" /><span>{stars}</span>
           </button>
           <button
             onClick={onToggleBGM}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import { CharacterId } from '../types';
 
 interface CharacterAvatarProps {
@@ -88,7 +88,8 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
     }
   };
 
-  const motionProps = getMotionVariant();
+  const reduceMotion = useReducedMotion();
+  const motionProps = reduceMotion ? {} : getMotionVariant();
 
   // Render vector character artwork based on character id
   const renderSVG = () => {
@@ -314,7 +315,7 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
     <motion.div
       {...motionProps}
       onClick={onClick}
-      className={`relative flex items-center justify-center cursor-pointer select-none ${getDimension()} ${className}`}
+      className={`relative flex items-center justify-center ${onClick ? 'cursor-pointer' : ''} select-none ${getDimension()} ${className}`}
     >
       {renderSVG()}
       {showBadge && (

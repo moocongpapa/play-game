@@ -1,3 +1,5 @@
+import { ToyArtwork } from '../../components/ToyArtwork';
+import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
@@ -21,6 +23,8 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
   ageGroup,
   childName,
 }) => {
+  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+
   const diffConfig = getDifficultyConfig(ageGroup);
   const itemPool = RHYTHM_ITEMS_BY_AGE[ageGroup] || RHYTHM_ITEMS_BY_AGE.sprout;
 
@@ -35,13 +39,19 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
   const [timeOut, setTimeOut] = useState(false);
   const gameTimerRef = useRef<number | null>(null);
 
+  const soundRef = useRef(soundEnabled);
+  soundRef.current = soundEnabled;
+  useEffect(() => {
+    if (!soundEnabled) void audioCtxRef.current?.suspend();
+  }, [soundEnabled]);
+
   // Web Audio Context 간이 생성
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   const playTone = (frequency: number, duration = 0.4) => {
-    if (!soundEnabled) return;
+    if (!soundRef.current) return;
     try {
-      if (!audioCtxRef.current) {
+      if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
         const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
         audioCtxRef.current = new AudioContextClass();
       }
@@ -71,26 +81,28 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
     }
   };
 
+  const sequenceRef = useRef(0);
   const playSequence = async (item: RhythmItem) => {
+    const sequence = ++sequenceRef.current;
     setIsPlayingSequence(true);
     setUserSequence([]);
     
     // 리듬 소리가 연주되기 전 가이드
     speakText(`도치의 연주 리듬을 귀기울여 잘 들어보아요!`, soundEnabled, { characterId: 'dochi', playIntroSFX: false });
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 1500));
 
     for (let i = 0; i < item.notes.length; i++) {
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current || sequence !== sequenceRef.current) return;
       const note = item.notes[i];
       setActiveButtonIdx(i);
       playTone(note, 0.4);
-      await new Promise((resolve) => setTimeout(resolve, 600));
-      if (!isMountedRef.current) return;
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 600));
+      if (!isMountedRef.current || sequence !== sequenceRef.current) return;
       setActiveButtonIdx(null);
-      await new Promise((resolve) => setTimeout(resolve, 150));
+      await new Promise<void>((resolve) => window.setTimeout(resolve, 150));
     }
     
-    if (!isMountedRef.current) return;
+    if (!isMountedRef.current || sequence !== sequenceRef.current) return;
     setIsPlayingSequence(false);
     speakText(`이제 똑같이 톡톡 터치해볼까요?`, soundEnabled, { characterId: 'dochi', playIntroSFX: false });
   };
@@ -101,6 +113,7 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
+      sequenceRef.current += 1;
       if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
         try {
           audioCtxRef.current.close();
@@ -112,6 +125,7 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
   }, []);
 
   const generateRound = () => {
+    clearGameTimeouts();
     if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
     setIsCompleted(false);
@@ -176,7 +190,7 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
       playWrongBoing(soundEnabled);
       speakText(`에구구, 리듬이 달라졌어요! 도치의 연주를 다시 듣고 따라해보아요!`, soundEnabled, { characterId: 'dochi' });
       setUserSequence([]);
-      setTimeout(() => {
+      scheduleGameTimeout(() => {
         playSequence(targetItem);
       }, 1800);
     }
@@ -185,9 +199,9 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
   if (!targetItem) return null;
 
   return (
-    <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[80vh] overflow-hidden">
+    <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
-      <div className="w-full bg-gradient-to-r from-[#FFE0B2] to-[#FFF3E0] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FFA726] shadow-sm flex items-center gap-3 sm:gap-4">
+      <div className="game-prompt w-full bg-gradient-to-r from-[#FFE0B2] to-[#FFF3E0] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FFA726] shadow-sm flex items-center gap-3 sm:gap-4">
         <CharacterAvatar id="dochi" size="md" mood={isCompleted ? 'excited' : 'happy'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#E65100] mb-1">
@@ -198,6 +212,7 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
           </h2>
         </div>
         <button
+          aria-label="놀이 안내 다시 듣기"
           onClick={() => playSequence(targetItem)}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#FFA726] shadow-xs text-[#E65100] cursor-pointer shrink-0"
           title="소리 리듬 다시 듣기"
@@ -253,13 +268,15 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
             <motion.button
               key={index}
               animate={isActive ? { scale: 1.25, filter: 'brightness(1.2)' } : { scale: 1 }}
+              aria-label={`${index + 1}번 악기`}
+              disabled={isPlayingSequence || isCompleted || timeOut}
               onClick={() => handleTapButton(note, index)}
               style={{ backgroundColor: color }}
-              className={`w-18 h-18 sm:w-24 sm:h-24 rounded-full flex flex-col items-center justify-center text-4xl sm:text-5xl shadow-lg border-4 transition-all cursor-pointer ${
+              className={`rhythm-key w-18 h-18 sm:w-24 sm:h-24 rounded-full flex flex-col items-center justify-center text-4xl sm:text-5xl shadow-lg border-4 transition-all cursor-pointer ${
                 isActive ? 'border-white ring-4 ring-amber-400' : 'border-slate-100'
               } ${isTapped ? 'opacity-50' : 'opacity-100'} ${isPlayingSequence ? 'cursor-wait' : ''}`}
             >
-              <span>{emoji}</span>
+              <span><ToyArtwork emoji={emoji} /></span>
             </motion.button>
           );
         })}
@@ -268,11 +285,11 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
       {/* Actions */}
       <div className="flex items-center justify-center gap-3 w-full">
         {isCompleted || timeOut ? (
-          <JellyButton variant="primary" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 리듬 놀이 🦔
+          <JellyButton soundEnabled={soundEnabled} variant="primary" size="lg" onClick={generateRound} className="w-full sm:w-auto">
+            다음 리듬 놀이 🦔 <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
-          <JellyButton variant="white" size="md" onClick={() => playSequence(targetItem)} className="!px-4">
+          <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={() => playSequence(targetItem)} className="!px-4">
             <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 리듬 다시 듣기
           </JellyButton>
         )}

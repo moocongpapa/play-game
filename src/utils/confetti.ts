@@ -5,6 +5,7 @@ import confetti from 'canvas-confetti';
  */
 export function fireConfetti() {
   confetti({
+    disableForReducedMotion: true,
     particleCount: 70,
     spread: 80,
     origin: { y: 0.65 },
@@ -17,6 +18,7 @@ export function fireConfetti() {
  */
 export function fireStarExplosion(origin?: { x: number; y: number }) {
   confetti({
+    disableForReducedMotion: true,
     particleCount: 45,
     spread: 360,
     startVelocity: 25,
@@ -35,6 +37,7 @@ export function fireBalloonPopParticle(screenX: number, screenY: number, color =
   const normY = Math.max(0, Math.min(1, screenY / window.innerHeight));
 
   confetti({
+    disableForReducedMotion: true,
     particleCount: 30,
     spread: 360,
     startVelocity: 18,
@@ -42,19 +45,22 @@ export function fireBalloonPopParticle(screenX: number, screenY: number, color =
     origin: { x: normX, y: normY },
     colors: [color, '#FFFFFF', '#FFF9DB'],
     scalar: 0.9,
-    disableForReducedMotion: true,
   });
 }
 
 /**
  * Grand Celebration Fireworks for Stage Clear & Final Trophy Party
  */
-export function fireCelebrationFireworks(durationMs = 3000) {
+export function fireCelebrationFireworks(durationMs = 1800) {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const generation = celebrationGeneration;
   const end = Date.now() + durationMs;
   const colors = ['#FF6B8B', '#FFD15C', '#4ADE80', '#60A5FA', '#BA68C8', '#FF8A65'];
 
   const frame = () => {
+    if (generation !== celebrationGeneration) return;
     confetti({
+      disableForReducedMotion: true,
       particleCount: 4,
       angle: 60,
       spread: 55,
@@ -62,6 +68,7 @@ export function fireCelebrationFireworks(durationMs = 3000) {
       colors,
     });
     confetti({
+      disableForReducedMotion: true,
       particleCount: 4,
       angle: 120,
       spread: 55,
@@ -74,4 +81,10 @@ export function fireCelebrationFireworks(durationMs = 3000) {
     }
   };
   frame();
+}
+
+let celebrationGeneration = 0;
+export function stopCelebrations() {
+  celebrationGeneration += 1;
+  confetti.reset();
 }

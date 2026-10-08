@@ -1,3 +1,5 @@
+import { ToyArtwork } from '../../components/ToyArtwork';
+import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
@@ -21,6 +23,8 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
   ageGroup,
   childName,
 }) => {
+  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+
   const diffConfig = getDifficultyConfig(ageGroup);
   const itemPool = EMOTION_ITEMS_BY_AGE[ageGroup] || EMOTION_ITEMS_BY_AGE.sprout;
 
@@ -39,6 +43,7 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
   const gameTimerRef = useRef<number | null>(null);
 
   const generateRound = () => {
+    clearGameTimeouts();
     if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
@@ -62,7 +67,7 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
-      hintTimerRef.current = window.setTimeout(() => {
+      hintTimerRef.current = scheduleGameTimeout(() => {
         setShowHint(true);
         speakText(`여기 반짝이는 걸 눌러봐!`, soundEnabled, { characterId: 'ggomi', playIntroSFX: false });
       }, diffConfig.hintDelaySec * 1000);
@@ -107,16 +112,16 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
       setShakingCardId(item.id);
       playWrongBoing(soundEnabled);
       speakText(`다시 표정을 관찰해 볼까요?`, soundEnabled, { characterId: 'ggomi' });
-      setTimeout(() => setShakingCardId(null), 600);
+      scheduleGameTimeout(() => setShakingCardId(null), 600);
     }
   };
 
   if (!targetItem) return null;
 
   return (
-    <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[80vh] overflow-hidden">
+    <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
-      <div className="w-full bg-gradient-to-r from-[#FFB7D5] to-[#FFE4EC] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FF80AB] shadow-sm flex items-center gap-3 sm:gap-4">
+      <div className="game-prompt w-full bg-gradient-to-r from-[#FFB7D5] to-[#FFE4EC] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FF80AB] shadow-sm flex items-center gap-3 sm:gap-4">
         <CharacterAvatar id="ggomi" size="md" mood={selectedCorrectId ? 'dancing' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#FF4081] mb-1">
@@ -127,6 +132,7 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
           </h2>
         </div>
         <button
+          aria-label="놀이 안내 다시 듣기"
           onClick={() => speakText(`친구들의 얼굴을 보고 ${targetItem.name} 표정을 골라보세요!`, soundEnabled, { characterId: 'ggomi' })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#FF80AB] shadow-xs text-[#FF4081] cursor-pointer shrink-0"
         >
@@ -157,15 +163,13 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
           transition={{ duration: 1.0, repeat: selectedCorrectId ? Infinity : 0 }}
           className="text-6xl sm:text-8xl drop-shadow-md"
         >
-          {selectedCorrectId ? targetItem.emoji : '❓'}
+          <ToyArtwork emoji={targetItem.emoji} />
         </motion.span>
         <span className="text-xs font-bold text-[#8C7B79] mt-2 block">친구들의 감정을 맞춰요</span>
       </div>
 
       {/* Options Grid */}
-      <div className={`grid gap-3 sm:gap-4 w-full my-3 sm:my-4 ${
-        options.length === 2 ? 'grid-cols-2' : 'grid-cols-1 sm:grid-cols-3'
-      }`}>
+      <div className="game-choice-grid w-full my-3">
         {options.map((item) => {
           const isShaking = shakingCardId === item.id;
           const isSolved = selectedCorrectId === item.id;
@@ -173,7 +177,7 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
           const shouldPulse = showHint && isTarget && !selectedCorrectId;
 
           return (
-            <motion.div
+            <motion.button
               key={item.id}
               animate={
                 isShaking
@@ -186,7 +190,7 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
               }
               transition={{ duration: isShaking ? 0.5 : shouldPulse ? 1.0 : 0.5 }}
               onClick={() => handleSelectCard(item)}
-              className={`flex flex-col items-center justify-center p-3 sm:p-5 rounded-3xl border-3 sm:border-4 cursor-pointer select-none transition-all shadow-md touch-manipulation min-h-[130px] sm:min-h-[160px] ${
+              className={`game-choice flex flex-col items-center justify-center p-3 sm:p-5 rounded-3xl border-3 sm:border-4 cursor-pointer select-none transition-all shadow-md touch-manipulation min-h-[130px] sm:min-h-[160px] ${
                 isSolved
                   ? 'bg-[#E8F5E9] border-[#81C784]'
                   : shouldPulse
@@ -194,9 +198,9 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
                   : 'bg-white hover:bg-[#FFF5F8] border-[#FFB7D5]'
               }`}
             >
-              <span className="text-5xl sm:text-6xl mb-1 sm:mb-2">{item.emoji}</span>
+              <span className="text-5xl sm:text-6xl mb-1 sm:mb-2"><ToyArtwork emoji={item.emoji} /></span>
               <span className="text-lg sm:text-xl font-black text-[#4A3E3D]">{item.name}</span>
-            </motion.div>
+            </motion.button>
           );
         })}
       </div>
@@ -204,11 +208,11 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
       {/* Actions */}
       <div className="flex items-center justify-center gap-3 w-full">
         {selectedCorrectId || timeOut ? (
-          <JellyButton variant="pink" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 감정 맞히기 🎀
+          <JellyButton soundEnabled={soundEnabled} variant="pink" size="lg" onClick={generateRound} className="w-full sm:w-auto">
+            다음 감정 맞히기 🎀 <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
-          <JellyButton variant="white" size="md" onClick={generateRound} className="!px-4">
+          <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">
             <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 다른 문제
           </JellyButton>
         )}

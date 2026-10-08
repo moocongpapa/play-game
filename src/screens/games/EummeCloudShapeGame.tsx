@@ -1,3 +1,5 @@
+import { ToyArtwork } from '../../components/ToyArtwork';
+import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
@@ -21,6 +23,8 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
   ageGroup,
   childName,
 }) => {
+  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+
   const diffConfig = getDifficultyConfig(ageGroup);
   const itemPool = CLOUD_SHAPES_BY_AGE[ageGroup] || CLOUD_SHAPES_BY_AGE.sprout;
 
@@ -39,6 +43,7 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
   const gameTimerRef = useRef<number | null>(null);
 
   const generateRound = () => {
+    clearGameTimeouts();
     if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
@@ -62,7 +67,7 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
-      hintTimerRef.current = window.setTimeout(() => {
+      hintTimerRef.current = scheduleGameTimeout(() => {
         setShowHint(true);
         speakText(`여기 흔들리는 구름을 눌러봐!`, soundEnabled, { characterId: 'eumme', playIntroSFX: false });
       }, diffConfig.hintDelaySec * 1000);
@@ -108,16 +113,16 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
       setShakingCloudId(cloud.id);
       playWrongBoing(soundEnabled);
       speakText(`다시 폭신폭신 구름을 모아보아요!`, soundEnabled, { characterId: 'eumme' });
-      setTimeout(() => setShakingCloudId(null), 600);
+      scheduleGameTimeout(() => setShakingCloudId(null), 600);
     }
   };
 
   if (!targetCloud) return null;
 
   return (
-    <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[80vh] overflow-hidden">
+    <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
-      <div className="w-full bg-gradient-to-r from-[#BBDEFB] to-[#E3F2FD] p-3.5 sm:p-4 rounded-3xl border-3 border-[#42A5F5] shadow-sm flex items-center gap-3 sm:gap-4">
+      <div className="game-prompt w-full bg-gradient-to-r from-[#BBDEFB] to-[#E3F2FD] p-3.5 sm:p-4 rounded-3xl border-3 border-[#42A5F5] shadow-sm flex items-center gap-3 sm:gap-4">
         <CharacterAvatar id="eumme" size="md" mood={selectedCorrectId ? 'dancing' : 'happy'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#1E88E5] mb-1">
@@ -128,6 +133,7 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
           </h2>
         </div>
         <button
+          aria-label="놀이 안내 다시 듣기"
           onClick={() => speakText(`${targetCloud.name}을 구름 속에서 찾아주세요!`, soundEnabled, { characterId: 'eumme' })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#42A5F5] shadow-xs text-[#1E88E5] cursor-pointer shrink-0"
         >
@@ -158,6 +164,8 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
         </div>
       )}
 
+      <div className="visual-prompt" aria-label="이 그림을 찾아요"><ToyArtwork emoji={targetCloud.emoji} label="찾을 그림" /><span aria-hidden="true">→</span><span className="text-3xl">?</span></div>
+
       {/* Fluffy Sky Playground */}
       <div className={`relative w-full h-[280px] sm:h-[320px] my-3 sm:my-4 bg-gradient-to-b from-[#E3F2FD] to-[#E1F5FE] rounded-3xl border-3 sm:border-4 border-dashed border-[#90CAF9] overflow-hidden p-2.5 sm:p-4 gap-2 ${
         clouds.length === 2 ? 'grid grid-cols-2 place-items-center' : 'grid grid-cols-2 place-items-center sm:flex sm:items-center sm:justify-around'
@@ -169,7 +177,7 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
           const shouldPulse = showHint && isTarget && !selectedCorrectId;
 
           return (
-            <motion.div
+            <motion.button
               key={cloud.id}
               animate={
                 isShaking
@@ -186,7 +194,7 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
                 ease: 'easeInOut',
               }}
               onClick={() => handleSelectCloud(cloud)}
-              className={`relative px-2 sm:px-6 py-4 sm:py-8 rounded-2xl sm:rounded-[40px] flex flex-col items-center justify-center cursor-pointer select-none shadow-md border-3 sm:border-4 touch-manipulation transition-all min-h-[120px] sm:min-h-[160px] min-w-[100px] sm:min-w-[140px] ${
+              className={`game-choice relative px-2 sm:px-6 py-4 sm:py-8 rounded-2xl sm:rounded-[40px] flex flex-col items-center justify-center cursor-pointer select-none shadow-md border-3 sm:border-4 touch-manipulation transition-all min-h-[120px] sm:min-h-[160px] min-w-[100px] sm:min-w-[140px] ${
                 isSolved
                   ? 'bg-white border-[#81C784]'
                   : shouldPulse
@@ -194,9 +202,9 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
                   : 'bg-white/90 hover:bg-white border-[#90CAF9]'
               }`}
             >
-              <span className="text-4xl sm:text-6xl mb-1">{cloud.emoji}</span>
+              <span className="text-4xl sm:text-6xl mb-1"><ToyArtwork emoji={cloud.emoji} /></span>
               <span className="text-xs sm:text-xl font-black text-[#4A3E3D] text-center whitespace-nowrap">{cloud.name}</span>
-            </motion.div>
+            </motion.button>
           );
         })}
       </div>
@@ -204,11 +212,11 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
       {/* Actions */}
       <div className="flex items-center justify-center gap-3 w-full">
         {selectedCorrectId || timeOut ? (
-          <JellyButton variant="blue" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 구름 모으기 🐑
+          <JellyButton soundEnabled={soundEnabled} variant="blue" size="lg" onClick={generateRound} className="w-full sm:w-auto">
+            다음 구름 모으기 🐑 <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
-          <JellyButton variant="white" size="md" onClick={generateRound} className="!px-4">
+          <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">
             <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 다른 구름
           </JellyButton>
         )}

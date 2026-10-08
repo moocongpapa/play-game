@@ -1,3 +1,5 @@
+import { ToyArtwork } from '../../components/ToyArtwork';
+import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
@@ -40,6 +42,8 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
   ageGroup,
   childName,
 }) => {
+  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+
   const diffConfig = getDifficultyConfig(ageGroup);
   
   // Pair count based on age: baby: 2 pairs (4 cards), sprout: 3 pairs (6 cards), bloom/star: 4 pairs (8 cards)
@@ -53,6 +57,7 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
   const [showComboBanner, setShowComboBanner] = useState(false);
 
   const startNewGame = () => {
+    clearGameTimeouts();
     setIsCompleted(false);
     setFlippedIndices([]);
     setIsChecking(true); // lock during initial reveal
@@ -92,7 +97,7 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
     }
 
     // Hide cards after 2.5 seconds
-    setTimeout(() => {
+    scheduleGameTimeout(() => {
       setCards((prev) => prev.map((c) => ({ ...c, isFlipped: false })));
       setIsChecking(false);
       if (soundEnabled) {
@@ -128,7 +133,7 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
 
       if (firstCard.pairId === secondCard.pairId) {
         // MATCH!
-        setTimeout(() => {
+        scheduleGameTimeout(() => {
           firstCard.isMatched = true;
           secondCard.isMatched = true;
           setCards([...updatedCards]);
@@ -141,7 +146,7 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
 
           if (newStreak >= 2) {
             setShowComboBanner(true);
-            setTimeout(() => setShowComboBanner(false), 1500);
+            scheduleGameTimeout(() => setShowComboBanner(false), 1500);
             speakText(`우와! 연속 짝 맞추기 대성공! ${firstCard.name} 짝을 찾았어요!`, soundEnabled, { characterId: 'nurungji' });
           } else {
             speakText(`정답이에요! 똑같은 ${firstCard.name} 친구예요!`, soundEnabled, { characterId: 'nurungji' });
@@ -158,7 +163,7 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
         }, 500);
       } else {
         // NO MATCH
-        setTimeout(() => {
+        scheduleGameTimeout(() => {
           firstCard.isFlipped = false;
           secondCard.isFlipped = false;
           setCards([...updatedCards]);
@@ -175,9 +180,9 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
   if (cards.length === 0) return null;
 
   return (
-    <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[80vh] overflow-hidden">
+    <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
-      <div className="w-full bg-gradient-to-r from-[#FFE0B2] to-[#FFF3E0] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FFA726] shadow-sm flex items-center gap-3 sm:gap-4 relative">
+      <div className="game-prompt w-full bg-gradient-to-r from-[#FFE0B2] to-[#FFF3E0] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FFA726] shadow-sm flex items-center gap-3 sm:gap-4 relative">
         <CharacterAvatar id="nurungji" size="md" mood={isCompleted ? 'happy' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#E65100] mb-1">
@@ -188,6 +193,7 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
           </h2>
         </div>
         <button
+          aria-label="놀이 안내 다시 듣기"
           onClick={() => speakText(`똑같은 그림 카드를 두 개 골라 짝을 맞춰보세요!`, soundEnabled, { characterId: 'nurungji' })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#FFA726] shadow-xs text-[#FB8C00] cursor-pointer shrink-0"
         >
@@ -217,12 +223,14 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
             const isOpen = card.isFlipped || card.isMatched;
 
             return (
-              <motion.div
+              <motion.button
                 key={card.id}
+                aria-label={isOpen ? card.name : `${idx + 1}번 카드 뒤집기`}
+                disabled={isChecking || card.isMatched || card.isFlipped}
                 whileHover={{ scale: card.isMatched ? 1 : 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => handleCardClick(idx)}
-                className={`aspect-square rounded-2xl sm:rounded-3xl border-3 flex flex-col items-center justify-center cursor-pointer select-none transition-all duration-300 shadow-sm relative ${
+                className={`game-choice aspect-square rounded-2xl sm:rounded-3xl border-3 flex flex-col items-center justify-center cursor-pointer select-none transition-all duration-300 shadow-sm relative ${
                   card.isMatched
                     ? 'bg-emerald-50 border-emerald-400 opacity-60'
                     : isOpen
@@ -236,7 +244,7 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
                     animate={{ rotateY: 0 }}
                     className="flex flex-col items-center justify-center text-center"
                   >
-                    <span className="text-4xl sm:text-5xl mb-0.5">{card.emoji}</span>
+                    <span className="text-4xl sm:text-5xl mb-0.5"><ToyArtwork emoji={card.emoji} /></span>
                     <span className="text-[10px] sm:text-xs font-black text-[#4A3E3D]">{card.name}</span>
                   </motion.div>
                 ) : (
@@ -252,7 +260,7 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
                 {card.isMatched && (
                   <span className="absolute top-1 right-1 text-emerald-500 text-xs sm:text-sm font-black">✓</span>
                 )}
-              </motion.div>
+              </motion.button>
             );
           })}
         </div>
@@ -261,11 +269,11 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
       {/* Actions */}
       <div className="flex items-center justify-center gap-3 w-full">
         {isCompleted ? (
-          <JellyButton variant="primary" size="lg" onClick={startNewGame} className="w-full sm:w-auto">
-            <Sparkles className="w-5 h-5 mr-1" /> 다음 카드 놀이하기 🐶
+          <JellyButton soundEnabled={soundEnabled} variant="primary" size="lg" onClick={startNewGame} className="w-full sm:w-auto">
+            <Sparkles className="w-5 h-5 mr-1" /> 다음 카드 놀이하기 🐶 <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
-          <JellyButton variant="white" size="md" onClick={startNewGame} className="!px-4">
+          <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={startNewGame} className="!px-4">
             <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 카드 다시 섞기
           </JellyButton>
         )}

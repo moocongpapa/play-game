@@ -1,40 +1,41 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { AppState, CharacterId, GameId, ChildProfile } from './types';
+import { CharacterAvatar } from './components/CharacterAvatar';
 import { Header } from './components/Header';
 import { ConfettiEffect } from './components/ConfettiEffect';
 import { ParentalGateModal } from './components/ParentalGateModal';
+import { stopCelebrations } from './utils/confetti';
+import { GameStage } from './components/GameStage';
+import { useGameTimeouts } from './hooks/useGameTimeouts';
 import { HomeScreen } from './screens/HomeScreen';
-import { CharacterTalkScreen } from './screens/CharacterTalkScreen';
-import { StickerRoomScreen } from './screens/StickerRoomScreen';
-import { ParentDashboard } from './screens/ParentDashboard';
 import { SplashLoader } from './components/SplashLoader';
 import { OnboardingScreen } from './screens/OnboardingScreen';
-import { SketchbookScreen } from './screens/SketchbookScreen';
 
-// Mini Games (기존 7종)
-import { GgomiObjectGame } from './screens/games/GgomiObjectGame';
-import { RanoShapeColorGame } from './screens/games/RanoShapeColorGame';
-import { JellyKoreanGame } from './screens/games/JellyKoreanGame';
-import { DochiSoundGame } from './screens/games/DochiSoundGame';
-import { GgulgguliCountingGame } from './screens/games/GgulgguliCountingGame';
-import { EummeCloudShapeGame } from './screens/games/EummeCloudShapeGame';
-import { NurungjiTreasureGame } from './screens/games/NurungjiTreasureGame';
-
-// New Mini Games (신규 5종)
-import { EmotionQuizGame } from './screens/games/EmotionQuizGame';
-import { PatternSequenceGame } from './screens/games/PatternSequenceGame';
-import { WordPuzzleGame } from './screens/games/WordPuzzleGame';
-import { RhythmGame } from './screens/games/RhythmGame';
-import { SizeComparisonGame } from './screens/games/SizeComparisonGame';
-import { MemoryCardGame } from './screens/games/MemoryCardGame';
-import { ShadowQuizGame } from './screens/games/ShadowQuizGame';
-import { BalloonPopGame } from './screens/games/BalloonPopGame';
-import { RainbowStageAdventure } from './screens/RainbowStageAdventure';
-
-import { startBGM, stopBGM, setBGMVolume, playStarGain, speakText, stopAllSpeech } from './utils/soundEngine';
+import { startBGM, stopBGM, setBGMVolume, playStarGain, speakText, stopAllSpeech, setAudioPreferences } from './utils/soundEngine';
 import { Moon, Shield } from 'lucide-react';
-import { createChildProfile, DEFAULT_CHILD_PROFILE } from './utils/ageEngine';
+import { createChildProfile } from './utils/ageEngine';
 import { ErrorBoundary } from './components/ErrorBoundary';
+
+const CharacterTalkScreen = lazy(() => import('./screens/CharacterTalkScreen').then(module => ({ default: module.CharacterTalkScreen })));
+const StickerRoomScreen = lazy(() => import('./screens/StickerRoomScreen').then(module => ({ default: module.StickerRoomScreen })));
+const ParentDashboard = lazy(() => import('./screens/ParentDashboard').then(module => ({ default: module.ParentDashboard })));
+const SketchbookScreen = lazy(() => import('./screens/SketchbookScreen').then(module => ({ default: module.SketchbookScreen })));
+const GgomiObjectGame = lazy(() => import('./screens/games/GgomiObjectGame').then(module => ({ default: module.GgomiObjectGame })));
+const RanoShapeColorGame = lazy(() => import('./screens/games/RanoShapeColorGame').then(module => ({ default: module.RanoShapeColorGame })));
+const JellyKoreanGame = lazy(() => import('./screens/games/JellyKoreanGame').then(module => ({ default: module.JellyKoreanGame })));
+const DochiSoundGame = lazy(() => import('./screens/games/DochiSoundGame').then(module => ({ default: module.DochiSoundGame })));
+const GgulgguliCountingGame = lazy(() => import('./screens/games/GgulgguliCountingGame').then(module => ({ default: module.GgulgguliCountingGame })));
+const EummeCloudShapeGame = lazy(() => import('./screens/games/EummeCloudShapeGame').then(module => ({ default: module.EummeCloudShapeGame })));
+const NurungjiTreasureGame = lazy(() => import('./screens/games/NurungjiTreasureGame').then(module => ({ default: module.NurungjiTreasureGame })));
+const EmotionQuizGame = lazy(() => import('./screens/games/EmotionQuizGame').then(module => ({ default: module.EmotionQuizGame })));
+const PatternSequenceGame = lazy(() => import('./screens/games/PatternSequenceGame').then(module => ({ default: module.PatternSequenceGame })));
+const WordPuzzleGame = lazy(() => import('./screens/games/WordPuzzleGame').then(module => ({ default: module.WordPuzzleGame })));
+const RhythmGame = lazy(() => import('./screens/games/RhythmGame').then(module => ({ default: module.RhythmGame })));
+const SizeComparisonGame = lazy(() => import('./screens/games/SizeComparisonGame').then(module => ({ default: module.SizeComparisonGame })));
+const MemoryCardGame = lazy(() => import('./screens/games/MemoryCardGame').then(module => ({ default: module.MemoryCardGame })));
+const ShadowQuizGame = lazy(() => import('./screens/games/ShadowQuizGame').then(module => ({ default: module.ShadowQuizGame })));
+const BalloonPopGame = lazy(() => import('./screens/games/BalloonPopGame').then(module => ({ default: module.BalloonPopGame })));
+const RainbowStageAdventure = lazy(() => import('./screens/RainbowStageAdventure').then(module => ({ default: module.RainbowStageAdventure })));
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>(() => {
@@ -100,6 +101,10 @@ export default function App() {
   });
 
   const [showSplash, setShowSplash] = useState(true);
+  const finishSplash = useCallback(() => setShowSplash(false), []);
+  const [homeStep, setHomeStep] = useState<'friends' | 'games'>('friends');
+  const [gamePage, setGamePage] = useState(0);
+  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
   const [currentScreen, setCurrentScreen] = useState<'home' | 'game' | 'stickers' | 'talk' | 'parent' | 'drawing'>('home');
   const [activeGameId, setActiveGameId] = useState<GameId | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -109,23 +114,42 @@ export default function App() {
     window.scrollTo(0, 0);
   }, [currentScreen]);
 
+  const handleGoHome = () => {
+    stopAllSpeech();
+    stopCelebrations();
+    clearGameTimeouts();
+    setShowConfetti(false);
+    setActiveGameId(null);
+    setCurrentScreen('home');
+    window.scrollTo(0, 0);
+  };
+
+  useEffect(() => {
+    return () => stopAllSpeech();
+  }, [currentScreen, activeGameId, appState.isTimeUp]);
+
   // Save state to localStorage
   useEffect(() => {
     localStorage.setItem('ITSME_APP_STATE', JSON.stringify(appState));
   }, [appState]);
 
+  useEffect(() => { setAudioPreferences(appState.soundEnabled, appState.ttsEnabled !== false); }, [appState.soundEnabled, appState.ttsEnabled]);
+
   // Handle BGM state
   useEffect(() => {
-    if (appState.bgmEnabled) {
+    if (appState.bgmEnabled && appState.soundEnabled && !showSplash && !appState.isTimeUp) {
       startBGM(appState.bgmVolume);
     } else {
       stopBGM();
     }
     return () => stopBGM();
-  }, [appState.bgmEnabled, appState.bgmVolume]);
+  }, [appState.bgmEnabled, appState.bgmVolume, appState.soundEnabled, showSplash, appState.isTimeUp]);
+
+  const soundEnabled = appState.soundEnabled;
 
   // Timer Tick
   useEffect(() => {
+    if (showSplash || appState.isTimeUp || currentScreen === 'parent') return;
     const interval = window.setInterval(() => {
       setAppState((prev) => {
         const nextTime = prev.playTimeSeconds + 1;
@@ -144,7 +168,7 @@ export default function App() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [showSplash, appState.isTimeUp, currentScreen]);
 
   // Reward Handler when a quiz round is completed
   const handleCompleteQuiz = (starsEarned: number) => {
@@ -174,17 +198,19 @@ export default function App() {
       };
     });
 
-    setTimeout(() => setShowConfetti(false), 2500);
+    scheduleGameTimeout(() => setShowConfetti(false), 1800);
   };
 
   const handleStartGame = (gameId: GameId, characterId: CharacterId) => {
+    stopAllSpeech();
+    setHomeStep('games');
     setAppState((prev) => ({ ...prev, selectedCharacter: characterId }));
     setActiveGameId(gameId);
     setCurrentScreen('game');
   };
 
   const handleToggleSound = () => {
-    if (appState.soundEnabled) stopAllSpeech();
+    setAudioPreferences(!appState.soundEnabled, appState.ttsEnabled !== false);
     setAppState((prev) => ({ ...prev, soundEnabled: !prev.soundEnabled }));
   };
 
@@ -233,13 +259,17 @@ export default function App() {
       case 'home':
         return (
           <HomeScreen
+            step={homeStep}
+            onChangeStep={setHomeStep}
+            page={gamePage}
+            onChangePage={setGamePage}
             selectedCharacter={appState.selectedCharacter}
             onSelectCharacter={(id) => setAppState((prev) => ({ ...prev, selectedCharacter: id }))}
             onStartGame={handleStartGame}
             onOpenDrawing={() => setCurrentScreen('drawing')}
             onOpenStickerRoom={() => setCurrentScreen('stickers')}
             onOpenCharacterTalk={() => setCurrentScreen('talk')}
-            soundEnabled={appState.soundEnabled}
+            soundEnabled={soundEnabled}
             childProfile={appState.childProfile}
           />
         );
@@ -247,8 +277,8 @@ export default function App() {
       case 'drawing':
         return (
           <SketchbookScreen
-            onGoHome={() => setCurrentScreen('home')}
-            soundEnabled={appState.soundEnabled}
+            onGoHome={handleGoHome}
+            soundEnabled={soundEnabled}
             childName={childName}
           />
         );
@@ -258,8 +288,8 @@ export default function App() {
           <CharacterTalkScreen
             selectedCharacter={appState.selectedCharacter}
             onSelectCharacter={(id) => setAppState((prev) => ({ ...prev, selectedCharacter: id }))}
-            onGoHome={() => setCurrentScreen('home')}
-            soundEnabled={appState.soundEnabled}
+            onGoHome={handleGoHome}
+            soundEnabled={soundEnabled}
             childName={childName}
           />
         );
@@ -273,8 +303,8 @@ export default function App() {
             onUpdatePlacedStickers={(stickers) =>
               setAppState((prev) => ({ ...prev, placedStickers: stickers }))
             }
-            onGoHome={() => setCurrentScreen('home')}
-            soundEnabled={appState.soundEnabled}
+            onGoHome={handleGoHome}
+            soundEnabled={soundEnabled}
           />
         );
 
@@ -311,7 +341,7 @@ export default function App() {
               localStorage.removeItem('ITSME_APP_STATE');
               window.location.reload();
             }}
-            onGoHome={() => setCurrentScreen('home')}
+            onGoHome={handleGoHome}
             onUpdateProfile={(profile) => {
               try {
                 localStorage.setItem('ITSME_CHILD_PROFILE', JSON.stringify(profile));
@@ -327,9 +357,9 @@ export default function App() {
         return (
           <ErrorBoundary
             fallbackTitle="앗! 이 놀이에서 동물 친구가 잠시 쉬고 있어요!"
-            onReset={() => setCurrentScreen('home')}
+            onReset={handleGoHome}
           >
-            <div className="game-surface">
+            <GameStage gameId={activeGameId || 'object_recognition'} buddy={appState.selectedCharacter}>
             {(() => {
               switch (activeGameId) {
                 // 기존 7개 게임
@@ -337,7 +367,7 @@ export default function App() {
                   return (
                     <GgomiObjectGame
                       onCompleteQuiz={handleCompleteQuiz}
-                      soundEnabled={appState.soundEnabled}
+                      soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
                       childName={childName}
                     />
@@ -346,7 +376,7 @@ export default function App() {
                   return (
                     <RanoShapeColorGame
                       onCompleteQuiz={handleCompleteQuiz}
-                      soundEnabled={appState.soundEnabled}
+                      soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
                       childName={childName}
                     />
@@ -355,7 +385,7 @@ export default function App() {
                   return (
                     <JellyKoreanGame
                       onCompleteQuiz={handleCompleteQuiz}
-                      soundEnabled={appState.soundEnabled}
+                      soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
                       childName={childName}
                     />
@@ -364,7 +394,7 @@ export default function App() {
                   return (
                     <DochiSoundGame
                       onCompleteQuiz={handleCompleteQuiz}
-                      soundEnabled={appState.soundEnabled}
+                      soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
                       childName={childName}
                     />
@@ -373,7 +403,7 @@ export default function App() {
                   return (
                     <GgulgguliCountingGame
                       onCompleteQuiz={handleCompleteQuiz}
-                      soundEnabled={appState.soundEnabled}
+                      soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
                       childName={childName}
                     />
@@ -382,7 +412,7 @@ export default function App() {
                   return (
                     <EummeCloudShapeGame
                       onCompleteQuiz={handleCompleteQuiz}
-                      soundEnabled={appState.soundEnabled}
+                      soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
                       childName={childName}
                     />
@@ -391,7 +421,7 @@ export default function App() {
                   return (
                     <NurungjiTreasureGame
                       onCompleteQuiz={handleCompleteQuiz}
-                      soundEnabled={appState.soundEnabled}
+                      soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
                       childName={childName}
                     />
@@ -402,7 +432,7 @@ export default function App() {
                   return (
                     <EmotionQuizGame
                       onCompleteQuiz={handleCompleteQuiz}
-                      soundEnabled={appState.soundEnabled}
+                      soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
                       childName={childName}
                     />
@@ -411,7 +441,7 @@ export default function App() {
                   return (
                     <PatternSequenceGame
                       onCompleteQuiz={handleCompleteQuiz}
-                      soundEnabled={appState.soundEnabled}
+                      soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
                       childName={childName}
                     />
@@ -420,7 +450,7 @@ export default function App() {
                   return (
                     <WordPuzzleGame
                       onCompleteQuiz={handleCompleteQuiz}
-                      soundEnabled={appState.soundEnabled}
+                      soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
                       childName={childName}
                     />
@@ -429,7 +459,7 @@ export default function App() {
                   return (
                     <RhythmGame
                       onCompleteQuiz={handleCompleteQuiz}
-                      soundEnabled={appState.soundEnabled}
+                      soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
                       childName={childName}
                     />
@@ -438,7 +468,7 @@ export default function App() {
                   return (
                     <SizeComparisonGame
                       onCompleteQuiz={handleCompleteQuiz}
-                      soundEnabled={appState.soundEnabled}
+                      soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
                       childName={childName}
                     />
@@ -447,7 +477,7 @@ export default function App() {
                   return (
                     <MemoryCardGame
                       onCompleteQuiz={handleCompleteQuiz}
-                      soundEnabled={appState.soundEnabled}
+                      soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
                       childName={childName}
                     />
@@ -456,7 +486,7 @@ export default function App() {
                   return (
                     <ShadowQuizGame
                       onCompleteQuiz={handleCompleteQuiz}
-                      soundEnabled={appState.soundEnabled}
+                      soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
                       childName={childName}
                     />
@@ -465,8 +495,8 @@ export default function App() {
                   return (
                     <RainbowStageAdventure
                       onCompleteQuiz={handleCompleteQuiz}
-                      onGoHome={() => setCurrentScreen('home')}
-                      soundEnabled={appState.soundEnabled}
+                      onGoHome={handleGoHome}
+                      soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
                       childName={childName}
                     />
@@ -475,7 +505,7 @@ export default function App() {
                   return (
                     <BalloonPopGame
                       onCompleteQuiz={handleCompleteQuiz}
-                      soundEnabled={appState.soundEnabled}
+                      soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
                       childName={childName}
                     />
@@ -484,28 +514,33 @@ export default function App() {
                 default:
                   return (
                     <HomeScreen
+                      step={homeStep}
+                      onChangeStep={setHomeStep}
+                      page={gamePage}
+                      onChangePage={setGamePage}
                       selectedCharacter={appState.selectedCharacter}
                       onSelectCharacter={(id) => setAppState((prev) => ({ ...prev, selectedCharacter: id }))}
                       onStartGame={handleStartGame}
                       onOpenDrawing={() => setCurrentScreen('drawing')}
                       onOpenStickerRoom={() => setCurrentScreen('stickers')}
                       onOpenCharacterTalk={() => setCurrentScreen('talk')}
-                      soundEnabled={appState.soundEnabled}
+                      soundEnabled={soundEnabled}
                       childProfile={appState.childProfile}
                     />
                   );
               }
             })()}
-            </div>
+            </GameStage>
           </ErrorBoundary>
         );
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#faf9f6] text-[#30343c] font-sans antialiased selection:bg-[#dbe8d7]">
-      <ConfettiEffect active={showConfetti} />
+    <div className="app-world min-h-screen text-[#49443d] font-sans antialiased selection:bg-[#dbe8d7]">
+      <ConfettiEffect active={showConfetti} buddy={appState.selectedCharacter} />
 
+      {!showSplash && <>
       <Header
         stars={appState.stars}
         selectedCharacter={appState.selectedCharacter}
@@ -517,19 +552,17 @@ export default function App() {
         onToggleSound={handleToggleSound}
         onOpenParentGate={() => setIsParentGateOpen(true)}
         onOpenStickerRoom={() => setCurrentScreen('stickers')}
-        onGoHome={() => {
-          setCurrentScreen('home');
-          window.scrollTo(0, 0);
-        }}
+        onGoHome={handleGoHome}
         currentScreen={currentScreen}
         childName={childName}
       />
 
-      <main className="mx-auto w-full max-w-7xl px-3 py-5 pb-12 sm:px-6 sm:py-7">
-        <ErrorBoundary onReset={() => setCurrentScreen('home')}>
-          {renderContent()}
+      <main className="app-main mx-auto w-full max-w-6xl px-3 py-5 pb-12 sm:px-6 sm:py-7">
+        <ErrorBoundary onReset={handleGoHome}>
+          <Suspense fallback={<div className="game-loading" role="status"><CharacterAvatar id={appState.selectedCharacter} size="xl" mood="waving" /><p>놀이를 꺼내오는 중이에요</p></div>}>{renderContent()}</Suspense>
         </ErrorBoundary>
       </main>
+      </>}
 
       <ParentalGateModal
         isOpen={isParentGateOpen}
@@ -543,9 +576,7 @@ export default function App() {
 
       {showSplash && (
         <SplashLoader
-          onFinish={() => setShowSplash(false)}
-          soundEnabled={appState.soundEnabled}
-          bgmEnabled={appState.bgmEnabled}
+          onFinish={finishSplash}
           childName={childName}
         />
       )}
@@ -553,7 +584,7 @@ export default function App() {
       {!appState.onboardingCompleted && !showSplash && (
         <OnboardingScreen
           onCompleteOnboarding={handleCompleteOnboarding}
-          soundEnabled={appState.soundEnabled}
+          soundEnabled={soundEnabled}
         />
       )}
     </div>

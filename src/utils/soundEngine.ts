@@ -3,6 +3,16 @@
 
 import { playGeminiSpeech, stopGeminiAudio, isGeminiTTSEnabled, getCachedGeminiVoiceAvailability } from '../services/geminiTTS';
 
+let masterSoundEnabled = true;
+let speechEnabled = true;
+
+export function setAudioPreferences(sound: boolean, speech = true) {
+  masterSoundEnabled = sound;
+  speechEnabled = speech;
+  if (!sound || !speech) stopAllSpeech();
+  if (!sound) { stopBGM(); void audioCtx?.suspend(); }
+}
+
 let audioCtx: AudioContext | null = null;
 let bgmOscillatorInterval: number | null = null;
 let isBgmPlaying = false;
@@ -32,7 +42,7 @@ const BGM_MELODY = [
 let noteIndex = 0;
 
 export function startBGM(volume = 0.15) {
-  if (isBgmPlaying) return;
+  if (isBgmPlaying || !masterSoundEnabled) return;
   try {
     const ctx = getAudioContext();
     isBgmPlaying = true;
@@ -72,6 +82,8 @@ export function startBGM(volume = 0.15) {
 
 export function stopBGM() {
   isBgmPlaying = false;
+  bgmVolumeNode?.disconnect();
+  bgmVolumeNode = null;
   if (bgmOscillatorInterval) {
     clearTimeout(bgmOscillatorInterval);
     bgmOscillatorInterval = null;
@@ -92,7 +104,7 @@ export function setBGMVolume(vol: number) {
  * 뿅 / 젤리 터치 소리 (통통 튀는 탄성 스프링 사운드)
  */
 export function playJellyTap(enabled = true) {
-  if (!enabled) return;
+  if (!enabled || !masterSoundEnabled) return;
   try {
     const ctx = getAudioContext();
     const osc = ctx.createOscillator();
@@ -121,7 +133,7 @@ export function playJellyTap(enabled = true) {
  * 통통 튀는 스프링 리액션 사운드
  */
 export function playBouncyBoing(enabled = true) {
-  if (!enabled) return;
+  if (!enabled || !masterSoundEnabled) return;
   try {
     const ctx = getAudioContext();
     const osc = ctx.createOscillator();
@@ -151,7 +163,7 @@ export function playBouncyBoing(enabled = true) {
  * 풍선 팡! 터뜨리기 효과음 (타격감 있는 노이즈 버스트 + 서브 킥)
  */
 export function playBalloonPop(enabled = true) {
-  if (!enabled) return;
+  if (!enabled || !masterSoundEnabled) return;
   try {
     const ctx = getAudioContext();
     const now = ctx.currentTime;
@@ -200,7 +212,7 @@ export function playBubblePop(enabled = true) {
  * 맑은 실로폰 딩-동-댕 화음 (C5 -> E5 -> G5)
  */
 export function playDingDongDang(enabled = true) {
-  if (!enabled) return;
+  if (!enabled || !masterSoundEnabled) return;
   try {
     const ctx = getAudioContext();
     const chords = [
@@ -234,7 +246,7 @@ export function playDingDongDang(enabled = true) {
  * 반짝반짝 별가루 / 보석 차임 효과음
  */
 export function playSparkleChime(enabled = true) {
-  if (!enabled) return;
+  if (!enabled || !masterSoundEnabled) return;
   try {
     const ctx = getAudioContext();
     const pitches = [1046.50, 1318.51, 1567.98, 2093.00, 2637.02]; // C6, E6, G6, C7, E7
@@ -263,7 +275,7 @@ export function playSparkleChime(enabled = true) {
  * 축하 팡파르 (경쾌하고 웅장한 트럼펫 화음)
  */
 export function playCelebrationFanfare(enabled = true) {
-  if (!enabled) return;
+  if (!enabled || !masterSoundEnabled) return;
   try {
     const ctx = getAudioContext();
     const melody = [
@@ -311,7 +323,7 @@ export function playStarGain(enabled = true) {
  * 띠로리~ 귀여운 오답 피드백 (부드러운 통통 boing)
  */
 export function playWrongBoing(enabled = true) {
-  if (!enabled) return;
+  if (!enabled || !masterSoundEnabled) return;
   try {
     const ctx = getAudioContext();
     const osc = ctx.createOscillator();
@@ -340,7 +352,7 @@ export function playWrongBoing(enabled = true) {
  * 실감나는 동물 울음소리 신시사이저 (Level 1 동물 짝 맞추기 지원)
  */
 export function playAnimalSound(animal: string, enabled = true) {
-  if (!enabled) return;
+  if (!enabled || !masterSoundEnabled) return;
   try {
     const ctx = getAudioContext();
     const now = ctx.currentTime;
@@ -603,7 +615,7 @@ export interface SpeakOptions {
  * Intelligently adjusts pitch and rate: prevents robotic chipmunk artifacts on legacy voices.
  */
 function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions = {}) {
-  if (!enabled) return;
+  if (!enabled || !masterSoundEnabled) return;
   if (typeof window === 'undefined' || !('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
     options.onError?.();
     return;
@@ -683,7 +695,7 @@ function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions
  * Gemini character audio when configured, with browser speech as the fallback.
  */
 export function speakText(text: string, enabled = true, options: SpeakOptions = {}) {
-  if (!enabled) return;
+  if (!enabled || !masterSoundEnabled || !speechEnabled) return;
 
   stopAllSpeech();
   const requestId = speechRequestId;

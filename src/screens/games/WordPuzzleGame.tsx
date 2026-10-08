@@ -1,3 +1,5 @@
+import { ToyArtwork } from '../../components/ToyArtwork';
+import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
@@ -21,6 +23,8 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
   ageGroup,
   childName,
 }) => {
+  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+
   const diffConfig = getDifficultyConfig(ageGroup);
   // bloom/star 외의 그룹 방어코드
   const currentPool = WORD_PUZZLE_ITEMS_BY_AGE[ageGroup]?.length > 0
@@ -43,6 +47,7 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
   const gameTimerRef = useRef<number | null>(null);
 
   const generateRound = () => {
+    clearGameTimeouts();
     if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
@@ -66,7 +71,7 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
-      hintTimerRef.current = window.setTimeout(() => {
+      hintTimerRef.current = scheduleGameTimeout(() => {
         setShowHint(true);
       }, diffConfig.hintDelaySec * 1000);
     }
@@ -128,14 +133,14 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
       setShakingLetterIdx(index);
       playWrongBoing(soundEnabled);
       speakText(`에구구, 올바른 순서의 글자를 눌러주세요!`, soundEnabled, { characterId: 'jelly' });
-      setTimeout(() => setShakingLetterIdx(null), 600);
+      scheduleGameTimeout(() => setShakingLetterIdx(null), 600);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[80vh] overflow-hidden">
+    <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
-      <div className="w-full bg-gradient-to-r from-[#E1BEE7] to-[#F3E5F5] p-3.5 sm:p-4 rounded-3xl border-3 border-[#AB47BC] shadow-sm flex items-center gap-3 sm:gap-4">
+      <div className="game-prompt w-full bg-gradient-to-r from-[#E1BEE7] to-[#F3E5F5] p-3.5 sm:p-4 rounded-3xl border-3 border-[#AB47BC] shadow-sm flex items-center gap-3 sm:gap-4">
         <CharacterAvatar id="jelly" size="md" mood={isCompleted ? 'dancing' : 'happy'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#8E24AA] mb-1">
@@ -146,6 +151,7 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
           </h2>
         </div>
         <button
+          aria-label="놀이 안내 다시 듣기"
           onClick={() => speakText(`힌트! ${targetItem.hint}`, soundEnabled, { characterId: 'jelly' })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#AB47BC] shadow-xs text-[#8E24AA] cursor-pointer shrink-0"
           title="단어 힌트 말하기"
@@ -179,7 +185,7 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
 
       {/* Emoji Clue Center Display */}
       <div className="my-3 flex flex-col items-center justify-center p-4 bg-white rounded-3xl border-3 border-dashed border-[#AB47BC] shadow-2xs">
-        <span className="text-6xl sm:text-7xl mb-1.5">{targetItem.emoji}</span>
+        <span className="text-6xl sm:text-7xl mb-1.5"><ToyArtwork emoji={targetItem.emoji} /></span>
         <span className="text-xs font-bold text-[#8C7B79] bg-purple-50 text-[#8E24AA] px-2.5 py-0.5 rounded-full">
           힌트: {targetItem.hint}
         </span>
@@ -233,11 +239,11 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
       {/* Actions */}
       <div className="flex items-center justify-center gap-3 w-full">
         {isCompleted || timeOut ? (
-          <JellyButton variant="purple" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 단어 만들기 🐰
+          <JellyButton soundEnabled={soundEnabled} variant="purple" size="lg" onClick={generateRound} className="w-full sm:w-auto">
+            다음 단어 만들기 🐰 <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
-          <JellyButton variant="white" size="md" onClick={generateRound} className="!px-4">
+          <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">
             <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 다른 단어
           </JellyButton>
         )}

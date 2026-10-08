@@ -1,3 +1,5 @@
+import { ToyArtwork } from '../../components/ToyArtwork';
+import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
@@ -21,6 +23,8 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
   ageGroup,
   childName,
 }) => {
+  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+
   const diffConfig = getDifficultyConfig(ageGroup);
   const itemPool = TREASURE_ITEMS_BY_AGE[ageGroup] || TREASURE_ITEMS_BY_AGE.sprout;
 
@@ -39,6 +43,7 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
   const gameTimerRef = useRef<number | null>(null);
 
   const generateRound = () => {
+    clearGameTimeouts();
     if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
     if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
@@ -62,7 +67,7 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
-      hintTimerRef.current = window.setTimeout(() => {
+      hintTimerRef.current = scheduleGameTimeout(() => {
         setShowHint(true);
         speakText(`여기 흔들리는 보물상자를 열어봐!`, soundEnabled, { characterId: 'nurungji', playIntroSFX: false });
       }, diffConfig.hintDelaySec * 1000);
@@ -107,16 +112,16 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
       setShakingCardId(item.id);
       playWrongBoing(soundEnabled);
       speakText(`다른 보물상자를 열어볼까요?`, soundEnabled, { characterId: 'nurungji' });
-      setTimeout(() => setShakingCardId(null), 600);
+      scheduleGameTimeout(() => setShakingCardId(null), 600);
     }
   };
 
   if (!targetItem) return null;
 
   return (
-    <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[80vh] overflow-hidden">
+    <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
-      <div className="w-full bg-gradient-to-r from-[#FFECB3] to-[#FFF8E1] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FFA000] shadow-sm flex items-center gap-3 sm:gap-4">
+      <div className="game-prompt w-full bg-gradient-to-r from-[#FFECB3] to-[#FFF8E1] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FFA000] shadow-sm flex items-center gap-3 sm:gap-4">
         <CharacterAvatar id="nurungji" size="md" mood={selectedCorrectId ? 'excited' : 'waving'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#FF8F00] mb-1">
@@ -127,6 +132,7 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
           </h2>
         </div>
         <button
+          aria-label="놀이 안내 다시 듣기"
           onClick={() => speakText(`숨겨진 ${targetItem.name} 보물을 찾아서 터치해보아요!`, soundEnabled, { characterId: 'nurungji' })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#FFA000] shadow-xs text-[#FF8F00] cursor-pointer shrink-0"
         >
@@ -157,6 +163,8 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
         </div>
       )}
 
+      <div className="visual-prompt" aria-label="이 그림을 찾아요"><ToyArtwork emoji={targetItem.emoji} label="찾을 그림" /><span aria-hidden="true">→</span><span className="text-3xl">?</span></div>
+
       {/* Interactive Treasure Room Scene */}
       <div className={`relative w-full min-h-[240px] sm:min-h-[280px] my-3 sm:my-4 bg-gradient-to-b from-[#FFF8E1] to-[#FFE082]/40 rounded-3xl border-3 sm:border-4 border-dashed border-[#FFA000] p-3 sm:p-6 gap-2 sm:gap-4 ${
         displayedItems.length === 2 ? 'grid grid-cols-2 place-items-center' : 'grid grid-cols-3 place-items-center sm:flex sm:items-center sm:justify-around'
@@ -168,7 +176,7 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
           const shouldPulse = showHint && isTarget && !selectedCorrectId;
 
           return (
-            <motion.div
+            <motion.button
               key={item.id}
               animate={
                 isShaking
@@ -181,7 +189,7 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
               }
               transition={{ duration: isShaking ? 0.5 : shouldPulse ? 1.0 : 0.5 }}
               onClick={() => handleSelectTreasure(item)}
-              className={`flex flex-col items-center justify-center p-3 sm:p-6 rounded-2xl sm:rounded-3xl border-3 sm:border-4 cursor-pointer select-none transition-all shadow-md touch-manipulation min-h-[120px] sm:min-h-[160px] min-w-[100px] sm:min-w-[140px] ${
+              className={`game-choice flex flex-col items-center justify-center p-3 sm:p-6 rounded-2xl sm:rounded-3xl border-3 sm:border-4 cursor-pointer select-none transition-all shadow-md touch-manipulation min-h-[120px] sm:min-h-[160px] min-w-[100px] sm:min-w-[140px] ${
                 isSolved
                   ? 'bg-[#E8F5E9] border-[#81C784]'
                   : shouldPulse
@@ -190,9 +198,9 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
               }`}
             >
               {isSolved && <Sparkles className="w-5 h-5 sm:w-8 sm:h-8 text-[#FFA000] animate-bounce mb-1" />}
-              <span className="text-4xl sm:text-6xl mb-1 sm:mb-2">{item.emoji}</span>
+              <span className="text-4xl sm:text-6xl mb-1 sm:mb-2"><ToyArtwork emoji={item.emoji} /></span>
               <span className="text-xs sm:text-xl font-black text-[#4A3E3D] text-center">{item.name}</span>
-            </motion.div>
+            </motion.button>
           );
         })}
       </div>
@@ -200,11 +208,11 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
       {/* Actions */}
       <div className="flex items-center justify-center gap-3 w-full">
         {selectedCorrectId || timeOut ? (
-          <JellyButton variant="yellow" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 보물 찾기 🐶
+          <JellyButton soundEnabled={soundEnabled} variant="yellow" size="lg" onClick={generateRound} className="w-full sm:w-auto">
+            다음 보물 찾기 🐶 <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
-          <JellyButton variant="white" size="md" onClick={generateRound} className="!px-4">
+          <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">
             <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 다른 문제
           </JellyButton>
         )}
