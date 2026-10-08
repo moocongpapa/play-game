@@ -1,13 +1,15 @@
 import React from 'react';
 import { ArrowRight, Check, Hand, Music2, Search, Sparkles, Volume2 } from 'lucide-react';
-import type { GameId } from '../types';
+import { CareFriend, ToothBrushArt } from './ToddlerPlay';
+import { CharacterAvatar } from './CharacterAvatar';
+import type { CharacterId, GameId } from '../types';
 import { GAME_CATALOG } from '../data/gameCatalog';
 import { ToyArtwork } from './ToyArtwork';
 
 const Toy = ({ emoji, x, y, size = 36, rotate = 0, shadow = false }: { emoji: string; x: number; y: number; size?: number; rotate?: number; shadow?: boolean }) =>
   <span className={`scene-toy ${shadow ? 'scene-silhouette' : ''}`} style={{ left: `${x}%`, top: `${y}%`, width: `${size}%`, height: `${size * 1.55}%`, transform: `rotate(${rotate}deg)` }}><ToyArtwork emoji={emoji} /></span>;
 
-export function GameArtwork({ gameId }: { gameId: GameId }) {
+export function GameArtwork({ gameId, buddy = 'jelly' }: { gameId: GameId; buddy?: CharacterId }) {
   const theme = GAME_CATALOG[gameId].theme;
   let scene: React.ReactNode;
   switch (gameId) {
@@ -55,6 +57,21 @@ export function GameArtwork({ gameId }: { gameId: GameId }) {
       break;
     case 'stage_adventure':
       scene = <><span className="adventure-rainbow" /><span className="adventure-path" /><Toy emoji="🐶" x={4} y={36} size={25} /><Toy emoji="🍎" x={39} y={26} size={23} /><Toy emoji="⭐" x={73} y={2} size={23} /><span className="adventure-flag" /></>;
+      break;
+    case 'tooth_brush':
+      scene = <><span className="mini-care-friend"><CareFriend buddy={buddy} /></span><span className="mini-care-teeth" /><span className="mini-toothbrush"><ToothBrushArt /></span><Sparkles className="scene-pop" /></>;
+      break;
+    case 'feeding':
+      scene = <><span className="mini-care-friend mini-food-friend"><CareFriend buddy={buddy} /></span><span className="mini-food-plate" /><Toy emoji="🥕" x={6} y={62} size={26} rotate={-18} /><Toy emoji="🍎" x={36} y={59} size={27} /><Toy emoji="🥦" x={66} y={55} size={29} /></>;
+      break;
+    case 'bubble_pop':
+      scene = <><span className="mini-soap soap-a"><ToyArtwork emoji="🍓" /></span><span className="mini-soap soap-b"><ToyArtwork emoji="🐧" /></span><span className="mini-soap soap-c"><Sparkles /></span><Hand className="scene-hand" /></>;
+      break;
+    case 'peekaboo_hide':
+      scene = <><span className="mini-hide-friend"><CharacterAvatar id={buddy} mood="still" /></span><span className="mini-hide-friend second"><CharacterAvatar id="rano" mood="still" /></span><span className="mini-hide-bush" /><span className="mini-hide-bush second" /><Search className="scene-search" /></>;
+      break;
+    case 'animal_xylophone':
+      scene = <><span className="mini-animal-keys">{['🐻', '🐱', '🐧', '🐰'].map((emoji, i) => <span key={emoji} style={{ background: ['#e8a2aa', '#e9c67e', '#94bdd5', '#c8aad4'][i] }}><ToyArtwork emoji={emoji} /></span>)}</span><Music2 className="scene-music" /></>;
       break;
     case 'balloon_pop':
       scene = <>{['#df91a5','#e5bb6e','#91b8cf'].map((c,i) => <span key={c} className={`picture-balloon balloon-${i}`} style={{ background: c }}><i /></span>)}<Hand className="scene-hand" /><Sparkles className="scene-pop" /></>;

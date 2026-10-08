@@ -17,6 +17,11 @@ export type GameId =
   | 'memory_card'        // 누룽지의 기억력 카드 뒤집기
   | 'shadow_quiz'        // 꼬미의 그림자 실루엣 퀴즈
   | 'stage_adventure'    // 3~4세 무지개 다단계 스테이지 모험
+  | 'tooth_brush'
+  | 'feeding'
+  | 'bubble_pop'
+  | 'peekaboo_hide'
+  | 'animal_xylophone'
   | 'balloon_pop';       // 꿀꿀이의 둥둥 풍선 팡팡 놀이
 
 // 연령 그룹 (4단계)

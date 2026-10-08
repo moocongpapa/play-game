@@ -123,6 +123,7 @@ export function getAvailableGames(ageGroup: AgeGroup): GameId[] {
     'counting_food',
     'cloud_shapes',
     'treasure_hunt',
+    'tooth_brush', 'feeding', 'bubble_pop', 'peekaboo_hide', 'animal_xylophone',
   ];
 
   switch (ageGroup) {

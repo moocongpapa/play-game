@@ -14,7 +14,7 @@ export function setAudioPreferences(sound: boolean, speech = true) {
   masterSoundEnabled = sound;
   speechEnabled = speech;
   if (!sound || !speech) stopAllSpeech();
-  if (!sound) { stopBGM(); void audioCtx?.suspend(); }
+  if (!sound) { stopPlaySounds(); stopBGM(); void audioCtx?.suspend(); }
 }
 
 let audioCtx: AudioContext | null = null;
@@ -48,7 +48,7 @@ function applyBgmVolume() {
   bgmVolumeNode.gain.setTargetAtTime(gain, audioCtx.currentTime, .12);
 }
 
-export function setBGMDucked(reason: 'speech' | 'animal' | 'rhythm', ducked: boolean) {
+export function setBGMDucked(reason: 'speech' | 'animal' | 'rhythm' | 'instrument', ducked: boolean) {
   if (ducked) bgmDucks.add(reason); else bgmDucks.delete(reason);
   applyBgmVolume();
 }
@@ -698,4 +698,64 @@ export function stopAllSpeech() {
 
 export function speakCharacterText(characterId: string, text: string, enabled = true) {
   speakText(text, enabled, { characterId, playIntroSFX: true });
+}
+
+// Short, bounded voices for care play and the freely playable instrument.
+const playVoices = new Set<OscillatorNode>();
+export function stopPlaySounds() {
+  for (const voice of [...playVoices]) { try { voice.stop(); } catch { /* Already ended. */ } }
+  playVoices.clear();
+  setBGMDucked('instrument', false);
+}
+function playToyTone(frequency: number, duration: number, volume: number, endFrequency = frequency, delay = 0) {
+  const ctx = getAudioContext();
+  while (playVoices.size >= 32) {
+    const oldest = playVoices.values().next().value!;
+    playVoices.delete(oldest);
+    try { oldest.stop(); } catch { /* Already ended. */ }
+  }
+  const voice = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const now = ctx.currentTime + delay;
+  voice.type = 'sine';
+  voice.frequency.setValueAtTime(frequency, now);
+  voice.frequency.exponentialRampToValueAtTime(endFrequency, now + duration);
+  gain.gain.setValueAtTime(.0001, now);
+  gain.gain.exponentialRampToValueAtTime(volume, now + .008);
+  gain.gain.exponentialRampToValueAtTime(.0001, now + duration);
+  voice.connect(gain);
+  gain.connect(ctx.destination);
+  playVoices.add(voice);
+  voice.onended = () => { playVoices.delete(voice); voice.disconnect(); gain.disconnect(); };
+  voice.start(now);
+  voice.stop(now + duration + .02);
+}
+
+export function playXylophoneNote(frequency: number, enabled = true, animalIndex = 0) {
+  if (!enabled || !masterSoundEnabled) return;
+  try {
+    // Bell-like partials give each key a distinct, gently decaying wooden-bar timbre.
+    playToyTone(frequency, .85, .13);
+    playToyTone(frequency * 2.76, .32, .045);
+    playToyTone(frequency * 5.4, .14, .012);
+    // A quiet toy-animal chirp follows the same pitch; no voice request delays a key.
+    const chirps = [0.75, 1.25, 1.5, 0.5, 2, 1.75, 2.5, 1];
+    const chirp = chirps[animalIndex] ?? 1;
+    playToyTone(frequency * chirp, .13, .018, frequency, .035);
+  } catch { /* Visual play remains available without Web Audio. */ }
+}
+
+export function playCareSound(kind: 'brush' | 'chew' | 'bubble', enabled = true) {
+  if (!enabled || !masterSoundEnabled) return;
+  try {
+    if (kind === 'brush') playToyTone(900, .12, .045, 1500);
+    else if (kind === 'chew') {
+      playToyTone(210, .16, .075, 130);
+      playToyTone(250, .18, .055, 160, .18);
+    } else {
+      const frequency = 700 + Math.random() * 450;
+      playToyTone(frequency, .2, .085, frequency * 1.65);
+      playToyTone(frequency * 2, .1, .02);
+    }
+  } catch { /* Visual feedback still works when audio is unavailable. */ }
 }

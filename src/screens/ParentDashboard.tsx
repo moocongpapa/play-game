@@ -102,6 +102,11 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
     size_comparison: '꿀꿀이의 크기 비교',
     memory_card: '누룽지의 기억력 카드',
     shadow_quiz: '음메의 그림자 퀴즈',
+    tooth_brush: '치카치카 양치 놀이',
+    feeding: '냠냠 골고루 먹기',
+    bubble_pop: '비눗방울 톡톡',
+    peekaboo_hide: '어디 숨었지? 까꿍',
+    animal_xylophone: '동물 실로폰',
   };
 
   return (

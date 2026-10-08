@@ -54,6 +54,10 @@ export function ToyArtwork({ emoji, className = '', label }: { emoji: string; cl
         {template.lines.map((d, i) => <path key={i} d={d} fill="none" />)}
       </g>
     </>;
+  } else if (emoji === '🥕') {
+    drawing = <g stroke="#9f7854" strokeWidth="2.5" strokeLinejoin="round"><path d="M42 24 Q40 4 49 10 L56 26 Q63 0 69 8 L65 29 Q83 11 84 24 L66 39" fill="#8bb782" /><path d="M31 28 Q50 19 69 40 Q77 60 17 91 Q11 83 22 50Z" fill="#efad68" /><path d="M28 46 L40 54 M24 63 L32 68 M47 40 L57 48" fill="none" stroke="#cd894b" /><path d="M28 35 Q38 30 44 34" stroke="#ffe0a5" fill="none" /></g>;
+  } else if (emoji === '🥦') {
+    drawing = <g stroke="#60845e" strokeWidth="2.5" strokeLinejoin="round"><path d="M40 43 L35 88 Q50 98 65 88 L60 43" fill="#b4ca8e" /><path d="M49 84 V56 M49 70 L32 52 M49 69 L68 48" fill="none" stroke="#7da16f" /><path d="M21 61 Q1 52 14 35 Q13 17 33 18 Q44 -1 60 16 Q82 10 85 31 Q103 47 83 60 Q72 73 54 61 Q36 77 21 61" fill="#86b080" /><path d="M28 40 Q22 27 37 26 M48 25 Q58 17 65 30 M67 42 Q82 33 84 46" fill="none" stroke="#b0cc9e" strokeWidth="5" strokeLinecap="round" /></g>;
   } else if (mood) {
     drawing = <g stroke="#725446" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="22" cy="23" r="13" fill="#d6a380" /><circle cx="78" cy="23" r="13" fill="#d6a380" />

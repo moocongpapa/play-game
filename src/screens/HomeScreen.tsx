@@ -70,8 +70,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
     </section> : <section aria-label="게임 선택" className="games-section">
       <div className="section-heading"><button className="change-friend" onClick={() => { stopAllSpeech(); onChangeStep('friends'); setHasNavigated(true); speakText('다른 친구랑도 놀아볼까?', soundEnabled); }}><ArrowLeft size={20} /><CharacterAvatar id={selectedCharacter} size="sm" /><span>친구 바꾸기</span></button></div>
       <div className="game-card-grid" key={selectedCharacter}>{games.map(id => <button key={id} className={`picture-game-card theme-${GAME_CATALOG[id].theme}`} onClick={() => { stopAllSpeech(); playJellyTap(soundEnabled); onStartGame(id, selectedCharacter); }} aria-label={`${GAME_CATALOG[id].title} 시작`}>
-        <GameArtwork gameId={id} />
+        <GameArtwork gameId={id} buddy={selectedCharacter} />
         <span className="game-card-caption"><span>{GAME_CATALOG[id].title}</span><span className="play-medallion"><Play fill="currentColor" size={20} /></span></span>
+        {GAME_CATALOG[id].badge && <span className="picture-game-badge">{GAME_CATALOG[id].badge}</span>}
       </button>)}</div>
     </section>}
 

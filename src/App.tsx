@@ -35,6 +35,11 @@ const SizeComparisonGame = lazy(() => import('./screens/games/SizeComparisonGame
 const MemoryCardGame = lazy(() => import('./screens/games/MemoryCardGame').then(module => ({ default: module.MemoryCardGame })));
 const ShadowQuizGame = lazy(() => import('./screens/games/ShadowQuizGame').then(module => ({ default: module.ShadowQuizGame })));
 const BalloonPopGame = lazy(() => import('./screens/games/BalloonPopGame').then(module => ({ default: module.BalloonPopGame })));
+const ToothBrushGame = lazy(() => import('./screens/games/ToothBrushGame').then(module => ({ default: module.ToothBrushGame })));
+const FeedingGame = lazy(() => import('./screens/games/FeedingGame').then(module => ({ default: module.FeedingGame })));
+const BubblePopGame = lazy(() => import('./screens/games/BubblePopGame').then(module => ({ default: module.BubblePopGame })));
+const PeekabooHideGame = lazy(() => import('./screens/games/PeekabooHideGame').then(module => ({ default: module.PeekabooHideGame })));
+const AnimalXylophoneGame = lazy(() => import('./screens/games/AnimalXylophoneGame').then(module => ({ default: module.AnimalXylophoneGame })));
 const RainbowStageAdventure = lazy(() => import('./screens/RainbowStageAdventure').then(module => ({ default: module.RainbowStageAdventure })));
 
 export default function App() {
@@ -510,6 +515,16 @@ export default function App() {
                       childName={childName}
                     />
                   );
+                case 'tooth_brush':
+                  return <ToothBrushGame buddy={appState.selectedCharacter} onCompleteQuiz={handleCompleteQuiz} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} />;
+                case 'feeding':
+                  return <FeedingGame buddy={appState.selectedCharacter} onCompleteQuiz={handleCompleteQuiz} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} />;
+                case 'bubble_pop':
+                  return <BubblePopGame buddy={appState.selectedCharacter} onCompleteQuiz={handleCompleteQuiz} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} />;
+                case 'peekaboo_hide':
+                  return <PeekabooHideGame buddy={appState.selectedCharacter} onCompleteQuiz={handleCompleteQuiz} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} />;
+                case 'animal_xylophone':
+                  return <AnimalXylophoneGame buddy={appState.selectedCharacter} onCompleteQuiz={handleCompleteQuiz} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} />;
                 case 'stage_adventure':
                   return (
                     <RainbowStageAdventure

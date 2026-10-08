@@ -62,7 +62,7 @@ export const Header: React.FC<HeaderProps> = ({
             aria-label="곤충 놀이터 열기"
             className="flex min-h-11 items-center gap-1.5 rounded-full bg-[#e8f5e5] px-3.5 font-black text-[#2e5223] hover:bg-[#dcf0d8] active:scale-95 transition-transform cursor-pointer"
           >
-            <span className="text-xl">🐞</span><span>곤충 놀이</span>
+            <span className="text-xl">🐞</span><span className="hidden min-[360px]:inline">곤충 놀이</span>
           </button>
 
           <button
