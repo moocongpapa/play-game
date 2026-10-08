@@ -1,0 +1,33 @@
+{
+  "id": "/",
+  "name": "유하의 작은 놀이숲",
+  "short_name": "유하 놀이숲",
+  "description": "젤리와 동물 친구들이 함께하는 그림 놀이",
+  "lang": "ko-KR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#faf7ef",
+  "theme_color": "#faf7ef",
+  "icons": [
+    {
+      "src": "/icons/jelly-app-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/jelly-app-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/jelly-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
