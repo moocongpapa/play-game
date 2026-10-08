@@ -47,9 +47,13 @@ import {
 } from 'lucide-react';
 import { JellyButton } from '../components/JellyButton';
 import { speakText } from '../utils/soundEngine';
+import type { CharacterId } from '../types';
+import { CharacterAvatar } from '../components/CharacterAvatar';
+import { CHARACTERS } from '../data/characters';
 import { fireConfetti } from '../utils/confetti';
 
 interface SketchbookScreenProps {
+  buddy: CharacterId;
   onGoHome: () => void;
   soundEnabled: boolean;
   childName?: string;
@@ -80,6 +84,7 @@ const brushWidths: Record<Brush, number[]> = {
 };
 
 export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
+  buddy,
   onGoHome,
   soundEnabled,
   childName = '유하',
@@ -194,6 +199,7 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
   if (isLivingCharacterActive && characterSpriteUrl) {
     return (
       <LivingCharacterStage
+        buddy={buddy}
         spriteUrl={characterSpriteUrl}
         characterTitle={characterTitle}
         childName={childName}
@@ -217,6 +223,7 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
           >
             <Home className="w-4 h-4" />
           </button>
+          <div className="shrink-0" aria-label={`${CHARACTERS[buddy].name}와 함께 색칠하기`}><CharacterAvatar id={buddy} size="sm" mood="waving" /></div>
 
           <div className="min-w-0">
             <h1 className="truncate text-base font-extrabold text-[#30343c] sm:text-xl">{childName}의 스케치북</h1>
@@ -656,7 +663,7 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
                               setTool('fill');
                               sound('magic');
                               setPanel(null);
-                              speakText(`${t.name} 도안이에요! 예쁘게 색칠해보자!`, soundEnabled);
+                              speakText(`${t.name} 도안이에요! 예쁘게 색칠해보자!`, soundEnabled, { characterId: buddy });
                             }
                           }}
                           className={`p-3 rounded-2xl border-2 flex flex-col items-center gap-1 cursor-pointer transition-all ${

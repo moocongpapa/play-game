@@ -21,7 +21,8 @@ test('speech endpoint keeps the key server-side and selects a distinct voice for
       assert.equal(response.headers.get('Content-Type'), 'audio/wav');
       assert.deepEqual(Buffer.from(await response.arrayBuffer()), wav);
     }
-    assert.equal(calls.length, 7);
+    assert.equal(calls.length, Object.keys(CHARACTER_VOICES).length);
+    assert.equal(new Set(Object.values(CHARACTER_VOICES).map(character => character.voice)).size, calls.length);
     for (const [index, character] of Object.values(CHARACTER_VOICES).entries()) {
       const call = calls[index];
       assert.equal(call.url, 'https://generativelanguage.googleapis.com/v1beta/interactions');
@@ -64,15 +65,14 @@ test('speech endpoint uses ElevenLabs when configured and falls back properly', 
   try {
     const response = await handleSpeechRequest(
       'POST',
-      { text: '안녕, 유하야!', characterId: 'ggomi' },
+      { text: '안녕, 나는 핑구야!', characterId: 'pingu' },
       { elevenLabsApiKey: 'test-eleven-key' }
     );
     assert.equal(response.status, 200);
     assert.equal(response.headers.get('Content-Type'), 'audio/mpeg');
-    assert.ok(calledUrl.includes('https://api.elevenlabs.io/v1/text-to-speech/'));
+    assert.equal(calledUrl, `https://api.elevenlabs.io/v1/text-to-speech/${CHARACTER_VOICES.pingu.elevenVoiceId}`);
     assert.equal(calledHeaders['xi-api-key'], 'test-eleven-key');
   } finally {
     globalThis.fetch = originalFetch;
   }
 });
-

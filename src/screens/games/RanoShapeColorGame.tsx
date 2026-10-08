@@ -1,3 +1,5 @@
+import type { CharacterId } from '../../types';
+import { CHARACTERS } from '../../data/characters';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -19,6 +21,7 @@ interface ShapeColorItem {
 }
 
 interface RanoShapeColorGameProps {
+  buddy: CharacterId;
   onCompleteQuiz: (starsEarned: number) => void;
   soundEnabled: boolean;
   ageGroup: AgeGroup;
@@ -128,10 +131,12 @@ const ShapeFigure: React.FC<{ shape: string; color: string; className?: string }
 
 export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
   onCompleteQuiz,
+  buddy,
   soundEnabled,
   ageGroup,
   childName,
 }) => {
+  const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const diffConfig = getDifficultyConfig(ageGroup);
@@ -172,14 +177,14 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
     setOptions(roundOptions);
 
     if (soundEnabled) {
-      speakText(`라노와 함께 알록달록 ${target.colorName} ${target.shape}를 찾아주세요!`, soundEnabled, { characterId: 'rano' });
+      speakText(`${friend.name}와 함께 알록달록 ${target.colorName} ${target.shape}를 찾아주세요!`, soundEnabled, { characterId: buddy });
     }
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
       hintTimerRef.current = scheduleGameTimeout(() => {
         setShowHint(true);
-        speakText(`여기 반짝이는 걸 눌러봐!`, soundEnabled, { characterId: 'rano', playIntroSFX: false });
+        speakText(`여기 반짝이는 걸 눌러봐!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
       }, diffConfig.hintDelaySec * 1000);
     }
 
@@ -191,7 +196,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
             if (gameTimerRef.current) clearInterval(gameTimerRef.current);
             setTimeOut(true);
             setStreak(0);
-            speakText(`시간이 끝났어요. 다음 문제를 풀어보아요!`, soundEnabled, { characterId: 'rano' });
+            speakText(`시간이 끝났어요. 다음 문제를 풀어보아요!`, soundEnabled, { characterId: buddy });
             return 0;
           }
           return prev - 1;
@@ -224,9 +229,9 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
       if (nextStreak >= 2) {
         setShowComboBanner(true);
         scheduleGameTimeout(() => setShowComboBanner(false), 1500);
-        speakText(`크앙! ${nextStreak}연속 정답! ${item.colorName} ${item.shape}를 완벽하게 맞췄어요!`, soundEnabled, { characterId: 'rano' });
+        speakText(`우와! ${nextStreak}연속 정답! ${item.colorName} ${item.shape}를 완벽하게 맞췄어요!`, soundEnabled, { characterId: buddy });
       } else {
-        speakText(`크앙! 정답이에요! ${item.colorName} ${item.shape}!`, soundEnabled, { characterId: 'rano' });
+        speakText(`우와! 정답이에요! ${item.colorName} ${item.shape}!`, soundEnabled, { characterId: buddy });
       }
 
       onCompleteQuiz(diffConfig.starsPerCorrect);
@@ -234,7 +239,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
       setShakingCardId(item.id);
       setStreak(0);
       playWrongBoing(soundEnabled);
-      speakText(`모양과 색깔을 다시 한번 잘 살펴보아요!`, soundEnabled, { characterId: 'rano' });
+      speakText(`모양과 색깔을 다시 한번 잘 살펴보아요!`, soundEnabled, { characterId: buddy });
       scheduleGameTimeout(() => setShakingCardId(null), 600);
     }
   };
@@ -243,10 +248,10 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#DCEDC8] to-[#E8F5E9] p-3.5 sm:p-4 rounded-3xl border-3 border-[#66BB6A] shadow-sm flex items-center gap-3 sm:gap-4 relative">
-        <CharacterAvatar id="rano" size="md" mood={selectedCorrectId ? 'excited' : 'waving'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
+        <CharacterAvatar id={buddy} size="md" mood={selectedCorrectId ? 'excited' : 'waving'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#2E7D32] mb-1">
-            <span>🦖 {getAgeGroupLabel(ageGroup)} &bull; 모양 색상</span>
+            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 모양 색상</span>
           </div>
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
             &ldquo;<span className="text-[#2E7D32] underline">{targetItem.colorName} {targetItem.shape}</span>&rdquo;를 찾아주세요!
@@ -254,7 +259,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
         </div>
         <button
           aria-label="놀이 안내 다시 듣기"
-          onClick={() => speakText(`${targetItem.colorName} ${targetItem.shape}를 찾아보아요!`, soundEnabled, { characterId: 'rano' })}
+          onClick={() => speakText(`${targetItem.colorName} ${targetItem.shape}를 찾아보아요!`, soundEnabled, { characterId: buddy })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#66BB6A] shadow-xs text-[#2E7D32] cursor-pointer shrink-0"
         >
           <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -353,7 +358,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
       <div className="flex items-center justify-center gap-3 w-full">
         {selectedCorrectId || timeOut ? (
           <JellyButton soundEnabled={soundEnabled} variant="primary" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 모양 놀이 🦖 <span className="next-play-icon" aria-hidden="true">➜</span>
+            다음 모양 놀이 {friend.badge} <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">

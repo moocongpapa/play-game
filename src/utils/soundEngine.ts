@@ -503,6 +503,7 @@ const CHARACTER_VOICE_PROFILES: Record<string, { pitch: number; rate: number; pr
   ggulgguli: { pitch: 1.05, rate: 0.90, prefixSFX: 'ggulgguli' }, // 유쾌하고 신난 꿀꿀이
   eumme: { pitch: 1.04, rate: 0.86, prefixSFX: 'eumme' },     // 부드럽고 상냥한 음메
   nurungji: { pitch: 1.06, rate: 0.92, prefixSFX: 'nurungji' }, // 신나고 기분 좋은 누룽지
+  pingu: { pitch: 1.09, rate: 0.88, prefixSFX: 'pingu' },    // 맑고 다정하게 말하는 핑구
 };
 
 /**

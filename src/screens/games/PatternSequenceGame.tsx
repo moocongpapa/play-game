@@ -1,3 +1,5 @@
+import type { CharacterId } from '../../types';
+import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
@@ -11,6 +13,7 @@ import { AgeGroup, PatternItem } from '../../types';
 import { Volume2, RefreshCw, Timer } from 'lucide-react';
 
 interface PatternSequenceGameProps {
+  buddy: CharacterId;
   onCompleteQuiz: (starsEarned: number) => void;
   soundEnabled: boolean;
   ageGroup: AgeGroup;
@@ -19,10 +22,12 @@ interface PatternSequenceGameProps {
 
 export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
   onCompleteQuiz,
+  buddy,
   soundEnabled,
   ageGroup,
   childName,
 }) => {
+  const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const diffConfig = getDifficultyConfig(ageGroup);
@@ -63,14 +68,14 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
     setOptions(roundOptions);
 
     if (soundEnabled) {
-      speakText(`라노랑 신나는 패턴 놀이! 물음표 상자에는 어떤 친구가 올까요? 규칙을 찾아보아요!`, soundEnabled, { characterId: 'rano' });
+      speakText(`${friend.name}랑 신나는 패턴 놀이! 물음표 상자에는 어떤 친구가 올까요? 규칙을 찾아보아요!`, soundEnabled, { characterId: buddy });
     }
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
       hintTimerRef.current = scheduleGameTimeout(() => {
         setShowHint(true);
-        speakText(`여기 반짝이는 친구를 골라봐!`, soundEnabled, { characterId: 'rano', playIntroSFX: false });
+        speakText(`여기 반짝이는 친구를 골라봐!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
       }, diffConfig.hintDelaySec * 1000);
     }
 
@@ -81,7 +86,7 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
           if (prev <= 1) {
             if (gameTimerRef.current) clearInterval(gameTimerRef.current);
             setTimeOut(true);
-            speakText(`시간 초과! 다음 패턴 규칙을 찾아볼까요?`, soundEnabled, { characterId: 'rano' });
+            speakText(`시간 초과! 다음 패턴 규칙을 찾아볼까요?`, soundEnabled, { characterId: buddy });
             return 0;
           }
           return prev - 1;
@@ -107,12 +112,12 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
 
       setSelectedCorrectId(ans);
       playCorrectFanfare(soundEnabled);
-      speakText(`크앙! 정답이에요! 패턴을 예쁘게 완성했어요!`, soundEnabled, { characterId: 'rano' });
+      speakText(`우와! 정답이에요! 패턴을 예쁘게 완성했어요!`, soundEnabled, { characterId: buddy });
       onCompleteQuiz(diffConfig.starsPerCorrect);
     } else {
       setShakingCardId(ans);
       playWrongBoing(soundEnabled);
-      speakText(`다시 순서를 곰곰이 살펴볼까요?`, soundEnabled, { characterId: 'rano' });
+      speakText(`다시 순서를 곰곰이 살펴볼까요?`, soundEnabled, { characterId: buddy });
       scheduleGameTimeout(() => setShakingCardId(null), 600);
     }
   };
@@ -123,10 +128,10 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#DCEDC8] to-[#E8F5E9] p-3.5 sm:p-4 rounded-3xl border-3 border-[#66BB6A] shadow-sm flex items-center gap-3 sm:gap-4">
-        <CharacterAvatar id="rano" size="md" mood={selectedCorrectId ? 'excited' : 'waving'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
+        <CharacterAvatar id={buddy} size="md" mood={selectedCorrectId ? 'excited' : 'waving'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#2E7D32] mb-1">
-            <span>🦖 {getAgeGroupLabel(ageGroup)} &bull; 패턴 완성</span>
+            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 패턴 완성</span>
           </div>
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
             물음표 <span className="text-[#2E7D32] underline">❓</span> 칸에 올 친구는?
@@ -134,7 +139,7 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
         </div>
         <button
           aria-label="놀이 안내 다시 듣기"
-          onClick={() => speakText(`규칙을 보며 어떤 것이 오는지 맞춰보아요!`, soundEnabled, { characterId: 'rano' })}
+          onClick={() => speakText(`규칙을 보며 어떤 것이 오는지 맞춰보아요!`, soundEnabled, { characterId: buddy })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#66BB6A] shadow-xs text-[#2E7D32] cursor-pointer shrink-0"
         >
           <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -232,7 +237,7 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
       <div className="flex items-center justify-center gap-3 w-full">
         {selectedCorrectId || timeOut ? (
           <JellyButton soundEnabled={soundEnabled} variant="green" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 패턴 완성하기 🦖 <span className="next-play-icon" aria-hidden="true">➜</span>
+            다음 패턴 완성하기 {friend.badge} <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">

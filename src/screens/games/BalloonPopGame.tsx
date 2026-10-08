@@ -1,3 +1,5 @@
+import type { CharacterId } from '../../types';
+import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
@@ -20,6 +22,7 @@ interface BalloonItem {
 }
 
 interface BalloonPopGameProps {
+  buddy: CharacterId;
   onCompleteQuiz: (starsEarned: number) => void;
   soundEnabled: boolean;
   ageGroup: AgeGroup;
@@ -42,12 +45,14 @@ const KOREAN_NUMBERS = ['하나!', '둘!', '셋!', '넷!', '다섯!', '여섯!',
 
 export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
   onCompleteQuiz,
+  buddy,
   soundEnabled,
   childName,
   targetCount = 5,
   onStageClear,
   isStageMode = false,
 }) => {
+  const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const reducedMotion = useReducedMotion();
@@ -76,7 +81,7 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
 
   useEffect(() => {
     if (soundEnabled) {
-      speakText(`하늘로 떠오르는 알록달록 풍선을 팡팡 터뜨려보자!`, soundEnabled, { characterId: 'ggulgguli' });
+      speakText(`하늘로 떠오르는 알록달록 풍선을 팡팡 터뜨려보자!`, soundEnabled, { characterId: buddy });
     }
 
     // Initial 4 balloons
@@ -129,7 +134,7 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
     }, 900);
 
     // Voice count out loud
-    speakText(numberText, soundEnabled, { characterId: 'ggulgguli', playIntroSFX: false });
+    speakText(numberText, soundEnabled, { characterId: buddy, playIntroSFX: false });
 
     // Check complete
     if (nextCount >= targetCount) {
@@ -139,7 +144,7 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
         playSparkleChime(soundEnabled);
         fireConfetti();
         speakText(`우와! ${childName}야, 풍선 ${targetCount}개를 모두 팡팡 터뜨렸어요! 최고야!`, soundEnabled, {
-          characterId: 'ggulgguli',
+          characterId: buddy,
         });
         onCompleteQuiz(3);
         if (onStageClear) {
@@ -158,7 +163,7 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
     for (let i = 0; i < 4; i++) {
       scheduleGameTimeout(() => spawnBalloon(), i * 400);
     }
-    speakText(`다시 신나게 터뜨려보자!`, soundEnabled, { characterId: 'ggulgguli' });
+    speakText(`다시 신나게 터뜨려보자!`, soundEnabled, { characterId: buddy });
   };
 
   return (
@@ -166,9 +171,9 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
       {/* Top Status Banner */}
       <div className="balloon-status z-20 w-full bg-white/90 backdrop-blur-xs p-3.5 rounded-3xl border-3 border-sky-300 shadow-md flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <CharacterAvatar id="ggulgguli" size="sm" mood="happy" className="!w-12 !h-12 shadow-xs" />
+          <CharacterAvatar id={buddy} size="sm" mood="happy" className="!w-12 !h-12 shadow-xs" />
           <div>
-            <span className="text-xs font-black text-sky-600 block">꿀꿀이와 풍선 팡팡! 🎈</span>
+            <span className="text-xs font-black text-sky-600 block">{friend.name}와 풍선 팡팡! 🎈</span>
             <span className="text-sm sm:text-base font-black text-[#4A3E3D]">
               풍선을 터치해 터뜨려보세요!
             </span>

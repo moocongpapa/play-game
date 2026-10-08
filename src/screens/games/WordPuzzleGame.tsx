@@ -1,3 +1,5 @@
+import type { CharacterId } from '../../types';
+import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
@@ -11,6 +13,7 @@ import { AgeGroup, WordPuzzleItem } from '../../types';
 import { Volume2, RefreshCw, Sparkles, Timer } from 'lucide-react';
 
 interface WordPuzzleGameProps {
+  buddy: CharacterId;
   onCompleteQuiz: (starsEarned: number) => void;
   soundEnabled: boolean;
   ageGroup: AgeGroup;
@@ -19,10 +22,12 @@ interface WordPuzzleGameProps {
 
 export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
   onCompleteQuiz,
+  buddy,
   soundEnabled,
   ageGroup,
   childName,
 }) => {
+  const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const diffConfig = getDifficultyConfig(ageGroup);
@@ -66,7 +71,7 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
     setLettersPool(shuffled);
 
     if (soundEnabled) {
-      speakText(`글자를 알맞은 순서대로 쏙쏙 모아서 '${target.word}' 단어를 만들어볼까요?`, soundEnabled, { characterId: 'jelly' });
+      speakText(`글자를 알맞은 순서대로 쏙쏙 모아서 '${target.word}' 단어를 만들어볼까요?`, soundEnabled, { characterId: buddy });
     }
 
     // 힌트 타이머 구동
@@ -83,7 +88,7 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
           if (prev <= 1) {
             if (gameTimerRef.current) clearInterval(gameTimerRef.current);
             setTimeOut(true);
-            speakText(`시간 초과! 다음 글자 퍼즐을 맞춰볼까요?`, soundEnabled, { characterId: 'jelly' });
+            speakText(`시간 초과! 다음 글자 퍼즐을 맞춰볼까요?`, soundEnabled, { characterId: buddy });
             return 0;
           }
           return prev - 1;
@@ -112,7 +117,7 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
       setPlacedLetters(newPlaced);
       
       // 글자 수 읽기
-      speakText(letter, soundEnabled, { characterId: 'jelly', playIntroSFX: false });
+      speakText(letter, soundEnabled, { characterId: buddy, playIntroSFX: false });
 
       // 글자 모음에서 탭한 글자 하나 지우기
       const newPool = [...lettersPool];
@@ -126,13 +131,13 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
 
         setIsCompleted(true);
         playCorrectFanfare(soundEnabled);
-        speakText(`와아! 단어가 완성되었어요! ${targetItem.word}!`, soundEnabled, { characterId: 'jelly' });
+        speakText(`와아! 단어가 완성되었어요! ${targetItem.word}!`, soundEnabled, { characterId: buddy });
         onCompleteQuiz(diffConfig.starsPerCorrect);
       }
     } else {
       setShakingLetterIdx(index);
       playWrongBoing(soundEnabled);
-      speakText(`에구구, 올바른 순서의 글자를 눌러주세요!`, soundEnabled, { characterId: 'jelly' });
+      speakText(`에구구, 올바른 순서의 글자를 눌러주세요!`, soundEnabled, { characterId: buddy });
       scheduleGameTimeout(() => setShakingLetterIdx(null), 600);
     }
   };
@@ -141,10 +146,10 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#E1BEE7] to-[#F3E5F5] p-3.5 sm:p-4 rounded-3xl border-3 border-[#AB47BC] shadow-sm flex items-center gap-3 sm:gap-4">
-        <CharacterAvatar id="jelly" size="md" mood={isCompleted ? 'dancing' : 'happy'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
+        <CharacterAvatar id={buddy} size="md" mood={isCompleted ? 'dancing' : 'happy'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#8E24AA] mb-1">
-            <span>🐰 {getAgeGroupLabel(ageGroup)} &bull; 단어 조합</span>
+            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 단어 조합</span>
           </div>
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
             단어 퍼즐: &ldquo;<span className="text-[#8E24AA] underline">{targetItem.word}</span>&rdquo;
@@ -152,7 +157,7 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
         </div>
         <button
           aria-label="놀이 안내 다시 듣기"
-          onClick={() => speakText(`힌트! ${targetItem.hint}`, soundEnabled, { characterId: 'jelly' })}
+          onClick={() => speakText(`힌트! ${targetItem.hint}`, soundEnabled, { characterId: buddy })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#AB47BC] shadow-xs text-[#8E24AA] cursor-pointer shrink-0"
           title="단어 힌트 말하기"
         >
@@ -240,7 +245,7 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
       <div className="flex items-center justify-center gap-3 w-full">
         {isCompleted || timeOut ? (
           <JellyButton soundEnabled={soundEnabled} variant="purple" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 단어 만들기 🐰 <span className="next-play-icon" aria-hidden="true">➜</span>
+            다음 단어 만들기 {friend.badge} <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">

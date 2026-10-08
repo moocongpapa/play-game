@@ -1,3 +1,5 @@
+import type { CharacterId } from '../../types';
+import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
@@ -20,6 +22,7 @@ interface SoundItem {
 }
 
 interface DochiSoundGameProps {
+  buddy: CharacterId;
   onCompleteQuiz: (starsEarned: number) => void;
   soundEnabled: boolean;
   ageGroup: AgeGroup;
@@ -28,10 +31,12 @@ interface DochiSoundGameProps {
 
 export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
   onCompleteQuiz,
+  buddy,
   soundEnabled,
   ageGroup,
   childName,
 }) => {
+  const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const diffConfig = getDifficultyConfig(ageGroup);
@@ -73,7 +78,7 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
     if (soundEnabled) {
       playAnimalSound(target.name, soundEnabled);
       scheduleGameTimeout(() => {
-        speakText(`도치가 소리를 들려줄게요! "${target.soundText}" 이 소리의 주인은 누구일까요?`, soundEnabled, { characterId: 'dochi' });
+        speakText(`${friend.name}가 소리를 들려줄게요! "${target.soundText}" 이 소리의 주인은 누구일까요?`, soundEnabled, { characterId: buddy });
       }, 350);
     }
 
@@ -81,7 +86,7 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
     if (diffConfig.hintEnabled) {
       hintTimerRef.current = scheduleGameTimeout(() => {
         setShowHint(true);
-        speakText(`여기 반짝이는 친구를 눌러보자!`, soundEnabled, { characterId: 'dochi', playIntroSFX: false });
+        speakText(`여기 반짝이는 친구를 눌러보자!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
       }, diffConfig.hintDelaySec * 1000);
     }
 
@@ -92,7 +97,7 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
           if (prev <= 1) {
             if (gameTimerRef.current) clearInterval(gameTimerRef.current);
             setTimeOut(true);
-            speakText(`시간이 완료되었어요. 다른 소리를 들려줄게요!`, soundEnabled, { characterId: 'dochi' });
+            speakText(`시간이 완료되었어요. 다른 소리를 들려줄게요!`, soundEnabled, { characterId: buddy });
             return 0;
           }
           return prev - 1;
@@ -112,7 +117,7 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
   const handlePlaySoundClue = () => {
     playAnimalSound(targetItem.name, soundEnabled);
     scheduleGameTimeout(() => {
-      speakText(`"${targetItem.soundText}" 소리를 가진 친구는 누구일까요?`, soundEnabled, { characterId: 'dochi' });
+      speakText(`"${targetItem.soundText}" 소리를 가진 친구는 누구일까요?`, soundEnabled, { characterId: buddy });
     }, 300);
   };
 
@@ -127,12 +132,12 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
       playAnimalSound(item.name, soundEnabled);
       playDingDongDang(soundEnabled);
       fireConfetti();
-      speakText(`딩동댕! 정답이에요! 귀여운 ${item.name}!`, soundEnabled, { characterId: 'dochi' });
+      speakText(`딩동댕! 정답이에요! 귀여운 ${item.name}!`, soundEnabled, { characterId: buddy });
       onCompleteQuiz(diffConfig.starsPerCorrect);
     } else {
       setShakingCardId(item.id);
       playWrongBoing(soundEnabled);
-      speakText(`다시 소리를 들어보아요!`, soundEnabled, { characterId: 'dochi' });
+      speakText(`다시 소리를 들어보아요!`, soundEnabled, { characterId: buddy });
       scheduleGameTimeout(() => setShakingCardId(null), 600);
     }
   };
@@ -143,10 +148,10 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#FFE0B2] to-[#FFF3E0] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FFA726] shadow-sm flex items-center gap-3 sm:gap-4">
-        <CharacterAvatar id="dochi" size="md" mood={selectedCorrectId ? 'excited' : 'waving'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
+        <CharacterAvatar id={buddy} size="md" mood={selectedCorrectId ? 'excited' : 'waving'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#E65100] mb-1">
-            <span>🦔 {getAgeGroupLabel(ageGroup)} &bull; 소리 퀴즈</span>
+            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 소리 퀴즈</span>
           </div>
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
             &ldquo;<span className="text-[#FB8C00] underline">{targetItem.soundText}</span>&rdquo;
@@ -243,7 +248,7 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
       <div className="flex items-center justify-center gap-3 w-full">
         {selectedCorrectId || timeOut ? (
           <JellyButton soundEnabled={soundEnabled} variant="yellow" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 소리 듣기 🦔 <span className="next-play-icon" aria-hidden="true">➜</span>
+            다음 소리 듣기 {friend.badge} <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">

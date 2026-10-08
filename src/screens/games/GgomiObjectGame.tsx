@@ -1,3 +1,5 @@
+import type { CharacterId } from '../../types';
+import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
@@ -11,6 +13,7 @@ import { getDifficultyConfig, getAgeGroupLabel, pickDistractors, pickRandom } fr
 import { Volume2, RefreshCw, Timer, Flame } from 'lucide-react';
 
 interface GgomiObjectGameProps {
+  buddy: CharacterId;
   onCompleteQuiz: (starsEarned: number) => void;
   soundEnabled: boolean;
   ageGroup: AgeGroup;
@@ -19,10 +22,12 @@ interface GgomiObjectGameProps {
 
 export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
   onCompleteQuiz,
+  buddy,
   soundEnabled,
   ageGroup,
   childName,
 }) => {
+  const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const diffConfig = getDifficultyConfig(ageGroup);
@@ -80,19 +85,19 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
     if (ageGroup !== 'baby' && target.category && categoryLabels[target.category] && Math.random() > 0.5) {
       promptText = `${categoryLabels[target.category]}인 '${target.koreanName}'를 찾아주세요!`;
     } else {
-      promptText = `꼬미가 '${target.koreanName}'를 찾고 있어요! 어디에 있을까요?`;
+      promptText = `${friend.name}가 '${target.koreanName}'를 찾고 있어요! 어디에 있을까요?`;
     }
     setQuestionPrompt(promptText);
 
     if (soundEnabled) {
-      speakText(promptText, soundEnabled, { characterId: 'ggomi' });
+      speakText(promptText, soundEnabled, { characterId: buddy });
     }
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
       hintTimerRef.current = scheduleGameTimeout(() => {
         setShowHint(true);
-        speakText(`여기 반짝이는 걸 눌러봐!`, soundEnabled, { characterId: 'ggomi', playIntroSFX: false });
+        speakText(`여기 반짝이는 걸 눌러봐!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
       }, diffConfig.hintDelaySec * 1000);
     }
 
@@ -103,7 +108,7 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
           if (prev <= 1) {
             if (gameTimerRef.current) clearInterval(gameTimerRef.current);
             setTimeOut(true);
-            speakText(`아쉬워요! 시간이 다 되었어요. 다른 문제를 풀어볼까요?`, soundEnabled, { characterId: 'ggomi' });
+            speakText(`아쉬워요! 시간이 다 되었어요. 다른 문제를 풀어볼까요?`, soundEnabled, { characterId: buddy });
             return 0;
           }
           return prev - 1;
@@ -136,23 +141,23 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
       if (nextStreak >= 2) {
         setShowComboBanner(true);
         scheduleGameTimeout(() => setShowComboBanner(false), 1500);
-        speakText(`와우! ${nextStreak}연속 정답! ${childName}야 정말 똑똑하구나!`, soundEnabled, { characterId: 'ggomi' });
+        speakText(`와우! ${nextStreak}연속 정답! ${childName}야 정말 똑똑하구나!`, soundEnabled, { characterId: buddy });
       } else {
-        speakText(`정답이에요! 참 잘했어요!`, soundEnabled, { characterId: 'ggomi' });
+        speakText(`정답이에요! 참 잘했어요!`, soundEnabled, { characterId: buddy });
       }
       onCompleteQuiz(diffConfig.starsPerCorrect);
     } else {
       setShakingCardId(item.id);
       setStreak(0);
       playWrongBoing(soundEnabled);
-      speakText(`다시 한번 생각해보아요!`, soundEnabled, { characterId: 'ggomi' });
+      speakText(`다시 한번 생각해보아요!`, soundEnabled, { characterId: buddy });
       scheduleGameTimeout(() => setShakingCardId(null), 600);
     }
   };
 
   const handleReplayVoice = () => {
     if (!targetItem) return;
-    speakText(`${targetItem.koreanName}는 어디에 있을까요?`, soundEnabled, { characterId: 'ggomi' });
+    speakText(`${targetItem.koreanName}는 어디에 있을까요?`, soundEnabled, { characterId: buddy });
   };
 
   if (!targetItem) return null;
@@ -161,10 +166,10 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#FFB7D5] to-[#FFE4EC] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FF80AB] shadow-sm flex items-center gap-3 sm:gap-4 relative">
-        <CharacterAvatar id="ggomi" size="md" mood={selectedCorrectId ? 'dancing' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
+        <CharacterAvatar id={buddy} size="md" mood={selectedCorrectId ? 'dancing' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#FF4081] mb-1">
-            <span>🐻 {getAgeGroupLabel(ageGroup)} &bull; 사물 인지</span>
+            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 사물 인지</span>
           </div>
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug">
             {questionPrompt || <>&ldquo;<span className="text-[#FF4081] underline">{targetItem?.koreanName}</span>&rdquo;를 찾아주세요!</>}

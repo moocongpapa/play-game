@@ -234,7 +234,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
           </button>
         </div>
         <p className="text-xs sm:text-sm text-[#625d67] mb-3">
-          일곱 친구가 서로 다른 목소리와 말투로 유하에게 이야기해요.
+          {Object.keys(CHARACTER_VOICES).length}명의 친구가 서로 다른 목소리와 말투로 이야기해요.
         </p>
         <div className={`rounded-2xl px-3 py-2.5 text-xs font-bold mb-3 ${aiAvailable ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-amber-50 text-amber-900 border border-amber-200'}`} role="status">
           {aiAvailable === null ? 'AI 음성 연결을 확인하고 있어요.' : aiAvailable ? 'AI 음성 키가 연결됐어요. 아래에서 목소리를 확인해 보세요.' : 'AI 음성이 아직 설정되지 않았어요. 지금은 기기 기본 목소리가 재생돼요.'}

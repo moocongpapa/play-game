@@ -1,4 +1,4 @@
-export type CharacterId = 'ggomi' | 'rano' | 'jelly' | 'dochi' | 'ggulgguli' | 'eumme' | 'nurungji';
+export type CharacterId = 'ggomi' | 'rano' | 'jelly' | 'dochi' | 'ggulgguli' | 'eumme' | 'nurungji' | 'pingu';
 
 export type GameId = 
   | 'object_recognition' // 꼬미

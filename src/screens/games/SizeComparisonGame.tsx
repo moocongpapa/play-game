@@ -1,3 +1,5 @@
+import type { CharacterId } from '../../types';
+import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
@@ -11,6 +13,7 @@ import { AgeGroup, SizeItem } from '../../types';
 import { Maximize2, Minimize2, ArrowRight, Volume2, RefreshCw, Timer } from 'lucide-react';
 
 interface SizeComparisonGameProps {
+  buddy: CharacterId;
   onCompleteQuiz: (starsEarned: number) => void;
   soundEnabled: boolean;
   ageGroup: AgeGroup;
@@ -19,10 +22,12 @@ interface SizeComparisonGameProps {
 
 export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
   onCompleteQuiz,
+  buddy,
   soundEnabled,
   ageGroup,
   childName,
 }) => {
+  const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const diffConfig = getDifficultyConfig(ageGroup);
@@ -72,22 +77,22 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
 
     let audioMsg = '';
     if (type === 'find_largest') {
-      audioMsg = `꿀꿀이와 크기 놀이! 어떤 것이 가장 클까요? 큰 친구를 골라주세요!`;
+      audioMsg = `${friend.name}와 크기 놀이! 어떤 것이 가장 클까요? 큰 친구를 골라주세요!`;
     } else if (type === 'find_smallest') {
-      audioMsg = `꿀꿀이와 크기 놀이! 어떤 것이 가장 작을까요? 작은 친구를 찾아보세요!`;
+      audioMsg = `${friend.name}와 크기 놀이! 어떤 것이 가장 작을까요? 작은 친구를 찾아보세요!`;
     } else {
       audioMsg = `작은 것부터 순서대로 하나씩 톡톡 터치해서 차례대로 나열해볼까요?`;
     }
 
     if (soundEnabled) {
-      speakText(audioMsg, soundEnabled, { characterId: 'ggulgguli' });
+      speakText(audioMsg, soundEnabled, { characterId: buddy });
     }
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
       hintTimerRef.current = scheduleGameTimeout(() => {
         setShowHint(true);
-        speakText(`여기 반짝이는 친구를 골라봐!`, soundEnabled, { characterId: 'ggulgguli', playIntroSFX: false });
+        speakText(`여기 반짝이는 친구를 골라봐!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
       }, diffConfig.hintDelaySec * 1000);
     }
 
@@ -98,7 +103,7 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
           if (prev <= 1) {
             if (gameTimerRef.current) clearInterval(gameTimerRef.current);
             setTimeOut(true);
-            speakText(`시간이 완료되었어요. 다른 크기 놀이를 시작할게요!`, soundEnabled, { characterId: 'ggulgguli' });
+            speakText(`시간이 완료되었어요. 다른 크기 놀이를 시작할게요!`, soundEnabled, { characterId: buddy });
             return 0;
           }
           return prev - 1;
@@ -150,12 +155,12 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
       if (index === correctIdx) {
         setIsCompleted(true);
         playCorrectFanfare(soundEnabled);
-        speakText(`정답이에요! 정말 커다란 친구를 잘 찾았어요!`, soundEnabled, { characterId: 'ggulgguli' });
+        speakText(`정답이에요! 정말 커다란 친구를 잘 찾았어요!`, soundEnabled, { characterId: buddy });
         onCompleteQuiz(diffConfig.starsPerCorrect);
       } else {
         setShakingIdx(index);
         playWrongBoing(soundEnabled);
-        speakText(`더 커다란 친구가 있는 것 같아요!`, soundEnabled, { characterId: 'ggulgguli' });
+        speakText(`더 커다란 친구가 있는 것 같아요!`, soundEnabled, { characterId: buddy });
         scheduleGameTimeout(() => setShakingIdx(null), 600);
       }
     } else if (questionType === 'find_smallest') {
@@ -163,12 +168,12 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
       if (index === correctIdx) {
         setIsCompleted(true);
         playCorrectFanfare(soundEnabled);
-        speakText(`정답이에요! 정말 작고 귀여운 친구를 찾았어요!`, soundEnabled, { characterId: 'ggulgguli' });
+        speakText(`정답이에요! 정말 작고 귀여운 친구를 찾았어요!`, soundEnabled, { characterId: buddy });
         onCompleteQuiz(diffConfig.starsPerCorrect);
       } else {
         setShakingIdx(index);
         playWrongBoing(soundEnabled);
-        speakText(`더 자그마한 친구를 골라보아요!`, soundEnabled, { characterId: 'ggulgguli' });
+        speakText(`더 자그마한 친구를 골라보아요!`, soundEnabled, { characterId: buddy });
         scheduleGameTimeout(() => setShakingIdx(null), 600);
       }
     } else {
@@ -193,13 +198,13 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
         if (newSelected.length === targetItems.length) {
           setIsCompleted(true);
           playCorrectFanfare(soundEnabled);
-          speakText(`우와! 작은 것부터 차례대로 완벽하게 정렬했어요! 최고예요!`, soundEnabled, { characterId: 'ggulgguli' });
+          speakText(`우와! 작은 것부터 차례대로 완벽하게 정렬했어요! 최고예요!`, soundEnabled, { characterId: buddy });
           onCompleteQuiz(diffConfig.starsPerCorrect);
         }
       } else {
         setShakingIdx(index);
         playWrongBoing(soundEnabled);
-        speakText(`더 작은 친구를 먼저 골라보아요!`, soundEnabled, { characterId: 'ggulgguli' });
+        speakText(`더 작은 친구를 먼저 골라보아요!`, soundEnabled, { characterId: buddy });
         scheduleGameTimeout(() => setShakingIdx(null), 600);
       }
     }
@@ -227,10 +232,10 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#FFCCBC] to-[#FBE9E7] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FF7043] shadow-sm flex items-center gap-3 sm:gap-4">
-        <CharacterAvatar id="ggulgguli" size="md" mood={isCompleted ? 'happy' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
+        <CharacterAvatar id={buddy} size="md" mood={isCompleted ? 'happy' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#F4511E] mb-1">
-            <span>🐷 {getAgeGroupLabel(ageGroup)} &bull; 크기 비교</span>
+            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 크기 비교</span>
           </div>
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
             {questionType === 'find_largest' && '어떤 것이 가장 클까요?'}
@@ -246,7 +251,7 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
               : questionType === 'find_smallest'
               ? '어떤 것이 가장 작은가요?'
               : '작은 것부터 순서대로 눌러보아요!';
-            speakText(msg, soundEnabled, { characterId: 'ggulgguli' });
+            speakText(msg, soundEnabled, { characterId: buddy });
           }}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#FF7043] shadow-xs text-[#F4511E] cursor-pointer shrink-0"
         >
@@ -329,7 +334,7 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
       <div className="flex items-center justify-center gap-3 w-full">
         {isCompleted || timeOut ? (
           <JellyButton soundEnabled={soundEnabled} variant="primary" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 크기 놀이 🐷 <span className="next-play-icon" aria-hidden="true">➜</span>
+            다음 크기 놀이 {friend.badge} <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">

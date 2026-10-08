@@ -52,6 +52,7 @@ export const CHARACTER_FILE_KEYWORDS: Record<CharacterId, string[]> = {
   ggulgguli: ['ggulgguli', '꿀꿀이', 'pig', '돼지'],
   eumme: ['eumme', '음메', 'cow', '소'],
   nurungji: ['nurungji', '누룽지', 'cat', '고양이'],
+  pingu: ['pingu', '핑구', 'penguin', '펭귄'],
 };
 
 export const initAuth = (

@@ -1,3 +1,5 @@
+import type { CharacterId } from '../../types';
+import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
@@ -12,6 +14,7 @@ import { AgeGroup, QuizItem } from '../../types';
 import { Volume2, RefreshCw, Sparkles, Flame, Eye } from 'lucide-react';
 
 interface ShadowQuizGameProps {
+  buddy: CharacterId;
   onCompleteQuiz: (starsEarned: number) => void;
   soundEnabled: boolean;
   ageGroup: AgeGroup;
@@ -20,10 +23,12 @@ interface ShadowQuizGameProps {
 
 export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
   onCompleteQuiz,
+  buddy,
   soundEnabled,
   ageGroup,
   childName,
 }) => {
+  const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const diffConfig = getDifficultyConfig(ageGroup);
@@ -50,7 +55,7 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
     setOptions(roundOptions);
 
     if (soundEnabled) {
-      speakText(`깜깜한 그림자가 나타났어요! 이 그림자의 주인공은 누구일까요?`, soundEnabled, { characterId: 'ggomi' });
+      speakText(`깜깜한 그림자가 나타났어요! 이 그림자의 주인공은 누구일까요?`, soundEnabled, { characterId: buddy });
     }
   };
 
@@ -74,9 +79,9 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
       if (nextStreak >= 2) {
         setShowComboBanner(true);
         scheduleGameTimeout(() => setShowComboBanner(false), 1500);
-        speakText(`와우! ${nextStreak}연속 정답! 정답은 바로 귀여운 ${targetItem.koreanName}였어요!`, soundEnabled, { characterId: 'ggomi' });
+        speakText(`와우! ${nextStreak}연속 정답! 정답은 바로 귀여운 ${targetItem.koreanName}였어요!`, soundEnabled, { characterId: buddy });
       } else {
-        speakText(`정답이에요! 그림자의 주인공은 ${targetItem.koreanName}였어요!`, soundEnabled, { characterId: 'ggomi' });
+        speakText(`정답이에요! 그림자의 주인공은 ${targetItem.koreanName}였어요!`, soundEnabled, { characterId: buddy });
       }
 
       onCompleteQuiz(diffConfig.starsPerCorrect);
@@ -85,7 +90,7 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
       setShakingCardId(item.id);
       setStreak(0);
       playWrongBoing(soundEnabled);
-      speakText(`그림자의 모양을 다시 한번 잘 살펴보아요!`, soundEnabled, { characterId: 'ggomi' });
+      speakText(`그림자의 모양을 다시 한번 잘 살펴보아요!`, soundEnabled, { characterId: buddy });
       scheduleGameTimeout(() => setShakingCardId(null), 600);
     }
   };
@@ -96,7 +101,7 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#F3E5F5] to-[#EDE7F6] p-3.5 sm:p-4 rounded-3xl border-3 border-[#BA68C8] shadow-sm flex items-center gap-3 sm:gap-4 relative">
-        <CharacterAvatar id="ggomi" size="md" mood={isRevealed ? 'happy' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
+        <CharacterAvatar id={buddy} size="md" mood={isRevealed ? 'happy' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#8E24AA] mb-1">
             <span>👥 {getAgeGroupLabel(ageGroup)} &bull; 그림자 실루엣 퀴즈</span>
@@ -107,7 +112,7 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
         </div>
         <button
           aria-label="놀이 안내 다시 듣기"
-          onClick={() => speakText(`그림자의 윤곽선을 보고 알맞은 친구를 골라보세요!`, soundEnabled, { characterId: 'ggomi' })}
+          onClick={() => speakText(`그림자의 윤곽선을 보고 알맞은 친구를 골라보세요!`, soundEnabled, { characterId: buddy })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#BA68C8] shadow-xs text-[#8E24AA] cursor-pointer shrink-0"
         >
           <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />

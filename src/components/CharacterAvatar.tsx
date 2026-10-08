@@ -281,6 +281,27 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
           </svg>
         );
 
+      case 'pingu':
+        return (
+          <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md" aria-hidden="true">
+            <ellipse cx="50" cy="90" rx="31" ry="4" fill="#7395a3" opacity=".15" />
+            <ellipse cx="34" cy="85" rx="13" ry="6" fill="#edb66b" transform="rotate(-12 34 85)" />
+            <ellipse cx="66" cy="85" rx="13" ry="6" fill="#edb66b" transform="rotate(12 66 85)" />
+            <path d="M24 47 Q10 43 9 65 Q11 73 26 60 M76 47 Q89 33 94 43 Q94 54 77 64" fill="#405c73" stroke="#365168" strokeWidth="2" strokeLinejoin="round" />
+            <path d="M20 49 Q17 12 50 10 Q83 12 80 49 L83 66 Q82 89 50 89 Q18 89 17 66Z" fill="#526f86" />
+            <path d="M25 49 Q22 24 37 23 Q46 22 50 32 Q56 21 66 23 Q80 26 75 49 Q85 80 50 82 Q15 80 25 49Z" fill="#fff8e9" />
+            <path d="M42 12 Q45 4 52 10 Q58 4 61 14" fill="#526f86" />
+            <ellipse cx="36" cy="41" rx="3.8" ry="4.6" fill="#35495b" /><ellipse cx="64" cy="41" rx="3.8" ry="4.6" fill="#35495b" />
+            <circle cx="37" cy="39" r="1.3" fill="white" /><circle cx="65" cy="39" r="1.3" fill="white" />
+            <ellipse cx="28" cy="49" rx="5.5" ry="3.2" fill="#eea6a2" /><ellipse cx="72" cy="49" rx="5.5" ry="3.2" fill="#eea6a2" />
+            <path d="M43 48 Q50 43 57 48 Q50 59 43 48Z" fill="#eeb36b" stroke="#d19b58" strokeWidth="1" />
+            <path d="M24 58 Q50 66 76 58 L75 66 Q50 74 25 66Z" fill="#84c9bb" />
+            <path d="M61 65 L71 65 L75 81 Q69 86 63 82Z" fill="#73bbaa" />
+            <path d="M65 79 L72 77" stroke="#e2f3db" strokeWidth="2" strokeLinecap="round" />
+            <circle cx="50" cy="77" r="2" fill="#d9e8dd" />
+          </svg>
+        );
+
       case 'nurungji': // 누룽지 (황토색 강아지 - Golden Ocher Puppy)
         return (
           <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
@@ -314,6 +335,7 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
   return (
     <motion.div
       {...motionProps}
+      data-character={id}
       onClick={onClick}
       className={`relative flex items-center justify-center ${onClick ? 'cursor-pointer' : ''} select-none ${getDimension()} ${className}`}
     >

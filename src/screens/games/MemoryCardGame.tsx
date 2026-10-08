@@ -1,3 +1,5 @@
+import type { CharacterId } from '../../types';
+import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
@@ -10,6 +12,7 @@ import { AgeGroup } from '../../types';
 import { Volume2, RefreshCw, Sparkles, Flame } from 'lucide-react';
 
 interface MemoryCardGameProps {
+  buddy: CharacterId;
   onCompleteQuiz: (starsEarned: number) => void;
   soundEnabled: boolean;
   ageGroup: AgeGroup;
@@ -38,10 +41,12 @@ const CARD_POOL = [
 
 export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
   onCompleteQuiz,
+  buddy,
   soundEnabled,
   ageGroup,
   childName,
 }) => {
+  const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const diffConfig = getDifficultyConfig(ageGroup);
@@ -93,7 +98,7 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
     setCards(shuffled);
 
     if (soundEnabled) {
-      speakText(`누룽지와 기억력 카드 놀이! 카드 위치를 잘 기억해두세요!`, soundEnabled, { characterId: 'nurungji' });
+      speakText(`${friend.name}와 기억력 카드 놀이! 카드 위치를 잘 기억해두세요!`, soundEnabled, { characterId: buddy });
     }
 
     // Hide cards after 2.5 seconds
@@ -101,7 +106,7 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
       setCards((prev) => prev.map((c) => ({ ...c, isFlipped: false })));
       setIsChecking(false);
       if (soundEnabled) {
-        speakText(`얍! 같은 그림 짝을 찾아보세요!`, soundEnabled, { characterId: 'nurungji' });
+        speakText(`얍! 같은 그림 짝을 찾아보세요!`, soundEnabled, { characterId: buddy });
       }
     }, 2500);
   };
@@ -147,9 +152,9 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
           if (newStreak >= 2) {
             setShowComboBanner(true);
             scheduleGameTimeout(() => setShowComboBanner(false), 1500);
-            speakText(`우와! 연속 짝 맞추기 대성공! ${firstCard.name} 짝을 찾았어요!`, soundEnabled, { characterId: 'nurungji' });
+            speakText(`우와! 연속 짝 맞추기 대성공! ${firstCard.name} 짝을 찾았어요!`, soundEnabled, { characterId: buddy });
           } else {
-            speakText(`정답이에요! 똑같은 ${firstCard.name} 친구예요!`, soundEnabled, { characterId: 'nurungji' });
+            speakText(`정답이에요! 똑같은 ${firstCard.name} 친구예요!`, soundEnabled, { characterId: buddy });
           }
 
           // Check if all matched
@@ -157,7 +162,7 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
           if (allMatched) {
             setIsCompleted(true);
             playCorrectFanfare(soundEnabled);
-            speakText(`대단해요 ${childName}야! 모든 카드의 짝을 완벽하게 다 찾았어요! 최고예요!`, soundEnabled, { characterId: 'nurungji' });
+            speakText(`대단해요 ${childName}야! 모든 카드의 짝을 완벽하게 다 찾았어요! 최고예요!`, soundEnabled, { characterId: buddy });
             onCompleteQuiz(diffConfig.starsPerCorrect + 1); // bonus star
           }
         }, 500);
@@ -171,7 +176,7 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
           setIsChecking(false);
           setStreak(0); // reset streak
           playWrongBoing(soundEnabled);
-          speakText(`카드를 다시 뒤집어둘게요!`, soundEnabled, { characterId: 'nurungji' });
+          speakText(`카드를 다시 뒤집어둘게요!`, soundEnabled, { characterId: buddy });
         }, 900);
       }
     }
@@ -183,10 +188,10 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#FFE0B2] to-[#FFF3E0] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FFA726] shadow-sm flex items-center gap-3 sm:gap-4 relative">
-        <CharacterAvatar id="nurungji" size="md" mood={isCompleted ? 'happy' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
+        <CharacterAvatar id={buddy} size="md" mood={isCompleted ? 'happy' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#E65100] mb-1">
-            <span>🐶 {getAgeGroupLabel(ageGroup)} &bull; 기억력 카드 뒤집기</span>
+            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 기억력 카드 뒤집기</span>
           </div>
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
             똑같은 그림 짝을 찾아주세요! 🎴
@@ -194,7 +199,7 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
         </div>
         <button
           aria-label="놀이 안내 다시 듣기"
-          onClick={() => speakText(`똑같은 그림 카드를 두 개 골라 짝을 맞춰보세요!`, soundEnabled, { characterId: 'nurungji' })}
+          onClick={() => speakText(`똑같은 그림 카드를 두 개 골라 짝을 맞춰보세요!`, soundEnabled, { characterId: buddy })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#FFA726] shadow-xs text-[#FB8C00] cursor-pointer shrink-0"
         >
           <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -270,7 +275,7 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
       <div className="flex items-center justify-center gap-3 w-full">
         {isCompleted ? (
           <JellyButton soundEnabled={soundEnabled} variant="primary" size="lg" onClick={startNewGame} className="w-full sm:w-auto">
-            <Sparkles className="w-5 h-5 mr-1" /> 다음 카드 놀이하기 🐶 <span className="next-play-icon" aria-hidden="true">➜</span>
+            <Sparkles className="w-5 h-5 mr-1" /> 다음 카드 놀이하기 {friend.badge} <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={startNewGame} className="!px-4">

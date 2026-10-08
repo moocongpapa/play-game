@@ -1,3 +1,5 @@
+import type { CharacterId } from '../../types';
+import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
@@ -11,6 +13,7 @@ import { AgeGroup } from '../../types';
 import { Volume2, RefreshCw, Timer } from 'lucide-react';
 
 interface GgulgguliCountingGameProps {
+  buddy: CharacterId;
   onCompleteQuiz: (starsEarned: number) => void;
   soundEnabled: boolean;
   ageGroup: AgeGroup;
@@ -19,10 +22,12 @@ interface GgulgguliCountingGameProps {
 
 export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
   onCompleteQuiz,
+  buddy,
   soundEnabled,
   ageGroup,
   childName,
 }) => {
+  const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const diffConfig = getDifficultyConfig(ageGroup);
@@ -79,14 +84,14 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
     setNumberOptions(finalOptions);
 
     if (soundEnabled) {
-      speakText(`꿀꿀이 접시에 맛있는 ${food.name}가 몇 개 있는지 세어주세요!`, soundEnabled, { characterId: 'ggulgguli' });
+      speakText(`${friend.name} 접시에 맛있는 ${food.name}가 몇 개 있는지 세어주세요!`, soundEnabled, { characterId: buddy });
     }
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
       hintTimerRef.current = scheduleGameTimeout(() => {
         setShowHint(true);
-        speakText(`여기 숫자를 눌러봐!`, soundEnabled, { characterId: 'ggulgguli', playIntroSFX: false });
+        speakText(`여기 숫자를 눌러봐!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
       }, diffConfig.hintDelaySec * 1000);
     }
 
@@ -97,7 +102,7 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
           if (prev <= 1) {
             if (gameTimerRef.current) clearInterval(gameTimerRef.current);
             setTimeOut(true);
-            speakText(`시간이 끝났어요. 다음 음식을 세어볼까요?`, soundEnabled, { characterId: 'ggulgguli' });
+            speakText(`시간이 끝났어요. 다음 음식을 세어볼까요?`, soundEnabled, { characterId: buddy });
             return 0;
           }
           return prev - 1;
@@ -122,7 +127,7 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
     setTappedIndices((prev) => [...prev, index]);
 
     if (currentTappedCount < countsKorean.length) {
-      speakText(countsKorean[currentTappedCount], soundEnabled, { characterId: 'ggulgguli', playIntroSFX: false });
+      speakText(countsKorean[currentTappedCount], soundEnabled, { characterId: buddy, playIntroSFX: false });
     }
   };
 
@@ -135,12 +140,12 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
 
       setSelectedCorrectNumber(num);
       playCorrectFanfare(soundEnabled);
-      speakText(`꿀꿀! 정답이에요! ${targetFood.name} ${num}개! 냠냠 참 맛있다!`, soundEnabled, { characterId: 'ggulgguli' });
+      speakText(`우와! 정답이에요! ${targetFood.name} ${num}개! 냠냠 참 맛있다!`, soundEnabled, { characterId: buddy });
       onCompleteQuiz(diffConfig.starsPerCorrect);
     } else {
       setShakingNumber(num);
       playWrongBoing(soundEnabled);
-      speakText(`다시 하나, 둘, 셋 세어보아요!`, soundEnabled, { characterId: 'ggulgguli' });
+      speakText(`다시 하나, 둘, 셋 세어보아요!`, soundEnabled, { characterId: buddy });
       scheduleGameTimeout(() => setShakingNumber(null), 600);
     }
   };
@@ -149,10 +154,10 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#FFCCBC] to-[#FBE9E7] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FF7043] shadow-sm flex items-center gap-3 sm:gap-4">
-        <CharacterAvatar id="ggulgguli" size="md" mood={selectedCorrectNumber ? 'happy' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
+        <CharacterAvatar id={buddy} size="md" mood={selectedCorrectNumber ? 'happy' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#F4511E] mb-1">
-            <span>🐷 {getAgeGroupLabel(ageGroup)} &bull; 맛있는 수 세기</span>
+            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 맛있는 수 세기</span>
           </div>
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
             접시 위의 <span className="text-[#F4511E] underline">{targetFood.name}</span>는 몇 개일까요?
@@ -160,7 +165,7 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
         </div>
         <button
           aria-label="놀이 안내 다시 듣기"
-          onClick={() => speakText(`${targetFood.name}가 몇 개 있는지 세어보아요!`, soundEnabled, { characterId: 'ggulgguli' })}
+          onClick={() => speakText(`${targetFood.name}가 몇 개 있는지 세어보아요!`, soundEnabled, { characterId: buddy })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#FF7043] shadow-xs text-[#F4511E] cursor-pointer shrink-0"
         >
           <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -257,7 +262,7 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
       <div className="flex items-center justify-center gap-3 w-full mt-2 sm:mt-4">
         {selectedCorrectNumber || timeOut ? (
           <JellyButton soundEnabled={soundEnabled} variant="primary" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 수 세기 🐷 <span className="next-play-icon" aria-hidden="true">➜</span>
+            다음 수 세기 {friend.badge} <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">

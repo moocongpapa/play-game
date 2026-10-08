@@ -24,6 +24,20 @@ export interface CharacterVideoData {
 }
 
 export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
+  pingu: {
+    characterId: 'pingu',
+    title: '뒤뚱뒤뚱 핑구의 반가운 인사',
+    tagline: '민트 목도리를 두르고 함께 노는 다정한 펭귄 친구!',
+    themeColor: '#84C9BB',
+    borderColor: '#66AEBB',
+    hasVideo: false,
+    scenes: [
+      { timeStart: 0, timeEnd: 2.5, title: '핑구의 첫인사', subtitle: '안녕! 나는 펭귄 핑구야!', voiceText: '안녕! 나는 펭귄 핑구야!', mood: 'waving', bgGradient: 'from-cyan-50 to-sky-100', bgDecorations: ['❄️', '🫧', '⭐'], actionBadge: '🐧 반가워!' },
+      { timeStart: 2.5, timeEnd: 5, title: '뒤뚱뒤뚱 춤', subtitle: '뒤뚱뒤뚱, 같이 춤춰볼까?', voiceText: '뒤뚱뒤뚱, 같이 춤춰볼까?', mood: 'dancing', bgGradient: 'from-sky-100 to-teal-100', bgDecorations: ['🎵', '🫧', '❄️'], actionBadge: '🎵 뒤뚱뒤뚱' },
+      { timeStart: 5, timeEnd: 7.5, title: '날개로 짝짝짝', subtitle: '참 잘했어! 날개로 짝짝짝!', voiceText: '참 잘했어! 날개로 짝짝짝!', mood: 'excited', bgGradient: 'from-teal-50 to-cyan-100', bgDecorations: ['⭐', '💖', '🫧'], actionBadge: '⭐ 짝짝짝!' },
+      { timeStart: 7.5, timeEnd: 10, title: '다정한 놀이 친구', subtitle: '하고 싶은 놀이를 골라봐. 핑구도 함께할게!', voiceText: '하고 싶은 놀이를 골라봐. 핑구도 함께할게!', mood: 'happy', bgGradient: 'from-cyan-50 to-sky-100', bgDecorations: ['💖', '❄️', '🐧'], actionBadge: '💖 함께 놀자' },
+    ],
+  },
   ggomi: {
     characterId: 'ggomi',
     title: '🎀 포근포근 꼬미의 10초 매력 어필 쇼츠!',

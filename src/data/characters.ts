@@ -1,6 +1,6 @@
-import { CharacterInfo } from '../types';
+import type { CharacterId, CharacterInfo } from '../types';
 
-export const CHARACTERS: Record<string, CharacterInfo> = {
+export const CHARACTERS: Record<CharacterId, CharacterInfo> = {
   ggomi: {
     id: 'ggomi',
     name: '꼬미',
@@ -139,6 +139,26 @@ export const CHARACTERS: Record<string, CharacterInfo> = {
     subGameId: 'memory_card',
     subGameTitle: '누룽지의 기억력 카드 놀이',
     subGameDesc: '뒤집힌 카드의 짝을 찾아 기억력을 쑥쑥 키워요!',
+    subGameMinAgeGroup: 'baby',
+  },
+  pingu: {
+    id: 'pingu',
+    name: '핑구',
+    title: '민트 목도리를 두른 아기 펭귄',
+    gender: 'female',
+    animal: '펭귄',
+    color: '#66B9C8',
+    bgGradient: 'from-cyan-100 to-sky-200',
+    badge: '🐧',
+    greeting: '안녕! 나는 펭귄 핑구야! 뒤뚱뒤뚱, 우리 같이 신나게 놀자!',
+    greetingTemplate: '{name}야 안녕! 나는 펭귄 핑구야! 뒤뚱뒤뚱, 우리 같이 신나게 놀자!',
+    praise: ['우와! {name}야 정말 잘했어!', '핑구가 날개로 짝짝짝! {name} 최고야!', '{name}랑 노니까 정말 신나!'],
+    gameId: 'balloon_pop',
+    gameTitle: '핑구의 풍선 팡팡',
+    gameDesc: '둥둥 떠오르는 풍선을 핑구와 함께 터뜨려요!',
+    subGameId: 'memory_card',
+    subGameTitle: '핑구의 짝꿍 카드',
+    subGameDesc: '뒤집힌 그림 카드의 짝을 함께 찾아요!',
     subGameMinAgeGroup: 'baby',
   },
 };

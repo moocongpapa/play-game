@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { JellyButton } from '../components/JellyButton';
+import type { CharacterId } from '../types';
 import {
   speakText,
   playBouncyBoing,
@@ -13,6 +14,7 @@ import { fireConfetti, fireStarExplosion, fireCelebrationFireworks } from '../ut
 import { Sparkles, Download, ArrowLeft, Heart, Music, Zap, Footprints } from 'lucide-react';
 
 interface LivingCharacterStageProps {
+  buddy: CharacterId;
   spriteUrl: string;
   characterTitle: string;
   childName: string;
@@ -32,6 +34,7 @@ const CUTE_REACTIONS = [
 ];
 
 export const LivingCharacterStage: React.FC<LivingCharacterStageProps> = ({
+  buddy,
   spriteUrl,
   characterTitle,
   childName,
@@ -49,7 +52,7 @@ export const LivingCharacterStage: React.FC<LivingCharacterStageProps> = ({
     fireCelebrationFireworks(2500);
 
     const entranceVoice = `우와! ${childName}야! 네가 색칠한 ${characterTitle} 친구가 살아 움직여요!`;
-    speakText(entranceVoice, soundEnabled);
+    speakText(entranceVoice, soundEnabled, { characterId: buddy });
     setSpeechBubble(entranceVoice);
 
     const timer = setTimeout(() => {
@@ -67,27 +70,27 @@ export const LivingCharacterStage: React.FC<LivingCharacterStageProps> = ({
       fireStarExplosion();
       const msg = '높이높이 점프! 얏호!';
       setSpeechBubble(msg);
-      speakText(msg, soundEnabled);
+      speakText(msg, soundEnabled, { characterId: buddy });
       setTimeout(() => setMotionMode('idle'), 2500);
     } else if (mode === 'dance') {
       playDingDongDang(soundEnabled);
       fireConfetti();
       const msg = '신나게 덩실덩실 춤을 춰요!';
       setSpeechBubble(msg);
-      speakText(msg, soundEnabled);
+      speakText(msg, soundEnabled, { characterId: buddy });
       setTimeout(() => setMotionMode('idle'), 4000);
     } else if (mode === 'magic') {
       playSparkleChime(soundEnabled);
       fireStarExplosion();
       const msg = '반짝반짝 무지개 마법 얍!';
       setSpeechBubble(msg);
-      speakText(msg, soundEnabled);
+      speakText(msg, soundEnabled, { characterId: buddy });
       setTimeout(() => setMotionMode('idle'), 3000);
     } else if (mode === 'walk') {
       playJellyTap(soundEnabled);
       const msg = '아장아장 산책을 가요~';
       setSpeechBubble(msg);
-      speakText(msg, soundEnabled);
+      speakText(msg, soundEnabled, { characterId: buddy });
       setTimeout(() => setMotionMode('idle'), 4500);
     }
   };
@@ -111,7 +114,7 @@ export const LivingCharacterStage: React.FC<LivingCharacterStageProps> = ({
 
     const randomMsg = CUTE_REACTIONS[Math.floor(Math.random() * CUTE_REACTIONS.length)];
     setSpeechBubble(randomMsg);
-    speakText(randomMsg, soundEnabled);
+    speakText(randomMsg, soundEnabled, { characterId: buddy });
   };
 
   // Determine character motion variants

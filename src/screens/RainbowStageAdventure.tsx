@@ -1,3 +1,4 @@
+import { CHARACTERS } from '../data/characters';
 import { GameArtwork } from '../components/GameArtwork';
 import { ToyArtwork, BasketArtwork } from '../components/ToyArtwork';
 import { useGameTimeouts } from '../hooks/useGameTimeouts';
@@ -21,6 +22,7 @@ import { AgeGroup, CharacterId } from '../types';
 import { Sparkles, Trophy, Home, RotateCcw, Volume2, Star } from 'lucide-react';
 
 interface RainbowStageAdventureProps {
+  buddy: CharacterId;
   onCompleteQuiz: (starsEarned: number) => void;
   onGoHome: () => void;
   soundEnabled: boolean;
@@ -81,10 +83,12 @@ const SHADOW_PUZZLE_LIST: ShadowPuzzleItem[] = [
 
 export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
   onCompleteQuiz,
+  buddy,
   onGoHome,
   soundEnabled,
   childName,
 }) => {
+  const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const reducedMotion = useReducedMotion();
@@ -114,7 +118,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
     scheduleGameTimeout(() => {
       playAnimalSound(target.soundKey, soundEnabled);
       speakText(`동물 소리를 들어보자! "${target.soundPrompt}" 누구 소리일까요?`, soundEnabled, {
-        characterId: 'dochi',
+        characterId: buddy,
       });
     }, 400);
   };
@@ -131,7 +135,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
       // Wrong boing
       setL1WrongId(item.id);
       playWrongBoing(soundEnabled);
-      speakText(`다시 소리를 잘 들어볼까요?`, soundEnabled, { characterId: 'dochi' });
+      speakText(`다시 소리를 잘 들어볼까요?`, soundEnabled, { characterId: buddy });
       scheduleGameTimeout(() => {
         setL1WrongId(null);
         playAnimalSound(l1Target.soundKey, soundEnabled);
@@ -154,7 +158,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
     setL2RemainingItems(selected);
 
     scheduleGameTimeout(() => {
-      speakText(`알록달록 과일을 같은 색깔 바구니에 쏙 넣어주세요!`, soundEnabled, { characterId: 'rano' });
+      speakText(`알록달록 과일을 같은 색깔 바구니에 쏙 넣어주세요!`, soundEnabled, { characterId: buddy });
     }, 400);
   };
 
@@ -177,12 +181,12 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
         fireConfetti();
         triggerStageClear(2, `우와! 과일들을 바구니에 예쁘게 다 모았어요! 멋지다!`);
       } else {
-        speakText(`쏙! 참 잘했어요!`, soundEnabled, { characterId: 'rano', playIntroSFX: false });
+        speakText(`쏙! 참 잘했어요!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
       }
     } else {
       // Wrong basket
       playWrongBoing(soundEnabled);
-      speakText(`다른 색깔 바구니를 찾아볼까요?`, soundEnabled, { characterId: 'rano' });
+      speakText(`다른 색깔 바구니를 찾아볼까요?`, soundEnabled, { characterId: buddy });
     }
   };
 
@@ -214,8 +218,8 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
     setL3Balloons(initialBalloons);
 
     scheduleGameTimeout(() => {
-      speakText(`꿀꿀이와 함께 둥둥 떠오르는 풍선 5개를 팡팡 터뜨려보자!`, soundEnabled, {
-        characterId: 'ggulgguli',
+      speakText(`${friend.name}와 함께 둥둥 떠오르는 풍선 5개를 팡팡 터뜨려보자!`, soundEnabled, {
+        characterId: buddy,
       });
     }, 400);
   };
@@ -243,7 +247,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
 
     const koreanNumbers = ['하나!', '둘!', '셋!', '넷!', '다섯!'];
     speakText(koreanNumbers[nextCount - 1] || `${nextCount}!`, soundEnabled, {
-      characterId: 'ggulgguli',
+      characterId: buddy,
       playIntroSFX: false,
     });
 
@@ -272,7 +276,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
 
     scheduleGameTimeout(() => {
       speakText(`깜깜한 그림자가 나타났어요! 이 그림자에 꼭 맞는 친구를 맞춰주세요!`, soundEnabled, {
-        characterId: 'ggomi',
+        characterId: buddy,
       });
     }, 400);
   };
@@ -289,7 +293,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
       triggerStageClear(4, `정답이에요! 그림자에 쏙 들어맞았어요!`);
     } else {
       playWrongBoing(soundEnabled);
-      speakText(`그림자 모양을 다시 한번 살펴볼까요?`, soundEnabled, { characterId: 'ggomi' });
+      speakText(`그림자 모양을 다시 한번 살펴볼까요?`, soundEnabled, { characterId: buddy });
     }
   };
 
@@ -303,14 +307,14 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
     setClearedLevels((prev) => (prev.includes(levelNumber) ? prev : [...prev, levelNumber]));
     onCompleteQuiz(2);
 
-    speakText(`와, 정말 잘했어! 멋지다! ${praiseMessage}`, soundEnabled);
+    speakText(`와, 정말 잘했어! 멋지다! ${praiseMessage}`, soundEnabled, { characterId: buddy });
 
     scheduleGameTimeout(() => {
       setStampAnimationLevel(null);
       if (levelNumber === 4) {
         // Grand Final Celebration!
         setCurrentLevel(5);
-        speakText(`축하합니다! ${childName}야, 모든 단계를 완료하고 황금 트로피를 받았어요! 최고야!`, soundEnabled);
+        speakText(`축하합니다! ${childName}야, 모든 단계를 완료하고 황금 트로피를 받았어요! 최고야!`, soundEnabled, { characterId: buddy });
       } else {
         const next = (levelNumber + 1) as 2 | 3 | 4;
         setCurrentLevel(next);
@@ -341,7 +345,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
     clearingLevel.current = false;
     if (currentLevel === 1) initLevel1();
     else setCurrentLevel(1);
-    speakText(`신나는 무지개 모험을 처음부터 다시 시작해요!`, soundEnabled);
+    speakText(`신나는 무지개 모험을 처음부터 다시 시작해요!`, soundEnabled, { characterId: buddy });
   };
 
   return (
@@ -442,7 +446,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
         >
           {/* Character & Question Banner */}
           <div className="flex items-center gap-3 bg-white/90 p-3 sm:p-4 rounded-3xl border-2 border-orange-200 shadow-xs w-full max-w-md">
-            <CharacterAvatar id="dochi" size="md" mood="talking" className="!w-16 !h-16 shrink-0" />
+            <CharacterAvatar id={buddy} size="md" mood="talking" className="!w-16 !h-16 shrink-0" />
             <div className="text-left flex-1 min-w-0">
               <span className="text-xs font-black text-orange-600 block">Level 1 &bull; 소리 듣고 동물 찾기</span>
               <p className="text-base sm:text-lg font-black text-[#4A3E3D] leading-snug">
@@ -499,7 +503,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
         >
           {/* Guide Banner */}
           <div className="flex items-center gap-3 bg-white/90 p-3 sm:p-4 rounded-3xl border-2 border-emerald-200 shadow-xs w-full max-w-md">
-            <CharacterAvatar id="rano" size="md" mood="happy" className="!w-16 !h-16 shrink-0" />
+            <CharacterAvatar id={buddy} size="md" mood="happy" className="!w-16 !h-16 shrink-0" />
             <div className="text-left flex-1 min-w-0">
               <span className="text-xs font-black text-emerald-600 block">Level 2 &bull; 색깔 바구니 분류</span>
               <p className="text-base sm:text-lg font-black text-[#4A3E3D] leading-snug">
@@ -558,7 +562,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
                       handleL2SortFruit(l2SelectedFruit, basket.colorId);
                     } else {
                       playBouncyBoing(soundEnabled);
-                      speakText(`먼저 위에서 과일을 선택한 후 바구니를 눌러주세요!`, soundEnabled);
+                      speakText(`먼저 위에서 과일을 선택한 후 바구니를 눌러주세요!`, soundEnabled, { characterId: buddy });
                     }
                   }}
                   style={{ backgroundColor: basket.bg, borderColor: basket.border }}
@@ -590,7 +594,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
           {/* Top Banner */}
           <div className="z-20 w-full bg-white/90 p-3 rounded-2xl border-2 border-sky-300 shadow-xs flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <CharacterAvatar id="ggulgguli" size="sm" mood="happy" className="!w-10 !h-10" />
+              <CharacterAvatar id={buddy} size="sm" mood="happy" className="!w-10 !h-10" />
               <span className="text-sm font-black text-[#4A3E3D]">
                 풍선을 터치해 팡팡! ({l3Popped}/5)
               </span>
@@ -643,7 +647,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
         >
           {/* Guide Banner */}
           <div className="flex items-center gap-3 bg-white/90 p-3 sm:p-4 rounded-3xl border-2 border-purple-200 shadow-xs w-full max-w-md">
-            <CharacterAvatar id="ggomi" size="md" mood="talking" className="!w-16 !h-16 shrink-0" />
+            <CharacterAvatar id={buddy} size="md" mood="talking" className="!w-16 !h-16 shrink-0" />
             <div className="text-left flex-1 min-w-0">
               <span className="text-xs font-black text-purple-600 block">Level 4 &bull; 그림자 실루엣 퍼즐</span>
               <p className="text-base sm:text-lg font-black text-[#4A3E3D] leading-snug">
@@ -722,25 +726,10 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
             </p>
           </div>
 
-          {/* Dancing Animal Avatars Party Row */}
-          <div className="flex items-center justify-center gap-2 sm:gap-4 flex-wrap my-2">
-            {(['ggomi', 'rano', 'jelly', 'dochi', 'ggulgguli', 'eumme', 'nurungji'] as CharacterId[]).map((cid, i) => (
-              <motion.div
-                key={`party-char-${cid}`}
-                animate={{
-                  y: [0, -18, 0],
-                  rotate: [0, i % 2 === 0 ? 8 : -8, 0],
-                }}
-                transition={{
-                  duration: 0.8 + (i % 3) * 0.2,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                  delay: i * 0.1,
-                }}
-              >
-                <CharacterAvatar id={cid} size="sm" mood="happy" className="!w-12 !h-12 sm:!w-14 sm:!h-14 shadow-md" />
-              </motion.div>
-            ))}
+          {/* The selected friend celebrates the whole adventure with the child. */}
+          <div className="flex flex-col items-center gap-2 my-2">
+            <CharacterAvatar id={buddy} size="lg" mood="dancing" />
+            <span className="text-lg font-black text-amber-900">{friend.name}도 신나서 짝짝짝!</span>
           </div>
 
           {/* Interactive touch hint */}

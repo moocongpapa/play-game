@@ -1,3 +1,5 @@
+import type { CharacterId } from '../../types';
+import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
@@ -11,6 +13,7 @@ import { AgeGroup } from '../../types';
 import { Volume2, RefreshCw, Timer } from 'lucide-react';
 
 interface EummeCloudShapeGameProps {
+  buddy: CharacterId;
   onCompleteQuiz: (starsEarned: number) => void;
   soundEnabled: boolean;
   ageGroup: AgeGroup;
@@ -19,10 +22,12 @@ interface EummeCloudShapeGameProps {
 
 export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
   onCompleteQuiz,
+  buddy,
   soundEnabled,
   ageGroup,
   childName,
 }) => {
+  const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const diffConfig = getDifficultyConfig(ageGroup);
@@ -62,14 +67,14 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
     setClouds(roundClouds);
 
     if (soundEnabled) {
-      speakText(`음메와 함께 폭신폭신 ${target.name}을 모아볼까요?`, soundEnabled, { characterId: 'eumme' });
+      speakText(`${friend.name}와 함께 폭신폭신 ${target.name}을 모아볼까요?`, soundEnabled, { characterId: buddy });
     }
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
       hintTimerRef.current = scheduleGameTimeout(() => {
         setShowHint(true);
-        speakText(`여기 흔들리는 구름을 눌러봐!`, soundEnabled, { characterId: 'eumme', playIntroSFX: false });
+        speakText(`여기 흔들리는 구름을 눌러봐!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
       }, diffConfig.hintDelaySec * 1000);
     }
 
@@ -80,7 +85,7 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
           if (prev <= 1) {
             if (gameTimerRef.current) clearInterval(gameTimerRef.current);
             setTimeOut(true);
-            speakText(`시간 초과! 다른 구름을 모아보아요!`, soundEnabled, { characterId: 'eumme' });
+            speakText(`시간 초과! 다른 구름을 모아보아요!`, soundEnabled, { characterId: buddy });
             return 0;
           }
           return prev - 1;
@@ -107,12 +112,12 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
       setSelectedCorrectId(cloud.id);
       playBubblePop(soundEnabled);
       playCorrectFanfare(soundEnabled);
-      speakText(`음메! 정답이에요! 예쁜 ${cloud.name}!`, soundEnabled, { characterId: 'eumme' });
+      speakText(`우와! 정답이에요! 예쁜 ${cloud.name}!`, soundEnabled, { characterId: buddy });
       onCompleteQuiz(diffConfig.starsPerCorrect);
     } else {
       setShakingCloudId(cloud.id);
       playWrongBoing(soundEnabled);
-      speakText(`다시 폭신폭신 구름을 모아보아요!`, soundEnabled, { characterId: 'eumme' });
+      speakText(`다시 폭신폭신 구름을 모아보아요!`, soundEnabled, { characterId: buddy });
       scheduleGameTimeout(() => setShakingCloudId(null), 600);
     }
   };
@@ -123,10 +128,10 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#BBDEFB] to-[#E3F2FD] p-3.5 sm:p-4 rounded-3xl border-3 border-[#42A5F5] shadow-sm flex items-center gap-3 sm:gap-4">
-        <CharacterAvatar id="eumme" size="md" mood={selectedCorrectId ? 'dancing' : 'happy'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
+        <CharacterAvatar id={buddy} size="md" mood={selectedCorrectId ? 'dancing' : 'happy'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#1E88E5] mb-1">
-            <span>🐑 {getAgeGroupLabel(ageGroup)} &bull; 구름 모으기</span>
+            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 구름 모으기</span>
           </div>
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
             &ldquo;<span className="text-[#1E88E5] underline">{targetCloud.name}</span>&rdquo;을 모아주세요!
@@ -134,7 +139,7 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
         </div>
         <button
           aria-label="놀이 안내 다시 듣기"
-          onClick={() => speakText(`${targetCloud.name}을 구름 속에서 찾아주세요!`, soundEnabled, { characterId: 'eumme' })}
+          onClick={() => speakText(`${targetCloud.name}을 구름 속에서 찾아주세요!`, soundEnabled, { characterId: buddy })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#42A5F5] shadow-xs text-[#1E88E5] cursor-pointer shrink-0"
         >
           <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -213,7 +218,7 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
       <div className="flex items-center justify-center gap-3 w-full">
         {selectedCorrectId || timeOut ? (
           <JellyButton soundEnabled={soundEnabled} variant="blue" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 구름 모으기 🐑 <span className="next-play-icon" aria-hidden="true">➜</span>
+            다음 구름 모으기 {friend.badge} <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">

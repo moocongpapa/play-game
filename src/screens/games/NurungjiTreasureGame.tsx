@@ -1,3 +1,5 @@
+import type { CharacterId } from '../../types';
+import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
@@ -11,6 +13,7 @@ import { AgeGroup } from '../../types';
 import { Volume2, RefreshCw, Sparkles, Timer } from 'lucide-react';
 
 interface NurungjiTreasureGameProps {
+  buddy: CharacterId;
   onCompleteQuiz: (starsEarned: number) => void;
   soundEnabled: boolean;
   ageGroup: AgeGroup;
@@ -19,10 +22,12 @@ interface NurungjiTreasureGameProps {
 
 export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
   onCompleteQuiz,
+  buddy,
   soundEnabled,
   ageGroup,
   childName,
 }) => {
+  const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const diffConfig = getDifficultyConfig(ageGroup);
@@ -62,14 +67,14 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
     setDisplayedItems(roundItems);
 
     if (soundEnabled) {
-      speakText(`누룽지와 함께 숨겨진 보물 ${target.name}을 찾아볼까요?`, soundEnabled, { characterId: 'nurungji' });
+      speakText(`${friend.name}와 함께 숨겨진 보물 ${target.name}을 찾아볼까요?`, soundEnabled, { characterId: buddy });
     }
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
       hintTimerRef.current = scheduleGameTimeout(() => {
         setShowHint(true);
-        speakText(`여기 흔들리는 보물상자를 열어봐!`, soundEnabled, { characterId: 'nurungji', playIntroSFX: false });
+        speakText(`여기 흔들리는 보물상자를 열어봐!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
       }, diffConfig.hintDelaySec * 1000);
     }
 
@@ -80,7 +85,7 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
           if (prev <= 1) {
             if (gameTimerRef.current) clearInterval(gameTimerRef.current);
             setTimeOut(true);
-            speakText(`시간 초과! 보물 상자가 닫혔어요! 다른 보물을 찾아보자!`, soundEnabled, { characterId: 'nurungji' });
+            speakText(`시간 초과! 보물 상자가 닫혔어요! 다른 보물을 찾아보자!`, soundEnabled, { characterId: buddy });
             return 0;
           }
           return prev - 1;
@@ -106,12 +111,12 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
 
       setSelectedCorrectId(item.id);
       playCorrectFanfare(soundEnabled);
-      speakText(`멍멍! 보물을 찾았어요! ${item.name}!`, soundEnabled, { characterId: 'nurungji' });
+      speakText(`우와! 보물을 찾았어요! ${item.name}!`, soundEnabled, { characterId: buddy });
       onCompleteQuiz(diffConfig.starsPerCorrect);
     } else {
       setShakingCardId(item.id);
       playWrongBoing(soundEnabled);
-      speakText(`다른 보물상자를 열어볼까요?`, soundEnabled, { characterId: 'nurungji' });
+      speakText(`다른 보물상자를 열어볼까요?`, soundEnabled, { characterId: buddy });
       scheduleGameTimeout(() => setShakingCardId(null), 600);
     }
   };
@@ -122,10 +127,10 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#FFECB3] to-[#FFF8E1] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FFA000] shadow-sm flex items-center gap-3 sm:gap-4">
-        <CharacterAvatar id="nurungji" size="md" mood={selectedCorrectId ? 'excited' : 'waving'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
+        <CharacterAvatar id={buddy} size="md" mood={selectedCorrectId ? 'excited' : 'waving'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#FF8F00] mb-1">
-            <span>🐶 {getAgeGroupLabel(ageGroup)} &bull; 보물 찾기</span>
+            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 보물 찾기</span>
           </div>
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
             숨어있는 &ldquo;<span className="text-[#FF8F00] underline">{targetItem.name}</span>&rdquo;을 찾아주세요!
@@ -133,7 +138,7 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
         </div>
         <button
           aria-label="놀이 안내 다시 듣기"
-          onClick={() => speakText(`숨겨진 ${targetItem.name} 보물을 찾아서 터치해보아요!`, soundEnabled, { characterId: 'nurungji' })}
+          onClick={() => speakText(`숨겨진 ${targetItem.name} 보물을 찾아서 터치해보아요!`, soundEnabled, { characterId: buddy })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#FFA000] shadow-xs text-[#FF8F00] cursor-pointer shrink-0"
         >
           <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -209,7 +214,7 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
       <div className="flex items-center justify-center gap-3 w-full">
         {selectedCorrectId || timeOut ? (
           <JellyButton soundEnabled={soundEnabled} variant="yellow" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 보물 찾기 🐶 <span className="next-play-icon" aria-hidden="true">➜</span>
+            다음 보물 찾기 {friend.badge} <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">

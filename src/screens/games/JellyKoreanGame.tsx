@@ -1,3 +1,5 @@
+import type { CharacterId } from '../../types';
+import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
@@ -19,6 +21,7 @@ interface KoreanLetterItem {
 }
 
 interface JellyKoreanGameProps {
+  buddy: CharacterId;
   onCompleteQuiz: (starsEarned: number) => void;
   soundEnabled: boolean;
   ageGroup: AgeGroup;
@@ -27,10 +30,12 @@ interface JellyKoreanGameProps {
 
 export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
   onCompleteQuiz,
+  buddy,
   soundEnabled,
   ageGroup,
   childName,
 }) => {
+  const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const diffConfig = getDifficultyConfig(ageGroup);
@@ -79,19 +84,19 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
     if (ageGroup !== 'baby' && target.word && Math.random() > 0.4) {
       prompt = `'${target.word}' ${target.emoji} 할 때 첫 글자는 무엇일까요? '${target.letter}' 방울을 터트려주세요!`;
     } else {
-      prompt = `젤리와 함께 '${target.letter}' 글자 비누방울을 팡팡 터트려주세요!`;
+      prompt = `${friend.name}와 함께 '${target.letter}' 글자 비누방울을 팡팡 터트려주세요!`;
     }
     setQuestionPrompt(prompt);
 
     if (soundEnabled) {
-      speakText(prompt, soundEnabled, { characterId: 'jelly' });
+      speakText(prompt, soundEnabled, { characterId: buddy });
     }
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
       hintTimerRef.current = scheduleGameTimeout(() => {
         setShowHint(true);
-        speakText(`여기 흔들리는 글자를 톡 눌러봐!`, soundEnabled, { characterId: 'jelly', playIntroSFX: false });
+        speakText(`여기 흔들리는 글자를 톡 눌러봐!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
       }, diffConfig.hintDelaySec * 1000);
     }
 
@@ -103,7 +108,7 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
             if (gameTimerRef.current) clearInterval(gameTimerRef.current);
             setTimeOut(true);
             setStreak(0);
-            speakText(`시간이 완료되었어요. 다른 방울을 터트려보자!`, soundEnabled, { characterId: 'jelly' });
+            speakText(`시간이 완료되었어요. 다른 방울을 터트려보자!`, soundEnabled, { characterId: buddy });
             return 0;
           }
           return prev - 1;
@@ -138,9 +143,9 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
       if (nextStreak >= 2) {
         setShowComboBanner(true);
         scheduleGameTimeout(() => setShowComboBanner(false), 1500);
-        speakText(`와우! ${nextStreak}연속 정답! 젤리가 너무 신나요!`, soundEnabled, { characterId: 'jelly' });
+        speakText(`와우! ${nextStreak}연속 정답! ${friend.name}가 너무 신나요!`, soundEnabled, { characterId: buddy });
       } else {
-        speakText(`정답이에요! '${bubble.letter}' 방울을 팡팡 터트렸어요!`, soundEnabled, { characterId: 'jelly' });
+        speakText(`정답이에요! '${bubble.letter}' 방울을 팡팡 터트렸어요!`, soundEnabled, { characterId: buddy });
       }
 
       onCompleteQuiz(diffConfig.starsPerCorrect);
@@ -148,7 +153,7 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
       setStreak(0);
       playWrongBoing(soundEnabled);
       setPoppedIds((prev) => [...prev, bubble.id]);
-      speakText(`다른 글자 방울을 골라보아요!`, soundEnabled, { characterId: 'jelly' });
+      speakText(`다른 글자 방울을 골라보아요!`, soundEnabled, { characterId: buddy });
     }
   };
 
@@ -158,10 +163,10 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#E1BEE7] to-[#F3E5F5] p-3.5 sm:p-4 rounded-3xl border-3 border-[#AB47BC] shadow-sm flex items-center gap-3 sm:gap-4 relative">
-        <CharacterAvatar id="jelly" size="md" mood={isCompleted ? 'dancing' : 'happy'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
+        <CharacterAvatar id={buddy} size="md" mood={isCompleted ? 'dancing' : 'happy'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#8E24AA] mb-1">
-            <span>🐰 {getAgeGroupLabel(ageGroup)} &bull; 한글 비누방울</span>
+            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 한글 비누방울</span>
           </div>
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
             {questionPrompt ? (
@@ -173,7 +178,7 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
         </div>
         <button
           aria-label="놀이 안내 다시 듣기"
-          onClick={() => speakText(`'${targetItem.letter}' 글자 비누방울을 터트려보아요!`, soundEnabled, { characterId: 'jelly' })}
+          onClick={() => speakText(`'${targetItem.letter}' 글자 비누방울을 터트려보아요!`, soundEnabled, { characterId: buddy })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#AB47BC] shadow-xs text-[#8E24AA] cursor-pointer shrink-0"
         >
           <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -279,7 +284,7 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
       <div className="flex items-center justify-center gap-3 w-full">
         {isCompleted || timeOut ? (
           <JellyButton soundEnabled={soundEnabled} variant="purple" size="lg" onClick={startNewRound} className="w-full sm:w-auto">
-            다음 한글 비누방울 🐰 <span className="next-play-icon" aria-hidden="true">➜</span>
+            다음 한글 비누방울 {friend.badge} <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={startNewRound} className="!px-4">

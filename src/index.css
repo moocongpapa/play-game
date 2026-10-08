@@ -45,6 +45,7 @@ h1:focus { outline: none; }
 .friend-ggulgguli .friend-portrait { background: radial-gradient(ellipse, #fff7e8, #f2dcd3); }
 .friend-eumme .friend-portrait { background: radial-gradient(ellipse, #f2faf9, #d9e8ed); }
 .friend-nurungji .friend-portrait { background: radial-gradient(ellipse, #fff8d9, #eae2c9); }
+.friend-pingu .friend-portrait { background: radial-gradient(ellipse, #f0fbf6, #cce8ec); }
 .friend-name { display: flex; width: 100%; justify-content: space-between; align-items: center; padding: 13px 7px 0; font-size: 17px; font-weight: 850; }
 .friend-arrow { display: grid; place-items: center; width: 31px; height: 31px; border-radius: 50%; color: #8a7b62; background: #f3eddf; }
 .buddy-video { position: relative; width: 100%; height: 100%; background: #fff5dc; overflow: hidden; border-radius: 50%; }

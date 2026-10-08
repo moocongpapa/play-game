@@ -1,3 +1,5 @@
+import type { CharacterId } from '../../types';
+import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
@@ -11,6 +13,7 @@ import { AgeGroup, EmotionItem } from '../../types';
 import { Volume2, RefreshCw, Timer } from 'lucide-react';
 
 interface EmotionQuizGameProps {
+  buddy: CharacterId;
   onCompleteQuiz: (starsEarned: number) => void;
   soundEnabled: boolean;
   ageGroup: AgeGroup;
@@ -19,10 +22,12 @@ interface EmotionQuizGameProps {
 
 export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
   onCompleteQuiz,
+  buddy,
   soundEnabled,
   ageGroup,
   childName,
 }) => {
+  const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const diffConfig = getDifficultyConfig(ageGroup);
@@ -62,14 +67,14 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
     setOptions(roundOptions);
 
     if (soundEnabled) {
-      speakText(`동물 친구들의 얼굴 표정을 보세요! '${target.name}' 표정은 어떤 것일까요?`, soundEnabled, { characterId: 'ggomi' });
+      speakText(`동물 친구들의 얼굴 표정을 보세요! '${target.name}' 표정은 어떤 것일까요?`, soundEnabled, { characterId: buddy });
     }
 
     // 힌트 타이머 구동
     if (diffConfig.hintEnabled) {
       hintTimerRef.current = scheduleGameTimeout(() => {
         setShowHint(true);
-        speakText(`여기 반짝이는 걸 눌러봐!`, soundEnabled, { characterId: 'ggomi', playIntroSFX: false });
+        speakText(`여기 반짝이는 걸 눌러봐!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
       }, diffConfig.hintDelaySec * 1000);
     }
 
@@ -80,7 +85,7 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
           if (prev <= 1) {
             if (gameTimerRef.current) clearInterval(gameTimerRef.current);
             setTimeOut(true);
-            speakText(`시간 초과! 다른 표정을 알아볼까요?`, soundEnabled, { characterId: 'ggomi' });
+            speakText(`시간 초과! 다른 표정을 알아볼까요?`, soundEnabled, { characterId: buddy });
             return 0;
           }
           return prev - 1;
@@ -106,12 +111,12 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
 
       setSelectedCorrectId(item.id);
       playCorrectFanfare(soundEnabled);
-      speakText(`딩동댕! 정답이에요! ${item.name}은 ${item.expression}이에요!`, soundEnabled, { characterId: 'ggomi' });
+      speakText(`딩동댕! 정답이에요! ${item.name}은 ${item.expression}이에요!`, soundEnabled, { characterId: buddy });
       onCompleteQuiz(diffConfig.starsPerCorrect);
     } else {
       setShakingCardId(item.id);
       playWrongBoing(soundEnabled);
-      speakText(`다시 표정을 관찰해 볼까요?`, soundEnabled, { characterId: 'ggomi' });
+      speakText(`다시 표정을 관찰해 볼까요?`, soundEnabled, { characterId: buddy });
       scheduleGameTimeout(() => setShakingCardId(null), 600);
     }
   };
@@ -122,10 +127,10 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#FFB7D5] to-[#FFE4EC] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FF80AB] shadow-sm flex items-center gap-3 sm:gap-4">
-        <CharacterAvatar id="ggomi" size="md" mood={selectedCorrectId ? 'dancing' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
+        <CharacterAvatar id={buddy} size="md" mood={selectedCorrectId ? 'dancing' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#FF4081] mb-1">
-            <span>🐻 {getAgeGroupLabel(ageGroup)} &bull; 감정 퀴즈</span>
+            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 감정 퀴즈</span>
           </div>
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
             어떤 표정이 &ldquo;<span className="text-[#FF4081] underline">{targetItem.name}</span>&rdquo; 인가요?
@@ -133,7 +138,7 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
         </div>
         <button
           aria-label="놀이 안내 다시 듣기"
-          onClick={() => speakText(`친구들의 얼굴을 보고 ${targetItem.name} 표정을 골라보세요!`, soundEnabled, { characterId: 'ggomi' })}
+          onClick={() => speakText(`친구들의 얼굴을 보고 ${targetItem.name} 표정을 골라보세요!`, soundEnabled, { characterId: buddy })}
           className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#FF80AB] shadow-xs text-[#FF4081] cursor-pointer shrink-0"
         >
           <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />

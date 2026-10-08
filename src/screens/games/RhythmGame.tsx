@@ -1,3 +1,5 @@
+import type { CharacterId } from '../../types';
+import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
@@ -11,6 +13,7 @@ import { AgeGroup, RhythmItem } from '../../types';
 import { Volume2, RefreshCw, Timer, Sparkles } from 'lucide-react';
 
 interface RhythmGameProps {
+  buddy: CharacterId;
   onCompleteQuiz: (starsEarned: number) => void;
   soundEnabled: boolean;
   ageGroup: AgeGroup;
@@ -19,10 +22,12 @@ interface RhythmGameProps {
 
 export const RhythmGame: React.FC<RhythmGameProps> = ({
   onCompleteQuiz,
+  buddy,
   soundEnabled,
   ageGroup,
   childName,
 }) => {
+  const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const diffConfig = getDifficultyConfig(ageGroup);
@@ -88,7 +93,7 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
     setUserSequence([]);
     
     // 리듬 소리가 연주되기 전 가이드
-    speakText(`도치의 연주 리듬을 귀기울여 잘 들어보아요!`, soundEnabled, { characterId: 'dochi', playIntroSFX: false });
+    speakText(`${friend.name}의 연주 리듬을 귀기울여 잘 들어보아요!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
     await new Promise<void>((resolve) => window.setTimeout(resolve, 1500));
 
     for (let i = 0; i < item.notes.length; i++) {
@@ -104,7 +109,7 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
     
     if (!isMountedRef.current || sequence !== sequenceRef.current) return;
     setIsPlayingSequence(false);
-    speakText(`이제 똑같이 톡톡 터치해볼까요?`, soundEnabled, { characterId: 'dochi', playIntroSFX: false });
+    speakText(`이제 똑같이 톡톡 터치해볼까요?`, soundEnabled, { characterId: buddy, playIntroSFX: false });
   };
 
   const isMountedRef = useRef(true);
@@ -146,7 +151,7 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
           if (prev <= 1) {
             if (gameTimerRef.current) clearInterval(gameTimerRef.current);
             setTimeOut(true);
-            speakText(`시간 초과! 다시 연주를 들어보아요!`, soundEnabled, { characterId: 'dochi' });
+            speakText(`시간 초과! 다시 연주를 들어보아요!`, soundEnabled, { characterId: buddy });
             return 0;
           }
           return prev - 1;
@@ -182,13 +187,13 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
 
         setIsCompleted(true);
         playCorrectFanfare(soundEnabled);
-        speakText(`참 잘했어요! 음악대장 정답이에요!`, soundEnabled, { characterId: 'dochi' });
+        speakText(`참 잘했어요! 음악대장 정답이에요!`, soundEnabled, { characterId: buddy });
         onCompleteQuiz(diffConfig.starsPerCorrect);
       }
     } else {
       // 틀렸을 경우 시퀀스 초기화 및 재연주 안내
       playWrongBoing(soundEnabled);
-      speakText(`에구구, 리듬이 달라졌어요! 도치의 연주를 다시 듣고 따라해보아요!`, soundEnabled, { characterId: 'dochi' });
+      speakText(`에구구, 리듬이 달라졌어요! ${friend.name}의 연주를 다시 듣고 따라해보아요!`, soundEnabled, { characterId: buddy });
       setUserSequence([]);
       scheduleGameTimeout(() => {
         playSequence(targetItem);
@@ -202,13 +207,13 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#FFE0B2] to-[#FFF3E0] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FFA726] shadow-sm flex items-center gap-3 sm:gap-4">
-        <CharacterAvatar id="dochi" size="md" mood={isCompleted ? 'excited' : 'happy'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
+        <CharacterAvatar id={buddy} size="md" mood={isCompleted ? 'excited' : 'happy'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
           <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#E65100] mb-1">
-            <span>🦔 {getAgeGroupLabel(ageGroup)} &bull; 리듬 놀이</span>
+            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 리듬 놀이</span>
           </div>
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
-            도치의 리듬: &ldquo;<span className="text-[#E65100] underline">{targetItem.name}</span>&rdquo;
+            {friend.name}의 리듬: &ldquo;<span className="text-[#E65100] underline">{targetItem.name}</span>&rdquo;
           </h2>
         </div>
         <button
@@ -241,7 +246,7 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
       <div className="my-3 flex flex-col items-center justify-center p-3.5 bg-white rounded-3xl border-3 border-dashed border-[#FFA726] text-center w-full">
         {isPlayingSequence ? (
           <div className="flex items-center gap-2 text-base font-black text-[#E65100] animate-pulse">
-            <Volume2 className="w-5 h-5" /> 👂 도치의 악기 연주를 귀기울여 듣고 있어요!
+            <Volume2 className="w-5 h-5" /> 👂 {friend.name}의 악기 연주를 귀기울여 듣고 있어요!
           </div>
         ) : isCompleted ? (
           <div className="flex items-center gap-2 text-base font-black text-emerald-600 animate-bounce">
@@ -286,7 +291,7 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
       <div className="flex items-center justify-center gap-3 w-full">
         {isCompleted || timeOut ? (
           <JellyButton soundEnabled={soundEnabled} variant="primary" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 리듬 놀이 🦔 <span className="next-play-icon" aria-hidden="true">➜</span>
+            다음 리듬 놀이 {friend.badge} <span className="next-play-icon" aria-hidden="true">➜</span>
           </JellyButton>
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={() => playSequence(targetItem)} className="!px-4">

@@ -274,6 +274,7 @@ export default function App() {
       case 'drawing':
         return (
           <SketchbookScreen
+            buddy={appState.selectedCharacter}
             onGoHome={handleGoHome}
             soundEnabled={soundEnabled}
             childName={childName}
@@ -294,6 +295,7 @@ export default function App() {
       case 'stickers':
         return (
           <StickerRoomScreen
+            buddy={appState.selectedCharacter}
             unlockedStickers={appState.unlockedStickers}
             placedStickers={appState.placedStickers}
             childName={childName}
@@ -363,6 +365,7 @@ export default function App() {
                 case 'object_recognition':
                   return (
                     <GgomiObjectGame
+                      buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
@@ -372,6 +375,7 @@ export default function App() {
                 case 'shape_color':
                   return (
                     <RanoShapeColorGame
+                      buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
@@ -381,6 +385,7 @@ export default function App() {
                 case 'korean_letters':
                   return (
                     <JellyKoreanGame
+                      buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
@@ -390,6 +395,7 @@ export default function App() {
                 case 'sound_quiz':
                   return (
                     <DochiSoundGame
+                      buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
@@ -399,6 +405,7 @@ export default function App() {
                 case 'counting_food':
                   return (
                     <GgulgguliCountingGame
+                      buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
@@ -408,6 +415,7 @@ export default function App() {
                 case 'cloud_shapes':
                   return (
                     <EummeCloudShapeGame
+                      buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
@@ -417,6 +425,7 @@ export default function App() {
                 case 'treasure_hunt':
                   return (
                     <NurungjiTreasureGame
+                      buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
@@ -428,6 +437,7 @@ export default function App() {
                 case 'emotion_quiz':
                   return (
                     <EmotionQuizGame
+                      buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
@@ -437,6 +447,7 @@ export default function App() {
                 case 'pattern_sequence':
                   return (
                     <PatternSequenceGame
+                      buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
@@ -446,6 +457,7 @@ export default function App() {
                 case 'word_puzzle':
                   return (
                     <WordPuzzleGame
+                      buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
@@ -455,6 +467,7 @@ export default function App() {
                 case 'rhythm_game':
                   return (
                     <RhythmGame
+                      buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
@@ -464,6 +477,7 @@ export default function App() {
                 case 'size_comparison':
                   return (
                     <SizeComparisonGame
+                      buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
@@ -473,6 +487,7 @@ export default function App() {
                 case 'memory_card':
                   return (
                     <MemoryCardGame
+                      buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
@@ -482,6 +497,7 @@ export default function App() {
                 case 'shadow_quiz':
                   return (
                     <ShadowQuizGame
+                      buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={soundEnabled}
                       ageGroup={ageGroup}
@@ -491,6 +507,7 @@ export default function App() {
                 case 'stage_adventure':
                   return (
                     <RainbowStageAdventure
+                      buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       onGoHome={handleGoHome}
                       soundEnabled={soundEnabled}
@@ -501,6 +518,7 @@ export default function App() {
                 case 'balloon_pop':
                   return (
                     <BalloonPopGame
+                      buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={soundEnabled}
                       ageGroup={ageGroup}

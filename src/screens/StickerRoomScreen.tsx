@@ -1,10 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { motion } from 'motion/react';
 import { STICKER_LIST } from '../data/gameData';
+import type { CharacterId } from '../types';
+import { CharacterAvatar } from '../components/CharacterAvatar';
 import { playStarGain, speakText, playBubblePop } from '../utils/soundEngine';
 import { Trash2, Sparkles, Home, Move } from 'lucide-react';
 
 interface StickerRoomScreenProps {
+  buddy: CharacterId;
   childName: string;
   unlockedStickers: string[];
   placedStickers: Array<{
@@ -26,6 +29,7 @@ interface StickerRoomScreenProps {
 }
 
 export const StickerRoomScreen: React.FC<StickerRoomScreenProps> = ({
+  buddy,
   childName,
   unlockedStickers,
   placedStickers,
@@ -41,7 +45,7 @@ export const StickerRoomScreen: React.FC<StickerRoomScreenProps> = ({
     if (!sticker) return;
 
     playStarGain(soundEnabled);
-    speakText(`${sticker.name} 스티커를 방에 붙였어요! 자유롭게 끌어서 옮겨보세요!`, soundEnabled);
+    speakText(`${sticker.name} 스티커를 방에 붙였어요! 자유롭게 끌어서 옮겨보세요!`, soundEnabled, { characterId: buddy });
 
     // Add with random comfortable offset within canvas
     const newPlaced = {
@@ -85,14 +89,15 @@ export const StickerRoomScreen: React.FC<StickerRoomScreenProps> = ({
 
   const handleClearRoom = () => {
     onUpdatePlacedStickers([]);
-    speakText('방을 깨끗하게 정리했어요!', soundEnabled);
+    speakText('방을 깨끗하게 정리했어요!', soundEnabled, { characterId: buddy });
   };
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-5 pb-8">
       {/* Top Banner */}
       <div className="w-full break-keep">
-        <h1 className="text-[28px] font-extrabold tracking-tight text-[#292c33] sm:text-4xl">
+        <h1 className="flex items-center gap-3 text-[28px] font-extrabold tracking-tight text-[#292c33] sm:text-4xl">
+          <CharacterAvatar id={buddy} size="sm" mood="waving" />
           {childName}의 스티커북
         </h1>
         <p className="mt-2 flex items-center gap-1.5 text-sm text-[#777980] sm:text-base">

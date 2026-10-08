@@ -50,7 +50,7 @@ export const CharacterTalkScreen: React.FC<CharacterTalkScreenProps> = ({
         <p className="mt-2 text-base text-[#777980]">친구를 고르면 반갑게 인사해 줄 거야.</p>
       </div>
 
-      <div className="grid grid-cols-4 gap-2 sm:grid-cols-7 sm:gap-3" aria-label="인사할 친구 고르기">
+      <div className="grid grid-cols-4 gap-2 sm:grid-cols-8 sm:gap-3" aria-label="인사할 친구 고르기">
         {CHARACTER_LIST.map((char) => (
           <button
             key={char.id}
