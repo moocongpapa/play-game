@@ -6,11 +6,12 @@ test('BGM changes through all six tracks, ducks/restores volume and cancels on m
   const savedWindow = globalThis.window;
   const originalRandom = Math.random;
   let nextStep: (() => void) | undefined;
+  let canResume = false;
   const gains: { value: number; setValueAtTime: (v: number) => void; setTargetAtTime: (v: number) => void; cancelScheduledValues: () => void; linearRampToValueAtTime: (v: number) => void; exponentialRampToValueAtTime: (v: number) => void }[] = [];
   const notes: { frequency: { value: number }; stopped: boolean }[] = [];
   class Context {
-    state = 'running'; currentTime = 0; destination = {};
-    resume() { this.state = 'running'; return Promise.resolve(); }
+    state = 'suspended'; currentTime = 0; destination = {};
+    resume() { if (canResume) this.state = 'running'; return Promise.resolve(); }
     suspend() { this.state = 'suspended'; return Promise.resolve(); }
     createGain() {
       const gain = { value: 0, setValueAtTime(v: number) { this.value = v; }, setTargetAtTime(v: number) { this.value = v; }, cancelScheduledValues() {}, linearRampToValueAtTime(v: number) { this.value = v; }, exponentialRampToValueAtTime(v: number) { this.value = v; } };
@@ -27,6 +28,11 @@ test('BGM changes through all six tracks, ducks/restores volume and cancels on m
     globalThis.window = { AudioContext: Context, setTimeout(callback: () => void) { nextStep = callback; return 1; }, clearTimeout() { nextStep = undefined; } } as unknown as Window & typeof globalThis;
     const engine = await import('./soundEngine');
     engine.startBGM(.2);
+    for (let i = 0; i < 5; i++) nextStep?.();
+    assert.equal(notes.length, 0, 'autoplay-blocked context must not accumulate notes');
+    canResume = true;
+    engine.getAudioContext();
+    nextStep?.();
     const heard: string[] = [];
     // Fisher–Yates with zero moves the first track to the end.
     const expected = [...BACKGROUND_MUSIC.slice(1), BACKGROUND_MUSIC[0]];
