@@ -1,3 +1,4 @@
+import { RoundContinuation } from '../components/RoundContinuation';
 import { useSoundClue } from '../hooks/useSoundClue';
 import { PLAY_THEMES } from '../data/playThemes';
 import { pickNextRound, shuffle } from '../utils/roundDeck';
@@ -752,16 +753,8 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-sm mt-2">
-            <JellyButton
-              soundEnabled={soundEnabled}
-              onClick={restartAdventure}
-              variant="primary"
-              size="lg"
-              className="w-full"
-            >
-              <RotateCcw className="w-5 h-5 mr-1.5" /> 다시 모험하기
-            </JellyButton>
+          <div className="flex flex-col items-center gap-3 w-full max-w-sm mt-2">
+            <RoundContinuation onNext={restartAdventure} delayMs={5000} label="새로운 모험이 곧 시작돼요!" />
             <JellyButton
               soundEnabled={soundEnabled}
               onClick={onGoHome}

@@ -1,3 +1,4 @@
+import { RoundContinuation } from '../../components/RoundContinuation';
 import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
@@ -12,7 +13,7 @@ import { fireConfetti } from '../../utils/confetti';
 import { getDifficultyConfig, getAgeGroupLabel, pickDistractors } from '../../utils/ageEngine';
 import { OBJECT_ITEMS_BY_AGE } from '../../data/gameData';
 import { AgeGroup, QuizItem } from '../../types';
-import { Volume2, RefreshCw, Sparkles, Flame, Eye } from 'lucide-react';
+import { Volume2, RefreshCw, Flame, Eye } from 'lucide-react';
 
 interface ShadowQuizGameProps {
   buddy: CharacterId;
@@ -198,9 +199,7 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
       {/* Actions */}
       <div className="flex items-center justify-center gap-3 w-full">
         {isRevealed ? (
-          <JellyButton soundEnabled={soundEnabled} variant="primary" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            <Sparkles className="w-5 h-5 mr-1" /> 다음 그림자 찾기 👥 <span className="next-play-icon" aria-hidden="true">➜</span>
-          </JellyButton>
+          <RoundContinuation onNext={generateRound} />
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">
             <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 다른 그림자

@@ -1,3 +1,4 @@
+import { RoundContinuation } from '../../components/RoundContinuation';
 import { PLAY_THEMES } from '../../data/playThemes';
 import { pickNextRound, shuffle } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
@@ -11,7 +12,7 @@ import { JellyButton } from '../../components/JellyButton';
 import { speakText, playCorrectFanfare, playWrongBoing, playBubblePop, playStarGain } from '../../utils/soundEngine';
 import { getDifficultyConfig, getAgeGroupLabel } from '../../utils/ageEngine';
 import { AgeGroup } from '../../types';
-import { Volume2, RefreshCw, Sparkles, Flame } from 'lucide-react';
+import { Volume2, RefreshCw, Flame } from 'lucide-react';
 
 interface MemoryCardGameProps {
   buddy: CharacterId;
@@ -268,9 +269,7 @@ export const MemoryCardGame: React.FC<MemoryCardGameProps> = ({
       {/* Actions */}
       <div className="flex items-center justify-center gap-3 w-full">
         {isCompleted ? (
-          <JellyButton soundEnabled={soundEnabled} variant="primary" size="lg" onClick={startNewGame} className="w-full sm:w-auto">
-            <Sparkles className="w-5 h-5 mr-1" /> 다음 카드 놀이하기 {friend.badge} <span className="next-play-icon" aria-hidden="true">➜</span>
-          </JellyButton>
+          <RoundContinuation onNext={startNewGame} delayMs={4000} />
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={startNewGame} className="!px-4">
             <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 카드 다시 섞기

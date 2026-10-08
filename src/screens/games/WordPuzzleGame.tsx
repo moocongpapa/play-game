@@ -1,3 +1,4 @@
+import { RoundContinuation } from '../../components/RoundContinuation';
 import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
@@ -245,9 +246,7 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
       {/* Actions */}
       <div className="flex items-center justify-center gap-3 w-full">
         {isCompleted || timeOut ? (
-          <JellyButton soundEnabled={soundEnabled} variant="purple" size="lg" onClick={generateRound} className="w-full sm:w-auto">
-            다음 단어 만들기 {friend.badge} <span className="next-play-icon" aria-hidden="true">➜</span>
-          </JellyButton>
+          <RoundContinuation onNext={generateRound} />
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">
             <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 다른 단어
