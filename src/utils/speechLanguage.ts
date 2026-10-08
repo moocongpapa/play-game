@@ -77,13 +77,18 @@ export function localizeSpeech(text: string, language: SpeechLanguage, childName
 }
 
 export function chooseSpeechVoice<T extends { lang: string; name: string; default?: boolean }>(voices: T[], language: SpeechLanguage): T | null {
-  const matching = voices.filter(voice => voice.lang.toLowerCase().startsWith(language));
+  // SpeechSynthesis exposes no age/gender metadata. Prefer identifiable child / light
+  // female voices and exclude known adult male defaults, even if marked "Natural".
+  const adultMale = /\b(male|david|mark|george|daniel|alex|fred|bruce|ralph|james|guy|ryan|christopher|eric|roger|andrew|brian|thomas|tony|jason|injoon|bongjin|gookmin|hyunsu)\b|인준|봉진|국민|현수|남성|남자/i;
+  const matching = voices.filter(voice => voice.lang.toLowerCase().startsWith(language) && !adultMale.test(voice.name));
   const score = (voice: T) => {
+    const child = /\b(Ana|Maisie)(Neural)?\b/i.test(voice.name) ? 1000 : 0;
+    const lightFemale = /\b(female|Samantha|Victoria|Karen|Moira|Tessa|Fiona|Zira|Jenny|Aria|Sara|Michelle|Emma|Ava|Libby|Sonia|Holly)\b|SunHi|선희|Yuna|유나|Heami|혜미|Hyeryun|kof/i.test(voice.name) ? 100 : 0;
     const natural = /natural|neural|premium|enhanced|siri/i.test(voice.name) ? 20 : 0;
     const familiarKorean = language === 'ko' && /SunHi|선희|Yuna|유나|Heami|혜미|Hyeryun|kof/i.test(voice.name) ? 15 : 0;
     const locale = voice.lang.toLowerCase() === (language === 'en' ? 'en-us' : 'ko-kr') ? 5 : 0;
     const nonLegacy = /google|구글/i.test(voice.name) ? 0 : 2;
-    return natural + familiarKorean + locale + nonLegacy + (voice.default ? 1 : 0);
+    return child + lightFemale + natural + familiarKorean + locale + nonLegacy + (voice.default ? 1 : 0);
   };
   return matching.reduce<T | null>((best, voice) => !best || score(voice) > score(best) ? voice : best, null);
 }

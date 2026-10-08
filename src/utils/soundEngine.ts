@@ -1,4 +1,5 @@
 import { chooseSpeechVoice, localizeSpeech, type SpeechLanguage } from './speechLanguage';
+import { getCharacterVoice } from '../data/characterVoices';
 import { randomEffectPitch } from './juice';
 import { BACKGROUND_MUSIC, SLEEP_MUSIC, type MusicTrack } from '../data/backgroundMusic';
 import { ANIMAL_RECORDINGS, resolveAnimalSound } from '../data/animalSounds';
@@ -455,6 +456,7 @@ export function playCharacterVoiceSFX(characterId: string, enabled = true) {
 let selectedVoice: SpeechSynthesisVoice | null = null;
 let activeBrowserUtterance: SpeechSynthesisUtterance | null = null;
 let browserSpeechStartTimer: number | null = null;
+let pendingBrowserSpeech: (() => void) | null = null;
 let currentVoiceToneMode: 'cheerful' | 'gentle' | 'energetic' = 'cheerful';
 let speechRequestId = 0;
 
@@ -467,18 +469,6 @@ function clearBrowserSpeechStartTimer() {
 export function setVoiceToneMode(mode: 'cheerful' | 'gentle' | 'energetic') {
   currentVoiceToneMode = mode;
 }
-
-// Character-specific natural voice profiles (Pitch, Rate, Prefix SFX)
-const CHARACTER_VOICE_PROFILES: Record<string, { pitch: number; rate: number; prefixSFX: string }> = {
-  ggomi: { pitch: 1.05, rate: 0.90, prefixSFX: 'ggomi' },     // 따뜻하고 포근한 꼬미 곰
-  rano: { pitch: 1.08, rate: 0.93, prefixSFX: 'rano' },       // 에너지 넘치고 씩씩한 라노
-  jelly: { pitch: 1.12, rate: 0.92, prefixSFX: 'jelly' },     // 깜찍하고 통통 튀는 젤리
-  dochi: { pitch: 1.06, rate: 0.88, prefixSFX: 'dochi' },     // 호기심 많은 귀여운 도치
-  ggulgguli: { pitch: 1.05, rate: 0.90, prefixSFX: 'ggulgguli' }, // 유쾌하고 신난 꿀꿀이
-  eumme: { pitch: 1.04, rate: 0.86, prefixSFX: 'eumme' },     // 부드럽고 상냥한 음메
-  nurungji: { pitch: 1.06, rate: 0.92, prefixSFX: 'nurungji' }, // 신나고 기분 좋은 누룽지
-  pingu: { pitch: 1.09, rate: 0.88, prefixSFX: 'pingu' },    // 맑고 다정하게 말하는 핑구
-};
 
 /** Pick a natural voice in the selected language, never a voice from the other language. */
 function findBestVoice(): SpeechSynthesisVoice | null {
@@ -502,6 +492,12 @@ function isRoboticVoice(voice: SpeechSynthesisVoice | null): boolean {
 if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
   window.speechSynthesis.onvoiceschanged = () => {
     selectedVoice = findBestVoice();
+    if (selectedVoice && pendingBrowserSpeech) {
+      const resume = pendingBrowserSpeech;
+      pendingBrowserSpeech = null;
+      clearBrowserSpeechStartTimer();
+      resume();
+    }
   };
   selectedVoice = findBestVoice();
 }
@@ -548,32 +544,28 @@ function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions
   try {
     const formatted = formatKindergartenTeacherText(text);
     if (!formatted) return;
-
+    selectedVoice ||= findBestVoice();
+    // Wait briefly for asynchronously loaded voices; never hand the choice to
+    // an arbitrary OS default that could be a deep adult male or another language.
+    if (!selectedVoice) {
+      if (window.speechSynthesis.getVoices().length === 0) {
+        pendingBrowserSpeech = () => speakWithBrowserTTS(text, enabled, options);
+        browserSpeechStartTimer = window.setTimeout(() => {
+          pendingBrowserSpeech = null;
+          browserSpeechStartTimer = null;
+          options.onError?.();
+        }, 1500);
+      } else options.onError?.();
+      return;
+    }
     const utterance = new SpeechSynthesisUtterance(formatted);
     activeBrowserUtterance = utterance;
-
-    if (!selectedVoice) {
-      selectedVoice = findBestVoice();
-    }
-    if (selectedVoice) {
-      utterance.voice = selectedVoice;
-      utterance.lang = selectedVoice.lang;
-    } else {
-      utterance.lang = speechLanguage === 'en' ? 'en-US' : 'ko-KR';
-    }
-
-    const isRobotic = isRoboticVoice(selectedVoice);
-
-    // If it's a robotic voice, DO NOT boost pitch! Boosting pitch on robotic synthesizers
-    // creates metallic harsh artifacts. Keep pitch 1.0 and pace at 0.92 for warm clarity.
-    let basePitch = isRobotic ? 1.0 : 1.06;
-    let baseRate = 0.92;
-
-    if (options.characterId && CHARACTER_VOICE_PROFILES[options.characterId]) {
-      const charProfile = CHARACTER_VOICE_PROFILES[options.characterId];
-      basePitch = isRobotic ? 1.0 : charProfile.pitch;
-      baseRate = charProfile.rate;
-    }
+    utterance.voice = selectedVoice;
+    utterance.lang = selectedVoice.lang;
+    const profile = getCharacterVoice(options.characterId || 'ggomi');
+    const childVoice = /\b(Ana|Maisie)(Neural)?\b/i.test(selectedVoice?.name || '');
+    const basePitch = childVoice ? 1.0 : isRoboticVoice(selectedVoice) ? 1.10 : profile.browserPitch;
+    const baseRate = profile.rate;
 
     utterance.pitch = options.pitch ?? basePitch;
     utterance.rate = options.rate ?? baseRate;
@@ -671,6 +663,7 @@ export function stopAllSpeech() {
   speechRequestId += 1;
   if (typeof window !== 'undefined') clearBrowserSpeechStartTimer();
   activeBrowserUtterance = null;
+  pendingBrowserSpeech = null;
   stopGeminiAudio();
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
     try {

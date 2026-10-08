@@ -91,3 +91,13 @@ test('browser voice selection stays in the selected language, including late-loa
   assert.equal(chooseSpeechVoice([], 'ko'), null);
   assert.equal(chooseSpeechVoice([{ lang: 'ko-KR', name: 'Google Korean', default: true }, { lang: 'ko-KR', name: 'Yuna' }], 'ko')?.name, 'Yuna');
 });
+
+test('child voices beat adult defaults; deep male fallback voices are excluded in both languages', () => {
+  const english = [{ lang: 'en-US', name: 'Microsoft Guy Online (Natural)', default: true }, { lang: 'en-US', name: 'Samantha' }, { lang: 'en-US', name: 'Microsoft Ana Online (Natural)' }];
+  assert.equal(chooseSpeechVoice(english, 'en'), english[2]);
+  assert.equal(chooseSpeechVoice(english.slice(0, 2), 'en'), english[1]);
+  assert.equal(chooseSpeechVoice(english.slice(0, 1), 'en'), null);
+  const korean = [{ lang: 'ko-KR', name: 'Microsoft InJoon Online (Natural)', default: true }, { lang: 'ko-KR', name: 'Yuna' }];
+  assert.equal(chooseSpeechVoice(korean, 'ko'), korean[1]);
+  assert.equal(chooseSpeechVoice(korean.slice(0, 1), 'ko'), null);
+});
