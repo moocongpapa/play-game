@@ -445,7 +445,6 @@ export const BugGardenScreen: React.FC<BugGardenScreenProps> = ({
             return (
               <motion.button
                 key={bugType.id}
-                whileTap={{ scale: 0.92 }}
                 onClick={() => {
                   setSelectedBugId(bugType.id);
                   handleAddBug(bugType);

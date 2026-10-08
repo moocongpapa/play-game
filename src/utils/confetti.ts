@@ -1,9 +1,11 @@
 import confetti from 'canvas-confetti';
+import { emitJuice } from './juice';
 
 /**
  * Standard cheerful multi-color candy confetti burst
  */
 export function fireConfetti() {
+  emitJuice({ kind: 'success' });
   confetti({
     disableForReducedMotion: true,
     particleCount: 70,
@@ -17,6 +19,7 @@ export function fireConfetti() {
  * Golden star explosion for star badges and milestone unlocks
  */
 export function fireStarExplosion(origin?: { x: number; y: number }) {
+  emitJuice({ kind: 'success' });
   confetti({
     disableForReducedMotion: true,
     particleCount: 45,
@@ -33,6 +36,7 @@ export function fireStarExplosion(origin?: { x: number; y: number }) {
  * Balloon pop burst triggered at the exact screen touch position
  */
 export function fireBalloonPopParticle(screenX: number, screenY: number, color = '#FF6B8B') {
+  emitJuice({ kind: 'pop', x: screenX, y: screenY });
   const normX = Math.max(0, Math.min(1, screenX / window.innerWidth));
   const normY = Math.max(0, Math.min(1, screenY / window.innerHeight));
 
@@ -52,6 +56,7 @@ export function fireBalloonPopParticle(screenX: number, screenY: number, color =
  * Grand Celebration Fireworks for Stage Clear & Final Trophy Party
  */
 export function fireCelebrationFireworks(durationMs = 1800) {
+  emitJuice({ kind: 'success' });
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   const generation = celebrationGeneration;
   const end = Date.now() + durationMs;

@@ -229,7 +229,7 @@ export const CharacterCharmVideoModal: React.FC<CharacterCharmVideoModalProps> =
 
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-      <div className="relative w-full max-w-xl bg-white rounded-3xl sm:rounded-[36px] shadow-2xl border-4 border-[#FFA000] overflow-hidden flex flex-col my-auto">
+      <div className="juice-dialog relative w-full max-w-xl bg-white rounded-3xl sm:rounded-[36px] shadow-2xl border-4 border-[#FFA000] overflow-hidden flex flex-col my-auto">
         {/* Top Header Controls (Prominent Top-Left Back Button & Short Title) */}
         <div className="bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 p-2.5 sm:p-3 flex items-center justify-between text-white">
           {/* Top-Left Back Button */}

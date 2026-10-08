@@ -50,10 +50,13 @@ test('BGM changes through all six tracks, ducks/restores volume and cancels on m
     }
     assert.equal(new Set(heard).size, 6);
     engine.setBGMDucked('animal', true);
-    assert.equal(gains[0].value, .2 * .16);
+    assert.equal(gains[0].value, .2 * .3);
     engine.setBGMVolume(.1);
-    assert.equal(gains[0].value, .1 * .16);
+    assert.equal(gains[0].value, .1 * .3);
+    engine.setBGMDucked('speech', true);
     engine.setBGMDucked('animal', false);
+    assert.equal(gains[0].value, .1 * .3, 'finishing one sound cannot unduck an ongoing voice');
+    engine.setBGMDucked('speech', false);
     assert.equal(gains[0].value, .1);
     engine.setAudioPreferences(false);
     assert.equal(nextStep, undefined);

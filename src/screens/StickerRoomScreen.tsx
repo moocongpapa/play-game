@@ -188,7 +188,6 @@ export const StickerRoomScreen: React.FC<StickerRoomScreenProps> = ({
             return (
               <motion.button
                 key={stk.id}
-                whileTap={{ scale: 0.9 }}
                 onClick={() => isUnlocked && handleAddSticker(stk.id)}
                 disabled={!isUnlocked}
                 className={`flex flex-col items-center justify-center p-2 sm:p-3 rounded-2xl border-2 min-w-[75px] sm:min-w-[90px] shrink-0 cursor-pointer transition-all ${

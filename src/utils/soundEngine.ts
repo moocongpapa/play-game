@@ -1,3 +1,4 @@
+import { randomEffectPitch } from './juice';
 import { BACKGROUND_MUSIC, type MusicTrack } from '../data/backgroundMusic';
 import { ANIMAL_RECORDINGS, resolveAnimalSound } from '../data/animalSounds';
 import { createRoundDeck } from './roundDeck';
@@ -43,12 +44,12 @@ const bgmNotes = new Set<OscillatorNode>();
 
 function applyBgmVolume() {
   if (!bgmVolumeNode || !audioCtx) return;
-  const gain = requestedBgmVolume * (bgmDucks.size ? .16 : 1);
+  const gain = requestedBgmVolume * (bgmDucks.size ? .3 : 1);
   bgmVolumeNode.gain.cancelScheduledValues(audioCtx.currentTime);
-  bgmVolumeNode.gain.setTargetAtTime(gain, audioCtx.currentTime, .12);
+  bgmVolumeNode.gain.setTargetAtTime(gain, audioCtx.currentTime, bgmDucks.size ? .09 : .32);
 }
 
-export function setBGMDucked(reason: 'speech' | 'animal' | 'rhythm' | 'instrument', ducked: boolean) {
+export function setBGMDucked(reason: 'speech' | 'animal' | 'rhythm' | 'instrument' | 'effect', ducked: boolean) {
   if (ducked) bgmDucks.add(reason); else bgmDucks.delete(reason);
   applyBgmVolume();
 }
@@ -144,14 +145,15 @@ export function playJellyTap(enabled = true) {
   if (!enabled || !masterSoundEnabled) return;
   try {
     const ctx = getAudioContext();
+    const pitch = randomEffectPitch();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
     osc.type = 'sine';
     const now = ctx.currentTime;
 
-    osc.frequency.setValueAtTime(320, now);
-    osc.frequency.exponentialRampToValueAtTime(680, now + 0.07);
+    osc.frequency.setValueAtTime(320 * pitch, now);
+    osc.frequency.exponentialRampToValueAtTime(680 * pitch, now + 0.07);
 
     gain.gain.setValueAtTime(0.2, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
@@ -159,6 +161,7 @@ export function playJellyTap(enabled = true) {
     osc.connect(gain);
     gain.connect(ctx.destination);
 
+    trackEffect(osc, gain);
     osc.start(now);
     osc.stop(now + 0.12);
   } catch (e) {
@@ -173,15 +176,16 @@ export function playBouncyBoing(enabled = true) {
   if (!enabled || !masterSoundEnabled) return;
   try {
     const ctx = getAudioContext();
+    const pitch = randomEffectPitch();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     const now = ctx.currentTime;
 
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(220, now);
-    osc.frequency.linearRampToValueAtTime(540, now + 0.08);
-    osc.frequency.linearRampToValueAtTime(380, now + 0.16);
-    osc.frequency.linearRampToValueAtTime(480, now + 0.22);
+    osc.frequency.setValueAtTime(220 * pitch, now);
+    osc.frequency.linearRampToValueAtTime(540 * pitch, now + 0.08);
+    osc.frequency.linearRampToValueAtTime(380 * pitch, now + 0.16);
+    osc.frequency.linearRampToValueAtTime(480 * pitch, now + 0.22);
 
     gain.gain.setValueAtTime(0.25, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
@@ -189,6 +193,7 @@ export function playBouncyBoing(enabled = true) {
     osc.connect(gain);
     gain.connect(ctx.destination);
 
+    trackEffect(osc, gain);
     osc.start(now);
     osc.stop(now + 0.24);
   } catch (e) {
@@ -203,30 +208,34 @@ export function playBalloonPop(enabled = true) {
   if (!enabled || !masterSoundEnabled) return;
   try {
     const ctx = getAudioContext();
+    const pitch = randomEffectPitch();
     const now = ctx.currentTime;
+    duckForEffect(220);
 
     // 1. Noise burst for high frequency "snap"
-    const bufferSize = ctx.sampleRate * 0.06;
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.012));
+    if (!popNoise || popNoise.sampleRate !== ctx.sampleRate) {
+      const bufferSize = Math.ceil(ctx.sampleRate * .06);
+      popNoise = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = popNoise.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * .012));
     }
     const noise = ctx.createBufferSource();
-    noise.buffer = buffer;
+    noise.buffer = popNoise;
+    noise.playbackRate.setValueAtTime(pitch, now);
     const noiseGain = ctx.createGain();
     noiseGain.gain.setValueAtTime(0.35, now);
     noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
     noise.connect(noiseGain);
     noiseGain.connect(ctx.destination);
+    trackEffect(noise, noiseGain);
     noise.start(now);
 
     // 2. Body thud
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(260, now);
-    osc.frequency.exponentialRampToValueAtTime(50, now + 0.09);
+    osc.frequency.setValueAtTime(260 * pitch, now);
+    osc.frequency.exponentialRampToValueAtTime(50 * pitch, now + 0.09);
 
     gain.gain.setValueAtTime(0.3, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
@@ -234,6 +243,7 @@ export function playBalloonPop(enabled = true) {
     osc.connect(gain);
     gain.connect(ctx.destination);
 
+    trackEffect(osc, gain);
     osc.start(now);
     osc.stop(now + 0.09);
   } catch (e) {
@@ -252,6 +262,7 @@ export function playDingDongDang(enabled = true) {
   if (!enabled || !masterSoundEnabled) return;
   try {
     const ctx = getAudioContext();
+    duckForEffect(650);
     const chords = [
       { freq: 523.25, time: 0.0 },  // 딩 (C5)
       { freq: 659.25, time: 0.12 }, // 동 (E5)
@@ -271,6 +282,7 @@ export function playDingDongDang(enabled = true) {
       osc.connect(gain);
       gain.connect(ctx.destination);
 
+      trackEffect(osc, gain);
       osc.start(now);
       osc.stop(now + 0.35);
     });
@@ -286,6 +298,7 @@ export function playSparkleChime(enabled = true) {
   if (!enabled || !masterSoundEnabled) return;
   try {
     const ctx = getAudioContext();
+    duckForEffect(500);
     const pitches = [1046.50, 1318.51, 1567.98, 2093.00, 2637.02]; // C6, E6, G6, C7, E7
     pitches.forEach((freq, idx) => {
       const osc = ctx.createOscillator();
@@ -300,6 +313,7 @@ export function playSparkleChime(enabled = true) {
       osc.connect(gain);
       gain.connect(ctx.destination);
 
+      trackEffect(osc, gain);
       osc.start(now);
       osc.stop(now + 0.25);
     });
@@ -315,6 +329,7 @@ export function playCelebrationFanfare(enabled = true) {
   if (!enabled || !masterSoundEnabled) return;
   try {
     const ctx = getAudioContext();
+    duckForEffect(1000);
     const melody = [
       { f: 523.25, t: 0.00, d: 0.12 }, // C5
       { f: 659.25, t: 0.10, d: 0.12 }, // E5
@@ -336,6 +351,7 @@ export function playCelebrationFanfare(enabled = true) {
       osc.connect(gain);
       gain.connect(ctx.destination);
 
+      trackEffect(osc, gain);
       osc.start(now);
       osc.stop(now + d);
     });
@@ -363,14 +379,15 @@ export function playWrongBoing(enabled = true) {
   if (!enabled || !masterSoundEnabled) return;
   try {
     const ctx = getAudioContext();
+    const pitch = randomEffectPitch();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
     osc.type = 'sine';
     const now = ctx.currentTime;
 
-    osc.frequency.setValueAtTime(260, now);
-    osc.frequency.exponentialRampToValueAtTime(140, now + 0.22);
+    osc.frequency.setValueAtTime(260 * pitch, now);
+    osc.frequency.exponentialRampToValueAtTime(140 * pitch, now + 0.22);
 
     gain.gain.setValueAtTime(0.16, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
@@ -378,6 +395,7 @@ export function playWrongBoing(enabled = true) {
     osc.connect(gain);
     gain.connect(ctx.destination);
 
+    trackEffect(osc, gain);
     osc.start(now);
     osc.stop(now + 0.22);
   } catch (e) {
@@ -702,7 +720,35 @@ export function speakCharacterText(characterId: string, text: string, enabled = 
 
 // Short, bounded voices for care play and the freely playable instrument.
 const playVoices = new Set<OscillatorNode>();
+const effectVoices = new Set<AudioScheduledSourceNode>();
+let popNoise: AudioBuffer | null = null;
+let effectDuckTimer: number | null = null;
+let effectDuckUntil = 0;
+function duckForEffect(duration: number) {
+  if (effectDuckTimer !== null) window.clearTimeout(effectDuckTimer);
+  const now = performance.now();
+  effectDuckUntil = Math.max(effectDuckUntil, now + duration);
+  setBGMDucked('effect', true);
+  effectDuckTimer = window.setTimeout(() => {
+    effectDuckTimer = null; effectDuckUntil = 0; setBGMDucked('effect', false);
+  }, effectDuckUntil - now);
+}
+function trackEffect(voice: AudioScheduledSourceNode, gain: GainNode) {
+  while (effectVoices.size >= 32) {
+    const oldest = effectVoices.values().next().value!;
+    effectVoices.delete(oldest);
+    try { oldest.stop(); } catch { /* Already ended. */ }
+  }
+  effectVoices.add(voice);
+  voice.onended = () => { effectVoices.delete(voice); voice.disconnect(); gain.disconnect(); };
+}
 export function stopPlaySounds() {
+  if (effectDuckTimer !== null) window.clearTimeout(effectDuckTimer);
+  effectDuckTimer = null;
+  effectDuckUntil = 0;
+  setBGMDucked('effect', false);
+  for (const voice of [...effectVoices]) { try { voice.stop(); } catch { /* Already ended. */ } }
+  effectVoices.clear();
   for (const voice of [...playVoices]) { try { voice.stop(); } catch { /* Already ended. */ } }
   playVoices.clear();
   setBGMDucked('instrument', false);
@@ -748,12 +794,14 @@ export function playXylophoneNote(frequency: number, enabled = true, animalIndex
 export function playCareSound(kind: 'brush' | 'chew' | 'bubble', enabled = true) {
   if (!enabled || !masterSoundEnabled) return;
   try {
-    if (kind === 'brush') playToyTone(900, .12, .045, 1500);
+    const pitch = randomEffectPitch();
+    if (kind === 'brush') playToyTone(900 * pitch, .12, .045, 1500 * pitch);
     else if (kind === 'chew') {
-      playToyTone(210, .16, .075, 130);
-      playToyTone(250, .18, .055, 160, .18);
+      playToyTone(210 * pitch, .16, .075, 130 * pitch);
+      playToyTone(250 * pitch, .18, .055, 160 * pitch, .18);
     } else {
-      const frequency = 700 + Math.random() * 450;
+      const frequency = 920 * pitch;
+      duckForEffect(200);
       playToyTone(frequency, .2, .085, frequency * 1.65);
       playToyTone(frequency * 2, .1, .02);
     }

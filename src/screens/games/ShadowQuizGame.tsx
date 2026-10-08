@@ -188,7 +188,6 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
             <DragPiece
               key={item.id}
               whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
               animate={isShaking ? { x: [-8, 8, -6, 6, 0] } : isTargetAndRevealed ? { scale: [1, 1.15, 1] } : {}}
               id={item.id} label={item.koreanName}
               className={`game-choice p-3 sm:p-4 rounded-2xl sm:rounded-3xl border-3 flex flex-col items-center justify-center cursor-pointer transition-all shadow-sm ${

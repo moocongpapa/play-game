@@ -415,6 +415,7 @@ export const CharacterAvatar: React.FC<CharacterAvatarProps> = ({
     <motion.div
       {...motionProps}
       data-character={id}
+      data-juice-target={onClick ? '' : undefined}
       onClick={onClick}
       className={`relative flex items-center justify-center ${onClick ? 'cursor-pointer' : ''} select-none ${getDimension()} ${className}`}
     >

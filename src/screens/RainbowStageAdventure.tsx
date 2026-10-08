@@ -484,7 +484,6 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
               <motion.button
                 key={opt.id}
                 whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.9, rotate: -2 }}
                 animate={{
                   x: l1WrongId === opt.id ? [-8, 8, -8, 8, 0] : 0,
                 }}
@@ -613,7 +612,6 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
                 animate={reducedMotion ? { y: 150 + (l3Balloons.indexOf(b) % 3) * 95, scale: 1 } : { y: -140, scale: 1 }}
                 transition={reducedMotion ? { duration: 0 } : { y: { duration: 9, delay: l3Balloons.indexOf(b) * 0.6, ease: 'linear', repeat: Infinity } }}
                 onClick={(e) => handleL3Pop(b.id, b.color, e)}
-                whileTap={{ scale: 0.8 }}
                 style={{
                   left: `calc(${Math.max(22, Math.min(78, b.x))}% - ${b.size / 2}px)`,
                   width: b.size,
@@ -688,7 +686,6 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
               <DragPiece
                 key={opt.id}
                 whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.9 }}
                 id={opt.id} label={opt.name}
                 className="p-4 rounded-3xl bg-white border-3 border-purple-300 shadow-md flex flex-col items-center justify-center cursor-pointer active:scale-95 touch-manipulation min-h-[100px]"
               >

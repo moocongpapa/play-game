@@ -9,6 +9,7 @@ import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import { BUBBLE_TOYS } from '../../data/toddlerPlay';
 import { playCareSound, playSparkleChime, speakText } from '../../utils/soundEngine';
 import { fireStarExplosion } from '../../utils/confetti';
+import { emitJuice } from '../../utils/juice';
 
 const GUIDE = '몽실몽실 비눗방울을 톡! 황금 방울에서는 별이 쏟아져!';
 interface Bubble { id: number; lane: number; size: number; toy: string | null; golden: boolean; duration: number; delay: number }
@@ -48,6 +49,7 @@ export function BubblePopGame(props: ToddlerGameProps) {
     const area = arena.current!.getBoundingClientRect();
     const x = rect.left + rect.width / 2;
     const y = rect.top + rect.height / 2;
+    emitJuice({ kind: 'pop', x, y });
     setBursts(current => [...current.slice(-4), { id: bubble.id, x: (x - area.left) / area.width * 100, y: (y - area.top) / area.height * 100, golden: bubble.golden }]);
     scheduleGameTimeout(() => setBursts(current => current.filter(burst => burst.id !== bubble.id)), 750);
     const replacement = reduced ? makeBubble() : null;

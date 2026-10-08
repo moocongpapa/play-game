@@ -43,7 +43,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
     onSelectCharacter(id);
     onChangeStep('games');
     setHasNavigated(true);
-    window.scrollTo({ top: 0 });
     speakText(`${childName}야, ${CHARACTERS[id].name}랑 같이 놀자! 어떤 게임 해볼까? 그림을 눌러봐.`, soundEnabled, { characterId: id });
   };
 

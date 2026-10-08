@@ -236,7 +236,6 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
           {/* 🪄 LIVING CHARACTER BUTTON */}
           <motion.button
             whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
             onClick={handleLaunchLivingCharacter}
             aria-label="색칠한 캐릭터 움직이기"
             className="flex min-h-11 items-center gap-1.5 rounded-xl bg-[#eaf0e7] px-3 text-sm font-bold text-[#48634d] hover:bg-[#dfe9db]"

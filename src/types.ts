@@ -96,6 +96,7 @@ export interface AppState {
   bgmVolume: number;
   sfxVolume: number;
   ttsEnabled: boolean;
+  hapticsEnabled?: boolean;
   timerMinutes: number; // 0 means unlimited
   playTimeSeconds: number;
   isTimeUp: boolean;

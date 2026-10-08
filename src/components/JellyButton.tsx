@@ -73,11 +73,10 @@ export const JellyButton: React.FC<JellyButtonProps> = ({
     <motion.button
       id={id}
       whileHover={{ scale: disabled ? 1 : 1.04 }}
-      whileTap={{ scale: disabled ? 1 : 0.92, y: 2 }}
-      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+      transition={{ type: 'spring', stiffness: 450, damping: 15, mass: 0.8 }}
       onClick={handleClick}
       disabled={disabled}
-      className={`relative inline-flex items-center justify-center font-bold tracking-wide select-none touch-manipulation transition-colors ${getSizeStyles()} ${getVariantStyles()} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`}
+      className={`jelly-button relative inline-flex items-center justify-center font-bold tracking-wide select-none touch-manipulation transition-colors ${getSizeStyles()} ${getVariantStyles()} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`}
     >
       {children}
     </motion.button>

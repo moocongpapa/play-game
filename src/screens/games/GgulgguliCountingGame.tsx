@@ -210,7 +210,6 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
             return (
               <motion.button
                 key={idx}
-                whileTap={{ scale: 0.85 }}
                 aria-label={`${targetFood.name} ${idx + 1}번째 세기`}
                 onClick={() => handleTapFoodItem(idx)}
                 className={`w-14 h-14 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl flex items-center justify-center text-2xl sm:text-4xl cursor-pointer select-none shadow-md border-2 sm:border-3 transition-transform ${

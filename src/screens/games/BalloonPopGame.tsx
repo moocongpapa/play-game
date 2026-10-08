@@ -224,7 +224,6 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
               background: b.bgGradient,
             }}
             whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.85 }}
             className="absolute rounded-full cursor-pointer shadow-lg flex items-center justify-center border-2 border-white/50 active:scale-90 touch-manipulation"
           >
             {/* Balloon Highlight Shine */}

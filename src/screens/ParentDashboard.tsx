@@ -13,6 +13,7 @@ interface ParentDashboardProps {
   onUpdateBgmVolume: (vol: number) => void;
   onUpdateSfxVolume: (vol: number) => void;
   onToggleSound: () => void;
+  onToggleHaptics: () => void;
   onToggleBGM: () => void;
   onUnlockAllStickers: () => void;
   onResetProgress: () => void;
@@ -26,6 +27,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   onUpdateBgmVolume,
   onUpdateSfxVolume,
   onToggleSound,
+  onToggleHaptics,
   onToggleBGM,
   onUnlockAllStickers,
   onResetProgress,
@@ -337,6 +339,11 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
           </button>
         </div>
       </div>
+
+      <section className="w-full bg-white p-4 rounded-3xl border-2 border-amber-200 mb-4 flex items-center justify-between gap-3">
+        <div><h2 className="font-bold text-sm">작은 진동 반응</h2><p className="text-xs text-stone-500">지원 기기에서 톡! 움직임 줄이기 설정 시 쉬어요.</p></div>
+        <button type="button" aria-label="진동 반응" aria-pressed={appState.hapticsEnabled !== false} onClick={onToggleHaptics} className="min-h-12 min-w-16 rounded-2xl bg-amber-100 font-bold text-sm">{appState.hapticsEnabled !== false ? '켜짐' : '꺼짐'}</button>
+      </section>
 
       {/* Quick Actions */}
       <p className="text-xs text-center text-stone-500 mb-4">

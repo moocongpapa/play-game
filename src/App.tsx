@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { AppState, CharacterId, GameId, ChildProfile } from './types';
 import { CharacterAvatar } from './components/CharacterAvatar';
 import { Header } from './components/Header';
@@ -10,12 +10,14 @@ import { useGameTimeouts } from './hooks/useGameTimeouts';
 import { HomeScreen } from './screens/HomeScreen';
 import { SplashLoader } from './components/SplashLoader';
 import { OnboardingScreen } from './screens/OnboardingScreen';
+import { useViewportLock } from './hooks/useViewportLock';
 
-import { getAudioContext, startBGM, stopBGM, setBGMVolume, playStarGain, speakText, stopAllSpeech, setAudioPreferences } from './utils/soundEngine';
+import { getAudioContext, startBGM, stopBGM, setBGMVolume, playStarGain, speakText, stopAllSpeech, stopPlaySounds, setAudioPreferences } from './utils/soundEngine';
 import { Moon, Shield } from 'lucide-react';
 import { createChildProfile } from './utils/ageEngine';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
+const TouchEffects = lazy(() => import('./components/TouchEffects').then(module => ({ default: module.TouchEffects })));
 const CharacterTalkScreen = lazy(() => import('./screens/CharacterTalkScreen').then(module => ({ default: module.CharacterTalkScreen })));
 const BugGardenScreen = lazy(() => import('./screens/BugGardenScreen').then(module => ({ default: module.BugGardenScreen })));
 const ParentDashboard = lazy(() => import('./screens/ParentDashboard').then(module => ({ default: module.ParentDashboard })));
@@ -43,6 +45,8 @@ const AnimalXylophoneGame = lazy(() => import('./screens/games/AnimalXylophoneGa
 const RainbowStageAdventure = lazy(() => import('./screens/RainbowStageAdventure').then(module => ({ default: module.RainbowStageAdventure })));
 
 export default function App() {
+  useViewportLock();
+  const mainRef = useRef<HTMLElement>(null);
   const [appState, setAppState] = useState<AppState>(() => {
     // 1. 전용 프로필 스토리지 우선 확인
     let savedProfile: ChildProfile | null = null;
@@ -84,6 +88,7 @@ export default function App() {
       bgmVolume: 0.15,
       sfxVolume: 1.0,
       ttsEnabled: true,
+      hapticsEnabled: true,
       timerMinutes: 0, // 0 = unlimited
       playTimeSeconds: 0,
       isTimeUp: false,
@@ -116,22 +121,23 @@ export default function App() {
   const [isParentGateOpen, setIsParentGateOpen] = useState(false);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [currentScreen]);
+    mainRef.current?.scrollTo(0, 0);
+  }, [currentScreen, activeGameId, homeStep]);
 
   const handleGoHome = () => {
     if (currentScreen === 'talk') setHomeStep('games');
     stopAllSpeech();
+    stopPlaySounds();
     stopCelebrations();
     clearGameTimeouts();
     setShowConfetti(false);
     setActiveGameId(null);
     setCurrentScreen('home');
-    window.scrollTo(0, 0);
+    mainRef.current?.scrollTo(0, 0);
   };
 
   useEffect(() => {
-    return () => stopAllSpeech();
+    return () => { stopAllSpeech(); stopPlaySounds(); };
   }, [currentScreen, activeGameId, appState.isTimeUp]);
 
   // Save state to localStorage
@@ -151,7 +157,7 @@ export default function App() {
       if (enabled && !document.hidden) { getAudioContext(); startBGM(); }
     };
     const onVisibility = () => {
-      if (document.hidden) stopAllSpeech();
+      if (document.hidden) { stopAllSpeech(); stopPlaySounds(); }
       syncMusic();
     };
     syncMusic();
@@ -333,6 +339,7 @@ export default function App() {
               setAppState((prev) => ({ ...prev, sfxVolume: vol }))
             }
             onToggleSound={handleToggleSound}
+            onToggleHaptics={() => setAppState(prev => ({ ...prev, hapticsEnabled: prev.hapticsEnabled === false }))}
             onToggleBGM={() =>
               setAppState((prev) => ({ ...prev, bgmEnabled: !prev.bgmEnabled }))
             }
@@ -571,7 +578,10 @@ export default function App() {
   };
 
   return (
-    <div className="app-world min-h-screen text-[#49443d] font-sans antialiased selection:bg-[#dbe8d7]">
+    <div className="app-world text-[#49443d] font-sans antialiased" data-screen={currentScreen}>
+      <Suspense fallback={null}>
+        <TouchEffects active={!showSplash && !isParentGateOpen && currentScreen !== 'parent' && !appState.isTimeUp} screenKey={`${currentScreen}:${activeGameId}:${homeStep}`} hapticsEnabled={appState.hapticsEnabled !== false} />
+      </Suspense>
       <ConfettiEffect active={showConfetti} buddy={appState.selectedCharacter} />
 
       {!showSplash && <>
@@ -591,7 +601,7 @@ export default function App() {
         childName={childName}
       />
 
-      <main className="app-main mx-auto w-full max-w-6xl px-3 py-5 pb-12 sm:px-6 sm:py-7">
+      <main ref={mainRef} className="app-main w-full px-3 py-5 pb-12 sm:px-6 sm:py-7" data-scroll-region>
         <ErrorBoundary onReset={handleGoHome}>
           <Suspense fallback={<div className="game-loading" role="status"><CharacterAvatar id={appState.selectedCharacter} size="xl" mood="waving" /><p>놀이를 꺼내오는 중이에요</p></div>}>{renderContent()}</Suspense>
         </ErrorBoundary>

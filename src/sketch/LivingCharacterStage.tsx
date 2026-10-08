@@ -95,7 +95,7 @@ export const LivingCharacterStage: React.FC<LivingCharacterStageProps> = ({
     }
   };
 
-  const handleTapCharacter = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleTapCharacter = (e: React.MouseEvent) => {
     playBouncyBoing(soundEnabled);
 
     let cx = window.innerWidth * 0.5;
@@ -226,20 +226,18 @@ export const LivingCharacterStage: React.FC<LivingCharacterStageProps> = ({
 
       {/* Living Character Play Stage */}
       <div className="relative z-20 flex-1 flex items-center justify-center pointer-events-auto">
-        <motion.div
+        <motion.button type="button" aria-label={`${characterTitle} 친구와 놀기`}
           animate={getMotionAnimation()}
           onClick={handleTapCharacter}
-          onTouchStart={handleTapCharacter}
           whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.95 }}
-          className="cursor-pointer filter drop-shadow-2xl active:scale-90 touch-manipulation max-w-[85vw] max-h-[48vh] sm:max-h-[55vh] flex items-center justify-center"
+          className="cursor-pointer filter drop-shadow-2xl max-w-[85vw] max-h-[48vh] sm:max-h-[55vh] flex items-center justify-center"
         >
           <img
             src={spriteUrl}
             alt={characterTitle}
             className="w-auto h-auto max-w-full max-h-[48vh] sm:max-h-[55vh] object-contain select-none pointer-events-none"
           />
-        </motion.div>
+        </motion.button>
 
         {/* Floating Heart Popups on Tap */}
         {tapHearts.map((h) => (
