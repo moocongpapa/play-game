@@ -1,0 +1,10 @@
+.character-artwork { overflow: visible; filter: drop-shadow(0 1px 1px #76624b18); }
+:where(.character-artwork) .friend-rest-eyes { display: none; }
+.character-avatar[data-mood='happy'] .friend-open-eyes { transform-box: fill-box; transform-origin: center; animation: friend-soft-blink 6s infinite; }
+.character-avatar[data-character='jelly'] .friend-open-eyes { animation-delay: 1.1s; }
+.character-avatar[data-character='dochi'] .friend-open-eyes { animation-delay: 2.4s; }
+.character-avatar[data-character='eumme'] .friend-open-eyes { animation-delay: 3.2s; }
+@keyframes friend-soft-blink { 0%, 44%, 48%, 100% { scale: 1 1; } 46% { scale: 1 .08; } }
+@media (prefers-reduced-motion: reduce) {
+  .character-avatar .friend-open-eyes { animation: none !important; }
+}
