@@ -1,5 +1,5 @@
 import { randomEffectPitch } from './juice';
-import { BACKGROUND_MUSIC, type MusicTrack } from '../data/backgroundMusic';
+import { BACKGROUND_MUSIC, SLEEP_MUSIC, type MusicTrack } from '../data/backgroundMusic';
 import { ANIMAL_RECORDINGS, resolveAnimalSound } from '../data/animalSounds';
 import { createRoundDeck } from './roundDeck';
 import { createRecordedAudioPlayer, type PlaybackResult } from './recordedAudio';
@@ -36,6 +36,12 @@ export function getAudioContext(): AudioContext {
 
 const nextMusic = createRoundDeck();
 let currentTrack: MusicTrack | null = null;
+let bgmScene: 'play' | 'sleep' = 'play';
+export function setBGMScene(scene: 'play' | 'sleep') {
+  if (scene === bgmScene) return;
+  stopBGM(); bgmScene = scene;
+}
+const nextBgmTrack = () => bgmScene === 'sleep' ? SLEEP_MUSIC : nextMusic(BACKGROUND_MUSIC, 'music');
 let noteIndex = 0;
 let phraseCount = 0;
 let requestedBgmVolume = .15;
@@ -44,7 +50,7 @@ const bgmNotes = new Set<OscillatorNode>();
 
 function applyBgmVolume() {
   if (!bgmVolumeNode || !audioCtx) return;
-  const gain = requestedBgmVolume * (bgmDucks.size ? .3 : 1);
+  const gain = requestedBgmVolume * (bgmScene === 'sleep' ? .55 : 1) * (bgmDucks.size ? .3 : 1);
   bgmVolumeNode.gain.cancelScheduledValues(audioCtx.currentTime);
   bgmVolumeNode.gain.setTargetAtTime(gain, audioCtx.currentTime, bgmDucks.size ? .09 : .32);
 }
@@ -83,7 +89,7 @@ export function startBGM(volume = requestedBgmVolume) {
   try {
     const ctx = getAudioContext();
     isBgmPlaying = true;
-    currentTrack = nextMusic(BACKGROUND_MUSIC, 'music');
+    currentTrack = nextBgmTrack();
     noteIndex = 0;
     phraseCount = 0;
     bgmVolumeNode = ctx.createGain();
@@ -106,7 +112,7 @@ export function startBGM(volume = requestedBgmVolume) {
         noteIndex = 0;
         phraseCount += 1;
         if (phraseCount === 2) {
-          currentTrack = nextMusic(BACKGROUND_MUSIC, 'music');
+          currentTrack = nextBgmTrack();
           phraseCount = 0;
           pause = .8;
         }
@@ -806,4 +812,21 @@ export function playCareSound(kind: 'brush' | 'chew' | 'bubble', enabled = true)
       playToyTone(frequency * 2, .1, .02);
     }
   } catch { /* Visual feedback still works when audio is unavailable. */ }
+}
+
+let sleepNoise: AudioBuffer | null = null;
+export function playSleepBreath(enabled = true) {
+  if (!enabled || !masterSoundEnabled) return;
+  try {
+    const ctx = getAudioContext();
+    if (!sleepNoise || sleepNoise.sampleRate !== ctx.sampleRate) {
+      sleepNoise = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * 1.3), ctx.sampleRate);
+      const data = sleepNoise.getChannelData(0); let smooth = 0;
+      for (let i = 0; i < data.length; i++) { smooth = smooth * .96 + (Math.random() * 2 - 1) * .04; data[i] = smooth; }
+    }
+    const source = ctx.createBufferSource(), gain = ctx.createGain(), now = ctx.currentTime;
+    source.buffer = sleepNoise; source.playbackRate.value = randomEffectPitch();
+    gain.gain.setValueAtTime(.0001, now); gain.gain.linearRampToValueAtTime(.08, now + .5); gain.gain.exponentialRampToValueAtTime(.0001, now + 1.3);
+    source.connect(gain); gain.connect(ctx.destination); trackEffect(source, gain); source.start(now);
+  } catch { /* Sleeping remains peaceful when audio is unavailable. */ }
 }

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { BACKGROUND_MUSIC } from '../data/backgroundMusic';
+import { BACKGROUND_MUSIC, SLEEP_MUSIC } from '../data/backgroundMusic';
 
 test('BGM changes through all six tracks, ducks/restores volume and cancels on mute', async () => {
   const savedWindow = globalThis.window;
@@ -58,6 +58,20 @@ test('BGM changes through all six tracks, ducks/restores volume and cancels on m
     assert.equal(gains[0].value, .1 * .3, 'finishing one sound cannot unduck an ongoing voice');
     engine.setBGMDucked('speech', false);
     assert.equal(gains[0].value, .1);
+    engine.setBGMScene('sleep');
+    assert.ok(notes.every(note => note.stopped), 'entering bedtime releases the previous song');
+    const sleepGain = gains.length, sleepNote = notes.length;
+    engine.startBGM();
+    assert.equal(gains[sleepGain].value, .1 * .55, 'lullaby is quieter and honors the saved volume');
+    assert.ok(Math.abs(notes[sleepNote].frequency.value - 440 * 2 ** ((SLEEP_MUSIC.notes[0] - 69) / 12)) < .001);
+    engine.setBGMDucked('speech', true);
+    assert.equal(gains[sleepGain].value, .1 * .55 * .3);
+    engine.setBGMDucked('speech', false);
+    engine.setBGMScene('play');
+    assert.equal(nextStep, undefined, 'leaving bedtime cancels its schedule');
+    const restoredGain = gains.length;
+    engine.startBGM();
+    assert.equal(gains[restoredGain].value, .1);
     engine.setAudioPreferences(false);
     assert.equal(nextStep, undefined);
     assert.ok(notes.every(note => note.stopped));

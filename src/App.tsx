@@ -7,12 +7,11 @@ import { ParentalGateModal } from './components/ParentalGateModal';
 import { stopCelebrations } from './utils/confetti';
 import { GameStage } from './components/GameStage';
 import { useGameTimeouts } from './hooks/useGameTimeouts';
-import { HomeScreen } from './screens/HomeScreen';
 import { SplashLoader } from './components/SplashLoader';
 import { OnboardingScreen } from './screens/OnboardingScreen';
 import { useViewportLock } from './hooks/useViewportLock';
 
-import { getAudioContext, startBGM, stopBGM, setBGMVolume, playStarGain, speakText, stopAllSpeech, stopPlaySounds, setAudioPreferences } from './utils/soundEngine';
+import { getAudioContext, setBGMScene, startBGM, stopBGM, setBGMVolume, playStarGain, speakText, stopAllSpeech, stopPlaySounds, setAudioPreferences } from './utils/soundEngine';
 import { Moon, Shield } from 'lucide-react';
 import { createChildProfile } from './utils/ageEngine';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -44,6 +43,15 @@ const FeedingGame = lazy(() => import('./screens/games/FeedingGame').then(module
 const BubblePopGame = lazy(() => import('./screens/games/BubblePopGame').then(module => ({ default: module.BubblePopGame })));
 const PeekabooHideGame = lazy(() => import('./screens/games/PeekabooHideGame').then(module => ({ default: module.PeekabooHideGame })));
 const AnimalXylophoneGame = lazy(() => import('./screens/games/AnimalXylophoneGame').then(module => ({ default: module.AnimalXylophoneGame })));
+const HomeScreen = lazy(() => import('./screens/HomeScreen').then(module => ({ default: module.HomeScreen })));
+const PathTracingGame = lazy(() => import('./screens/games/PathTracingGame').then(module => ({ default: module.PathTracingGame })));
+const FruitHarvestGame = lazy(() => import('./screens/games/FruitHarvestGame').then(module => ({ default: module.FruitHarvestGame })));
+const SymmetryPuzzleGame = lazy(() => import('./screens/games/SymmetryPuzzleGame').then(module => ({ default: module.SymmetryPuzzleGame })));
+const SizeOrderingGame = lazy(() => import('./screens/games/SizeOrderingGame').then(module => ({ default: module.SizeOrderingGame })));
+const DayNightWeatherGame = lazy(() => import('./screens/games/DayNightWeatherGame').then(module => ({ default: module.DayNightWeatherGame })));
+const GoodNightSleepGame = lazy(() => import('./screens/games/GoodNightSleepGame').then(module => ({ default: module.GoodNightSleepGame })));
+const EmotionFaceGame = lazy(() => import('./screens/games/EmotionFaceGame').then(module => ({ default: module.EmotionFaceGame })));
+const SensoryPaintCanvas = lazy(() => import('./screens/games/SensoryPaintCanvas').then(module => ({ default: module.SensoryPaintCanvas })));
 const RainbowStageAdventure = lazy(() => import('./screens/RainbowStageAdventure').then(module => ({ default: module.RainbowStageAdventure })));
 
 export default function App() {
@@ -149,8 +157,11 @@ export default function App() {
 
   useEffect(() => { setAudioPreferences(appState.soundEnabled, appState.ttsEnabled !== false); }, [appState.soundEnabled, appState.ttsEnabled]);
 
+  const quietPlay = currentScreen === 'game' && activeGameId === 'goodnight_sleep';
+
   // Resume only in a user gesture; stop background audio when the app is hidden.
   useEffect(() => {
+    setBGMScene(quietPlay ? 'sleep' : 'play');
     const enabled = appState.bgmEnabled && appState.soundEnabled && !showSplash && !appState.isTimeUp;
     const syncMusic = () => {
       if (enabled && !document.hidden) startBGM(); else stopBGM();
@@ -172,7 +183,7 @@ export default function App() {
       window.removeEventListener('keydown', unlockMusic);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [appState.bgmEnabled, appState.soundEnabled, showSplash, appState.isTimeUp]);
+  }, [appState.bgmEnabled, appState.soundEnabled, showSplash, appState.isTimeUp, quietPlay]);
 
   useEffect(() => { setBGMVolume(appState.bgmVolume); }, [appState.bgmVolume]);
 
@@ -203,8 +214,9 @@ export default function App() {
 
   // Play Celebration when a quiz round is completed (점수 누적 없이 순수한 성취 축하)
   const handleCompleteQuiz = (_starsEarned: number, completedGameId: GameId | null = activeGameId) => {
-    setShowConfetti(!document.hidden);
-    playStarGain(appState.soundEnabled && !document.hidden);
+    const calm = ['goodnight_sleep', 'sensory_paint', 'emotion_face'].includes(completedGameId || '');
+    setShowConfetti(!calm && !document.hidden);
+    if (!calm) playStarGain(appState.soundEnabled && !document.hidden);
 
     setAppState((prev) => {
       // 완료한 게임 카운트만 부모 대시보드 놀이 통계용으로 기록
@@ -531,6 +543,22 @@ export default function App() {
                       childName={childName}
                     />
                   );
+                case 'path_tracing':
+                  return <PathTracingGame buddy={appState.selectedCharacter} onCompleteQuiz={handleCompleteQuiz} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} />;
+                case 'fruit_harvest':
+                  return <FruitHarvestGame buddy={appState.selectedCharacter} onCompleteQuiz={handleCompleteQuiz} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} />;
+                case 'symmetry_puzzle':
+                  return <SymmetryPuzzleGame buddy={appState.selectedCharacter} onCompleteQuiz={handleCompleteQuiz} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} />;
+                case 'size_ordering':
+                  return <SizeOrderingGame buddy={appState.selectedCharacter} onCompleteQuiz={handleCompleteQuiz} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} />;
+                case 'day_night_weather':
+                  return <DayNightWeatherGame buddy={appState.selectedCharacter} onCompleteQuiz={handleCompleteQuiz} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} />;
+                case 'goodnight_sleep':
+                  return <GoodNightSleepGame buddy={appState.selectedCharacter} onCompleteQuiz={handleCompleteQuiz} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} />;
+                case 'emotion_face':
+                  return <EmotionFaceGame buddy={appState.selectedCharacter} onCompleteQuiz={handleCompleteQuiz} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} />;
+                case 'sensory_paint':
+                  return <SensoryPaintCanvas buddy={appState.selectedCharacter} onCompleteQuiz={handleCompleteQuiz} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} />;
                 case 'tooth_brush':
                   return <ToothBrushGame buddy={appState.selectedCharacter} onCompleteQuiz={handleCompleteQuiz} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} />;
                 case 'feeding':

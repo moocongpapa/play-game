@@ -5,7 +5,8 @@ import { ArrowUp, Check, Hand } from 'lucide-react';
 import { findDropTarget } from '../utils/dropTarget';
 import { useGentleHelp } from '../hooks/useGentleHelp';
 import { PlayVoiceContext } from './PlayFlowContext';
-import { speakText } from '../utils/soundEngine';
+import { JUICE_SPRING, emitJuice } from '../utils/juice';
+import { playJellyTap, speakText } from '../utils/soundEngine';
 
 type Piece = { id: string; label: string; children: ReactNode; className: string };
 type Gesture = Piece & { pointerId: number; source: HTMLButtonElement; rect: DOMRect; startX: number; startY: number; moved: boolean; phase: 'dragging' | 'settling' };
@@ -30,8 +31,9 @@ function useMatch() {
 }
 
 /** Pointer capture works with fingers, pens and mice, including outside the source tile. */
-export function DragMatch({ children, onDrop, disabled = false, resetKey, hint, onDragMove }: {
+export function DragMatch({ children, onDrop, disabled = false, resetKey, hint, onDragMove, juicy = false }: {
   children: ReactNode; onDrop: (pieceId: string, targetId: string) => boolean; disabled?: boolean; resetKey: string | number;
+  juicy?: boolean;
   hint?: { pieceId: string; targetId: string };
   onDragMove?: (point: { x: number; y: number; targetId: string | null } | null) => void;
 }) {
@@ -116,6 +118,7 @@ export function DragMatch({ children, onDrop, disabled = false, resetKey, hint, 
     Array.from(slots.current).filter(([, node]) => !node.disabled).map(([id, node]) => ({ id, ...rectBounds(node.getBoundingClientRect()) })), help.level >= 2 ? 40 : 22);
 
   const select = (piece: Piece) => {
+    if (juicy && gesture.current?.phase === 'settling') cancel();
     if (disabled || gesture.current) return;
     // Some assistive inputs emit both a pointer tap and a detail=0 click.
     // Selecting the same piece twice must not silently cancel the choice.
@@ -125,7 +128,10 @@ export function DragMatch({ children, onDrop, disabled = false, resetKey, hint, 
   };
 
   const start = (event: PointerEvent<HTMLButtonElement>, piece: Piece) => {
-    if (disabled || gesture.current || !event.isPrimary || event.button !== 0) return;
+    if (disabled || !event.isPrimary || event.button !== 0) return;
+    // A finishing spring must never swallow the child's next grab.
+    if (juicy && gesture.current?.phase === 'settling') cancel();
+    if (gesture.current) return;
     const rect = event.currentTarget.getBoundingClientRect();
     help.hold();
     gesture.current = { ...piece, source: event.currentTarget, rect, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, moved: false, phase: 'dragging' };
@@ -135,6 +141,7 @@ export function DragMatch({ children, onDrop, disabled = false, resetKey, hint, 
     x.set(rect.left);
     y.set(rect.top);
     opacity.set(1);
+    if (juicy) { setGhost(gesture.current); playJellyTap(voice?.soundEnabled ?? false); }
   };
 
   const move = (event: PointerEvent<HTMLButtonElement>) => {
@@ -144,9 +151,13 @@ export function DragMatch({ children, onDrop, disabled = false, resetKey, hint, 
     const dy = event.clientY - current.startY;
     if (!current.moved && Math.hypot(dx, dy) < 6) return;
     if (!current.moved) { current.moved = true; setGhost(current); }
-    x.set(current.rect.left + dx);
-    y.set(current.rect.top + dy - 12);
-    setOverId(targetAt(event.clientX, event.clientY));
+    const target = targetAt(event.clientX, event.clientY);
+    const magnet = juicy && target ? slots.current.get(target)?.getBoundingClientRect() : null;
+    const pullX = magnet ? (magnet.left + magnet.width / 2 - event.clientX) * .2 : 0;
+    const pullY = magnet ? (magnet.top + magnet.height / 2 - event.clientY) * .2 : 0;
+    x.set(current.rect.left + dx + pullX);
+    y.set(current.rect.top + dy - 12 + pullY);
+    setOverId(target);
     dragCallback.current?.({ x: event.clientX, y: event.clientY, targetId: targetAt(event.clientX, event.clientY) });
   };
 
@@ -158,6 +169,7 @@ export function DragMatch({ children, onDrop, disabled = false, resetKey, hint, 
     if (current.source.hasPointerCapture(current.pointerId)) current.source.releasePointerCapture(current.pointerId);
     if (!current.moved) {
       gesture.current = null;
+      setGhost(null);
       help.release();
       select(current);
       return;
@@ -169,11 +181,13 @@ export function DragMatch({ children, onDrop, disabled = false, resetKey, hint, 
     dragCallback.current?.(null);
     setAnnouncement(accepted ? '쏙! 알맞은 자리에 놓았어요.' : '괜찮아요. 다시 옮겨 보세요.');
     setOverId(null);
-    const duration = reducedMotion ? 0 : 0.24;
+    if (accepted && juicy) emitJuice({ kind: 'snap', x: event.clientX, y: event.clientY });
+    const duration = reducedMotion ? 0 : juicy ? .65 : .24;
+    const settling = juicy && !reducedMotion ? JUICE_SPRING : { duration };
     animations.current = [
-      animate(x, accepted && targetRect ? targetRect.left + (targetRect.width - current.rect.width) / 2 : current.rect.left, { duration }),
-      animate(y, accepted && targetRect ? targetRect.top + (targetRect.height - current.rect.height) / 2 : current.rect.top, { duration }),
-      animate(opacity, accepted ? 0 : 1, { duration }),
+      animate(x, accepted && targetRect ? targetRect.left + (targetRect.width - current.rect.width) / 2 : current.rect.left, settling),
+      animate(y, accepted && targetRect ? targetRect.top + (targetRect.height - current.rect.height) / 2 : current.rect.top, settling),
+      animate(opacity, accepted ? 0 : 1, { duration: reducedMotion ? 0 : .22, delay: juicy && !reducedMotion ? .18 : 0 }),
     ];
     settlingTimer.current = setTimeout(cancel, duration * 1000 + 30);
   };
@@ -184,6 +198,7 @@ export function DragMatch({ children, onDrop, disabled = false, resetKey, hint, 
     selectedRef.current = null;
     setSelected(null);
     const accepted = onDrop(piece.id, id);
+    if (accepted && juicy) emitJuice({ kind: 'snap' });
     if (accepted) help.progress(); else help.miss();
     setAnnouncement(accepted ? '쏙! 알맞은 자리에 놓았어요.' : '괜찮아요. 다시 옮겨 보세요.');
   };
@@ -197,7 +212,7 @@ export function DragMatch({ children, onDrop, disabled = false, resetKey, hint, 
     <span role="status" aria-live="polite" className="sr-only">{announcement}</span>
     {children}
     {demo && helpLevel >= 3 && createPortal(<div className="drag-help-demo" aria-hidden="true" style={{ left: demo.x, top: demo.y, '--help-dx': `${demo.dx}px`, '--help-dy': `${demo.dy}px` } as React.CSSProperties}><Hand /></div>, document.body)}
-    {ghost && createPortal(<motion.div aria-hidden="true" className={`drag-ghost ${ghost.className}`} style={{ x, y, opacity, width: ghost.rect.width, height: ghost.rect.height }}>
+    {ghost && createPortal(<motion.div aria-hidden="true" className={`drag-ghost ${ghost.className}`} style={{ x, y, opacity, scale: juicy && !reducedMotion ? 1.1 : 1, width: ghost.rect.width, height: ghost.rect.height }}>
       {ghost.children}
     </motion.div>, document.body)}
   </MatchContext.Provider></MotionConfig>;

@@ -33,13 +33,13 @@ const faceColors: Record<CharacterId, [string, string]> = {
 };
 
 /** Close-up play portrait uses each existing friend's ears, fur, accessories and colors. */
-export function CareFriend({ buddy, mouth = 'open', children, className = '', smilingEyes = false, gaze, blush = '#ebaaa9' }: {
+export function CareFriend({ buddy, mouth = 'open', children, className = '', smilingEyes = false, gaze, blush = '#ebaaa9', hideExpression = false, sleeping = false, faceLabel }: {
   buddy: CharacterId; mouth?: 'open' | 'chew' | 'smile' | 'rest'; children?: ReactNode; className?: string; smilingEyes?: boolean;
-  gaze?: { x: number; y: number }; blush?: string;
+  gaze?: { x: number; y: number }; blush?: string; hideExpression?: boolean; sleeping?: boolean; faceLabel?: string;
 }) {
   const [fur, edge] = faceColors[buddy];
   const happy = mouth === 'smile' || smilingEyes;
-  return <svg viewBox="0 0 300 258" className={`care-friend ${className}`} role="img" aria-label={`${CHARACTERS[buddy].name}${happy ? '의 활짝 웃는 얼굴' : mouth === 'chew' ? '의 냠냠 먹는 얼굴' : mouth === 'rest' ? '의 배고픈 얼굴' : '의 아 벌린 입'}`}>
+  return <svg viewBox="0 0 300 258" className={`care-friend ${className}`} role="img" aria-label={`${CHARACTERS[buddy].name}${faceLabel ? `의 ${faceLabel}` : sleeping ? '의 잠든 얼굴' : hideExpression ? '의 마음 얼굴' : happy ? '의 활짝 웃는 얼굴' : mouth === 'chew' ? '의 냠냠 먹는 얼굴' : mouth === 'rest' ? '의 배고픈 얼굴' : '의 아 벌린 입'}`}>
     <ellipse cx="150" cy="247" rx="95" ry="8" fill="#a7978020" />
     <path d="M61 232 Q80 213 104 212 H197 Q227 214 240 232 L225 248 H75Z" fill={buddy === 'jelly' ? '#bfaddb' : buddy === 'rano' ? '#f1d995' : '#e4adba'} />
     <g stroke={edge} strokeWidth="3" strokeLinejoin="round">
@@ -56,13 +56,13 @@ export function CareFriend({ buddy, mouth = 'open', children, className = '', sm
       {buddy === 'ggomi' && <g fill="#d981a4"><path d="M201 63 Q173 33 176 65 Q179 84 201 72 Q224 91 230 67 Q231 42 201 63" /><circle cx="202" cy="67" r="7" /></g>}
     </g>
     <g fill="#56483f">
-      <g transform={`translate(${gaze?.x || 0} ${gaze?.y || 0})`} className="care-eyes">{happy ? <g stroke="#56483f" strokeWidth="5" fill="none" strokeLinecap="round"><path d="M95 117 Q108 102 121 117 M179 117 Q192 102 205 117" /></g> : <><ellipse cx="109" cy="109" rx="7" ry="10" /><ellipse cx="191" cy="109" rx="7" ry="10" /><circle cx="112" cy="106" r="2.5" fill="white" /><circle cx="194" cy="106" r="2.5" fill="white" /></>}</g>
+      <g transform={`translate(${gaze?.x || 0} ${gaze?.y || 0})`} className="care-eyes" opacity={hideExpression ? 0 : 1}>{sleeping ? <path d="M96 111 Q109 122 122 111 M178 111 Q191 122 204 111" fill="none" stroke="#56483f" strokeWidth="4" strokeLinecap="round" /> : happy ? <g stroke="#56483f" strokeWidth="5" fill="none" strokeLinecap="round"><path d="M95 117 Q108 102 121 117 M179 117 Q192 102 205 117" /></g> : <><ellipse cx="109" cy="109" rx="7" ry="10" /><ellipse cx="191" cy="109" rx="7" ry="10" /><circle cx="112" cy="106" r="2.5" fill="white" /><circle cx="194" cy="106" r="2.5" fill="white" /></>}</g>
       <motion.ellipse cx="73" cy="140" rx="15" ry="9" fill={blush} opacity=".7" animate={{ scale: mouth === 'chew' ? [1, 1.3, 1] : 1 }} transition={{ duration: .4, repeat: mouth === 'chew' ? 2 : 0 }} />
       <motion.ellipse cx="227" cy="140" rx="15" ry="9" fill={blush} opacity=".7" animate={{ scale: mouth === 'chew' ? [1, 1.3, 1] : 1 }} transition={{ duration: .4, repeat: mouth === 'chew' ? 2 : 0 }} />
       {buddy === 'ggulgguli' ? <><ellipse cx="150" cy="122" rx="22" ry="12" fill="#de97a5" /><circle cx="142" cy="122" r="3" /><circle cx="158" cy="122" r="3" /></> : buddy === 'pingu' ? <path d="M137 121 Q150 113 163 121 L150 135Z" fill="#edb75c" /> : buddy === 'rano' ? <><circle cx="142" cy="123" r="2.8" /><circle cx="158" cy="123" r="2.8" /></> : <ellipse cx="150" cy="123" rx="7" ry="4.5" />}
     </g>
-    {mouth === 'open' ? <><rect x="72" y="130" width="156" height="79" rx="29" fill="#844e59" stroke="#bc8085" strokeWidth="4" /><ellipse cx="150" cy="196" rx="38" ry="11" fill="#d9909d" /></> :
-      <path d={happy ? 'M112 151 Q150 195 188 151 Q150 167 112 151' : 'M118 164 Q150 176 182 164'} stroke="#90596a" strokeWidth="5" fill={happy ? '#fffcf4' : 'none'} strokeLinecap="round" />}
+    {!hideExpression && <g className="care-mouth">{mouth === 'open' ? <><rect x="72" y="130" width="156" height="79" rx="29" fill="#844e59" stroke="#bc8085" strokeWidth="4" /><ellipse cx="150" cy="196" rx="38" ry="11" fill="#d9909d" /></> :
+      <path d={happy ? 'M112 151 Q150 195 188 151 Q150 167 112 151' : 'M118 164 Q150 176 182 164'} stroke="#90596a" strokeWidth="5" fill={happy ? '#fffcf4' : 'none'} strokeLinecap="round" />}</g>}
     {children}
   </svg>;
 }

@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { ArrowRight, Check, Hand, Music2, Search, Sparkles, Volume2 } from 'lucide-react';
 import { CareFriend, ToothBrushArt } from './ToddlerPlay';
 import { CharacterAvatar } from './CharacterAvatar';
 import type { CharacterId, GameId } from '../types';
 import { GAME_CATALOG } from '../data/gameCatalog';
 import { ToyArtwork } from './ToyArtwork';
+
+const DevelopmentThumbnail = lazy(() => import('./development/DevelopmentThumbnail').then(m => ({ default: m.DevelopmentThumbnail })));
 
 const Toy = ({ emoji, x, y, size = 36, rotate = 0, shadow = false }: { emoji: string; x: number; y: number; size?: number; rotate?: number; shadow?: boolean }) =>
   <span className={`scene-toy ${shadow ? 'scene-silhouette' : ''}`} style={{ left: `${x}%`, top: `${y}%`, width: `${size}%`, height: `${size * 1.55}%`, transform: `rotate(${rotate}deg)` }}><ToyArtwork emoji={emoji} /></span>;
@@ -13,6 +15,16 @@ export function GameArtwork({ gameId, buddy = 'jelly' }: { gameId: GameId; buddy
   const theme = GAME_CATALOG[gameId].theme;
   let scene: React.ReactNode;
   switch (gameId) {
+    case 'path_tracing':
+    case 'fruit_harvest':
+    case 'symmetry_puzzle':
+    case 'size_ordering':
+    case 'day_night_weather':
+    case 'goodnight_sleep':
+    case 'emotion_face':
+    case 'sensory_paint':
+      scene = <Suspense fallback={<Sparkles className="scene-pop" />}><DevelopmentThumbnail gameId={gameId} buddy={buddy} /></Suspense>;
+      break;
     case 'object_recognition':
       scene = <><span className="scene-plate" /><Toy emoji="🍎" x={8} y={31} size={31} rotate={-10} /><Toy emoji="🍌" x={48} y={28} size={39} rotate={10} /><Search className="scene-search" /></>;
       break;

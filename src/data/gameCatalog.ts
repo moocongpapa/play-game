@@ -1,7 +1,7 @@
 import type { AgeGroup, GameId } from '../types';
 
 export type GameTheme = 'garden' | 'sky' | 'music' | 'picnic' | 'magic';
-export const GAME_CATALOG: Record<GameId, { title: string; prompt: string; theme: GameTheme; minAge?: AgeGroup; badge?: string }> = {
+export const GAME_CATALOG: Record<GameId, { title: string; prompt: string; theme: GameTheme; minAge?: AgeGroup; badge?: string; category?: 'hands' | 'care' }> = {
   object_recognition: { title: '이름 찾기', prompt: '그림 속 친구를 찾아봐!', theme: 'garden' },
   shape_color: { title: '모양과 색', prompt: '같은 모양을 콕 눌러봐!', theme: 'picnic' },
   korean_letters: { title: '글자 방울', prompt: '같은 글자 방울을 톡!', theme: 'sky' },
@@ -22,6 +22,14 @@ export const GAME_CATALOG: Record<GameId, { title: string; prompt: string; theme
   bubble_pop: { title: '비눗방울 톡톡', prompt: '무지개 방울을 톡톡!', theme: 'sky', badge: '톡톡 · 감각 놀이' },
   peekaboo_hide: { title: '어디 숨었지?', prompt: '살랑살랑 귀를 찾아 까꿍!', theme: 'garden', badge: '까꿍 · 관찰 놀이' },
   animal_xylophone: { title: '동물 실로폰', prompt: '내가 만드는 도레미 음악회!', theme: 'music', badge: '도레미 · 자유 연주' },
+  path_tracing: { title: '별빛 길 따라가기', prompt: '별을 잡고 길을 따라 쭉!', theme: 'garden', badge: '손끝 · 선 긋기', category: 'hands' },
+  fruit_harvest: { title: '과일 수확', prompt: '톡! 따서 같은 바구니에 쏙!', theme: 'picnic', badge: '쏙쏙 · 분류', category: 'hands' },
+  symmetry_puzzle: { title: '반쪽 날개', prompt: '같은 무늬의 날개를 쏙!', theme: 'garden', badge: '팔랑 · 대칭', category: 'hands' },
+  size_ordering: { title: '곰 세 마리', prompt: '크기에 꼭 맞는 자리를 찾아요!', theme: 'picnic', badge: '차곡 · 크기 순서', category: 'hands' },
+  day_night_weather: { title: '해님 달님 날씨', prompt: '해님을 내리고 구름을 톡톡!', theme: 'sky', badge: '톡톡 · 자연', category: 'care' },
+  goodnight_sleep: { title: '코~ 자자', prompt: '인형 꼭, 이불 쏙, 좋은 꿈 꿔!', theme: 'magic', badge: '포근 · 잠자리', category: 'care' },
+  emotion_face: { title: '마음 거울', prompt: '눈과 입으로 마음을 만들어 봐!', theme: 'picnic', badge: '방긋 · 감정', category: 'care' },
+  sensory_paint: { title: '마법 물감과 모래', prompt: '무지개 물감을 쓱쓱 펼쳐 봐!', theme: 'magic', badge: '쓱쓱 · 자유 감각', category: 'hands' },
   balloon_pop: { title: '풍선 팡팡', prompt: '둥둥 떠오르는 풍선을 톡!', theme: 'sky' },
 };
 

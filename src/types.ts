@@ -22,6 +22,14 @@ export type GameId =
   | 'bubble_pop'
   | 'peekaboo_hide'
   | 'animal_xylophone'
+  | 'path_tracing'
+  | 'fruit_harvest'
+  | 'symmetry_puzzle'
+  | 'size_ordering'
+  | 'day_night_weather'
+  | 'goodnight_sleep'
+  | 'emotion_face'
+  | 'sensory_paint'
   | 'balloon_pop';       // 꿀꿀이의 둥둥 풍선 팡팡 놀이
 
 // 연령 그룹 (4단계)

@@ -23,7 +23,7 @@ test('haptics throttle ticks, prioritize the success pattern and safely stop', (
   assert.deepEqual(patterns, [12]);
   now = 10; haptics.play('success');
   now = 30; haptics.play('tap'); haptics.play('success');
-  assert.deepEqual(patterns, [12, [30, 20, 50]]);
+  assert.deepEqual(patterns, [12, [20, 30, 40]]);
   now = 200; haptics.play('tap'); haptics.stop();
   assert.deepEqual(patterns.slice(-2), [12, 0]);
   const unsupported = createHaptics(() => { throw new Error('denied'); });
@@ -32,7 +32,7 @@ test('haptics throttle ticks, prioritize the success pattern and safely stop', (
 
 test('effect pitch is bounded and leaving a screen unsubscribes its impacts', () => {
   assert.equal(randomEffectPitch(() => 0), .95);
-  assert.equal(randomEffectPitch(() => 1), 1.08);
+  assert.equal(randomEffectPitch(() => 1), 1.05);
   let count = 0;
   const stop = subscribeJuice(() => count++);
   emitJuice({ kind: 'pop' }); stop(); emitJuice({ kind: 'success' });

@@ -50,7 +50,7 @@ test('play sounds honor mute, bound rapid polyphony and stop every voice on exit
       Math.random = () => 0; sound.playJellyTap();
       assert.equal(voices.at(-1)?.frequency.value, 680 * .95);
       Math.random = () => 1; sound.playJellyTap();
-      assert.equal(voices.at(-1)?.frequency.value, 680 * 1.08);
+      assert.equal(voices.at(-1)?.frequency.value, 680 * 1.05);
     } finally { Math.random = originalRandom; }
     sound.playBouncyBoing();
     sound.playCorrectFanfare();

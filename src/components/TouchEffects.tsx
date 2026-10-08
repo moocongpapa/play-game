@@ -61,7 +61,8 @@ export function TouchEffects({ active, screenKey, hapticsEnabled }: { active: bo
       const target = event.target.closest<HTMLElement>('button:not(:disabled), [role="button"], [data-juice-target]');
       pointers.set(event.pointerId, { x: event.clientX, y: event.clientY, at: 0, target });
       emit(event.clientX, event.clientY, true);
-      if (target) { spring(target, true); haptics.play('tap'); }
+      if (target) spring(target, true);
+      if (target || event.target.closest('[data-juice-surface]')) haptics.play('tap');
     };
     const move = (event: PointerEvent) => {
       const pointer = pointers.get(event.pointerId);
@@ -85,6 +86,7 @@ export function TouchEffects({ active, screenKey, hapticsEnabled }: { active: bo
       if (document.hidden || reduced || performance.now() - lastImpact < 180) return;
       lastImpact = performance.now(); haptics.play('success');
       if (impact.x !== undefined && impact.y !== undefined) emit(impact.x, impact.y, true);
+      if (impact.kind === 'snap') return;
       // Keep navigation and fixed overlays still while the play surface briefly reacts.
       const scene = document.querySelector<HTMLElement>('.game-stage, .greeting-card');
       shake?.cancel();

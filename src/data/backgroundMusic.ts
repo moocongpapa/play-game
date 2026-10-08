@@ -29,3 +29,6 @@ export const BACKGROUND_MUSIC: MusicTrack[] = [
     notes: [76,79,83,81,79,76,74,72,74,77,81,79,77,74,72,76],
     beats: [.5,.5,1,1,1,2,1,1,.5,.5,1,1,1,1,2,2], bass: [48,52,53,55] },
 ];
+
+export const SLEEP_MUSIC: MusicTrack = { id: 'lullaby', name: '포근한 별빛 자장가', bpm: 58, instrument: 'musicbox',
+  notes: [72,76,79,76,74,72,69,0,71,74,77,74,72,0,72,0], beats: [1,1,2,1,1,2,2,1,1,1,2,1,2,2,2,3], bass: [48,53,55,48] };
