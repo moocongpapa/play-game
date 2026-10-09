@@ -2,9 +2,11 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig, loadEnv, type Plugin} from 'vite';
-import { handleSpeechRequest } from './src/server/speech';
+import { createSpeechEndpoint } from './src/server/speechEndpoint';
+import { createLocalSpeechQuota } from './src/server/speechQuota';
 
 function localSpeechApi(keys: { geminiApiKey?: string; elevenLabsApiKey?: string }): Plugin {
+  const endpoint = createSpeechEndpoint(keys, createLocalSpeechQuota());
   return {
     name: 'local-speech-api',
     configureServer(server) {
@@ -18,8 +20,11 @@ function localSpeechApi(keys: { geminiApiKey?: string; elevenLabsApiKey?: string
               return;
             }
           }
-          const body = chunks.length ? JSON.parse(Buffer.concat(chunks).toString('utf8')) : undefined;
-          const response = await handleSpeechRequest(req.method || 'GET', body, keys);
+          const headers = new Headers();
+          for (const [key, value] of Object.entries(req.headers)) if (value) headers.set(key, Array.isArray(value) ? value.join(',') : value);
+          const method = req.method || 'GET';
+          const request = new Request(`http://${req.headers.host}/api/speech`, { method, headers, ...(method === 'POST' ? { body: Buffer.concat(chunks) } : {}) });
+          const response = await endpoint(request, req.socket.remoteAddress || 'local');
           res.writeHead(response.status, Object.fromEntries(response.headers));
           res.end(Buffer.from(await response.arrayBuffer()));
         } catch {

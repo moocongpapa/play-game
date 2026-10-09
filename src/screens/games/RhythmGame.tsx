@@ -3,12 +3,12 @@ import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
-import { useGameTimeouts } from '../../hooks/useGameTimeouts';
+import { createRhythmPlayback } from '../../utils/rhythmPlayback';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
-import { speakText, stopAllSpeech, setBGMDucked, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
+import { speakText, stopAllSpeech, setBGMDucked, playRhythmTone, stopPlaySounds, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
 import { getDifficultyConfig, getAgeGroupLabel } from '../../utils/ageEngine';
 import { RHYTHM_ITEMS_BY_AGE } from '../../data/gameData';
 import { AgeGroup, RhythmItem } from '../../types';
@@ -34,7 +34,6 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
     setBGMDucked('rhythm', true);
     return () => setBGMDucked('rhythm', false);
   }, []);
-  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const diffConfig = getDifficultyConfig(ageGroup);
   const itemPool = RHYTHM_ITEMS_BY_AGE[ageGroup] || RHYTHM_ITEMS_BY_AGE.sprout;
@@ -50,95 +49,49 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
   const [timeOut, setTimeOut] = useState(false);
   const gameTimerRef = useRef<number | null>(null);
 
-  const soundRef = useRef(soundEnabled);
-  soundRef.current = soundEnabled;
-  useEffect(() => {
-    if (!soundEnabled) void audioCtxRef.current?.suspend();
-  }, [soundEnabled]);
-
-  // Web Audio Context 간이 생성
-  const audioCtxRef = useRef<AudioContext | null>(null);
-
-  const playTone = (frequency: number, duration = 0.4) => {
-    if (!soundRef.current) return;
-    try {
-      if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
-        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
-        audioCtxRef.current = new AudioContextClass();
-      }
-      const ctx = audioCtxRef.current;
-      if (ctx.state === 'suspended') {
-        ctx.resume();
-      }
-
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = 'sine';
-      osc.frequency.value = frequency;
-
-      const now = ctx.currentTime;
-      gain.gain.setValueAtTime(0.01, now);
-      gain.gain.exponentialRampToValueAtTime(0.2, now + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(now);
-      osc.stop(now + duration);
-    } catch (e) {
-      console.warn('Web Audio error:', e);
-    }
-  };
-
-  const sequenceRef = useRef(0);
-  const playSequence = async (item: RhythmItem) => {
-    const sequence = ++sequenceRef.current;
+  const resumeDemo = useRef(false);
+  const latest = useRef({ soundEnabled, buddy });
+  latest.current = { soundEnabled, buddy };
+  const [playback] = useState(() => createRhythmPlayback({
+    clock: window,
+    isVisible: () => !document.hidden,
+    onNote: (note, index) => { setActiveButtonIdx(index); playRhythmTone(note, latest.current.soundEnabled); },
+    onRest: () => setActiveButtonIdx(null),
+    onFinish: () => {
+      setIsPlayingSequence(false);
+      setActiveButtonIdx(null);
+      speakText('이제 똑같이 톡톡 터치해볼까요?', latest.current.soundEnabled, { characterId: latest.current.buddy, playIntroSFX: false });
+    },
+    onCancel: () => { if (document.hidden) resumeDemo.current = true; setIsPlayingSequence(false); setActiveButtonIdx(null); stopPlaySounds(); },
+  }));
+  const playSequence = (item: RhythmItem, guide = `${friend.name}의 연주 리듬을 귀기울여 잘 들어보아요!`) => {
+    if (playback.isPlaying()) return;
+    if (document.hidden) { resumeDemo.current = true; return; }
     setIsPlayingSequence(true);
     setUserSequence([]);
-    
-    // 리듬 소리가 연주되기 전 가이드
-    speakText(`${friend.name}의 연주 리듬을 귀기울여 잘 들어보아요!`, soundEnabled, { characterId: buddy, playIntroSFX: false });
-    await new Promise<void>((resolve) => window.setTimeout(resolve, 1500));
-    if (!isMountedRef.current || sequence !== sequenceRef.current) return;
-    stopAllSpeech();
-
-    for (let i = 0; i < item.notes.length; i++) {
-      if (!isMountedRef.current || sequence !== sequenceRef.current) return;
-      const note = item.notes[i];
-      setActiveButtonIdx(i);
-      playTone(note, 0.4);
-      await new Promise<void>((resolve) => window.setTimeout(resolve, 600));
-      if (!isMountedRef.current || sequence !== sequenceRef.current) return;
-      setActiveButtonIdx(null);
-      await new Promise<void>((resolve) => window.setTimeout(resolve, 150));
-    }
-    
-    if (!isMountedRef.current || sequence !== sequenceRef.current) return;
-    setIsPlayingSequence(false);
-    speakText(`이제 똑같이 톡톡 터치해볼까요?`, soundEnabled, { characterId: buddy, playIntroSFX: false });
+    playback.start(item.notes, callbacks => {
+      speakText(guide, latest.current.soundEnabled, { characterId: latest.current.buddy, playIntroSFX: false, ...callbacks });
+    });
   };
-
-  const isMountedRef = useRef(true);
-
+  const replay = useRef(() => playSequence(targetItem));
+  replay.current = () => { if (!isCompleted && !timeOut) playSequence(targetItem); };
   useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-      sequenceRef.current += 1;
-      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
-        try {
-          audioCtxRef.current.close();
-        } catch (e) {
-          // ignore
-        }
+    const visibility = () => {
+      if (document.hidden) {
+        resumeDemo.current ||= playback.isPlaying();
+        playback.cancel();
+        stopAllSpeech();
+      } else if (resumeDemo.current) {
+        resumeDemo.current = false;
+        replay.current();
       }
     };
-  }, []);
+    document.addEventListener('visibilitychange', visibility);
+    return () => { playback.cancel(); stopAllSpeech(); document.removeEventListener('visibilitychange', visibility); };
+  }, [playback]);
 
   const generateRound = () => {
-    clearGameTimeouts();
+    playback.cancel();
     if (gameTimerRef.current) clearInterval(gameTimerRef.current);
 
     setIsCompleted(false);
@@ -156,6 +109,7 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
     // 시간제한 타이머 구동
     if (diffConfig.timeLimit > 0) {
       gameTimerRef.current = window.setInterval(() => {
+        if (document.hidden || playback.isPlaying()) return;
         setTimeLeft((prev) => {
           if (prev <= 1) {
             if (gameTimerRef.current) clearInterval(gameTimerRef.current);
@@ -173,16 +127,14 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
     generateRound();
     return () => {
       if (gameTimerRef.current) clearInterval(gameTimerRef.current);
-      if (audioCtxRef.current) {
-        audioCtxRef.current.close().catch(() => {});
-      }
+      playback.cancel();
     };
   }, [ageGroup]);
 
   const handleTapButton = (note: number, index: number) => {
     if (isPlayingSequence || isCompleted || timeOut) return;
 
-    playTone(note, 0.3);
+    playRhythmTone(note, soundEnabled, .3);
     const nextExpectedIdx = userSequence.length;
     const expectedNote = targetItem.notes[nextExpectedIdx];
 
@@ -202,12 +154,7 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
     } else {
       // 틀렸을 경우 시퀀스 초기화 및 재연주 안내
       playWrongBoing(soundEnabled);
-      speakText(`에구구, 리듬이 달라졌어요! ${friend.name}의 연주를 다시 듣고 따라해보아요!`, soundEnabled, { characterId: buddy });
-      setUserSequence([]);
-      setIsPlayingSequence(true);
-      scheduleGameTimeout(() => {
-        playSequence(targetItem);
-      }, 1800);
+      playSequence(targetItem, `에구구, 리듬이 달라졌어요! ${friend.name}의 연주를 다시 듣고 따라해보아요!`);
     }
   };
 

@@ -9,8 +9,8 @@ import { AgeGroup, DifficultyConfig, GameId, ChildProfile } from '../types';
 /**
  * 기본 아이 프로필 (유하, 2023-01-03)
  */
-export function createChildProfile(name: string = '유하', birthDate: string = '2023-01-03'): ChildProfile {
-  const ageMonths = calculateAgeMonths(birthDate);
+export function createChildProfile(name: string = '유하', birthDate: string = '2023-01-03', now = new Date()): ChildProfile {
+  const ageMonths = calculateAgeMonths(birthDate, now);
   const ageGroup = determineAgeGroup(ageMonths);
   return {
     name: name.trim() || '유하',
@@ -30,9 +30,10 @@ export const DEFAULT_CHILD_PROFILE: ChildProfile = {
 /**
  * 생년월일 문자열(YYYY-MM-DD)로부터 현재 월령(개월 수)을 계산합니다.
  */
-export function calculateAgeMonths(birthDate: string): number {
-  const birth = new Date(birthDate);
-  const now = new Date();
+export function calculateAgeMonths(birthDate: string, now = new Date()): number {
+  // A birthday is a local calendar date, not a UTC timestamp.
+  const [year, month, day] = birthDate.split('-').map(Number);
+  const birth = new Date(year, month - 1, day);
   
   let months = (now.getFullYear() - birth.getFullYear()) * 12;
   months += now.getMonth() - birth.getMonth();
@@ -43,6 +44,11 @@ export function calculateAgeMonths(birthDate: string): number {
   }
   
   return Math.max(0, months);
+}
+
+export function refreshChildProfile(profile: ChildProfile | null | undefined, now = new Date()): ChildProfile {
+  const updated = createChildProfile(profile?.name || '유하', profile?.birthDate || '2023-01-03', now);
+  return profile && profile.ageMonths === updated.ageMonths && profile.ageGroup === updated.ageGroup ? profile : updated;
 }
 
 /**

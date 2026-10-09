@@ -3,8 +3,9 @@ import test from 'node:test';
 import { setImmediate } from 'node:timers/promises';
 
 test('speech playback respects preferences, navigation and uninterrupted repeated taps', async t => {
-  const original = new Map(['window', 'localStorage', 'SpeechSynthesisUtterance', 'fetch', 'Audio'].map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
+  const original = new Map(['window', 'document', 'localStorage', 'SpeechSynthesisUtterance', 'fetch', 'Audio'].map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
   const storage = new Map<string, string>();
+  const page = { hidden: false };
   let voices = [{ name: 'Korean natural', lang: 'ko-KR' }, { name: 'English natural', lang: 'en-US' }];
   class Utterance {
     lang = ''; voice: unknown = null;
@@ -41,8 +42,10 @@ test('speech playback respects preferences, navigation and uninterrupted repeate
   const requests: Array<{ text: string; characterId: string; language: string; signal: AbortSignal }> = [];
   let holdRequest = false;
   let failRequest = false;
+  let failureStatus = 502;
   let release: ((response: Response) => void) | undefined;
   Object.defineProperties(globalThis, {
+    document: { configurable: true, value: page },
     window: { configurable: true, value: { AudioContext: Context, SpeechSynthesisUtterance: Utterance, setTimeout, clearTimeout, speechSynthesis: {
       getVoices: () => voices, cancel: () => { cancelled++; }, speak: (utterance: Utterance) => { spoken.push(utterance); utterance.onstart?.(); },
     } } },
@@ -51,7 +54,7 @@ test('speech playback respects preferences, navigation and uninterrupted repeate
     fetch: { configurable: true, value: async (_url: string, init?: RequestInit) => {
       if (!init?.method) return Response.json({ available: true });
       requests.push({ ...JSON.parse(String(init.body)), signal: init.signal });
-      return holdRequest ? new Promise<Response>(resolve => { release = resolve; }) : failRequest ? new Response(null, { status: 502 }) : new Response(new Uint8Array(44), { headers: { 'X-Speech-Provider': provider } });
+      return holdRequest ? new Promise<Response>(resolve => { release = resolve; }) : failRequest ? new Response(null, { status: failureStatus, headers: { 'Retry-After': '60' } }) : new Response(new Uint8Array(44), { headers: { 'X-Speech-Provider': provider } });
     } },
   });
   const engine = await import('./soundEngine');
@@ -138,6 +141,28 @@ test('speech playback respects preferences, navigation and uninterrupted repeate
 
     voices = [{ name: 'Microsoft Ana Online (Natural)', lang: 'en-US' }];
     window.speechSynthesis.onvoiceschanged!(new Event('voiceschanged'));
+
+    await t.test('hidden pages reject delayed speech and late downloads, then resume on a new visible request', async () => {
+      engine.stopAllSpeech();
+      const before = { spoken: spoken.length, requests: requests.length, starts };
+      page.hidden = true;
+      let cancelledGuide = 0;
+      engine.speakText('Hidden hint', true, { onCancel: () => { cancelledGuide++; } });
+      await flush();
+      assert.deepEqual({ spoken: spoken.length, requests: requests.length, starts }, before);
+      assert.equal(cancelledGuide, 1);
+      page.hidden = false;
+      ai.setGeminiTTSEnabled(true); holdRequest = true;
+      engine.speakText('Late hidden download'); await flush();
+      page.hidden = true;
+      release!(new Response(new Uint8Array(44))); await flush();
+      assert.equal(starts, before.starts);
+      assert.equal(spoken.length, before.spoken);
+      page.hidden = false; holdRequest = false;
+      engine.speakText('Visible again'); await flush();
+      assert.equal(starts, before.starts + 1);
+      engine.stopAllSpeech();
+    });
 
     await t.test('AI loading and playback survive repeated taps; completion allows cached replay', async () => {
       ai.setGeminiTTSEnabled(true);
@@ -293,6 +318,44 @@ test('speech playback respects preferences, navigation and uninterrupted repeate
       assert.equal(engine.trySpeakIdleHint('A gentle hint', true, 'jelly'), true);
       assert.equal(spoken.length, before + 1);
       engine.stopAllSpeech();
+    });
+    await t.test('an audio device that never resumes cannot hold a guide or start a late paid request', async sub => {
+      sub.mock.timers.enable({ apis: ['setTimeout'] });
+      ai.setGeminiTTSEnabled(true);
+      let resume: () => void;
+      const context = new Context();
+      context.state = 'suspended';
+      context.resume = () => new Promise<void>(resolve => { resume = resolve; });
+      const before = { requests: requests.length, starts };
+      const pending = ai.playGeminiSpeech('Wait for the audio device.', { audioCtx: context as unknown as AudioContext });
+      await flush();
+      sub.mock.timers.tick(3000);
+      assert.equal(await pending, false, 'Allows the caller to use device speech or visual guidance');
+      resume!(); await flush();
+      assert.deepEqual({ requests: requests.length, starts }, before);
+    });
+
+    await t.test('quota cooldown uses device voices without repeated paid requests and recovers later', async () => {
+      const originalNow = Date.now;
+      let now = originalNow();
+      Date.now = () => now;
+      try {
+        ai.setGeminiTTSEnabled(true); failRequest = true; failureStatus = 429;
+        engine.speakText('The server limit was reached.'); await flush();
+        assert.equal(spoken.at(-1)?.text, 'The server limit was reached.');
+        const limitedCount = requests.length;
+        engine.speakText('Use a gentle device voice.'); await flush();
+        assert.equal(requests.length, limitedCount);
+        assert.equal(spoken.at(-1)?.text, 'Use a gentle device voice.');
+        now += 61000; failRequest = false;
+        const priorStarts = starts;
+        engine.speakText('The server is ready again.'); await flush();
+        assert.equal(requests.length, limitedCount + 1);
+        assert.equal(starts, priorStarts + 1);
+      } finally {
+        Date.now = originalNow; failRequest = false; failureStatus = 502;
+        engine.stopAllSpeech();
+      }
     });
   } finally {
     engine.stopAllSpeech(); ai.clearGeminiAudioCache();

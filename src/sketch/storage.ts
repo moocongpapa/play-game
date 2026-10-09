@@ -6,6 +6,8 @@ export type SavedArt = {
   updatedAt: number;
 };
 let connection: Promise<IDBDatabase> | undefined;
+let pendingDraft: Artwork | undefined;
+let draftWrites: Promise<unknown> = Promise.resolve();
 function db() {
   if (!connection)
     connection = new Promise<IDBDatabase>((resolve, reject) => {
@@ -44,11 +46,18 @@ async function transaction<T>(
   });
 }
 export async function loadDraft() {
+  // An immediate return to the sketchbook must see an edit still being committed.
+  if (pendingDraft) return pendingDraft;
+  await draftWrites.catch(() => {});
   const d = await transaction('draft', 'readonly', (s) => s.get('current'));
   return validArtwork(d) ? d : null;
 }
 export function saveDraft(a: Artwork) {
-  return transaction('draft', 'readwrite', (s) => s.put(a, 'current'));
+  pendingDraft = a;
+  draftWrites = draftWrites.catch(() => {}).then(() => transaction('draft', 'readwrite', s => s.put(a, 'current')));
+  const write = draftWrites;
+  void write.then(() => { if (pendingDraft === a) pendingDraft = undefined; }, () => {});
+  return write;
 }
 export function saveGallery(a: Artwork, thumbnail: string) {
   return transaction('gallery', 'readwrite', (s) =>

@@ -15,7 +15,8 @@ import { useViewportLock } from './hooks/useViewportLock';
 
 import { getAudioContext, setSpeechLanguage, setBGMScene, startBGM, stopBGM, setBGMVolume, playStarGain, speakText, stopAllSpeech, stopPlaySounds, setAudioPreferences } from './utils/soundEngine';
 import { Moon, Shield } from 'lucide-react';
-import { createChildProfile } from './utils/ageEngine';
+import { refreshChildProfile } from './utils/ageEngine';
+import { advancePlayTime, createForegroundClock, localPlayDate, refreshPlaySession, restartPlayTimer } from './utils/playSession';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
 const FriendDayScreen = lazy(() => import('./screens/FriendDayScreen').then(m => ({ default: m.FriendDayScreen })));
@@ -78,20 +79,20 @@ export default function App() {
       try {
         const parsed = JSON.parse(saved);
         // 저장된 프로필이 있으면 반영, 없으면 기본값(유하, 2023-01-03)
-        const finalProfile = savedProfile || parsed.childProfile || createChildProfile('유하', '2023-01-03');
-        return {
+        const finalProfile = refreshChildProfile(savedProfile || parsed.childProfile);
+        return refreshPlaySession({
           ...parsed,
           speechLanguage: normalizeSpeechLanguage(parsed.speechLanguage),
           stars: 0, // 점수 누적 제거
           childProfile: finalProfile,
           onboardingCompleted: true, // 항상 유지되도록 완료 처리
-        };
+        });
       } catch (e) {
         console.warn('Failed to parse saved state, using default', e);
       }
     }
 
-    const defaultProf = savedProfile || createChildProfile('유하', '2023-01-03');
+    const defaultProf = refreshChildProfile(savedProfile);
     return {
       stars: 0,
       unlockedStickers: ['stk_ggomi', 'stk_rano', 'stk_jelly', 'stk_dochi', 'stk_star', 'stk_flower'],
@@ -106,6 +107,8 @@ export default function App() {
       hapticsEnabled: true,
       timerMinutes: 0, // 0 = unlimited
       playTimeSeconds: 0,
+      playDate: localPlayDate(),
+      timerStartedAtSeconds: 0,
       isTimeUp: false,
       completedGames: {
         object_recognition: 0,
@@ -157,7 +160,8 @@ export default function App() {
 
   // Save state to localStorage
   useEffect(() => {
-    localStorage.setItem('ITSME_APP_STATE', JSON.stringify(appState));
+    try { localStorage.setItem('ITSME_APP_STATE', JSON.stringify(appState)); }
+    catch (error) { console.warn('Could not save play preferences', error); }
   }, [appState]);
 
   // Apply audio choices before child screens start their passive-effect greetings.
@@ -198,28 +202,25 @@ export default function App() {
 
   const soundEnabled = appState.soundEnabled;
 
-  // Timer Tick
+  // Refresh the date even on the sleep screen; hidden time never spends allowance.
   useEffect(() => {
-    if (showSplash || appState.isTimeUp || currentScreen === 'parent') return;
-    const interval = window.setInterval(() => {
-      setAppState((prev) => {
-        const nextTime = prev.playTimeSeconds + 1;
-        let timeUp = prev.isTimeUp;
-
-        if (prev.timerMinutes > 0 && nextTime >= prev.timerMinutes * 60) {
-          timeUp = true;
-        }
-
-        return {
-          ...prev,
-          playTimeSeconds: nextTime,
-          isTimeUp: timeUp,
-        };
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [showSplash, appState.isTimeUp, currentScreen]);
+    const sample = createForegroundClock(() => performance.now(), () =>
+      !document.hidden && !showSplash && !appState.isTimeUp && !isParentGateOpen && currentScreen !== 'parent');
+    const tick = () => {
+      const elapsed = sample();
+      const now = new Date();
+      setAppState(prev => advancePlayTime(prev, elapsed, now));
+    };
+    tick();
+    const interval = window.setInterval(tick, 1000);
+    document.addEventListener('visibilitychange', tick);
+    window.addEventListener('pagehide', tick);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', tick);
+      window.removeEventListener('pagehide', tick);
+    };
+  }, [showSplash, appState.isTimeUp, currentScreen, isParentGateOpen]);
 
   // Play Celebration when a quiz round is completed (점수 누적 없이 순수한 성취 축하)
   const handleCompleteQuiz = (_starsEarned: number, completedGameId: GameId | null = activeGameId) => {
@@ -275,7 +276,7 @@ export default function App() {
 
   // Render current screen content
   const renderContent = () => {
-    if (appState.isTimeUp) {
+    if (appState.isTimeUp && currentScreen !== 'parent') {
       return (
         <div className="flex flex-col items-center justify-center p-8 text-center min-h-[80vh]">
           <div className="p-6 rounded-full bg-indigo-100 text-indigo-600 mb-4 animate-pulse">
@@ -363,7 +364,7 @@ export default function App() {
           <ParentDashboard
             appState={appState}
             onUpdateTimerMinutes={(min) =>
-              setAppState((prev) => ({ ...prev, timerMinutes: min, isTimeUp: false }))
+              setAppState(prev => restartPlayTimer(prev, min))
             }
             onUpdateBgmVolume={(vol) => {
               setBGMVolume(vol);
@@ -673,7 +674,6 @@ export default function App() {
         onClose={() => setIsParentGateOpen(false)}
         onSuccess={() => {
           setIsParentGateOpen(false);
-          setAppState((prev) => ({ ...prev, isTimeUp: false }));
           setCurrentScreen('parent');
         }}
       />

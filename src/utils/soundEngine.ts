@@ -5,6 +5,7 @@ import { BACKGROUND_MUSIC, SLEEP_MUSIC, type MusicTrack } from '../data/backgrou
 import { ANIMAL_RECORDINGS, resolveAnimalSound } from '../data/animalSounds';
 import { createRoundDeck } from './roundDeck';
 import { createRecordedAudioPlayer, type PlaybackResult } from './recordedAudio';
+import { isPageHidden } from './pageVisibility';
 // Web Audio API & Multi-Engine Speech Synthesis for Toddlers (Ages 3~4)
 // High-fidelity sound effects, nursery rhyme procedural BGM, and warm kindergarten teacher voices.
 
@@ -97,7 +98,7 @@ function musicNote(ctx: AudioContext, midi: number, duration: number, bass = fal
 
 export function startBGM(volume = requestedBgmVolume) {
   requestedBgmVolume = Math.max(0, Math.min(.3, volume));
-  if (isBgmPlaying || !masterSoundEnabled) { applyBgmVolume(); return; }
+  if (isBgmPlaying || !masterSoundEnabled || isPageHidden()) { applyBgmVolume(); return; }
   try {
     const ctx = getAudioContext();
     isBgmPlaying = true;
@@ -160,7 +161,7 @@ export function setBGMVolume(vol: number) {
  * 뿅 / 젤리 터치 소리 (통통 튀는 탄성 스프링 사운드)
  */
 export function playJellyTap(enabled = true) {
-  if (!enabled || !masterSoundEnabled) return;
+  if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const ctx = getAudioContext();
     const pitch = randomEffectPitch();
@@ -191,7 +192,7 @@ export function playJellyTap(enabled = true) {
  * 통통 튀는 스프링 리액션 사운드
  */
 export function playBouncyBoing(enabled = true) {
-  if (!enabled || !masterSoundEnabled) return;
+  if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const ctx = getAudioContext();
     const pitch = randomEffectPitch();
@@ -223,7 +224,7 @@ export function playBouncyBoing(enabled = true) {
  * 풍선 팡! 터뜨리기 효과음 (타격감 있는 노이즈 버스트 + 서브 킥)
  */
 export function playBalloonPop(enabled = true) {
-  if (!enabled || !masterSoundEnabled) return;
+  if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const ctx = getAudioContext();
     const pitch = randomEffectPitch();
@@ -277,7 +278,7 @@ export function playBubblePop(enabled = true) {
  * 맑은 실로폰 딩-동-댕 화음 (C5 -> E5 -> G5)
  */
 export function playDingDongDang(enabled = true) {
-  if (!enabled || !masterSoundEnabled) return;
+  if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const ctx = getAudioContext();
     duckForEffect(650);
@@ -313,7 +314,7 @@ export function playDingDongDang(enabled = true) {
  * 반짝반짝 별가루 / 보석 차임 효과음
  */
 export function playSparkleChime(enabled = true) {
-  if (!enabled || !masterSoundEnabled) return;
+  if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const ctx = getAudioContext();
     duckForEffect(500);
@@ -344,7 +345,7 @@ export function playSparkleChime(enabled = true) {
  * 축하 팡파르 (경쾌하고 웅장한 트럼펫 화음)
  */
 export function playCelebrationFanfare(enabled = true) {
-  if (!enabled || !masterSoundEnabled) return;
+  if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const ctx = getAudioContext();
     duckForEffect(1000);
@@ -394,7 +395,7 @@ export function playStarGain(enabled = true) {
  * 띠로리~ 귀여운 오답 피드백 (부드러운 통통 boing)
  */
 export function playWrongBoing(enabled = true) {
-  if (!enabled || !masterSoundEnabled) return;
+  if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const ctx = getAudioContext();
     const pitch = randomEffectPitch();
@@ -435,7 +436,7 @@ export function stopAnimalSound() {
 /** Real field recordings, stored with the app; never imitate animals with oscillators. */
 export async function playAnimalSound(animal: string, enabled = true): Promise<PlaybackResult> {
   stopAnimalSound();
-  if (!enabled || !masterSoundEnabled) return 'cancelled';
+  if (!enabled || !masterSoundEnabled || isPageHidden()) return 'cancelled';
   stopAllSpeech();
   const id = resolveAnimalSound(animal);
   if (!id) return 'unavailable';
@@ -463,11 +464,11 @@ let browserSpeechStartTimer: number | null = null;
 let pendingBrowserSpeech: (() => void) | null = null;
 let currentVoiceToneMode: 'cheerful' | 'gentle' | 'energetic' = 'cheerful';
 let speechRequestId = 0;
-let activeSpeech: { key: string; provider?: 'ai' | 'browser' } | null = null;
+let activeSpeech: { key: string; provider?: 'ai' | 'browser'; onCancel?: () => void } | null = null;
 
 /** False means busy; the idle hook may try again if the child is still resting. */
 export function trySpeakIdleHint(text: string, enabled: boolean, characterId: string): boolean {
-  if (!enabled || !masterSoundEnabled || !speechEnabled) return true;
+  if (!enabled || !masterSoundEnabled || !speechEnabled || isPageHidden()) return true;
   if (activeSpeech || animalClueActive) return false;
   speakText(text, enabled, { characterId, playIntroSFX: false });
   return true;
@@ -541,6 +542,7 @@ export interface SpeakOptions {
   onStart?: (provider: 'ai' | 'browser') => void;
   onEnd?: () => void;
   onError?: () => void;
+  onCancel?: () => void;
 }
 
 /**
@@ -548,7 +550,7 @@ export interface SpeakOptions {
  * Intelligently adjusts pitch and rate: prevents robotic chipmunk artifacts on legacy voices.
  */
 function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions = {}) {
-  if (!enabled || !masterSoundEnabled || !speechEnabled) {
+  if (!enabled || !masterSoundEnabled || !speechEnabled || isPageHidden()) {
     options.onError?.();
     return;
   }
@@ -628,10 +630,11 @@ function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions
  * Gemini character audio when configured, with browser speech as the fallback.
  */
 export function speakText(text: string, enabled = true, options: SpeakOptions = {}) {
-  if (!enabled || !masterSoundEnabled || !speechEnabled) return;
+  if (isPageHidden()) { options.onCancel?.(); return; }
+  if (!enabled || !masterSoundEnabled || !speechEnabled) { options.onError?.(); return; }
 
   const clean = localizeSpeech(text.trim(), speechLanguage, spokenChildName);
-  if (!clean) return;
+  if (!clean) { options.onError?.(); return; }
   const key = JSON.stringify([
     clean.replace(/\s+/g, ' '), options.characterId || 'ggomi', speechLanguage,
     options.pitch ?? null, options.rate ?? null,
@@ -646,7 +649,7 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
 
   stopAllSpeech();
   const requestId = speechRequestId;
-  activeSpeech = { key };
+  activeSpeech = { key, onCancel: options.onCancel };
   const originalOptions = options;
   const finish = (callback?: () => void) => {
     if (requestId !== speechRequestId) return;
@@ -694,6 +697,7 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
  * Halts all voice speech across all engines immediately
  */
 export function stopAllSpeech() {
+  const cancelled = activeSpeech?.onCancel;
   activeSpeech = null;
   stopAnimalSound();
   setBGMDucked('speech', false);
@@ -709,6 +713,7 @@ export function stopAllSpeech() {
       // ignore
     }
   }
+  cancelled?.();
 }
 
 export function speakCharacterText(characterId: string, text: string, enabled = true) {
@@ -774,8 +779,13 @@ function playToyTone(frequency: number, duration: number, volume: number, endFre
   voice.stop(now + duration + .02);
 }
 
+export function playRhythmTone(frequency: number, enabled = true, duration = .4) {
+  if (!enabled || !masterSoundEnabled || isPageHidden()) return;
+  try { playToyTone(frequency, duration, .2); } catch { /* Keep the visual rhythm available. */ }
+}
+
 export function playXylophoneNote(frequency: number, enabled = true, animalIndex = 0) {
-  if (!enabled || !masterSoundEnabled) return;
+  if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     // Bell-like partials give each key a distinct, gently decaying wooden-bar timbre.
     playToyTone(frequency, .85, .13);
@@ -789,7 +799,7 @@ export function playXylophoneNote(frequency: number, enabled = true, animalIndex
 }
 
 export function playCareSound(kind: 'brush' | 'chew' | 'bubble', enabled = true) {
-  if (!enabled || !masterSoundEnabled) return;
+  if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const pitch = randomEffectPitch();
     if (kind === 'brush') playToyTone(900 * pitch, .12, .045, 1500 * pitch);
@@ -807,7 +817,7 @@ export function playCareSound(kind: 'brush' | 'chew' | 'bubble', enabled = true)
 
 let sleepNoise: AudioBuffer | null = null;
 export function playSleepBreath(enabled = true) {
-  if (!enabled || !masterSoundEnabled) return;
+  if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const ctx = getAudioContext();
     if (!sleepNoise || sleepNoise.sampleRate !== ctx.sampleRate) {

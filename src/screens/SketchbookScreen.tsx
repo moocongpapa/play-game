@@ -18,6 +18,7 @@ import { templates, templateUrl } from '../sketch/art';
 import { renderArtwork, renderCharacterSprite } from '../sketch/render';
 import { playDrawingSound, playSound } from '../sketch/sound';
 import { loadDraft, saveDraft, saveGallery, listGallery, deleteGallery, type SavedArt } from '../sketch/storage';
+import { createDraftAutosave } from '../utils/draftAutosave';
 import {
   Undo2,
   Redo2,
@@ -102,6 +103,9 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
   const [selectedSticker, setSelectedSticker] = useState<string | null>(null);
   const [gallery, setGallery] = useState<SavedArt[]>([]);
   const [notice, setNotice] = useState('');
+  const [autosave] = useState(() => createDraftAutosave<Artwork>(saveDraft, () => {
+    console.warn('Sketchbook draft could not be saved; retaining the latest edit for retry.');
+  }));
 
   // Living Character Animation Mode state
   const [isLivingCharacterActive, setIsLivingCharacterActive] = useState(false);
@@ -111,6 +115,7 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
 
   const setH = (h: History) => {
     historyRef.current = h;
+    autosave.schedule(h.present);
     setHistory(h);
   };
 
@@ -175,14 +180,17 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
     };
   }, []);
 
-  // Auto save draft to storage
+  // Home navigation also uses the global header, so flush on every unmount.
   useEffect(() => {
-    if (!art) return;
-    const id = setTimeout(() => {
-      void saveDraft(art).catch(() => {});
-    }, 1500);
-    return () => clearTimeout(id);
-  }, [art]);
+    const hide = () => { if (document.hidden) autosave.flush(); };
+    document.addEventListener('visibilitychange', hide);
+    window.addEventListener('pagehide', autosave.flush);
+    return () => {
+      autosave.flush();
+      document.removeEventListener('visibilitychange', hide);
+      window.removeEventListener('pagehide', autosave.flush);
+    };
+  }, [autosave]);
 
   // Load Gallery list when gallery panel opens
   useEffect(() => {

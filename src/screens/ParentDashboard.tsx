@@ -54,7 +54,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
 
   const formatSeconds = (sec: number) => {
     const m = Math.floor(sec / 60);
-    const s = sec % 60;
+    const s = Math.floor(sec % 60);
     return `${m}분 ${s}초`;
   };
 
@@ -187,15 +187,15 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
       {/* Play Statistics Card */}
       <div className="w-full bg-white p-4 sm:p-5 rounded-3xl border-2 sm:border-3 border-amber-200 shadow-sm mb-3">
         <h2 className="text-base sm:text-lg font-black text-[#4A3E3D] flex items-center gap-2 mb-2.5 break-keep">
-          <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-[#FF9E4A] shrink-0" /> 오늘 아이의 놀이 기록
+          <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-[#FF9E4A] shrink-0" /> 아이의 놀이 기록
         </h2>
         <div className="grid grid-cols-2 gap-2 sm:gap-3 text-center mb-4">
           <div className="p-2.5 sm:p-3 bg-amber-50 rounded-2xl border border-amber-200">
-            <span className="text-[11px] sm:text-xs font-bold text-[#8C7B79] block">총 이용 시간</span>
+            <span className="text-[11px] sm:text-xs font-bold text-[#8C7B79] block">오늘 이용 시간</span>
             <span className="text-lg sm:text-2xl font-black text-[#FF9E4A]">{formatSeconds(appState.playTimeSeconds)}</span>
           </div>
           <div className="p-2.5 sm:p-3 bg-emerald-50 rounded-2xl border border-emerald-200">
-            <span className="text-[11px] sm:text-xs font-bold text-[#8C7B79] block">완료한 놀이 활동</span>
+            <span className="text-[11px] sm:text-xs font-bold text-[#8C7B79] block">누적 완료한 놀이</span>
             <span className="text-lg sm:text-2xl font-black text-emerald-600">
               {Object.values(appState.completedGames).reduce((a, b) => a + b, 0)}회
             </span>
@@ -293,7 +293,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
           <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 shrink-0" /> 이용 시간 제한 타이머
         </h2>
         <p className="text-[11px] sm:text-xs font-bold text-[#8C7B79] mb-3 break-keep">
-          지정한 시간이 지나면 귀여운 동물 친구들이 잘 시간으로 전환됩니다.
+          시간을 누르면 지금부터 새로 시작해요. 앱을 보고 있는 시간만 세고, 다음 날에는 다시 놀 수 있어요.
         </p>
         <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
           {[0, 10, 15, 20, 30].map((min) => {

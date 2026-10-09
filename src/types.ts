@@ -110,6 +110,8 @@ export interface AppState {
   hapticsEnabled?: boolean;
   timerMinutes: number; // 0 means unlimited
   playTimeSeconds: number;
+  playDate: string; // Device-local calendar date for today's foreground play.
+  timerStartedAtSeconds: number; // A parent's restart preserves today's total.
   isTimeUp: boolean;
   completedGames: Record<string, number>; // gameId -> completion count
   // --- 신규 프로필 필드 ---
