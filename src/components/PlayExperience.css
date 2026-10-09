@@ -1,6 +1,6 @@
 /* Shared picture-book interactions. These shapes remain readable with motion off. */
 .friend-rest-eyes { display: none; }
-.companion-body { position: relative; width: 270px; height: 270px; margin-bottom: 28px; }
+.companion-body { position: relative; width: 270px; height: 270px; margin-top: 20px; margin-bottom: 0; }
 .companion-avatar { width: 100% !important; height: 100% !important; }
 .companion-performer { width: 100%; height: 100%; pointer-events: none; }
 .companion-avatar .friend-arm { transform-box: view-box; }
@@ -10,7 +10,13 @@
 .buddy-touch-zone:focus-visible { outline: 4px solid #bc8952; background: #fff7d04d; }
 .buddy-head { top: 9%; left: 22%; width: 56%; height: 39%; }
 .buddy-belly { top: 53%; left: 35%; width: 30%; height: 28%; }
-.buddy-hand { top: 36%; right: 0; width: 27%; height: 27%; }
+.buddy-hand { top: var(--hand-zone-y, 36%); right: 0; width: 27%; height: 27%; }
+.companion-body { --high-five-angle: -12deg; }
+.companion-body:is(.buddy-species-ggomi, .buddy-species-dochi, .buddy-species-ggulgguli) { --high-five-angle: -70deg; --hand-zone-y: 61%; }
+.companion-body.buddy-species-rano { --high-five-angle: -30deg; --hand-zone-y: 44%; }
+.companion-body.buddy-species-pingu { --high-five-angle: -25deg; }
+.companion-body.buddy-five { --hand-zone-y: 36%; }
+.companion-body.buddy-five:is(.buddy-species-ggomi, .buddy-species-dochi, .buddy-species-ggulgguli) { --hand-zone-y: 48%; }
 .buddy-touch-mark { position: absolute; display: grid; place-items: center; width: 33px; height: 33px; border: 2px solid #fffcf4; border-radius: 50%; background: #fff9eccc; color: #a97965; box-shadow: 0 3px 8px #7861491c; pointer-events: none; }
 .buddy-touch-mark svg { width: 19px; height: 19px; }
 .buddy-head .buddy-touch-mark { left: -24px; top: 40%; }
@@ -21,8 +27,9 @@
 .buddy-pet .friend-rest-eyes, .buddy-tickle .friend-rest-eyes { display: inline; }
 .buddy-tickle .companion-performer { animation: buddy-giggle .45s ease-in-out 5; }
 .buddy-five .companion-performer { animation: buddy-high-five .7s ease-out 2; }
-.buddy-five .friend-arm-right { transform: rotate(-115deg); transition: transform .18s ease-out; }
-.buddy-species-pingu.buddy-five .friend-arm-right { transform-origin: 76px 49px; transform: rotate(-85deg); }
+.buddy-five .friend-arm-right { transform: rotate(var(--high-five-angle)); transition: transform .22s cubic-bezier(.2,.8,.3,1); }
+.buddy-species-pingu .companion-avatar .friend-arm-left { transform-origin: 24px 49px; }
+.buddy-species-pingu .companion-avatar .friend-arm-right { transform-origin: 76px 49px; }
 .buddy-pet.buddy-species-nurungji .friend-tail { transform-origin: 73px 79px; animation: greeting-tail .5s ease-in-out 5; }
 .buddy-pet.buddy-species-pingu .friend-arm-left { animation: greeting-hand-wave .65s ease-in-out 4; }
 .buddy-reaction-float { position: absolute; left: 12%; top: 10%; color: #df9bb1; pointer-events: none; animation: buddy-heart 2.3s ease-out forwards; }
@@ -130,7 +137,7 @@
 .music-theater[data-echo='true'] { box-shadow: inset 0 0 0 3px #cbb5d6; }
 @media (max-width: 600px) {
   .companion-touch.greeting-stage { height: 302px; }
-  .companion-body { width: 252px; height: 252px; }
+  .companion-body { width: 220px; height: 220px; }
   .play-result { border-radius: 24px; }
   .result-scenery { min-height: 184px; }
   .train-engine { width: 27%; }

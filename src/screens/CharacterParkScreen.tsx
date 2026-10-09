@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useContext, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useReducedMotion } from 'motion/react';
 import { ArrowLeftRight, Footprints, Hand, Heart, Music2, Pause, Play, RotateCw, Sparkles } from 'lucide-react';
 import { CHARACTER_LIST, CHARACTERS } from '../data/characters';
 import { PARK_ACTIONS, PARK_GUIDE, type ParkAction } from '../data/characterPark';
 import { CharacterAvatar } from '../components/CharacterAvatar';
+import { PlayHintsPausedContext } from '../components/PlayFlowContext';
 import { useCharacterParkMotion } from '../hooks/useCharacterParkMotion';
 import { useGameTimeouts } from '../hooks/useGameTimeouts';
 import { usePageVisible } from '../hooks/useToddlerPlay';
@@ -19,7 +20,8 @@ export function CharacterParkScreen({ buddy, soundEnabled }: { buddy: CharacterI
   const [reaction, setReaction] = useState<{ id: CharacterId; action: ParkAction; serial: number } | null>(null);
   const visible = usePageVisible();
   const reduced = useReducedMotion();
-  const { nodes, held, react } = useCharacterParkMotion(field, visible && !paused && !reduced);
+  const blocked = useContext(PlayHintsPausedContext);
+  const { nodes, held, react } = useCharacterParkMotion(field, visible && !paused && !reduced && !blocked);
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
   const lastTap = useRef(-Infinity);
   const serial = useRef(0);
@@ -30,11 +32,11 @@ export function CharacterParkScreen({ buddy, soundEnabled }: { buddy: CharacterI
     return () => { stopAllSpeech(); stopPlaySounds(); };
   }, []);
   useEffect(() => {
-    if (!visible) { clearGameTimeouts(); setReaction(null); stopAllSpeech(); stopPlaySounds(); }
-  }, [visible, clearGameTimeouts]);
+    if (!visible || blocked) { clearGameTimeouts(); setReaction(null); stopAllSpeech(); stopPlaySounds(); }
+  }, [visible, blocked, clearGameTimeouts]);
 
   const touchFriend = (id: CharacterId) => {
-    if (!visible || performance.now() - lastTap.current < 180) return;
+    if (!visible || blocked || performance.now() - lastTap.current < 180) return;
     lastTap.current = performance.now();
     const action = react(id);
     if (!action) return;
@@ -48,7 +50,7 @@ export function CharacterParkScreen({ buddy, soundEnabled }: { buddy: CharacterI
     scheduleGameTimeout(() => setReaction(null), 2100);
   };
 
-  return <section className="character-park" data-still={paused || reduced || !visible} data-reduced={Boolean(reduced)} aria-label="친구 놀이터" data-juice-surface>
+  return <section className="character-park" data-still={paused || reduced || !visible || blocked} data-reduced={Boolean(reduced)} aria-label="친구 놀이터" data-juice-surface>
     <h1 className="sr-only">친구 놀이터</h1>
     <div className="park-scenery" aria-hidden="true" />
     <div className="park-cloud park-cloud-one" aria-hidden="true" /><div className="park-cloud park-cloud-two" aria-hidden="true" />
@@ -58,12 +60,12 @@ export function CharacterParkScreen({ buddy, soundEnabled }: { buddy: CharacterI
       setPaused(value => !value); playJellyTap(soundEnabled); stopAllSpeech();
     }}>{paused ? <Play fill="currentColor" /> : <Pause fill="currentColor" />}</button>}
     <div ref={field} className="park-field">
-      {CHARACTER_LIST.map((friend, index) => {
+      {CHARACTER_LIST.map(friend => {
         const selected = reaction?.id === friend.id;
         const ReactionIcon = selected ? ACTION_ICONS[reaction.action] : Heart;
         return <button key={friend.id} ref={node => { if (node) nodes.current.set(friend.id, node); else nodes.current.delete(friend.id); }}
           className="park-friend" data-park-friend={friend.id} data-reacting={selected}
-          style={{ '--friend-color': friend.color, '--step-duration': `${.56 + index % 3 * .09}s` } as CSSProperties}
+          style={{ '--friend-color': friend.color } as CSSProperties}
           aria-label={`${friend.name}와 놀기`}
           onPointerDown={event => {
             if (event.button !== 0 || !event.isPrimary) return;
@@ -73,7 +75,10 @@ export function CharacterParkScreen({ buddy, soundEnabled }: { buddy: CharacterI
           onFocus={event => { if (event.currentTarget.matches(':focus-visible')) held.current.add(friend.id); }} onBlur={() => held.current.delete(friend.id)}
           onClick={event => { if (event.detail === 0) touchFriend(friend.id); }}>
           <span className="park-shadow" aria-hidden="true" />
-          <span className="park-facing" aria-hidden="true"><span className="park-performer"><CharacterAvatar id={friend.id} size="lg" mood="still" className="park-avatar" /></span></span>
+          <span className="park-facing" aria-hidden="true"><span className="park-performer"><CharacterAvatar id={friend.id} size="lg" mood="still"
+            view={selected ? 'front' : friend.id === 'rano' || friend.id === 'nurungji' ? 'side' : 'three-quarter'}
+            expression={selected ? reaction.action === 'wave' || reaction.action === 'turn' ? 'happy' : 'excited' : 'happy'}
+            className="park-avatar" /></span></span>
           {selected && <span key={reaction.serial} className="park-reaction" aria-hidden="true"><ReactionIcon /><Heart className="park-love" fill="currentColor" /><span>{PARK_ACTIONS[reaction.action].label}</span></span>}
         </button>;
       })}

@@ -42,12 +42,12 @@ function BearScene({ props, stage, cycle, locked, onComplete }: { props: Toddler
     <div className="bear-room"><div className="bear-window" aria-hidden="true"/><div className="bear-seats">
       {BEARS.map(bear => <DropSlot key={bear.id} id={bear.id} label={`${bear.name} ${item}`} filled={placed.includes(bear.id)} className={`bear-seat ${wobble === bear.id ? 'seat-wobble' : ''}`}>
         <span className="seat-size" style={{ width: `${bear.size / 110 * 95}%`, maxWidth: bear.size }}>{stage === 2 ? <span className="bear-bed"/> : <SeatArt variant={0}/>}</span>
-        {(stage > 0 || placed.includes(bear.id)) && <span className="seated-bear" style={{ width: `${bear.size / 110 * 95}%`, maxWidth: bear.size, height: bear.size }}><CharacterAvatar id="ggomi" size="sm" mood={placed.includes(bear.id) ? 'happy' : 'still'}/></span>}
+        {(stage > 0 || placed.includes(bear.id)) && <span className="seated-bear" style={{ width: `${bear.size / 110 * 95}%`, maxWidth: bear.size, height: bear.size }}><CharacterAvatar id="ggomi" size="sm" variant="full" mood={placed.includes(bear.id) ? 'happy' : 'still'}/></span>}
         {stage > 0 && <span className="bear-care-item" style={{ width: `${bear.size / 110 * 95}%`, maxWidth: bear.size, opacity: placed.includes(bear.id) ? 1 : .23 }}>{stage === 1 ? <SeatArt variant={2}/> : <CareObjectArt kind="blanket"/>}</span>}
       </DropSlot>)}
     </div><span className="bear-order-line" aria-hidden="true"><i/><i/><i/></span></div>
     <div className="bear-family" aria-label="크기가 다른 놀잇감">{order.map(bear => <DragPiece key={bear.id} id={bear.id} label={stage === 0 ? bear.name : `${bear.name} 크기 ${item}`} disabled={placed.includes(bear.id)} className={`bear-piece ${placed.includes(bear.id) ? 'bear-seated' : ''}`}>
-      <span style={{ width: `${bear.size / 110 * 95}%`, maxWidth: bear.size, height: bear.size }}>{stage === 0 ? <CharacterAvatar id="ggomi" size="sm" mood="still"/> : stage === 1 ? <SeatArt variant={2}/> : <CareObjectArt kind="blanket"/>}</span>
+      <span style={{ width: `${bear.size / 110 * 95}%`, maxWidth: bear.size, height: bear.size }}>{stage === 0 ? <CharacterAvatar id="ggomi" size="sm" variant="full" mood="still"/> : stage === 1 ? <SeatArt variant={2}/> : <CareObjectArt kind="blanket"/>}</span>
       <span className="bear-size-dots" aria-hidden="true">{Array.from({ length: BEARS.indexOf(bear) + 1 }, (_, i) => <i key={i}/>)}</span>
     </DragPiece>)}</div>
   </DragMatch>;

@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import type { CharacterId } from '../types';
 import { CharacterArtwork } from './CharacterArtwork';
+import { CHARACTER_ART } from '../data/characterArt';
 import { CreatureArtwork } from './habitat/CreatureArtwork';
 
 export type PlayNavKind = 'drawing' | 'bugs' | 'aquarium' | 'park' | 'greeting';
@@ -8,9 +9,10 @@ export type PlayNavKind = 'drawing' | 'bugs' | 'aquarium' | 'park' | 'greeting';
 /** Small, still toy scenes share the artwork used inside each playground. */
 export function PlayNavArtwork({ kind, buddy }: { kind: PlayNavKind; buddy: CharacterId }) {
   const paint = `palette-${useId().replace(/:/g, '')}`;
+  const friend = CHARACTER_ART[buddy];
   if (kind === 'bugs' || kind === 'aquarium') return <span className={`nav-toy nav-toy-${kind}`}><CreatureArtwork id={kind === 'bugs' ? 'ladybug' : 'clownfish'} happy /></span>;
-  if (kind === 'park') return <span className="nav-toy nav-toy-park"><span><CharacterArtwork id={buddy} /></span><span><CharacterArtwork id={buddy === 'jelly' ? 'pingu' : 'jelly'} /></span><i /></span>;
-  if (kind === 'greeting') return <span className={`nav-toy nav-toy-greeting nav-wave-${buddy}`}><CharacterArtwork id={buddy} /><svg className="nav-wave-lines" viewBox="0 0 64 64"><path d="M51 12l4-5M55 19l6-1M46 8V3" fill="none" stroke="#ac8754" strokeWidth="3" strokeLinecap="round" /></svg></span>;
+  if (kind === 'park') return <span className="nav-toy nav-toy-park"><span><CharacterArtwork id={buddy} variant="portrait" /></span><span><CharacterArtwork id={buddy === 'jelly' ? 'pingu' : 'jelly'} variant="portrait" /></span><i /></span>;
+  if (kind === 'greeting') return <span className={`nav-toy nav-toy-greeting nav-wave-${buddy}`}><CharacterArtwork id={buddy} variant="portrait" /><svg className="nav-wave-lines" viewBox="0 0 64 64" aria-hidden="true"><path d="M51 12l4-5M55 19l6-1M46 8V3" fill="none" stroke="#ac8754" strokeWidth="3" strokeLinecap="round" /><g transform="rotate(18 50 41)"><path d="M42 48C38 45 36 40 38 38Q40 36 43 41V30Q43 25 46 27V36V25Q49 21 51 26V36V28Q54 24 56 29V38Q60 32 62 36L60 46Q57 54 50 53Z" fill={friend.light} stroke={friend.edge} strokeWidth="1.6" strokeLinejoin="round"/><ellipse cx="50" cy="44" rx="4" ry="3.6" fill={friend.accent}/></g></svg></span>;
   return <svg className="nav-toy nav-toy-drawing" viewBox="0 0 72 72" aria-hidden="true">
     <defs><linearGradient id={paint} x2=".8" y2="1"><stop stopColor="#ffeed5" /><stop offset="1" stopColor="#dbaa7f" /></linearGradient></defs>
     <path d="M58 27C54 7 22 8 11 27C-1 48 17 65 33 62C48 59 30 47 41 42C50 39 62 43 58 27Z" fill={`url(#${paint})`} stroke="#b98966" strokeWidth="2" />

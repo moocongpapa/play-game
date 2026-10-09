@@ -51,7 +51,7 @@ function TraceCourse({ props, round, theme, completed, finish }: { props: Toddle
         onPointerDown={e=>{if(completed||!e.isPrimary||e.button!==0)return;drag.current={id:e.pointerId,last:point(e.clientX,e.clientY),node:e.currentTarget};e.currentTarget.setPointerCapture(e.pointerId);}}
         onPointerMove={e=>{const d=drag.current;if(!d||d.id!==e.pointerId)return;const p=point(e.clientX,e.clientY);update(advanceTrace(path,progress.current,d.last,p));d.last=p;}}
         onPointerUp={cancel} onPointerCancel={cancel} onLostPointerCapture={cancel} onKeyDown={e=>{if(['ArrowRight','ArrowUp',' '].includes(e.key)){e.preventDefault();update(Math.min(path.length-1,progress.current+5));}}}>
-        <CharacterAvatar id={props.buddy} size="sm" mood="still" /><Star fill="#ffe89e" />
+        <CharacterAvatar id={props.buddy} size="sm" variant="full" mood="still" /><Star fill="#ffe89e" />
       </motion.button>
       <div className="trace-dots" role="progressbar" aria-label="길 따라가기 진행" aria-valuenow={step} aria-valuemin={0} aria-valuemax={path.length-1}>{[0,1,2,3,4].map(i=><Star key={i} fill={step/(path.length-1)>=i/4?'#efcb70':'#fff5df'} />)}</div>
     </div>

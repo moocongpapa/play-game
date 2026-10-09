@@ -7,12 +7,13 @@
 .greeting-card { padding: 18px 12px 14px; background: #fffcf5; border: 2px solid #e8dfce; border-radius: 32px; box-shadow: 0 6px 0 #e8dfd0; text-align: center; min-width: 0; }
 .greeting-card h2 { margin: 0 0 12px; font-size: 17px; font-weight: 750; color: #8b7c67; }
 .greeting-card h2 span { color: #486453; font-size: 21px; font-weight: 900; }
-.greeting-stage { position: relative; isolation: isolate; display: grid; place-items: center; width: 100%; height: 330px; border: 3px solid #fff7e8; border-radius: 24px; background: var(--greeting-color); overflow: hidden; }
+.greeting-stage { position: relative; isolation: isolate; display: grid; place-items: center; width: 100%; height: 330px; border: 3px solid #fff7e8; border-radius: 24px; background: var(--greeting-color); overflow: clip; }
 .greeting-stage:focus-visible { outline-offset: 0; }
 .greeting-scenery { position: absolute; inset: 0; z-index: -2; background: linear-gradient(#fffdf07a, #fffdf03d), url('/art/playground-meadow.jpg') center 68% / cover; opacity: .52; }
 .greeting-stage::before { content: ''; position: absolute; z-index: -1; width: 92%; height: 75%; bottom: -40%; background: #fffae6; border: 2px solid #fffdf5; border-radius: 50%; box-shadow: 0 -12px 0 #ffffff35; }
 .greeting-tap-hint { position: absolute; right: 12px; top: 12px; display: flex; gap: 5px; align-items: center; color: #806343; background: #fffbeadf; padding: 7px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; }
 .greeting-ground { position: absolute; bottom: 47px; width: 145px; height: 17px; border-radius: 50%; background: #68795b24; }
+.companion-ground { position: absolute; left: 26%; right: 26%; bottom: 5%; height: 6%; border-radius: 50%; background: radial-gradient(ellipse, #6676533d, #6676530a 72%, transparent); pointer-events: none; }
 .greeting-animation { position: relative; display: grid; place-items: center; width: 100%; height: 100%; padding-bottom: 35px; pointer-events: none; }
 .greeting-performer { display: block; transform-origin: 50% 85%; }
 .greeting-avatar { width: 236px; height: 236px; }
@@ -52,11 +53,20 @@
 .greeting-skate .friend-arm-right { transform-origin: 76px 49px; }
 .greeting-skate .friend-leg-left { transform-origin: 34px 83px; }
 .greeting-skate .friend-leg-right { transform-origin: 66px 83px; }
+.greeting-avatar .friend-ear-left, .greeting-avatar .friend-ear-right { transform-box: fill-box; transform-origin: 50% 88%; }
+.greeting-avatar[data-character='nurungji'] .friend-ear-left, .greeting-avatar[data-character='nurungji'] .friend-ear-right { transform-origin: 50% 15%; }
+.greeting-avatar .friend-accessory { transform-box: fill-box; transform-origin: 50% 15%; }
+.companion-touch:not(.is-playing) .buddy-idle .companion-performer { animation: greeting-breathe 3.6s ease-in-out infinite; }
+.companion-touch:not(.is-playing) .buddy-idle .friend-open-eyes { transform-box: fill-box; transform-origin: center; animation: friend-soft-blink 6.5s var(--friend-delay, 0s) infinite; }
 .is-playing .greeting-performer { animation-duration: 2.2s; animation-iteration-count: 2; animation-timing-function: ease-in-out; }
+.is-playing .greeting-avatar .friend-ear-left { animation: greeting-ear-follow 1.1s .09s ease-in-out 4; }
+.is-playing .greeting-avatar .friend-ear-right { animation: greeting-ear-follow 1.1s .17s ease-in-out 4 reverse; }
+.is-playing .greeting-avatar .friend-accessory { animation: greeting-cloth-follow 1.1s .13s ease-in-out 4; }
+.is-playing .greeting-ground, .is-playing .companion-ground { animation: greeting-weight-shadow 2.2s ease-in-out 2; }
 .is-playing .greeting-particles svg { animation: greeting-sparkle 2.2s ease-out 2; }
 .is-playing .greeting-particles svg:nth-child(even) { animation-delay: .2s; }
 .is-playing.greeting-wave .greeting-performer { animation-name: greeting-wave; }
-.is-playing.greeting-wave .friend-arm-right { animation: greeting-hand-wave .55s ease-in-out 8; }
+.is-playing.greeting-wave .friend-arm-right { animation: greeting-raised-wave 2.2s ease-in-out 2; }
 .is-playing.greeting-kick .greeting-performer { animation-name: greeting-kick; }
 .is-playing.greeting-kick .friend-leg-right { animation: greeting-foot-kick 1.1s ease-in-out 4; }
 .is-playing.greeting-kick .friend-arm-left { animation: greeting-kick-arm 1.1s ease-in-out 4; }
@@ -70,6 +80,7 @@
 .is-playing.greeting-clap .friend-arm-right { animation: greeting-clap-right 1.1s ease-in-out 4; }
 .is-playing.greeting-jump .greeting-performer { animation-name: greeting-jump; }
 .is-playing.greeting-jump .greeting-ground { animation: greeting-jump-shadow 1.1s ease-in-out 4; }
+.is-playing.greeting-jump .companion-ground { animation: greeting-jump-shadow 1.1s ease-in-out 4; }
 .is-playing.greeting-jump .friend-arm-left { animation: greeting-jump-arm 1.1s ease-in-out 4; }
 .is-playing.greeting-bow .greeting-performer { animation-name: greeting-bow; }
 .is-playing.greeting-bow .friend-tail { animation: greeting-tail .44s ease-in-out 10; }
@@ -77,27 +88,35 @@
 .is-playing.greeting-skate .friend-leg-left { animation: greeting-skate-foot 1.1s ease-in-out 4; }
 .is-playing.greeting-skate .friend-arm-right { animation: greeting-hand-wave 1.1s ease-in-out 4; }
 
-@keyframes greeting-wave { 0%, 100% { transform: rotate(0); } 25%, 65% { transform: rotate(-5deg); } 45%, 85% { transform: rotate(5deg); } }
+@keyframes greeting-wave { 0%, 100% { transform: rotate(0) scale(1); } 12% { transform: translateY(2%) scale(1.03, .96); } 30%, 65% { transform: rotate(-4deg) scale(.99, 1.02); } 45%, 80% { transform: rotate(4deg); } }
 @keyframes greeting-hand-wave { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-23deg); } 70% { transform: rotate(23deg); } }
-@keyframes greeting-kick { 0%, 50%, 100% { transform: rotate(0) translateY(0); } 25%, 75% { transform: rotate(-9deg) translateY(-4%); } }
+/* Ggomi's relaxed paw starts beside the belly, so lift before waving. */
+@keyframes greeting-raised-wave { 0%, 100% { transform: rotate(0); } 18%, 82% { transform: rotate(-70deg); } 30%, 56% { transform: rotate(-78deg); } 43%, 69% { transform: rotate(-58deg); } }
+@keyframes greeting-kick { 0%, 50%, 100% { transform: rotate(0) translateY(0) scale(1); } 10%, 60% { transform: translateY(2%) scale(1.03, .96); } 25%, 75% { transform: rotate(-7deg) translateY(-3%) scale(.98, 1.03); } 40%, 90% { transform: rotate(2deg) scale(1.025, .975); } }
 @keyframes greeting-foot-kick { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(15deg); } 45%, 65% { transform: rotate(-82deg); } }
 @keyframes greeting-kick-arm { 0%, 100% { transform: rotate(0); } 45%, 65% { transform: rotate(45deg); } }
-@keyframes greeting-ballet { 0% { transform: translateY(0) rotateY(0); } 100% { transform: translateY(0) rotateY(360deg); } 20% { transform: translateY(-6%) rotateY(0) rotate(-8deg); } 70% { transform: translateY(-9%) rotateY(360deg) rotate(7deg); } 85% { transform: translateY(-4%) rotateY(360deg); } }
+/* A three-quarter pose keeps the face readable throughout a balanced turn. */
+@keyframes greeting-ballet { 0%, 100% { transform: translate(0, 0) rotate(0) scale(1); } 12% { transform: translateY(3%) scale(1.04, .94); } 30% { transform: translate(-3%, -6%) rotate(-8deg) scale(.98, 1.03); } 56% { transform: translate(3%, -7%) rotate(8deg) scale(.96, 1.04); } 76% { transform: translate(1%, -2%) rotate(-3deg); } 86% { transform: translateY(2%) scale(1.04, .96); } }
 @keyframes greeting-ballet-arm { 0%, 100% { transform: rotate(0); } 20%, 80% { transform: rotate(105deg); } }
 @keyframes greeting-ballet-leg { 0%, 100% { transform: rotate(0); } 20%, 80% { transform: rotate(-48deg); } }
 @keyframes greeting-roll { 0% { transform: translateX(0) rotate(0); } 15% { transform: translateX(-12%) rotate(-15deg) scale(.92); } 55% { transform: translateX(18%) rotate(345deg) scale(.92); } 70% { transform: translateX(18%) rotate(360deg); } 100% { transform: translateX(0) rotate(360deg); } }
 @keyframes greeting-tuck-arm { 0%, 100% { transform: rotate(0); } 20%, 70% { transform: rotate(-65deg); } }
-@keyframes greeting-clap { 0%, 50%, 100% { transform: translateY(0); } 25%, 75% { transform: translateY(-4%) scale(1.02); } }
-@keyframes greeting-clap-left { 0%, 100% { transform: rotate(0); } 35%, 70% { transform: translateX(5px) rotate(-75deg); } 50% { transform: rotate(-45deg); } }
-@keyframes greeting-clap-right { 0%, 100% { transform: rotate(0); } 35%, 70% { transform: translateX(-3px) rotate(180deg); } 50% { transform: rotate(135deg); } }
+@keyframes greeting-clap { 0%, 50%, 100% { transform: translateY(0) scale(1); } 15%, 65% { transform: translateY(1%) scale(1.03, .97); } 25%, 75% { transform: translateY(-3%) scale(.98, 1.025); } 40%, 90% { transform: scale(1.02, .98); } }
+@keyframes greeting-clap-left { 0%, 100% { transform: rotate(0); } 35%, 70% { transform: translateX(2px) rotate(-82deg); } 50% { transform: rotate(-50deg); } }
+@keyframes greeting-clap-right { 0%, 100% { transform: rotate(0); } 35%, 70% { transform: translateX(-2px) rotate(82deg); } 50% { transform: rotate(50deg); } }
 @keyframes greeting-jump { 0%, 50%, 100% { transform: translateY(0) scale(1); } 10%, 60% { transform: translateY(3%) scale(1.08, .9); } 25%, 75% { transform: translateY(-20%) scale(.94, 1.06); } 40%, 90% { transform: translateY(0) scale(1.06, .94); } }
 @keyframes greeting-jump-arm { 0%, 100% { transform: rotate(0); } 45%, 65% { transform: rotate(120deg); } }
-@keyframes greeting-jump-shadow { 0%, 100% { transform: scaleX(1); opacity: 1; } 50% { transform: scaleX(.65); opacity: .5; } }
+@keyframes greeting-jump-shadow { 0%, 100% { transform: scaleX(1); opacity: 1; } 40%, 60% { transform: scaleX(.65); opacity: .5; } 80% { transform: scaleX(1.12); opacity: .9; } }
 @keyframes greeting-bow { 0%, 100% { transform: rotate(0) scaleY(1); } 30%, 55% { transform: rotate(15deg) scaleY(.8) translateY(5%); } 75% { transform: rotate(-6deg) scaleY(1); } }
 @keyframes greeting-tail { 0%, 100% { transform: rotate(-14deg); } 50% { transform: rotate(20deg); } }
 @keyframes greeting-skate { 0%, 100% { transform: translateX(0) rotate(0); } 25% { transform: translateX(-18%) rotate(-11deg); } 60% { transform: translateX(18%) rotate(11deg); } 85% { transform: translateX(-8%) rotate(-5deg); } }
 @keyframes greeting-skate-foot { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(28deg) translateY(-3px); } }
 @keyframes greeting-sparkle { 0%, 100% { opacity: 0; transform: translateY(9px) scale(.65); } 25%, 60% { opacity: .9; } 80% { opacity: 0; transform: translateY(-17px) scale(1.1); } }
+@keyframes greeting-ear-follow { 0%, 100% { transform: rotate(0); } 24% { transform: rotate(-7deg); } 48% { transform: rotate(6deg); } 70% { transform: rotate(-3deg); } }
+@keyframes greeting-cloth-follow { 0%, 100% { transform: rotate(0); } 32% { transform: rotate(5deg); } 65% { transform: rotate(-4deg); } 85% { transform: rotate(1deg); } }
+@keyframes greeting-weight-shadow { 0%, 100% { transform: scaleX(1); opacity: .9; } 15% { transform: scaleX(1.1); opacity: 1; } 38%, 65% { transform: scaleX(.88); opacity: .65; } 85% { transform: scaleX(1.05); opacity: .95; } }
+@keyframes greeting-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.012, .99); } }
+.greeting-stage[data-still='true'] *, .greeting-stage[data-still='true'] *::before { animation-play-state: paused !important; }
 @media (max-width: 759px) {
   .greeting-layout { grid-template-columns: 1fr; gap: 24px; }
   .greeting-heading { margin-bottom: 18px; }
@@ -117,13 +136,13 @@
 @media (prefers-reduced-motion: reduce) {
   .greeting-stage *, .greeting-stage *::before { animation: none !important; transition: none !important; }
   .is-playing .greeting-particles svg { opacity: .85; }
-  .is-playing.greeting-wave .friend-arm-right { transform: rotate(-15deg); }
+  .is-playing.greeting-wave .friend-arm-right { transform: rotate(-70deg); }
   .is-playing.greeting-kick .friend-leg-right { transform: rotate(-55deg); }
   .is-playing.greeting-ballet .friend-arm-left { transform: rotate(100deg); }
   .is-playing.greeting-ballet .friend-leg-right { transform: rotate(-35deg); }
   .is-playing.greeting-roll .friend-arm-left { transform: rotate(-60deg); }
-  .is-playing.greeting-clap .friend-arm-left { transform: translateX(5px) rotate(-75deg); }
-  .is-playing.greeting-clap .friend-arm-right { transform: translateX(-3px) rotate(180deg); }
+  .is-playing.greeting-clap .friend-arm-left { transform: translateX(2px) rotate(-82deg); }
+  .is-playing.greeting-clap .friend-arm-right { transform: translateX(-2px) rotate(82deg); }
   .is-playing.greeting-jump .friend-arm-left { transform: rotate(110deg); }
   .is-playing.greeting-bow .greeting-performer { transform: rotate(8deg); }
   .is-playing.greeting-skate .friend-leg-left { transform: rotate(20deg); }

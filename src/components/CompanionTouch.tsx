@@ -1,10 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { Hand, Heart, Sparkles } from 'lucide-react';
 import { CharacterAvatar } from './CharacterAvatar';
 import { CHARACTERS } from '../data/characters';
 import { CHARACTER_GREETINGS } from '../data/characterGreetings';
 import { playBouncyBoing, playJellyTap, speakText, stopAllSpeech } from '../utils/soundEngine';
 import { useGameTimeouts } from '../hooks/useGameTimeouts';
+import { usePageVisible } from '../hooks/useToddlerPlay';
+import { PlayHintsPausedContext } from './PlayFlowContext';
 import { emitJuice } from '../utils/juice';
 import type { CharacterId } from '../types';
 import './PlayExperience.css';
@@ -23,18 +25,18 @@ export function CompanionTouch({ id, playing, replayKey, onInteraction, soundEna
   const [reaction, setReaction] = useState<Reaction | null>(null);
   const [reactionKey, setReactionKey] = useState(0);
   const [lean, setLean] = useState(0);
+  const paused = useContext(PlayHintsPausedContext);
+  const visible = usePageVisible();
   const last = useRef(-Infinity);
   const stroke = useRef<{ id: number; x: number } | null>(null);
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
   const greeting = CHARACTER_GREETINGS[id];
   useEffect(() => { clearGameTimeouts(); setReaction(null); setLean(0); stroke.current = null; }, [id, replayKey, clearGameTimeouts]);
   useEffect(() => {
-    const hide = () => { if (document.hidden) { clearGameTimeouts(); setReaction(null); stroke.current = null; stopAllSpeech(); } };
-    document.addEventListener('visibilitychange', hide);
-    return () => document.removeEventListener('visibilitychange', hide);
-  }, [clearGameTimeouts]);
+    if (!visible || paused) { clearGameTimeouts(); setReaction(null); setLean(0); stroke.current = null; stopAllSpeech(); }
+  }, [visible, paused, clearGameTimeouts]);
   const react = (kind: Reaction) => {
-    if (performance.now() - last.current < 700) return;
+    if (!visible || paused || performance.now() - last.current < 700) return;
     last.current = performance.now();
     onInteraction(); clearGameTimeouts(); setReaction(kind); setReactionKey(key => key + 1);
     if (kind === 'tickle') playBouncyBoing(soundEnabled); else playJellyTap(soundEnabled);
@@ -42,10 +44,14 @@ export function CompanionTouch({ id, playing, replayKey, onInteraction, soundEna
     speakText(kind === 'pet' ? PET_LINES[id] : kind === 'tickle' ? `${CHARACTERS[id].name} 배가 간질간질! 헤헤헤!` : '짝! 우리 손이 만났네! 하이파이브!', soundEnabled, { characterId: id, playIntroSFX: false });
     scheduleGameTimeout(() => { setReaction(null); setLean(0); }, 2300);
   };
-  return <div className={`greeting-stage companion-touch greeting-${greeting.move} ${playing ? 'is-playing' : ''}`} style={{ '--greeting-color': greeting.color } as React.CSSProperties}>
+  return <div className={`greeting-stage companion-touch greeting-${greeting.move} ${playing ? 'is-playing' : ''}`} data-still={paused || !visible} style={{ '--greeting-color': greeting.color } as React.CSSProperties}>
     <span className="greeting-scenery" aria-hidden="true" />
     <div className={`companion-body buddy-${reaction || 'idle'} buddy-species-${id}`} style={{ '--pet-lean': `${lean}deg` } as React.CSSProperties}>
-      <div key={`${replayKey}:${reactionKey}`} className="greeting-performer companion-performer" aria-hidden="true"><CharacterAvatar id={id} mood="still" size="2xl" className="greeting-avatar companion-avatar" /></div>
+      <span className="companion-ground" aria-hidden="true" />
+      <div key={`${replayKey}:${reactionKey}`} className="greeting-performer companion-performer" aria-hidden="true"><CharacterAvatar id={id} mood="still"
+        expression={reaction === 'pet' ? 'comfort' : reaction || playing ? 'excited' : 'happy'}
+        view={!reaction && playing && ['ballet', 'kick', 'skate'].includes(greeting.move) ? 'three-quarter' : 'front'}
+        size="2xl" className="greeting-avatar companion-avatar" /></div>
       <button className="buddy-touch-zone buddy-head" aria-label={`${CHARACTERS[id].name} 머리 쓰다듬기`}
         onPointerDown={event => { if (!event.isPrimary || event.button !== 0) return; event.currentTarget.setPointerCapture(event.pointerId); stroke.current = { id: event.pointerId, x: event.clientX }; react('pet'); }}
         onPointerMove={event => { if (stroke.current?.id === event.pointerId) setLean(Math.max(-7, Math.min(7, (event.clientX - stroke.current.x) / 8))); }}

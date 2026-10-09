@@ -1,10 +1,55 @@
 .character-artwork { overflow: visible; filter: drop-shadow(0 1px 1px #76624b18); }
+.character-artwork .friend-head { transform-box: view-box; transform-origin: 50px 61px; }
+.character-artwork[data-variant='portrait'] .friend-fine-detail { display: none; }
 :where(.character-artwork) .friend-rest-eyes { display: none; }
-.character-avatar[data-mood='happy'] .friend-open-eyes { transform-box: fill-box; transform-origin: center; animation: friend-soft-blink 6s infinite; }
-.character-avatar[data-character='jelly'] .friend-open-eyes { animation-delay: 1.1s; }
-.character-avatar[data-character='dochi'] .friend-open-eyes { animation-delay: 2.4s; }
-.character-avatar[data-character='eumme'] .friend-open-eyes { animation-delay: 3.2s; }
+.character-avatar { flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
+.character-avatar:focus-visible { outline: 3px solid #9778b4; outline-offset: 4px; border-radius: 24%; }
+/* Idle motion is opt-in: greetings and the park keep ownership of their own joints. */
+.character-avatar[data-idle='true'] .friend-open-eyes {
+  transform-box: fill-box; transform-origin: center;
+  animation: friend-soft-blink 6.5s var(--friend-delay, 0s) infinite;
+}
+.character-avatar[data-idle='true'] .friend-head {
+  transform-box: view-box; transform-origin: 50px 61px;
+  animation: friend-listen var(--friend-breath, 3.6s) ease-in-out infinite;
+}
+.character-avatar[data-idle='true'] .friend-ear-left,
+.character-avatar[data-idle='true'] .friend-ear-right {
+  transform-box: fill-box; transform-origin: 50% 90%;
+  animation: friend-ear-settle var(--friend-breath, 3.6s) .18s ease-in-out infinite;
+}
+.character-avatar[data-idle='true'] .friend-ear-right { animation-delay: .32s; animation-direction: reverse; }
+.character-avatar[data-character='nurungji'] .friend-ear-left,
+.character-avatar[data-character='nurungji'] .friend-ear-right { transform-origin: 50% 15%; }
+.character-avatar[data-idle='true'] .friend-tail {
+  transform-box: view-box; transform-origin: 73px 79px;
+  animation: friend-tail-settle var(--friend-breath, 3.6s) .18s ease-in-out infinite;
+}
+.character-avatar[data-idle='true'] .friend-accessory {
+  transform-box: fill-box; transform-origin: 50% 10%;
+  animation: friend-cloth-settle var(--friend-breath, 3.6s) .3s ease-in-out infinite;
+}
+.character-avatar[data-idle='true'][data-mood='waving'] .friend-arm-right {
+  transform-box: view-box; transform-origin: 68px 62px;
+  animation: friend-hello 3.2s ease-in-out infinite;
+}
+.character-avatar[data-character='pingu'][data-mood='waving'] .friend-arm-right { transform-origin: 76px 49px; }
+.character-avatar:is([data-character='ggomi'], [data-character='dochi'], [data-character='ggulgguli']) { --friend-wave-lift: -70deg; }
+.character-artwork[data-expression='talking'] .friend-mouth {
+  transform-box: fill-box; transform-origin: 50% 25%;
+  animation: friend-speaking .72s ease-in-out infinite;
+}
+.character-artwork[data-expression='curious'] .friend-head { rotate: -4deg; }
+.character-artwork[data-expression='comfort'] .friend-head { rotate: 3deg; }
+.character-artwork[data-expression='sleepy'] .friend-head { rotate: -3deg; }
+.character-avatar[data-portrait='true'] .friend-head { transform-origin: center; transform-box: fill-box; }
 @keyframes friend-soft-blink { 0%, 44%, 48%, 100% { scale: 1 1; } 46% { scale: 1 .08; } }
+@keyframes friend-listen { 0%,100% { transform: translateY(0) rotate(-.6deg); } 50% { transform: translateY(.35px) rotate(.6deg); } }
+@keyframes friend-ear-settle { 0%,100% { rotate: -1.5deg; } 55% { rotate: 2deg; } }
+@keyframes friend-cloth-settle { 0%,100% { rotate: -1deg; } 55% { rotate: 1.8deg; } }
+@keyframes friend-tail-settle { 0%,100% { rotate: -3deg; } 55% { rotate: 5deg; } }
+@keyframes friend-hello { 0%,60%,100% { transform: rotate(0); } 10%,28% { transform: rotate(calc(var(--friend-wave-lift, 0deg) - 16deg)); } 19%,36% { transform: rotate(calc(var(--friend-wave-lift, 0deg) + 9deg)); } 45% { transform: rotate(var(--friend-wave-lift, 0deg)); } }
+@keyframes friend-speaking { 0%,42%,100% { scale: 1 .6; } 18%,68% { scale: .93 1.13; } 80% { scale: 1 .82; } }
 @media (prefers-reduced-motion: reduce) {
-  .character-avatar .friend-open-eyes { animation: none !important; }
+  .character-artwork *, .character-avatar * { animation: none !important; transition: none !important; }
 }
