@@ -15,11 +15,11 @@
 }
 .home-play-nav-items {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: center;
   justify-items: center;
   gap: 4px;
-  max-width: 640px;
+  max-width: 560px;
   margin: 0 auto;
 }
 .home-play-nav .home-play-nav-button {
@@ -51,8 +51,6 @@
 .home-play-nav-button svg { width: 34px; height: 34px; stroke-width: 2.4; pointer-events: none; }
 .home-play-nav-button.nav-drawing { --nav-color: #f2d9cd; --nav-ink: #a36157; --nav-shadow: #dfb7a7; }
 .home-play-nav-button.nav-bugs { --nav-color: #ede5b9; --nav-ink: #85772e; --nav-shadow: #d3c887; }
-.home-play-nav-button.nav-home { --nav-color: #efbf7e; --nav-ink: #61462b; --nav-shadow: #c6995f; }
-.home-play-nav-button.nav-home svg { fill: #fff4d6; }
 .home-play-nav-button.nav-aquarium { --nav-color: #cce9ea; --nav-ink: #397f86; --nav-shadow: #9ccace; }
 .home-play-nav-button.nav-park { --nav-color: #e5dbf3; --nav-ink: #8460a4; --nav-shadow: #c4afdd; }
 .home-play-nav-button.nav-greeting { --nav-color: #d9e9d9; --nav-ink: #5b8062; --nav-shadow: #b1ceaf; }

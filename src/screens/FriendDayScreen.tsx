@@ -1,5 +1,6 @@
 import { Fragment, lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { ArrowRight, Check, Home, Sun } from 'lucide-react';
+import { ArrowRight, Check, Sun } from 'lucide-react';
+import { CookieHouseIcon } from '../components/CookieHouseIcon';
 import { CHARACTERS } from '../data/characters';
 import { FRIEND_DAY } from '../data/friendDay';
 import { CharacterAvatar } from '../components/CharacterAvatar';
@@ -51,7 +52,7 @@ export function FriendDayScreen({ onCompleteGame, onGoHome, ...props }: Omit<Tod
       {index > 0 && <ArrowRight aria-hidden="true" />}<div aria-current={started && !finished && index === step ? 'step' : undefined} aria-label={`${item.title}${index < step || (index === step && done) ? ' 완료' : ''}`}><GameArtwork gameId={item.gameId} buddy={props.buddy} />{(index < step || (index === step && done)) && <Check className="day-check" />}</div>
     </Fragment>)}</div>
     {!started ? <div className="day-intro"><CharacterAvatar id={props.buddy} size="2xl" mood="waving" /><div className="day-next"><p>우리 같이 아침 먹으러 갈까?</p><button onClick={() => { stopAllSpeech(); setStarted(true); }} aria-label="친구의 하루 아침 먹기 시작"><GameArtwork gameId="feeding" buddy={props.buddy} /><span><ArrowRight /> 냠냠 먹으러!</span></button></div></div>
-    : finished ? <div className="day-finale"><PlayResultScene kind="dance" buddy={props.buddy} friends={[props.buddy]} caption="우리 함께 만든 멋진 하루!" /><p>오늘도 함께 놀아 줘서 고마워!</p><button className="day-home" onClick={onGoHome}><Home /> 다른 놀이 고르기</button></div>
+    : finished ? <div className="day-finale"><PlayResultScene kind="dance" buddy={props.buddy} friends={[props.buddy]} caption="우리 함께 만든 멋진 하루!" /><p>오늘도 함께 놀아 줘서 고마워!</p><button className="day-home" onClick={onGoHome}><CookieHouseIcon className="size-9" /> 다른 놀이 고르기</button></div>
     : <DayContinuationContext.Provider value={{ onNext: next, label: scene.next, picture: step + 1 < FRIEND_DAY.length ? <GameArtwork gameId={FRIEND_DAY[step + 1].gameId} buddy={props.buddy} /> : <Sun /> }}>
       <GameStage gameId={scene.gameId} buddy={props.buddy} soundEnabled={props.soundEnabled}>
         <Suspense fallback={<div className="game-loading"><CharacterAvatar id={props.buddy} mood="waving" /><p>다음 놀이를 꺼내고 있어!</p></div>}>

@@ -304,7 +304,6 @@ export default function App() {
         return (
           <HomeScreen
             step={homeStep}
-            onGoHome={handleGoHome}
             onChangeStep={setHomeStep}
             selectedCharacter={appState.selectedCharacter}
             onSelectCharacter={(id) => setAppState((prev) => ({ ...prev, selectedCharacter: id }))}
@@ -614,7 +613,6 @@ export default function App() {
                   return (
                     <HomeScreen
                       step={homeStep}
-                      onGoHome={handleGoHome}
                       onChangeStep={setHomeStep}
                       selectedCharacter={appState.selectedCharacter}
                       onSelectCharacter={(id) => setAppState((prev) => ({ ...prev, selectedCharacter: id }))}

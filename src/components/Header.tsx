@@ -1,5 +1,6 @@
 import React from 'react';
-import { Home, Music2, Shield, Volume2, VolumeX } from 'lucide-react';
+import { Music2, Shield, Volume2, VolumeX } from 'lucide-react';
+import { CookieHouseIcon } from './CookieHouseIcon';
 import { CHARACTERS } from '../data/characters';
 import type { CharacterId } from '../types';
 
@@ -47,15 +48,16 @@ export const Header: React.FC<HeaderProps> = ({
               : `${childName}의 놀이터`;
 
   return (
-    <header className={`app-header sticky top-0 z-30 w-full${currentScreen === 'home' ? ' app-header-home' : ''}`}>
+    <header className="app-header sticky top-0 z-30 w-full">
       <div className="mx-auto flex min-h-20 w-full max-w-7xl items-center justify-between gap-2 px-3 sm:px-6">
-        {currentScreen !== 'home' && <button
+        <button
+          type="button"
           onClick={onGoHome}
           aria-label="홈으로 가기"
           className="home-button"
         >
-          <Home aria-hidden="true" className="home-button-icon" /><span>우리 집</span>
-        </button>}
+          <CookieHouseIcon className="home-button-icon" />
+        </button>
 
         <span className="header-page-label hidden min-w-0 truncate font-bold sm:block">{pageLabel}</span>
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">

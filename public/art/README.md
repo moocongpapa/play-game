@@ -5,6 +5,7 @@
 - Original PNG was converted to JPEG at quality 84 for use in the app.
 - The image is decorative; essential controls and characters remain available when it fails to load.
 - Game previews and play objects are code-native vector drawings, reusing the repository's `src/sketch/art.ts` templates where possible.
+- `cookie-house.svg` is an original, hand-authored 96 × 96 vector icon with biscuit walls, strawberry icing, mint windows, and a chocolate door. `CookieHouseIcon` shares it across home navigation controls; the enclosing button provides the accessible label.
 
 ## Generation prompt
 

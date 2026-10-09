@@ -25,7 +25,8 @@ import {
 } from '../utils/soundEngine';
 import { fireConfetti, fireStarExplosion, fireCelebrationFireworks, fireBalloonPopParticle } from '../utils/confetti';
 import { AgeGroup, CharacterId } from '../types';
-import { Sparkles, Trophy, Home, RotateCcw, Volume2, Star } from 'lucide-react';
+import { Sparkles, Trophy, RotateCcw, Volume2, Star } from 'lucide-react';
+import { CookieHouseIcon } from '../components/CookieHouseIcon';
 
 interface RainbowStageAdventureProps {
   buddy: CharacterId;
@@ -763,7 +764,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
               size="lg"
               className="w-full"
             >
-              <Home className="w-5 h-5 mr-1.5" /> 홈으로 가기
+              <CookieHouseIcon className="size-9 mr-1.5" /> 홈으로 가기
             </JellyButton>
           </div>
         </motion.div>

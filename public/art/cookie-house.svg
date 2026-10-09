@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none">
+  <defs>
+    <linearGradient id="biscuit" x1="28" y1="39" x2="68" y2="86" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE1A1"/><stop offset="1" stop-color="#D69A58"/>
+    </linearGradient>
+    <linearGradient id="roof" x1="36" y1="12" x2="59" y2="48" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7A9B6"/><stop offset="1" stop-color="#D7788D"/>
+    </linearGradient>
+    <linearGradient id="door" x1="42" y1="62" x2="54" y2="85" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B57A50"/><stop offset="1" stop-color="#895A43"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="48" cy="88" rx="35" ry="5" fill="#A87948" opacity=".15"/>
+  <!-- A chocolate chimney with a soft dollop of icing. -->
+  <path d="M65 28V15h10v23" fill="#B97D57" stroke="#96613F" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M64 15h12" stroke="#FFF7DF" stroke-width="6" stroke-linecap="round"/>
+  <!-- Golden biscuit walls and a lightly toasted rim. -->
+  <path d="M20 43 48 22 76 43v35q0 8-8 8H28q-8 0-8-8Z" fill="url(#biscuit)" stroke="#AE7846" stroke-width="2.5"/>
+  <path d="M25 47v29q0 5 5 5h36" stroke="#FFF0CC" stroke-width="2.5" stroke-linecap="round" opacity=".85"/>
+  <!-- Strawberry-cookie roof, scalloped cream and sugar sprinkles. -->
+  <path d="m12 42 30-28q6-6 12 0l30 28q4 4 0 8l-4 2L48 24 16 52l-4-2q-4-4 0-8Z" fill="url(#roof)" stroke="#B86772" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="m13 44 29-27q6-6 12 0l29 27" stroke="#FFF7E6" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="m20 43 3 4m5-11 3 4m5-11 3 4m18-4 3-4m5 11 3-4m5 11 3-4" stroke="#FFDCCC" stroke-width="3" stroke-linecap="round"/>
+  <path d="M21 45q4 9 9 1 5 8 9 0 5 8 9 0 5 8 9 0 5 8 9 0 5 8 9-1" stroke="#FFF8E9" stroke-width="5" stroke-linecap="round"/>
+  <!-- A peppermint candy in the little attic. -->
+  <circle cx="48" cy="35" r="7" fill="#FFFAEA" stroke="#D98591" stroke-width="1.5"/>
+  <path d="M48 35q-7-4-2-7m2 7q4-7 7-2m-7 2q7 4 2 7m-2-7q-4 7-7 2" stroke="#E895A2" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Mint-candy windows with chunky cream frames. -->
+  <rect x="26" y="55" width="15" height="16" rx="5" fill="#8DC8B4" stroke="#FFF5D9" stroke-width="3"/>
+  <rect x="55" y="55" width="15" height="16" rx="5" fill="#8DC8B4" stroke="#FFF5D9" stroke-width="3"/>
+  <path d="M33.5 55v16M26 63h15m21.5-8v16M55 63h15" stroke="#FFF5D9" stroke-width="2"/>
+  <path d="M30 58h2m28 0h2" stroke="#E6FFED" stroke-width="2" stroke-linecap="round"/>
+  <!-- An arched chocolate door and a small candy heart. -->
+  <path d="M39 86V74a9 9 0 0 1 18 0v12" fill="url(#door)" stroke="#FFF3D6" stroke-width="3"/>
+  <path d="M48 77c-7-4-6-9-2-8l2 2 2-2c4-1 5 4-2 8Z" fill="#F6B1B8"/>
+  <circle cx="53" cy="80" r="1.5" fill="#FFE2A3"/>
+  <path d="M27 76h1m3 3h1m34-3h1m-3 4h1" stroke="#BE854D" stroke-width="2" stroke-linecap="round"/>
+  <!-- Squishy gumdrops by the doorstep. -->
+  <path d="M13 85v-5a6 6 0 0 1 12 0v5Z" fill="#9BCDAD" stroke="#74A78D" stroke-width="2"/>
+  <path d="M71 85v-5a6 6 0 0 1 12 0v5Z" fill="#EBA5B7" stroke="#C9819A" stroke-width="2"/>
+  <path d="M17 78v2m58-2v2" stroke="#FFFAE8" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M13 86h70" stroke="#FFF6DF" stroke-width="3" stroke-linecap="round"/>
+</svg>

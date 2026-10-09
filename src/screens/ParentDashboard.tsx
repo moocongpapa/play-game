@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { AppState, ChildProfile, SpeechLanguage } from '../types';
 import { JellyButton } from '../components/JellyButton';
-import { Shield, Clock, Volume2, Music, Sparkles, Home, RotateCcw, Mic, Calendar, User, CheckCircle2 } from 'lucide-react';
+import { Shield, Clock, Volume2, Music, Sparkles, RotateCcw, Mic, Calendar, User, CheckCircle2 } from 'lucide-react';
+import { CookieHouseIcon } from '../components/CookieHouseIcon';
 import { speakText, stopAllSpeech } from '../utils/soundEngine';
 import { calculateAgeMonths, determineAgeGroup, getAgeGroupLabel, getAgeGroupEmoji, getAgeGroupDescription } from '../utils/ageEngine';
 import { isGeminiTTSEnabled, getCharacterAudioStatus, setGeminiTTSEnabled } from '../services/geminiTTS';
@@ -395,7 +396,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
       </div>
 
       <JellyButton variant="primary" size="lg" onClick={onGoHome} className="w-full">
-        <Home className="w-5 h-5 sm:w-6 sm:h-6 mr-1.5" /> 아이 화면으로 돌아가기
+        <CookieHouseIcon className="size-9 mr-1.5" /> 아이 화면으로 돌아가기
       </JellyButton>
     </div>
   );

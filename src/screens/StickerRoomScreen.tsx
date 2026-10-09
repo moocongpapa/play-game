@@ -4,7 +4,8 @@ import { STICKER_LIST } from '../data/gameData';
 import type { CharacterId } from '../types';
 import { CharacterAvatar } from '../components/CharacterAvatar';
 import { playStarGain, speakText, playBubblePop } from '../utils/soundEngine';
-import { Trash2, Sparkles, Home, Move } from 'lucide-react';
+import { Trash2, Sparkles, Move } from 'lucide-react';
+import { CookieHouseIcon } from '../components/CookieHouseIcon';
 
 interface StickerRoomScreenProps {
   buddy: CharacterId;
@@ -207,7 +208,7 @@ export const StickerRoomScreen: React.FC<StickerRoomScreenProps> = ({
       </div>
 
       <button onClick={onGoHome} className="inline-flex min-h-12 items-center justify-center gap-2 self-center rounded-xl px-5 font-bold text-[#4d5562] hover:bg-[#ecece9]">
-        <Home className="size-5" /> 다른 놀이 보기
+        <CookieHouseIcon className="size-9" /> 다른 놀이 보기
       </button>
     </div>
   );

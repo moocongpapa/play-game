@@ -1,5 +1,6 @@
 import React, { ErrorInfo, ReactNode } from 'react';
-import { Home, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
+import { CookieHouseIcon } from './CookieHouseIcon';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -68,7 +69,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
               }}
               className="flex-1 py-3 px-4 bg-white hover:bg-slate-50 text-[#4A3E3D] font-black text-sm rounded-2xl border-2 border-slate-200 shadow-sm flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
             >
-              <Home className="w-4 h-4 text-slate-600" /> 첫 화면으로
+              <CookieHouseIcon className="size-8" /> 첫 화면으로
             </button>
           </div>
         </div>

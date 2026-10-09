@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeftRight, ArrowRight, Bug, Fish, Hand, Heart, Home, Palette, PawPrint, Play } from 'lucide-react';
+import { ArrowLeftRight, ArrowRight, Bug, Fish, Hand, Heart, Palette, PawPrint, Play } from 'lucide-react';
 import { CHARACTER_LIST, CHARACTERS } from '../data/characters';
 import { CharacterAvatar } from '../components/CharacterAvatar';
 import { CharacterCharmVideoModal } from '../components/CharacterCharmVideoModal';
@@ -17,7 +17,6 @@ interface HomeScreenProps {
   onSelectCharacter: (id: CharacterId) => void;
   onStartGame: (gameId: GameId, characterId: CharacterId) => void;
   onStartDay: () => void;
-  onGoHome: () => void;
   onOpenDrawing: () => void;
   onOpenStickerRoom: () => void;
   onOpenAquarium: () => void;
@@ -29,7 +28,7 @@ interface HomeScreenProps {
   onChangeStep: (step: HomeStep) => void;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSelectCharacter, onStartGame, onStartDay, onGoHome, onOpenDrawing, onOpenStickerRoom, onOpenAquarium, onOpenCharacterPark, onOpenCharacterTalk, soundEnabled, childProfile, step, onChangeStep }) => {
+export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSelectCharacter, onStartGame, onStartDay, onOpenDrawing, onOpenStickerRoom, onOpenAquarium, onOpenCharacterPark, onOpenCharacterTalk, soundEnabled, childProfile, step, onChangeStep }) => {
   const buddy = CHARACTERS[selectedCharacter] || CHARACTERS.ggomi;
   const childName = childProfile?.name || '유하';
   const age = childProfile?.ageGroup || 'sprout';
@@ -138,7 +137,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
         {[
           { label: '색칠 놀이', theme: 'drawing', Icon: Palette, open: onOpenDrawing },
           { label: '곤충 놀이', theme: 'bugs', Icon: Bug, open: onOpenStickerRoom },
-          { label: '홈으로 가기', theme: 'home', Icon: Home, open: onGoHome },
           { label: '수족관 놀이', theme: 'aquarium', Icon: Fish, open: onOpenAquarium },
           { label: '친구 놀이터', theme: 'park', Icon: PawPrint, open: onOpenCharacterPark },
           { label: '친구와 인사', theme: 'greeting', Icon: Hand, open: onOpenCharacterTalk },
@@ -147,7 +145,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
           type="button"
           className={`home-play-nav-button nav-${theme}`}
           aria-label={label}
-          aria-current={theme === 'home' ? 'page' : undefined}
           onClick={() => { stopAllSpeech(); playJellyTap(soundEnabled); open(); }}
         ><span className="home-play-nav-icon" aria-hidden="true"><Icon /></span></button>)}
       </div>

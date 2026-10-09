@@ -9,9 +9,12 @@ h1:focus { outline: none; }
 .app-world { background: radial-gradient(ellipse at 100% 28%, #f0e9dc80, transparent 45%), #faf7ef; }
 .app-header { background: #fffdf6f5; border-bottom: 1px solid #e7dece; padding-top: env(safe-area-inset-top); padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
 .app-main { padding-bottom: max(32px, env(safe-area-inset-bottom)); }
-.home-button { display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; width: 70px; min-height: 68px; margin: 6px 0 10px; border: 3px solid #fffaf0; border-radius: 22px; background: #e6ae65; box-shadow: 0 5px 0 #b98447, 0 6px 12px #94704420; color: #493b2e; font-size: 11px; font-weight: 900; transition: transform .15s; }
-.home-button:active { transform: translateY(4px); box-shadow: 0 1px 0 #b98447; }
-.home-button-icon { width: 34px; height: 34px; stroke-width: 2.5; fill: #fff4d6; }
+.home-button { display: grid; place-items: center; flex-shrink: 0; width: 72px; height: 72px; margin: 4px 0 8px; padding: 2px; border: 3px solid #fff9e9; border-radius: 24px; background: radial-gradient(circle at 45% 30%, #fffef5 35%, #f4e3c4); box-shadow: inset 0 2px 0 #fff, 0 4px 0 #d8ba88, 0 7px 12px #9e784f1a; transition: transform .15s, box-shadow .15s; }
+.home-button:active { transform: translateY(3px); box-shadow: inset 0 1px 0 #fff, 0 1px 0 #d8ba88; }
+.cookie-house-icon { display: inline-block; flex-shrink: 0; object-fit: contain; pointer-events: none; }
+.home-button-icon { width: 62px; height: 62px; filter: drop-shadow(0 2px 0 #ad75441a); transition: transform .2s; }
+@media (hover: hover) { .home-button:hover .home-button-icon { transform: rotate(-6deg) translateY(-1px); } }
+@media (prefers-reduced-motion: reduce) { .home-button, .home-button-icon { transition: none; }.home-button:hover .home-button-icon { transform: none; } }
 .header-page-label { color: #736759; }
 .storybook-home { max-width: 1000px; margin: auto; }
 .eyebrow { display: flex; align-items: center; gap: 8px; color: #65776d; font-size: 12px; font-weight: 800; letter-spacing: .04em; margin: 0 0 12px; }
