@@ -1,0 +1,356 @@
+/* Spectacular 5-Second Motion Graphic Splash Screen */
+
+.splash-motion-container {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: radial-gradient(circle at 50% 25%, #fffdf4 0%, #fef3dc 45%, #eaf4e5 100%);
+  overflow: hidden;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* Background animated elements */
+.splash-bg-decor {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.splash-sun-glow {
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 460px;
+  height: 460px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 235, 150, 0.6) 0%, rgba(255, 214, 102, 0.25) 50%, transparent 75%);
+  filter: blur(20px);
+  animation: splash-pulse-glow 4s ease-in-out infinite alternate;
+}
+
+.splash-rainbow-arc {
+  position: absolute;
+  top: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(900px, 140vw);
+  height: 220px;
+  border-radius: 50% 50% 0 0;
+  border: 14px solid transparent;
+  border-top-color: rgba(255, 140, 160, 0.45);
+  box-shadow: 
+    0 -12px 0 0 rgba(255, 195, 110, 0.4),
+    0 -24px 0 0 rgba(255, 240, 120, 0.4),
+    0 -36px 0 0 rgba(160, 230, 170, 0.35),
+    0 -48px 0 0 rgba(140, 205, 255, 0.3);
+  filter: blur(2px);
+  opacity: 0.85;
+}
+
+.splash-cloud-float {
+  position: absolute;
+  background: #ffffff;
+  border-radius: 9999px;
+  filter: drop-shadow(0 8px 16px rgba(120, 100, 60, 0.08));
+  opacity: 0.9;
+}
+
+.splash-cloud-1 {
+  width: 140px;
+  height: 46px;
+  top: 12%;
+  left: -20px;
+  animation: splash-cloud-drift-1 18s linear infinite;
+}
+
+.splash-cloud-2 {
+  width: 180px;
+  height: 54px;
+  top: 18%;
+  right: -30px;
+  animation: splash-cloud-drift-2 22s linear infinite;
+}
+
+/* Header & Skip button */
+.splash-top-bar {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 960px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 8px;
+}
+
+.splash-badge-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  border: 2px solid #ffffff;
+  border-radius: 9999px;
+  font-size: clamp(13px, 2.5vw, 15px);
+  font-weight: 900;
+  color: #647552;
+  box-shadow: 0 4px 12px rgba(100, 120, 70, 0.1);
+}
+
+.splash-skip-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid #ffe2a8;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 900;
+  color: #8c6e3b;
+  box-shadow: 0 4px 10px rgba(140, 110, 60, 0.1);
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.splash-skip-button:active {
+  transform: scale(0.94);
+  background: #fff8e8;
+}
+
+/* Center stage */
+.splash-stage {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 860px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: clamp(12px, 3vh, 26px);
+  margin: 10px 0;
+}
+
+.splash-main-heading {
+  text-align: center;
+}
+
+.splash-welcome-title {
+  font-size: clamp(26px, 6vw, 44px);
+  font-weight: 950;
+  color: #3b503e;
+  letter-spacing: -0.04em;
+  margin: 0;
+  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.8);
+}
+
+.splash-welcome-sub {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 6px 18px;
+  background: linear-gradient(135deg, rgba(255, 235, 180, 0.9), rgba(255, 215, 170, 0.9));
+  border-radius: 9999px;
+  border: 2px solid #ffffff;
+  font-size: clamp(13px, 3vw, 17px);
+  font-weight: 900;
+  color: #7a542b;
+  box-shadow: 0 3px 10px rgba(180, 120, 50, 0.15);
+}
+
+/* Character Friends Showcase (8 Friends) */
+.splash-friends-roster {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(8px, 2.2vw, 20px);
+  padding: 8px clamp(4px, 2vw, 16px);
+  max-width: 760px;
+}
+
+.splash-friend-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.splash-friend-bubble {
+  position: relative;
+  width: clamp(66px, 16vw, 108px);
+  height: clamp(66px, 16vw, 108px);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffffff 0%, var(--friend-bg, #fff5e8) 75%);
+  border: 3.5px solid #ffffff;
+  box-shadow: 0 8px 22px rgba(90, 80, 60, 0.14), inset 0 2px 4px rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.splash-friend-avatar-wrap {
+  width: 90% !important;
+  height: 90% !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.splash-friend-avatar-wrap svg {
+  width: 100%;
+  height: 100%;
+}
+
+.splash-friend-emoji-tag {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: clamp(24px, 5vw, 32px);
+  height: clamp(24px, 5vw, 32px);
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid var(--friend-color, #ffaa44);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(12px, 2.6vw, 16px);
+}
+
+.splash-friend-name-pill {
+  margin-top: 6px;
+  padding: 3px 10px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 9999px;
+  border: 1.5px solid #ffffff;
+  font-size: clamp(11px, 2.2vw, 13px);
+  font-weight: 900;
+  color: #4a453f;
+  box-shadow: 0 2px 6px rgba(80, 70, 50, 0.08);
+  white-space: nowrap;
+}
+
+/* Bottom Progress Track */
+.splash-bottom-bar {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.splash-progress-container {
+  position: relative;
+  width: 100%;
+  height: 18px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 3px solid #ffffff;
+  border-radius: 9999px;
+  box-shadow: 0 4px 14px rgba(120, 100, 60, 0.12), inset 0 2px 3px rgba(0, 0, 0, 0.06);
+  overflow: visible;
+}
+
+.splash-progress-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #ff8fa3 0%, #ffc46b 35%, #8de498 70%, #6ecbff 100%);
+  box-shadow: 0 0 10px rgba(255, 190, 80, 0.4);
+  transition: width 0.08s linear;
+}
+
+.splash-progress-runner {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #ffaa44;
+  box-shadow: 0 3px 8px rgba(220, 120, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: left 0.08s linear;
+  animation: splash-runner-bounce 0.6s infinite alternate ease-in-out;
+}
+
+.splash-progress-hint {
+  font-size: clamp(12px, 2.4vw, 14px);
+  font-weight: 850;
+  color: #657754;
+  margin: 0;
+}
+
+/* Floating touch sparkles */
+.splash-floating-tap {
+  position: absolute;
+  pointer-events: none;
+  font-size: 32px;
+  z-index: 100;
+  animation: splash-tap-rise 0.9s ease-out forwards;
+}
+
+/* Keyframes */
+@keyframes splash-pulse-glow {
+  0% { transform: translateX(-50%) scale(0.95); opacity: 0.6; }
+  100% { transform: translateX(-50%) scale(1.1); opacity: 0.85; }
+}
+
+@keyframes splash-cloud-drift-1 {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(60px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes splash-cloud-drift-2 {
+  0% { transform: translateX(0); }
+  50% { transform: translateX(-70px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes splash-runner-bounce {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  100% { transform: translate(-50%, -65%) scale(1.12); }
+}
+
+@keyframes splash-tap-rise {
+  0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+  100% { transform: translate(-50%, -120px) scale(1.4); opacity: 0; }
+}
+
+/* Responsive adjustment for small screens */
+@media (max-width: 480px) {
+  .splash-friends-roster {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .splash-friend-bubble {
+    width: 68px;
+    height: 68px;
+    border-width: 2.5px;
+  }
+  .splash-friend-name-pill {
+    font-size: 10.5px;
+    padding: 2px 7px;
+  }
+}

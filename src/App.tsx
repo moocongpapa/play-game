@@ -685,6 +685,7 @@ export default function App() {
         <SplashLoader
           onFinish={finishSplash}
           childName={childName}
+          soundEnabled={soundEnabled}
         />
       )}
 
