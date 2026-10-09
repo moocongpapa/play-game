@@ -47,7 +47,7 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
     scenes: [
       {
         timeStart: 0,
-        timeEnd: 2.5,
+        timeEnd: 8.0,
         title: '장면 1: 반가운 첫인사 (00s-08s)',
         subtitle: '안녕 유하야! 나는 핑구야!',
         voiceText: '안녕 유하야! 나는 핑구야!',
@@ -59,8 +59,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Pingu waddles excitedly out of an igloo onto sparkling soft snow, trips slightly, catches balance, and waves both wings happily toward the camera with a cheerful smile.',
       },
       {
-        timeStart: 2.5,
-        timeEnd: 5.0,
+        timeStart: 8.0,
+        timeEnd: 16.0,
         title: '장면 2: 슈웅~ 눈 미끄럼틀 (08s-16s)',
         subtitle: '슈웅~ 눈 미끄럼틀 정말 신난다!',
         voiceText: '슈웅~ 눈 미끄럼틀 정말 신난다!',
@@ -72,8 +72,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Pingu spots a gentle baby ice slide, belly-slides down smoothly with sparkles trailing behind, giggling as it splashes softly into a pile of fluffy snow.',
       },
       {
-        timeStart: 5.0,
-        timeEnd: 7.5,
+        timeStart: 16.0,
+        timeEnd: 24.0,
         title: '장면 3: 나와 닮은 미니 눈사람 (16s-24s)',
         subtitle: '짜잔, 나와 닮은 눈사람도 만들었어!',
         voiceText: '짜잔, 나와 닮은 눈사람도 만들었어!',
@@ -85,8 +85,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Pingu rolls a tiny snowball that grows into a cute mini snowman, placing a mint flower on its head and clapping wings with pride.',
       },
       {
-        timeStart: 7.5,
-        timeEnd: 10.0,
+        timeStart: 24.0,
+        timeEnd: 30.0,
         title: '장면 4: 사랑의 얼음 하트 (24s-30s)',
         subtitle: '유하야, 오늘도 나랑 신나게 놀자! 사랑해~',
         voiceText: '유하야, 오늘도 나랑 신나게 놀자! 사랑해~',
@@ -115,7 +115,7 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
     scenes: [
       {
         timeStart: 0,
-        timeEnd: 2.5,
+        timeEnd: 8.0,
         title: '장면 1: 까꿍 놀이와 반가운 인사 (00s-08s)',
         subtitle: '까꿍! 유하야 안녕?',
         voiceText: '까꿍! 유하야 안녕?',
@@ -127,8 +127,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Ggomi peeks out from behind a giant fluffy pink pillow in a cozy nursery room, giggling softly and waving with both padded paws.',
       },
       {
-        timeStart: 2.5,
-        timeEnd: 5.0,
+        timeStart: 8.0,
+        timeEnd: 16.0,
         title: '장면 2: 달콤한 딸기 컵케이크 (08s-16s)',
         subtitle: '꼬미가 유하 주려고 달콤한 딸기 케이크를 만들었어!',
         voiceText: '꼬미가 유하 주려고 달콤한 딸기 케이크를 만들었어!',
@@ -140,8 +140,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Ggomi sits at a small wooden table, carefully placing a bright red strawberry on top of a whipped cream cupcake, licking its lips cutely.',
       },
       {
-        timeStart: 5.0,
-        timeEnd: 7.5,
+        timeStart: 16.0,
+        timeEnd: 24.0,
         title: '장면 3: 냠냠 맛있는 댄스 (16s-24s)',
         subtitle: '냠냠 맛있겠지? 유하 생각만 해도 꼬미는 매일매일 행복해.',
         voiceText: '냠냠 맛있겠지? 유하 생각만 해도 꼬미는 매일매일 행복해.',
@@ -153,8 +153,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Holding the cupcake, Ggomi does a gentle side-to-side wiggle dance, surrounded by floating pink sparkles and musical notes.',
       },
       {
-        timeStart: 7.5,
-        timeEnd: 10.0,
+        timeStart: 24.0,
+        timeEnd: 30.0,
         title: '장면 4: 사랑 나눔과 포근한 포옹 (24s-30s)',
         subtitle: '포근포근 꼭 안아줄게! 사랑해~',
         voiceText: '포근포근 꼭 안아줄게!',
@@ -184,7 +184,7 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
     scenes: [
       {
         timeStart: 0,
-        timeEnd: 2.5,
+        timeEnd: 8.0,
         title: '장면 1: 씩씩한 포효와 등장 (00s-08s)',
         subtitle: '크와앙! 씩씩한 아기공룡 라노 등장!',
         voiceText: '크와앙! 씩씩한 아기공룡 라노 등장!',
@@ -196,8 +196,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Rano pops out from behind a giant leafy fern, stomps its chubby feet playfully, and lets out a tiny, adorable "Roar!" before giggling.',
       },
       {
-        timeStart: 2.5,
-        timeEnd: 5.0,
+        timeStart: 8.0,
+        timeEnd: 16.0,
         title: '장면 2: 쿵쿵 발구르기 (08s-16s)',
         subtitle: '쿵쿵 발을 구르면 기분이 최고야!',
         voiceText: '쿵쿵 발을 구르면 기분이 최고야!',
@@ -209,8 +209,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Rano hops through colorful prehistoric flower bushes and discovers a glowing rainbow-spotted dinosaur egg wobbling on a mossy stone.',
       },
       {
-        timeStart: 5.0,
-        timeEnd: 7.5,
+        timeStart: 16.0,
+        timeEnd: 24.0,
         title: '장면 3: 무지개 알과 방울 퐁퐁 (16s-24s)',
         subtitle: '와, 무지개 알에서 알록달록 방울이 퐁퐁 튀어나오네!',
         voiceText: '와, 무지개 알에서 알록달록 방울이 퐁퐁 튀어나오네!',
@@ -222,8 +222,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'The egg gently cracks open and pops out a bunch of flying soap bubbles! Rano jumps in the air, popping bubbles with its little snout and tail.',
       },
       {
-        timeStart: 7.5,
-        timeEnd: 10.0,
+        timeStart: 24.0,
+        timeEnd: 30.0,
         title: '장면 4: 힘찬 하이파이브 (24s-30s)',
         subtitle: '유하야, 나랑 힘차게 하이파이브!',
         voiceText: '유하야, 나랑 힘차게 하이파이브!',
@@ -253,7 +253,7 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
     scenes: [
       {
         timeStart: 0,
-        timeEnd: 2.5,
+        timeEnd: 8.0,
         title: '장면 1: 깡충깡충 반가운 등장 (00s-08s)',
         subtitle: '깡충깡충! 안녕 유하야, 젤리야!',
         voiceText: '깡충깡충! 안녕 유하야, 젤리야!',
@@ -265,8 +265,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Jelly bounces rhythmically into a sunny vegetable garden, long ears flopping happily, stopping to twitch its pink nose at the camera.',
       },
       {
-        timeStart: 2.5,
-        timeEnd: 5.0,
+        timeStart: 8.0,
+        timeEnd: 16.0,
         title: '장면 2: 커다란 당근 뽑기 (08s-16s)',
         subtitle: '영차영차~ 커다란 당근 뽑기 성공!',
         voiceText: '영차영차~ 커다란 당근 뽑기 성공!',
@@ -278,8 +278,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Jelly tries to pull a huge cartoon carrot from the ground; with a big tug, it plops backward softly onto a bed of clover leaves, laughing cheerfully.',
       },
       {
-        timeStart: 5.0,
-        timeEnd: 7.5,
+        timeStart: 16.0,
+        timeEnd: 24.0,
         title: '장면 3: 나비 친구와 에취! (16s-24s)',
         subtitle: '어라? 나비 친구가 코를 간지럽히네? 에취!',
         voiceText: '어라? 나비 친구가 코를 간지럽히네? 에취!',
@@ -291,8 +291,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'A sparkling yellow butterfly lands gently on Jelly\'s nose. Jelly giggles, sneezes softly, and spins around playing tag with the butterfly.',
       },
       {
-        timeStart: 7.5,
-        timeEnd: 10.0,
+        timeStart: 24.0,
+        timeEnd: 30.0,
         title: '장면 4: 토끼 귀 하트 뿅뿅 (24s-30s)',
         subtitle: '유하야, 젤리 귀로 하트 만들어줄게. 뿅뿅!',
         voiceText: '유하야, 젤리 귀로 하트 만들어줄게. 뿅뿅!',
@@ -322,7 +322,7 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
     scenes: [
       {
         timeStart: 0,
-        timeEnd: 2.5,
+        timeEnd: 8.0,
         title: '장면 1: 또르르 굴러서 짠! (00s-08s)',
         subtitle: '또르르르~ 짠! 호기심 대장 도치 등장!',
         voiceText: '또르르르~ 짠! 호기심 대장 도치 등장!',
@@ -334,8 +334,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'A round prickly ball rolls in through autumn leaves, unfurls, and reveals Dochi’s adorable face blinking curiously at the viewer.',
       },
       {
-        timeStart: 2.5,
-        timeEnd: 5.0,
+        timeStart: 8.0,
+        timeEnd: 16.0,
         title: '장면 2: 황금 도토리 발견 (08s-16s)',
         subtitle: '킁킁, 숲속에서 반짝이는 황금 도토리를 찾았어!',
         voiceText: '킁킁, 숲속에서 반짝이는 황금 도토리를 찾았어!',
@@ -347,8 +347,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Dochi sniffs the ground and finds a giant shiny golden acorn. It polishes the acorn with its little tummy until it gleams.',
       },
       {
-        timeStart: 5.0,
-        timeEnd: 7.5,
+        timeStart: 16.0,
+        timeEnd: 24.0,
         title: '장면 3: 예쁜 단풍잎 왕관 (16s-24s)',
         subtitle: '예쁜 단풍잎 왕관도 썼지롱!',
         voiceText: '예쁜 단풍잎 왕관도 썼지롱!',
@@ -360,8 +360,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Leaves fall gently; Dochi sticks three colorful maple leaves onto its back spines like a festive crown and wiggles with joy.',
       },
       {
-        timeStart: 7.5,
-        timeEnd: 10.0,
+        timeStart: 24.0,
+        timeEnd: 30.0,
         title: '장면 4: 신나는 보물 찾기 (24s-30s)',
         subtitle: '유하야, 나랑 재미있는 보물 찾으러 가볼까?',
         voiceText: '유하야, 나랑 재미있는 보물 찾으러 가볼까?',
@@ -391,7 +391,7 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
     scenes: [
       {
         timeStart: 0,
-        timeEnd: 2.5,
+        timeEnd: 8.0,
         title: '장면 1: 귀여운 코 씰룩 인사 (00s-08s)',
         subtitle: '꿀꿀! 유하야 안녕? 난 맛있는 걸 제일 좋아하는 꿀꿀이야!',
         voiceText: '꿀꿀! 유하야 안녕? 난 맛있는 걸 제일 좋아하는 꿀꿀이야!',
@@ -403,8 +403,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Ggulgguli wiggles its round snout directly in front of the lens with funny sound effects, then steps back dancing on its hind hooves.',
       },
       {
-        timeStart: 2.5,
-        timeEnd: 5.0,
+        timeStart: 8.0,
+        timeEnd: 16.0,
         title: '장면 2: 맛있는 딸기 파티 (08s-16s)',
         subtitle: '딸기 세 개를 냠냠~',
         voiceText: '딸기 세 개를 냠냠~',
@@ -416,8 +416,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Ggulgguli spots a bowl of giant juicy strawberries, juggles three of them cutely, and munches happily with puffed cheeks.',
       },
       {
-        timeStart: 5.0,
-        timeEnd: 7.5,
+        timeStart: 16.0,
+        timeEnd: 24.0,
         title: '장면 3: 보글보글 거품 목욕 (16s-24s)',
         subtitle: '보글보글 거품 목욕도 정말 시원해!',
         voiceText: '보글보글 거품 목욕도 정말 시원해!',
@@ -429,8 +429,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Ggulgguli jumps playfully into a shallow warm bubble pool, splashing pink bubbles everywhere and wearing a bubble hat.',
       },
       {
-        timeStart: 7.5,
-        timeEnd: 10.0,
+        timeStart: 24.0,
+        timeEnd: 30.0,
         title: '장면 4: 꼬리 프로펠러 댄스 (24s-30s)',
         subtitle: '내 꼬리 뱅글뱅글 돌아가는 것 좀 봐! 헤헤~',
         voiceText: '내 꼬리 뱅글뱅글 돌아가는 것 좀 봐! 헤헤~',
@@ -460,7 +460,7 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
     scenes: [
       {
         timeStart: 0,
-        timeEnd: 2.5,
+        timeEnd: 8.0,
         title: '장면 1: 포근한 구름 인사 (00s-08s)',
         subtitle: '음메~ 포근한 아기양 음메예요.',
         voiceText: '음메~ 포근한 아기양 음메예요.',
@@ -472,8 +472,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Eumme floats gently into the lavender pastel sky sitting atop a fluffy pink cotton-candy cloud, humming a soft tune.',
       },
       {
-        timeStart: 2.5,
-        timeEnd: 5.0,
+        timeStart: 8.0,
+        timeEnd: 16.0,
         title: '장면 2: 반짝이는 별 잡기 (08s-16s)',
         subtitle: '둥실둥실 구름 침대에 누워 반짝이는 별을 잡았어요.',
         voiceText: '둥실둥실 구름 침대에 누워 반짝이는 별을 잡았어요.',
@@ -485,8 +485,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Eumme reaches out a tiny hoof and catches a falling yellow star, which glows softly and chimes like a music box.',
       },
       {
-        timeStart: 5.0,
-        timeEnd: 7.5,
+        timeStart: 16.0,
+        timeEnd: 24.0,
         title: '장면 3: 폭신폭신 구름 베개 (16s-24s)',
         subtitle: '우리 유하 마음도 구름처럼 폭신폭신해지길 바랄게요.',
         voiceText: '우리 유하 마음도 구름처럼 폭신폭신해지길 바랄게요.',
@@ -498,8 +498,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Eumme fluffs up a mini cloud like a marshmallow pillow, rests its head, and yawns cutely as tiny crescent moons float by.',
       },
       {
-        timeStart: 7.5,
-        timeEnd: 10.0,
+        timeStart: 24.0,
+        timeEnd: 30.0,
         title: '장면 4: 달콤한 꿈나라 (24s-30s)',
         subtitle: '좋은 꿈 꿔요~',
         voiceText: '좋은 꿈 꿔요~',
@@ -529,7 +529,7 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
     scenes: [
       {
         timeStart: 0,
-        timeEnd: 2.5,
+        timeEnd: 8.0,
         title: '장면 1: 꼬리 살랑 신나는 등장 (00s-08s)',
         subtitle: '멍멍! 꼬리 살랑살랑 누룽지야!',
         voiceText: '멍멍! 꼬리 살랑살랑 누룽지야!',
@@ -541,8 +541,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Nurungji trots happily across a green meadow holding a red squeaky ball in its mouth, stopping to tilt its head with perked ears.',
       },
       {
-        timeStart: 2.5,
-        timeEnd: 5.0,
+        timeStart: 8.0,
+        timeEnd: 16.0,
         title: '장면 2: 신나는 공놀이 (08s-16s)',
         subtitle: '유하야, 공놀이 정말 신난다!',
         voiceText: '유하야, 공놀이 정말 신난다!',
@@ -554,8 +554,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Nurungji tosses the ball with its nose, chases it in circles, and rolls over onto its back asking for tummy rubs.',
       },
       {
-        timeStart: 5.0,
-        timeEnd: 7.5,
+        timeStart: 16.0,
+        timeEnd: 24.0,
         title: '장면 3: 모래밭 별 보물 (16s-24s)',
         subtitle: '모래밭에서 반짝이는 별도 찾았어!',
         voiceText: '모래밭에서 반짝이는 별도 찾았어!',
@@ -567,8 +567,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
           'Nurungji digs energetically in a sandbox, pulling out a sparkling toy star and doing an excited tail-spin dance.',
       },
       {
-        timeStart: 7.5,
-        timeEnd: 10.0,
+        timeStart: 24.0,
+        timeEnd: 30.0,
         title: '장면 4: 사랑의 뽀뽀와 약속 (24s-30s)',
         subtitle: '유하가 너무 좋아서 뽀뽀 츄~ 해줄래! 언제나 유하 곁에 있을게!',
         voiceText: '유하가 너무 좋아서 뽀뽀 츄~ 해줄래! 언제나 유하 곁에 있을게!',
