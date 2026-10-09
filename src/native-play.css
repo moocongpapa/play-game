@@ -7,13 +7,7 @@ body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none
 .app-main { flex: 1 1 0%; min-height: 0; max-width: none; margin: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: none; touch-action: pan-y; scrollbar-width: none; scroll-behavior: auto; padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); padding-bottom: max(24px, env(safe-area-inset-bottom)); }
 .app-main::-webkit-scrollbar { display: none; }
 .app-world:is([data-screen='stickers'],[data-screen='aquarium'],[data-screen='park']) .app-main { padding: 8px max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left)); overflow: hidden; touch-action: none; }
-.habitat-shortcuts { display: flex; gap: 4px; }
-.habitat-shortcuts button { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 1px; width: 52px; min-height: 64px; border-radius: 18px; border: 2px solid #f9fced; background: #e8f0dc; color: #66835c; font-size: 10px; font-weight: 850; box-shadow: inset 0 2px 0 #ffffffaa,0 2px 0 #cdd6bb; }
-.habitat-shortcuts button + button { background: #d9eff0; color: #588b91; border-color: #effbfa; box-shadow: inset 0 2px 0 #ffffffaa,0 2px 0 #bbd5d7; }
-.habitat-shortcuts svg { width: 27px; height: 27px; }
-.habitat-shortcuts button[aria-current='page'] { outline: 2px solid currentColor; outline-offset: -4px; }
-@media (min-width: 700px) { .habitat-shortcuts button { width: 64px; } }
-@media (max-width: 359px) { .app-header > div { padding-inline: 6px; gap: 4px; }.app-header .home-button { width: 60px; }.habitat-shortcuts button { width: 45px; } }
+@media (max-width: 359px) { .app-header > div { padding-inline: 6px; gap: 4px; }.app-header .home-button { width: 60px; } }
 [data-scroll-region], .overflow-y-auto { touch-action: pan-y; overscroll-behavior: none; }
 .overflow-x-auto { touch-action: pan-x; overscroll-behavior: none; }
 input, textarea, select, [contenteditable="true"] { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; touch-action: manipulation; }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bug, Fish, Home, Music2, Shield, Volume2, VolumeX } from 'lucide-react';
+import { Home, Music2, Shield, Volume2, VolumeX } from 'lucide-react';
 import { CHARACTERS } from '../data/characters';
 import type { CharacterId } from '../types';
 
@@ -13,8 +13,6 @@ interface HeaderProps {
   onToggleBGM: () => void;
   onToggleSound: () => void;
   onOpenParentGate: () => void;
-  onOpenStickerRoom: () => void;
-  onOpenAquarium: () => void;
   onGoHome: () => void;
   currentScreen: Screen;
   childName: string;
@@ -28,8 +26,6 @@ export const Header: React.FC<HeaderProps> = ({
   onToggleBGM,
   onToggleSound,
   onOpenParentGate,
-  onOpenStickerRoom,
-  onOpenAquarium,
   onGoHome,
   currentScreen,
   childName,
@@ -63,11 +59,6 @@ export const Header: React.FC<HeaderProps> = ({
 
         <span className="header-page-label hidden min-w-0 truncate font-bold sm:block">{pageLabel}</span>
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-          <div className="habitat-shortcuts">
-            <button onClick={onOpenStickerRoom} aria-label="곤충 놀이터 열기" aria-current={currentScreen === 'stickers' ? 'page' : undefined}><Bug aria-hidden="true" /><span>곤충</span></button>
-            <button onClick={onOpenAquarium} aria-label="수족관 열기" aria-current={currentScreen === 'aquarium' ? 'page' : undefined}><Fish aria-hidden="true" /><span>수족관</span></button>
-          </div>
-
           <button
             onClick={onToggleBGM}
             aria-label={bgmEnabled ? '배경음악 끄기' : '배경음악 켜기'}

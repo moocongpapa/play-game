@@ -653,8 +653,6 @@ export default function App() {
         }
         onToggleSound={handleToggleSound}
         onOpenParentGate={() => setIsParentGateOpen(true)}
-        onOpenStickerRoom={() => setCurrentScreen('stickers')}
-        onOpenAquarium={() => setCurrentScreen('aquarium')}
         onGoHome={handleGoHome}
         currentScreen={currentScreen}
         childName={childName}

@@ -1,3 +1,75 @@
+.storybook-home { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+
+/* Fixed to the viewport; the content above reserves room for the whole dock. */
+.home-play-nav {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 35;
+  padding: 8px max(8px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
+  border-top: 1px solid #e7dece;
+  border-radius: 26px 26px 0 0;
+  background: #fffdf5f5;
+  box-shadow: 0 -6px 24px #786c5414, inset 0 2px 0 #ffffff;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.home-play-nav-items {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: center;
+  justify-items: center;
+  gap: 4px;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.home-play-nav .home-play-nav-button {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  max-width: 88px;
+  min-height: 68px;
+  padding: 4px;
+  border: 0;
+  border-radius: 24px;
+  background: transparent;
+  touch-action: manipulation;
+  transition: transform .15s ease;
+}
+/* The full button remains a large touch target; the inset tile leaves visual
+   space between all five icons even on a 320px screen. */
+.home-play-nav-icon {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 60px;
+  border: 2px solid #ffffffb3;
+  border-radius: 22px;
+  color: var(--nav-ink);
+  background: linear-gradient(160deg, #ffffff70, transparent 65%), var(--nav-color);
+  box-shadow: inset 0 2px 0 #ffffffb3, inset 0 -3px 0 #695d4310, 0 3px 0 var(--nav-shadow);
+  pointer-events: none;
+}
+.home-play-nav-button svg { width: 34px; height: 34px; stroke-width: 2.4; pointer-events: none; }
+.home-play-nav-button.nav-drawing { --nav-color: #f2d9cd; --nav-ink: #a36157; --nav-shadow: #dfb7a7; }
+.home-play-nav-button.nav-bugs { --nav-color: #ede5b9; --nav-ink: #85772e; --nav-shadow: #d3c887; }
+.home-play-nav-button.nav-aquarium { --nav-color: #cce9ea; --nav-ink: #397f86; --nav-shadow: #9ccace; }
+.home-play-nav-button.nav-park { --nav-color: #e5dbf3; --nav-ink: #8460a4; --nav-shadow: #c4afdd; }
+.home-play-nav-button.nav-greeting { --nav-color: #d9e9d9; --nav-ink: #5b8062; --nav-shadow: #b1ceaf; }
+.home-play-nav-button:focus-visible { outline-offset: 3px; }
+.home-play-nav-button:active { transform: translateY(3px); }
+.home-play-nav-button:active .home-play-nav-icon { box-shadow: inset 0 2px 0 #ffffff99, inset 0 -1px 0 #695d4310; }
+@media (max-width: 359px) {
+  .home-play-nav { padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px); }
+  .home-play-nav-items { gap: 0; }
+  .home-play-nav-icon { border-radius: 19px; }
+}
+@media (hover: hover) {
+  .home-play-nav-button:hover { transform: translateY(-2px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-play-nav .home-play-nav-button { transition: none; transform: none; }
+}
+
 /* Two sibling touch targets: the landscape speaks; the portrait changes friend. */
 .storybook-home .welcome-voice-surface { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; padding: 0; border: 0; border-radius: inherit; background: transparent; scale: 1; }
 .welcome-voice-surface:focus-visible { outline-offset: -7px; }
@@ -25,10 +97,6 @@
 .storybook-home .friend-day-card { padding: 10px 18px; }
 .storybook-home .friend-day-card > div:first-child { width: 68px; height: 68px; }
 .storybook-home .day-mini-pictures > .game-artwork { aspect-ratio: 2.4; }
-.storybook-home .extra-play > button { min-height: 64px; padding-block: 6px; }
-.storybook-home .extra-icon { width: 36px; height: 36px; }
-.storybook-home .extra-play > .extra-character-park { min-height: 94px; }
-.storybook-home .park-card-friends > div { width: 60px; height: 60px; }
 
 @media (max-width: 639px) {
   .home-games .welcome-scene { min-height: 190px; padding: 18px 16px; }
@@ -47,7 +115,4 @@
   .storybook-home .friend-day-card { padding: 8px 10px; }
   .storybook-home .friend-day-card > div:first-child { width: 56px; height: 56px; }
   .storybook-home .day-mini-pictures > .game-artwork { aspect-ratio: 1.9; }
-  .storybook-home .extra-play > button { min-height: 80px; }
-  .storybook-home .extra-play > .extra-character-park { min-height: 90px; }
-  .storybook-home .park-card-friends > div { width: 52px; height: 52px; }
 }
