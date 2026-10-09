@@ -1,7 +1,7 @@
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 import type { IncludedAudioBudget } from '../data/audioExperience';
 import { PLAY_EFFECTS, type PlayEffectId } from '../data/audioExperience';
-import { getCharacterVoice } from '../data/characterVoices';
+import { normalizeSpokenText, speechSynthesisSpec } from '../data/speechSynthesis';
 
 // Never retry a generation automatically: an interrupted request may already be charged.
 const clientFor = (apiKey: string) => new ElevenLabsClient({ apiKey, maxRetries: 0, timeoutInSeconds: 14, fetch: globalThis.fetch });
@@ -41,10 +41,9 @@ export async function generateElevenAudio(apiKey: string, input: { text: string;
     stream = await client.textToSoundEffects.convert({ text: spec.prompt, durationSeconds: spec.seconds,
       modelId: 'eleven_text_to_sound_v2', promptInfluence: .65, outputFormat: 'mp3_44100_128' }, { abortSignal });
   } else {
-    const voice = getCharacterVoice(input.characterId);
-    stream = await client.textToSpeech.convert(voice.elevenVoiceId, {
-      text: input.text, modelId: 'eleven_multilingual_v2', outputFormat: 'mp3_44100_128',
-      voiceSettings: { stability: .42, similarityBoost: .78, style: .3, speed: voice.rate, useSpeakerBoost: false },
+    const { voiceId, ...spec } = speechSynthesisSpec(input.characterId);
+    stream = await client.textToSpeech.convert(voiceId, {
+      ...spec, text: normalizeSpokenText(input.text),
     }, { abortSignal });
   }
   const audio = await new Response(stream).arrayBuffer();

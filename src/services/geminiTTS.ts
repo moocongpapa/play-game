@@ -2,6 +2,8 @@ import { normalizeSpeechLanguage, type SpeechLanguage } from '../utils/speechLan
 import { isPageHidden } from '../utils/pageVisibility';
 import { CHARACTER_VOICE_REVISION, getCharacterVoice } from '../data/characterVoices';
 import type { CharacterAudioStatus } from '../data/audioExperience';
+import { normalizeSpokenText, speechAssetId } from '../data/speechSynthesis';
+import { bundledSpeechId, hasBundledSpeech, loadBundledSpeech } from './bundledSpeech';
 import { readSavedAudio, saveAudio, deleteSavedAudio } from './audioCache';
 // Provider keys and the SDK stay on the server; the legacy public API is preserved.
 const audioBufferCache = new Map<string, { buffer: AudioBuffer; playbackRate: number }>();
@@ -78,7 +80,7 @@ export async function playGeminiSpeech(
   if (isPageHidden() || !isGeminiTTSEnabled() || !text.trim()) return false;
   const currentGeneration = generation;
 
-  const cleanText = text.trim();
+  const cleanText = normalizeSpokenText(text);
   const language = normalizeSpeechLanguage(options.language);
   const cacheKey = `${CHARACTER_VOICE_REVISION}:${language}:${options.characterId || 'ggomi'}:${cleanText}`;
   try {
@@ -102,6 +104,30 @@ export async function playGeminiSpeech(
         try { clip = { buffer: await ctx.decodeAudioData(saved.bytes), playbackRate: saved.playbackRate }; }
         catch { void deleteSavedAudio(cacheKey); }
       }
+    }
+    const assetId = bundledSpeechId(cleanText, options.characterId || 'ggomi', language) ||
+      (!clip && globalThis.crypto?.subtle ? await speechAssetId(cleanText, options.characterId || 'ggomi', language) : null);
+    const sharedKey = assetId ? `eleven:${assetId}` : cacheKey;
+    const characterRate = getCharacterVoice(options.characterId || 'ggomi').fallbackPlaybackRate;
+    if (!clip && assetId) {
+      const shared = await readSavedAudio(sharedKey);
+      if (shared) {
+        try { clip = { buffer: await ctx.decodeAudioData(shared.bytes), playbackRate: characterRate }; }
+        catch { void deleteSavedAudio(sharedKey); }
+      }
+    }
+    if (!clip && assetId && hasBundledSpeech(assetId)) {
+      if (currentGeneration !== generation || isPageHidden() || !isGeminiTTSEnabled()) return false;
+      const request = new AbortController();
+      activeRequest = request;
+      try {
+        const bytes = await loadBundledSpeech(assetId, request.signal);
+        if (currentGeneration !== generation || isPageHidden() || !isGeminiTTSEnabled()) return false;
+        const buffer = await ctx.decodeAudioData(bytes.slice(0));
+        void saveAudio({ key: sharedKey, bytes, playbackRate: 1, savedAt: Date.now() });
+        clip = { buffer, playbackRate: characterRate };
+      } finally { if (activeRequest === request) activeRequest = null; }
+      // Errors propagate to device speech: never regenerate a temporarily missing shipped file.
     }
     if (!clip) {
       if (!(await isGeminiVoiceAvailable()) || currentGeneration !== generation || isPageHidden()) return false;
@@ -130,10 +156,10 @@ export async function playGeminiSpeech(
       // The server requests slower speech, keeping the final pace near normal.
       // Gemini's directed child performance is played unmodified.
       const playbackRate = response.headers.get('X-Speech-Provider') === 'elevenlabs'
-        ? getCharacterVoice(options.characterId || 'ggomi').fallbackPlaybackRate : 1;
+        ? characterRate : 1;
       clip = { buffer, playbackRate };
       if (response.headers.get('X-Speech-Provider') === 'elevenlabs') {
-        void saveAudio({ key: cacheKey, bytes: wav, playbackRate, savedAt: Date.now() });
+        void saveAudio({ key: sharedKey, bytes: wav, playbackRate: assetId ? 1 : playbackRate, savedAt: Date.now() });
       }
     }
     if (!audioBufferCache.has(cacheKey)) {
