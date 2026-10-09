@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CharacterId } from '../types';
-import { CHARACTER_LIST } from '../data/characters';
+import { CHARACTERS } from '../data/characters';
 import { CHARACTER_VIDEOS } from '../data/characterVideoData';
-import { CharacterAvatar } from './CharacterAvatar';
 import { playBubblePop, stopAllSpeech, playJellyTap } from '../utils/soundEngine';
-import { ArrowLeft, RotateCcw, X } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 interface CharacterCharmVideoModalProps {
   isOpen: boolean;
@@ -20,51 +19,33 @@ export const CharacterCharmVideoModal: React.FC<CharacterCharmVideoModalProps> =
   initialCharacterId,
   soundEnabled,
 }) => {
-  const [selectedCharId, setSelectedCharId] = useState<CharacterId>(initialCharacterId);
   const [floatingHearts, setFloatingHearts] = useState<{ id: number; x: number }[]>([]);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  const videoData = CHARACTER_VIDEOS[selectedCharId] || CHARACTER_VIDEOS.ggomi;
-  const videoUrl = videoData.videoUrl || `/videos/${selectedCharId}.mp4`;
-  const currentChar = CHARACTER_LIST.find((c) => c.id === selectedCharId);
+  const buddy = CHARACTERS[initialCharacterId] || CHARACTERS.ggomi;
+  const videoData = CHARACTER_VIDEOS[initialCharacterId] || CHARACTER_VIDEOS.ggomi;
+  const videoUrl = videoData.videoUrl || `/videos/${initialCharacterId}.mp4`;
 
   useEffect(() => {
     if (!isOpen) {
       stopAllSpeech();
       return;
     }
-    setSelectedCharId(initialCharacterId);
-  }, [isOpen, initialCharacterId]);
-
-  useEffect(() => {
-    if (isOpen && videoRef.current) {
+    if (videoRef.current) {
       videoRef.current.currentTime = 0;
       videoRef.current.play().catch(() => {});
     }
-  }, [selectedCharId, isOpen]);
+  }, [isOpen, initialCharacterId]);
 
   if (!isOpen) return null;
 
   const handleClose = () => {
+    playJellyTap(soundEnabled);
     stopAllSpeech();
     if (videoRef.current) {
       videoRef.current.pause();
     }
     onClose();
-  };
-
-  const handleSelectCharacter = (charId: CharacterId) => {
-    playJellyTap(soundEnabled);
-    stopAllSpeech();
-    setSelectedCharId(charId);
-  };
-
-  const handleReplay = () => {
-    playJellyTap(soundEnabled);
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(() => {});
-    }
   };
 
   const handleCheerTap = (e: React.MouseEvent) => {
@@ -76,67 +57,47 @@ export const CharacterCharmVideoModal: React.FC<CharacterCharmVideoModalProps> =
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/95 flex flex-col justify-between p-2 sm:p-4 select-none touch-none"
+      className="fixed inset-0 z-50 bg-black/95 flex flex-col justify-between p-2.5 sm:p-5 select-none touch-none"
       role="dialog"
       aria-modal="true"
-      aria-label={`${currentChar?.name} 영상 전체화면`}
+      aria-label={`${buddy.name} 영상 전체화면`}
     >
-      {/* Top Bar: 큰 뒤로가기 버튼 + 캐릭터 이름 + 다시보기 */}
-      <header className="w-full max-w-4xl mx-auto flex items-center justify-between gap-2 z-20 py-1">
+      {/* Top Bar: 유하 눈높이에 맞춘 커다란 나가기/놀러가기 버튼 + 캐릭터 배지 */}
+      <header className="w-full max-w-4xl mx-auto flex items-center justify-between gap-3 z-20 pt-1 pb-2">
         <button
           onClick={handleClose}
           type="button"
-          className="py-2 px-3.5 sm:px-4 bg-white/20 hover:bg-white/30 text-white font-black text-sm sm:text-base rounded-full backdrop-blur-md flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform shrink-0 border border-white/20 shadow-md"
-          title="뒤로 가기"
+          className="py-2.5 sm:py-3 px-5 sm:px-7 bg-gradient-to-r from-amber-400 via-amber-300 to-orange-400 hover:brightness-105 text-stone-900 font-black text-base sm:text-xl rounded-full shadow-xl flex items-center gap-2 cursor-pointer active:scale-95 transition-all border-3 border-white/90"
+          title={`${buddy.name}랑 놀러가기`}
         >
-          <ArrowLeft className="w-5 h-5 stroke-[3]" />
-          <span>나가기</span>
+          <ArrowLeft className="w-6 h-6 sm:w-7 sm:h-7 stroke-[3.5]" />
+          <span>👈 {buddy.name}랑 놀자!</span>
         </button>
 
-        <div className="flex items-center gap-2 px-3.5 py-1.5 bg-white/15 backdrop-blur-md rounded-full border border-white/20 text-white font-black text-base sm:text-lg shadow-md">
-          <span>{currentChar?.badge}</span>
-          <span>{currentChar?.name} 영상</span>
+        <div className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md rounded-full border border-white/30 text-white font-black text-base sm:text-lg shadow-md shrink-0">
+          <span>{buddy.badge}</span>
+          <span>{buddy.name}</span>
           <span>🎬</span>
-        </div>
-
-        <div className="flex items-center gap-1.5 shrink-0">
-          <button
-            onClick={handleReplay}
-            type="button"
-            className="p-2 sm:px-3 sm:py-2 bg-amber-400 hover:bg-amber-300 text-amber-950 font-black text-xs sm:text-sm rounded-full flex items-center gap-1 cursor-pointer active:scale-95 transition-transform shadow-md"
-            title="다시 보기"
-          >
-            <RotateCcw className="w-4 h-4 stroke-[3]" />
-            <span className="hidden sm:inline">다시 보기</span>
-          </button>
-          <button
-            onClick={handleClose}
-            type="button"
-            className="p-2 bg-white/20 hover:bg-white/30 text-white rounded-full transition-colors cursor-pointer"
-            title="닫기"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
       </header>
 
-      {/* Center Video Stage (가득 찬 비디오 뷰) */}
+      {/* Center Video Stage (하단 여백 없이 시원하게 펼쳐지는 전체화면 영상) */}
       <main
-        className="relative flex-1 w-full max-w-4xl mx-auto flex items-center justify-center my-1 sm:my-2 overflow-hidden rounded-2xl sm:rounded-3xl bg-black shadow-2xl border-2 border-white/10"
+        className="relative flex-1 w-full max-w-4xl mx-auto flex items-center justify-center my-1 overflow-hidden rounded-2xl sm:rounded-3xl bg-black shadow-2xl border-2 border-white/10"
         onClick={handleCheerTap}
       >
         <video
-          key={selectedCharId}
+          key={initialCharacterId}
           ref={videoRef}
           src={videoUrl}
           controls
           autoPlay
           loop
           playsInline
-          className="w-full h-full object-contain max-h-[75vh]"
+          className="w-full h-full object-contain max-h-[82vh]"
         />
 
-        {/* Floating Hearts Reaction when toddler taps screen */}
+        {/* 화면을 터치할 때 퐁퐁 솟아오르는 사랑스러운 하트 리액션 */}
         <div className="absolute inset-0 pointer-events-none z-30 overflow-hidden">
           <AnimatePresence>
             {floatingHearts.map((h) => (
@@ -155,30 +116,6 @@ export const CharacterCharmVideoModal: React.FC<CharacterCharmVideoModalProps> =
           </AnimatePresence>
         </div>
       </main>
-
-      {/* Bottom Bar: 다른 캐릭터 영상 바로보기 리본 */}
-      <footer className="w-full max-w-4xl mx-auto z-20 py-1">
-        <div className="flex items-center justify-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar py-1 px-2">
-          {CHARACTER_LIST.map((char) => {
-            const isSelected = char.id === selectedCharId;
-            return (
-              <button
-                key={char.id}
-                type="button"
-                onClick={() => handleSelectCharacter(char.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                  isSelected
-                    ? 'bg-amber-400 text-amber-950 shadow-md scale-105 border-2 border-amber-300 ring-2 ring-amber-400/50'
-                    : 'bg-white/20 text-white hover:bg-white/30 border border-white/20'
-                }`}
-              >
-                <CharacterAvatar id={char.id} size="sm" mood="happy" className="!w-6 !h-6" />
-                <span>{char.name}</span>
-              </button>
-            );
-          })}
-        </div>
-      </footer>
     </div>
   );
 };
