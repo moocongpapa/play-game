@@ -28,6 +28,7 @@ type Props = {
   selected: string | null;
   onSelect: (id: string | null) => void;
   onChange: (a: Artwork) => void;
+  onGestureChange: (active: boolean) => void;
   onStamp: () => void;
   onDrawSound: (tool: Brush | 'fill', strength?: number) => void;
   disabled: boolean;
@@ -88,6 +89,7 @@ export default function DrawingCanvas(props: Props) {
     const g = gesture.current;
     if (!g) return;
     gesture.current = null;
+    latest.current.onGestureChange(false);
     const a = latest.current.artwork;
     if (g.stroke) update({ ...a, strokes: [...a.strokes, g.stroke] });
     if (g.sticker)
@@ -260,6 +262,10 @@ export default function DrawingCanvas(props: Props) {
     el.addEventListener('touchstart', prevent, { passive: false });
     el.addEventListener('touchmove', prevent, { passive: false });
     return () => {
+      if (gesture.current) {
+        gesture.current = null;
+        latest.current.onGestureChange(false);
+      }
       observer.disconnect();
       cancelAnimationFrame(frame.current);
       frame.current = 0;
@@ -344,6 +350,7 @@ export default function DrawingCanvas(props: Props) {
       return;
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
+    latest.current.onGestureChange(true);
     const p = point(e),
       a = props.artwork;
     if (props.tool === 'fill' || props.tool === 'magic') {

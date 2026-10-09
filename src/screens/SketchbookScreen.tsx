@@ -63,6 +63,7 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({ buddy, sound
   const [category, setCategory] = useState('친구들');
   const [stickerKind, setStickerKind] = useState('heart');
   const [selectedSticker, setSelectedSticker] = useState<string | null>(null);
+  const [drawing, setDrawing] = useState(false);
   const [notice, setNotice] = useState('');
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
@@ -84,6 +85,14 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({ buddy, sound
     if (historyRef.current) setH(change(historyRef.current, next));
   };
   const sound = (kind: 'tap' | 'sticker' | 'fanfare' | 'magic' | 'pop' | 'clear' = 'tap') => playSound(kind, !soundEnabled);
+  const stepHistory = (direction: 'undo' | 'redo') => {
+    const current = historyRef.current;
+    if (drawing || !current || !(direction === 'undo' ? current.past : current.future).length) return;
+    setH(direction === 'undo' ? undo(current) : redo(current));
+    setSelectedSticker(null);
+    setNotice('');
+    sound();
+  };
   const closePanel = () => { setPanel(null); setNotice(''); };
   const openPanel = (next: Panel) => {
     setSelectedSticker(null);
@@ -204,6 +213,10 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({ buddy, sound
         <div><h1>{childName}의 스케치북</h1><span>쓱쓱, 나만의 그림!</span></div>
       </div>
       <div className="sketch-header-actions">
+        <button className="sketch-top-button sketch-undo" disabled={drawing || !history?.past.length}
+          aria-label="한 단계 되돌리기" onClick={() => stepHistory('undo')}>
+          <Undo2 aria-hidden="true" /><span>되돌리기</span>
+        </button>
         <button className="sketch-top-button sketch-living" disabled={!art} aria-label="색칠한 캐릭터 살아나기"
           onClick={() => { if (art) { setCharacterSpriteUrl(renderCharacterSprite(art)); sound('magic'); } }}>
           <Wand2 aria-hidden="true" /><span>살아나!</span><Sparkles className="sketch-button-sparkle" aria-hidden="true" />
@@ -222,7 +235,7 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({ buddy, sound
       {art && <DrawingCanvas artwork={art} tool={tool} color={color}
         size={brushWidths[tool === 'fill' || tool === 'magic' || tool === 'sticker' ? 'pen' : tool][size]}
         glitter={glitter} stickerKind={stickerKind} selected={selectedSticker} onSelect={setSelectedSticker}
-        onChange={commit} onStamp={() => sound('sticker')} onDrawSound={(brush, strength) => playDrawingSound(brush, !soundEnabled, strength)} disabled={!!panel} />}
+        onChange={commit} onGestureChange={setDrawing} onStamp={() => sound('sticker')} onDrawSound={(brush, strength) => playDrawingSound(brush, !soundEnabled, strength)} disabled={!!panel} />}
       {selectedSticker && <div className="sketch-sticker-edit" aria-label="붙인 스티커 바꾸기">
         <button onClick={() => editSticker('grow')} aria-label="스티커 크게"><ZoomIn /><span>크게</span></button>
         <button onClick={() => editSticker('shrink')} aria-label="스티커 작게"><ZoomOut /><span>작게</span></button>
@@ -263,8 +276,8 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({ buddy, sound
         </div>
         <button className="sketch-action sketch-glitter" aria-pressed={glitter} onClick={() => { setGlitter(!glitter); sound(); }}><Sparkles /> 반짝이 {glitter ? '켜짐' : '꺼짐'}</button>
         <div className="sketch-gallery-actions">
-          <button className="sketch-action" disabled={!history?.past.length} onClick={() => { if (historyRef.current) setH(undo(historyRef.current)); sound(); }}><Undo2 /> 되돌리기</button>
-          <button className="sketch-action" disabled={!history?.future.length} onClick={() => { if (historyRef.current) setH(redo(historyRef.current)); sound(); }}><Redo2 /> 다시 하기</button>
+          <button className="sketch-action" disabled={drawing || !history?.past.length} onClick={() => stepHistory('undo')}><Undo2 /> 되돌리기</button>
+          <button className="sketch-action" disabled={drawing || !history?.future.length} onClick={() => stepHistory('redo')}><Redo2 /> 다시 하기</button>
         </div>
       </>}
       {panel === 'colors' && <div className="sketch-choice-grid sketch-colors">
