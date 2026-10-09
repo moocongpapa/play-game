@@ -60,11 +60,8 @@ export default defineConfig(({ mode }) => {
               if (id.includes('lucide-react')) {
                 return 'vendor-icons';
               }
-              if (id.includes('howler') || id.includes('canvas-confetti')) {
+              if (id.includes('canvas-confetti')) {
                 return 'vendor-media';
-              }
-              if (id.includes('firebase')) {
-                return 'vendor-firebase';
               }
             }
           },

@@ -1,5 +1,7 @@
 # Jelly app icons
 
+Documentation checked: 2026-10-09 · [Documentation index](../../docs/README.md)
+
 Created with the built-in imagegen tool on 2026-10-08, using the existing app's Jelly character as the identity reference. Jelly's lavender ears, white face, pink flower, plum eyes and purple heart dress are preserved. The source illustrations were resized with macOS `sips`; no new runtime dependency is needed.
 
 ## Files
@@ -11,7 +13,7 @@ Created with the built-in imagegen tool on 2026-10-08, using the existing app's 
 - `jelly-maskable-1024.png`: padded master for adaptive icon masks.
 - `jelly-maskable-512.png`: Android adaptive icon (`purpose: maskable`).
 
-All images are opaque square PNGs. Do not bake rounded corners into them; the operating system applies its own mask. The maskable variant keeps Jelly's face, ears and hands inside the central safe area. The manifest enables standalone launch; it does not provide offline caching or an App Store package. Existing installed shortcuts may need to be removed and added again to refresh their cached icon. Actual iOS/Android installation still needs a device check.
+All images are opaque square PNGs. Do not bake rounded corners into them; the operating system applies its own mask. The maskable variant keeps Jelly's face, ears and hands inside the central safe area. The manifest enables standalone launch; it does not provide offline caching or an App Store package. The app registers `public/sw.js` from `src/main.tsx` in production for limited offline caching; videos and all game assets are not precached. See [PWA behavior](../../docs/development.md#pwa와-오프라인). Existing installed shortcuts may need to be removed and added again to refresh their cached icon. Actual iOS/Android installation still needs a device check.
 
 References: [web app manifest](https://web.dev/learn/pwa/web-app-manifest), [Apple home-screen icons](https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html).
 

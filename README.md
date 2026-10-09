@@ -1,53 +1,86 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# 유하의 작은 놀이숲 · play-game
 
-# Run and deploy your AI Studio app
+한글을 아직 읽지 못하는 유하를 위한 캐릭터 놀이 웹 앱입니다. 그림 카드, 선택한 친구의 음성, 터치와 드래그 반응으로 스스로 놀 수 있도록 구성했습니다. 모바일·태블릿·PC를 지원하며 홈 화면에 설치할 수 있습니다.
 
-This contains everything you need to run your app locally.
+문서 기준일: **2026-10-09**. 기능 설명은 현재 소스를 기준으로 합니다. 과거 검증과 영상 제작 기록은 해당 시점의 기록으로 따로 보존합니다.
 
-View your app in AI Studio: https://ai.studio/apps/e9b7985c-a0f7-4008-8953-39da2f4dbd34
+## 현재 기능
 
-## Run Locally
+- **친구 8명**: 꼬미(곰), 라노(공룡), 젤리(토끼), 도치(고슴도치), 꿀꿀이(돼지), 음메(양), 누룽지(강아지), 핑구(펭귄).
+- **게임 30종**: 그림·소리 맞추기, 숫자, 모양·색·크기·규칙, 음악, 생활습관, 감정, 감각 놀이. 생년월일에 따라 메뉴와 난이도가 달라집니다. 현재 유하의 새싹반 메뉴에는 29종이 표시됩니다.
+- **숫자 0~100**: 토끼 버튼은 하나·둘·셋, 곰 버튼은 일·이·삼. 두 버튼이 하나의 숫자를 이어 올립니다.
+- **자유 놀이**: 색칠하기와 작은 전시회, 곤충 놀이터, 수족관, 친구 놀이터, 친구와 인사. 친구 놀이터에는 각 캐릭터가 한 명씩 등장합니다.
+- **연속 진행**: 새 문제와 여러 장면을 자동으로 이어갑니다. ‘친구의 하루’는 먹기 → 양치 → 까꿍 → 음악회를 반복합니다.
+- **아이에게 맞춘 조작**: 큰 그림 카드, 자석 드롭, 무입력 안내, 별빛 터치 반응, 과자 집 모양 홈 버튼. 게임에서 돌아오면 고른 친구와 게임 선택 화면을 유지합니다.
+- **오디오**: 한국어가 기본이며 부모 설정에서 영어로 바꿀 수 있습니다. 저장된 ElevenLabs 음성·음악·효과음을 재사용하고, 새 안내는 ElevenLabs를 우선 사용합니다. 사용 가능 여부에 따라 기기 음성과 Web Audio로 대체합니다.
+- **영상**: 세로 화면에서 핑구·꼬미·라노의 새 30초 더빙 영상을 사용합니다. 가로 화면은 8명의 기존 가로 영상을 사용합니다. 나머지 5명의 세로 제작은 미완료입니다.
+- **부모 설정**: 아이 프로필, 놀이 시간, 소리·배경음·진동, 음성 언어와 엔진 상태, 놀이 통계. 그림과 설정은 현재 브라우저에 저장됩니다.
 
-**Prerequisites:**  Node.js
+## 빠르게 실행하기
 
+Node.js **22 이상**과 npm이 필요합니다. 현재 검증 환경은 Node 26.5.0입니다.
 
-1. Install dependencies:
-   `npm install`
-2. Copy [.env.example](.env.example) to `.env.local` and set `ELEVENLABS_API_KEY` to your ElevenLabs API key. Keep the key on the server; do not use a `VITE_` prefix.
-3. Run the app:
-   `npm run dev`
+```sh
+npm install
+cp .env.example .env.local
+npm run dev
+```
 
-## Character speech, music and effects
+접속: [http://localhost:3000](http://localhost:3000). 같은 네트워크의 다른 기기는 개발 컴퓨터의 로컬 IP와 실제 서버 포트를 사용합니다. 3000번 포트가 사용 중이면 Vite가 다른 포트를 선택하므로 터미널 출력을 확인합니다.
 
-The eight character profiles use the official `@elevenlabs/elevenlabs-js` Node SDK through `/api/speech`. ElevenLabs is the first provider. Korean remains the default; parent settings offer English, character previews, AI sound preferences, remaining included credits, and the provider's next reset date. Jessica/Laura are light female base voices, with character-specific pacing and a modest cartoon pitch lift; they are not recordings of children.
+API 키 없이도 그림·게임·저장된 오디오를 사용할 수 있습니다. 새로운 고품질 음성 생성에는 서버 전용 `ELEVENLABS_API_KEY`가 필요합니다. `.env.local`을 채운 뒤 개발 서버를 다시 시작합니다. 생성 도구 실행은 별도 유료 작업이며 앱 실행·빌드에는 포함되지 않습니다.
 
-- Every new generation rechecks the provider's live account-wide allowance. **Free and Starter are supported only with usage-based billing disabled** (`max_credit_limit_extension: 0`, extension flags false). No upgrades, credit purchases, Music API calls from the child UI, or automatic paid-provider failover occur. Provider errors/unknown allowance fail closed. SDK generation retries are disabled because an interrupted request may already consume credits.
-- Included credits renew on the provider's billing cycle, not a guessed calendar date. Needed new lines resume on subsequent play after renewal (availability refreshes within one minute). The app does not generate unused content just to exhaust a monthly balance.
-- Speech uses Multilingual v2, 128 kbps MP3, and the selected character/language. Repeat taps preserve the first line through completion. Compressed ElevenLabs clips are saved in IndexedDB (at most 200 clips / 12 MiB) and replay before checking network availability. Browser storage can be evicted or unavailable; short in-memory playback and the selected-language device voice remain fallbacks.
-- Four original ElevenLabs instrumental recordings are bundled: three shuffled play tracks and one quiet lullaby. They play through the same BGM gain/ducking path. If files cannot load, six original procedural arrangements with layered marimba/flute/music-box timbres remain available. Sleep music stays quieter.
-- Six short ElevenLabs effects are bundled and cached: tap, bounce, pop, bubble, sparkle, success. A first gesture responds immediately with synthesis while its recording loads; a late download never makes a late sound. Missing recordings may be generated from a fixed, short server catalog using included credits. Polyphony, mute, navigation cancellation, and pitch variation are bounded. Recorded real animal sounds and tuned xylophone notes are preserved.
-- No microphone, chat agent, Speech Engine session or transcript server is introduced. This change covers game guidance, praise, music and effects.
+## 명령
 
-### Audio asset maintenance
+| 명령 | 역할 |
+|---|---|
+| `npm run dev` | Vite 개발 서버와 로컬 `/api/speech` 실행 |
+| `npm run lint` | TypeScript 전체 타입 검사 (`tsc --noEmit`, ESLint 아님) |
+| `npm test` | 서버·유틸리티 회귀 테스트. 실제 유료 생성 요청은 하지 않음 |
+| `npm run build` | `dist/`에 정적 앱·공개 자산 빌드 |
+| `npm run preview` | 빌드한 정적 앱 확인. 음성 API 서버는 실행하지 않음 |
+| `npm run clean` | 재생성 가능한 `dist/`만 삭제 |
 
-`scripts/generate-play-audio.ts` generates **missing** originals with the official SDK. Run deliberately with `node --import tsx scripts/generate-play-audio.ts`; it is not a build/startup hook. It verifies included credits and disabled overages before each request, skips existing assets, stops across a billing reset, and limits a batch to 5,000 credits with conservative per-request reserves. Music generation requires Starter. Review new output before committing. Prompts and track names live in `src/data/generatedMusic.ts`; effect prompts and revisions are in `src/data/audioExperience.ts`. Existing assets cost no credits to replay.
+배포에는 정적 앱과 `api/speech.ts`의 Node 서버 경로가 모두 필요합니다. 설정·배포·문제 해결은 [개발 환경 안내](docs/development.md)를 확인합니다.
 
-References: [SDK](https://github.com/elevenlabs/elevenlabs-js), [subscription/overage fields](https://elevenlabs.io/docs/api-reference/user/subscription/get), [Music API](https://elevenlabs.io/docs/eleven-api/guides/cookbooks/music), [sound-effect billing](https://help.elevenlabs.io/hc/en-us/articles/25735337678481-How-much-does-it-cost-to-generate-sound-effects). AI-generated audio attribution is also shown in parent settings.
+## 소스 구조
 
-## Speech API protection
+```text
+src/App.tsx                 화면 전환, 프로필, 놀이 시간, 통계와 설정
+src/screens/                홈·부모·자유 놀이·연속 놀이
+src/screens/games/          개별 게임 (무지개 모험은 screens/ 바로 아래)
+src/components/             캐릭터·그림·공통 드래그·힌트·홈·영상 UI
+src/hooks/                  놀이 진행, 입력, 일시정지와 타이머
+src/data/                   게임 목록·문제·캐릭터·음성·제작 자산 등록
+src/utils/                  난이도, 오디오, 스냅, 진행과 저장 보조 로직
+src/services/               브라우저 음성 API 연결과 저장 오디오 캐시
+src/server/ + api/          음성 생성·포함 크레딧 확인·공유 사용량 제한
+src/sketch/                 색칠 캔버스, 도안, 되돌리기, IndexedDB 전시회
+public/                     배포하는 이미지·음원·영상·PWA 자산
+scripts/                    유지보수용 오디오·세로 영상 제작 도구
+production/                 영상 계획·외형 참조·시작 이미지·완료 기록
+backups/                    이전 영상 원본·체크섬 (배포하지 않음)
+tests/                      수동 브라우저 회귀 검증 화면
+```
 
-The deployed `/api/speech` uses the Node runtime for the SDK. Keep API keys and Redis credentials server-only: never prefix them with `VITE_` or commit local environment files. The API key needs permission to read subscription limits as well as generate speech/effects.
+기술: React 19, TypeScript 5.8, Vite 6, Tailwind CSS 4, Motion(`motion/react`), Canvas-confetti, Web Audio API, ElevenLabs Node SDK, Google GenAI SDK. 앱 내 서버 데이터베이스·로그인·Google Drive 동기화는 없습니다.
 
-- POST requests require the app's own Origin and JSON content type. Cross-origin requests receive no CORS permission; bodies larger than 4 KiB are rejected before generation. Text is limited to 300 characters and effects to an authored allowlist.
-- Optional `UPSTASH_REDIS_REST_URL` plus `UPSTASH_REDIS_REST_TOKEN` add shared abuse protection: 30 requests per IP per minute, 300 per IP per 24 hours and 1,200 app-wide per 24 hours. Windows start with the first request. A configured limiter outage blocks generation; the app uses cached/device audio. No raw IP or spoken text is stored in Redis.
-- Redis counters are reserved atomically using [Upstash REST](https://upstash.com/docs/redis/features/restapi). Vercel's platform-managed IP header identifies the client. Other adapters share an `unknown` client bucket until a trusted adapter is supplied. Origin checks are not authentication; use Redis to limit intentional depletion of included credits on public installations.
-- Without Redis, **only the verified ElevenLabs Free/Starter path with overages disabled** is enabled. The provider enforces the monthly cap across all instances. Gemini-only legacy installations still require the shared quota in production; Gemini is never used when an ElevenLabs key is configured, including on exhaustion.
-- `npm run dev` uses the same validation and SDK with an additional bounded in-memory request limiter. This development server is not a production API server.
+## 문서
 
-## Play time and saved drawings
+- [문서 전체 목차](docs/README.md)
+- [환경 변수·배포·문제 해결](docs/development.md)
+- [화면·상태·저장·공통 UX 아키텍처](docs/architecture.md)
+- [전체 게임 목록과 추가 방법](docs/games.md)
+- [음성·음악·효과음·크레딧·제작 도구](docs/audio.md)
+- [세로 영상 제작 상태와 재개 방법](production/character-videos/README.md)
+- [파일 정리 기준·검증 방법·남은 제한](docs/maintenance.md)
 
-Today's visible play time resets at local midnight, including after reopening the app. Undated legacy totals start with a fresh daily allowance; completed-game history is retained. Choosing a timer in parent settings starts a new allowance without deleting today's total. Opening parent settings alone does not remove a time limit. Age and difficulty refresh from the saved birthday.
+## 검증과 제한
 
-Sketchbook edits are debounced while drawing, then flushed on home navigation, visibility loss, or page exit. Pending writes are ordered and remain readable when the sketchbook is reopened immediately. As with browser storage generally, abrupt device termination or storage failure cannot guarantee a final write.
+최신 자동 검증은 타입 검사·빌드와 **115개 회귀 테스트**입니다. 화면 검증 기록은 [전체 놀이 QA](docs/responsive-play-qa-2026-10-09.md), [숫자 놀이](docs/number-parade.md), [모바일 콘텐츠 비율](docs/mobile-content-proportions.md)에 있습니다. 각 문서의 검증 범위가 다릅니다.
+
+브라우저 화면 크기 검증이 실제 iPhone/iPad의 소리·진동·멀티터치·설치 검증을 대신하지 않습니다. 오프라인 지원은 한 번 받아 둔 화면·자산과 저장 음성에 한정되며 영상 전체를 오프라인 저장하지 않습니다. 그림 전시회는 기기 간 동기화되지 않으므로 중요한 그림은 PNG로 내보내 주세요.
+
+이미지·영상 원본, 라이선스 표시와 제작 기록을 보존합니다. [동물 녹음 출처](public/audio/CREDITS.html), [오디오 자산 기록](public/audio/elevenlabs/README.md), [그림](public/art/README.md), [젤리 앱 아이콘](public/icons/README.md)을 참고합니다.
+
+저장소 작업과 커밋·푸시 규칙은 [AGENTS.md](AGENTS.md)를 따릅니다.

@@ -1,5 +1,9 @@
 # Jelly opening frame
 
+문서 확인일: 2026-10-09 · [현재 제작 안내](../../README.md)
+
+이 문서는 실제 생성 입력·출처의 기록입니다. 제작에 쓰는 저장 파일은 [opening.png](opening.png)이며 외부 절대 경로는 당시 생성 원본의 위치입니다. 현재 완료 상태·재개 방법은 위 제작 안내를 확인합니다. 원래 프롬프트는 보존합니다.
+
 - Tool: built-in imagegen (one generation, no quality reruns).
 - Identity reference: `../../references/jelly.png`
 - Material style reference: `../../references/pingu-clay.png`

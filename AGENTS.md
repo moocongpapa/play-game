@@ -7,7 +7,12 @@
 - `src/screens/games/` contains individual games; `src/screens/RainbowStageAdventure.tsx` contains the multistage game.
 - `src/data/` contains characters, age-specific game questions, stickers, and video scenes.
 - `src/utils/ageEngine.ts` sets age groups and difficulty; `src/utils/soundEngine.ts` handles music, effects, and speech fallbacks.
-- `src/services/` handles Firebase/Google Drive and Gemini/ElevenLabs speech. `public/videos/` contains local character videos.
+- `src/services/` connects browser speech to the same-origin API and caches saved/generated audio. `src/server/` and `api/speech.ts` own provider calls, included-credit checks, and request quotas.
+- `src/sketch/` owns the drawing model, undo, rendering, and local IndexedDB draft/gallery storage. There is no active Firebase/Google Drive integration.
+- `public/` contains shipped art/audio/video/PWA assets. `production/character-videos/` owns the four-scene portrait plan and completion records; `backups/` preserves prior landscape originals.
+- `scripts/generate-portrait-videos.ts`, `generate-play-audio.ts`, and `generate-care-voices.ts` are manual maintainer tools. They must not run during app startup, build, or ordinary verification; generation can spend credits.
+- `docs/README.md` indexes current architecture, setup, games, audio, maintenance, and dated QA records. Update relevant docs when behavior changes.
+- `tests/review-regressions.html` is a manual browser harness; `npm test` runs the server/utility tests without paid generation.
 
 ## Git workflow
 
