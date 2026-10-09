@@ -9,6 +9,8 @@ import { isGeminiTTSEnabled, getCharacterAudioStatus, setGeminiTTSEnabled } from
 import type { CharacterAudioStatus } from '../data/audioExperience';
 import { stopGeneratedEffects } from '../services/generatedEffects';
 import { CHARACTER_VOICES, type CharacterVoiceId } from '../data/characterVoices';
+import { CHARACTERS } from '../data/characters';
+import { CharacterAvatar } from '../components/CharacterAvatar';
 
 interface ParentDashboardProps {
   appState: AppState;
@@ -192,9 +194,9 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
       {/* Play Statistics Card */}
       <div className="w-full bg-white p-4 sm:p-5 rounded-3xl border-2 sm:border-3 border-amber-200 shadow-sm mb-3">
         <h2 className="text-base sm:text-lg font-black text-[#4A3E3D] flex items-center gap-2 mb-2.5 break-keep">
-          <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-[#FF9E4A] shrink-0" /> 아이의 놀이 기록
+          <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-[#FF9E4A] shrink-0" /> 아이의 놀이 기록 및 리포트
         </h2>
-        <div className="grid grid-cols-2 gap-2 sm:gap-3 text-center mb-4">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 text-center mb-3">
           <div className="p-2.5 sm:p-3 bg-amber-50 rounded-2xl border border-amber-200">
             <span className="text-[11px] sm:text-xs font-bold text-[#8C7B79] block">오늘 이용 시간</span>
             <span className="text-lg sm:text-2xl font-black text-[#FF9E4A]">{formatSeconds(appState.playTimeSeconds)}</span>
@@ -207,6 +209,47 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
           </div>
         </div>
 
+        {/* 가장 좋아하는 단짝 친구 카드 */}
+        <div className="p-3 bg-orange-50/70 rounded-2xl border border-orange-200/70 mb-3 text-left flex items-center gap-3">
+          <CharacterAvatar id={appState.selectedCharacter} size="sm" mood="happy" />
+          <div className="break-keep">
+            <span className="text-[10px] sm:text-xs font-bold text-[#8C7B79] block">가장 좋아하는 단짝 친구</span>
+            <p className="text-sm sm:text-base font-black text-[#4A3E3D]">
+              {CHARACTERS[appState.selectedCharacter]?.name} {CHARACTERS[appState.selectedCharacter]?.animal} {CHARACTERS[appState.selectedCharacter]?.badge}
+            </p>
+          </div>
+        </div>
+
+        {/* 영역별 놀이 활동 균형 리포트 */}
+        <h3 className="text-xs font-black text-[#4A3E3D] text-left mb-2 flex items-center gap-1">
+          <Sparkles className="w-3.5 h-3.5 text-amber-500" /> 발달 영역별 활동 요약
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4 text-left">
+          <div className="p-2 bg-sky-50 rounded-xl border border-sky-100 text-center">
+            <span className="text-[10px] font-bold text-sky-700 block">🗣️ 언어·인지</span>
+            <span className="text-sm font-black text-sky-900">
+              {((appState.completedGames['korean_letters'] || 0) + (appState.completedGames['word_puzzle'] || 0) + (appState.completedGames['object_recognition'] || 0) + (appState.completedGames['sound_quiz'] || 0))}회
+            </span>
+          </div>
+          <div className="p-2 bg-amber-50 rounded-xl border border-amber-100 text-center">
+            <span className="text-[10px] font-bold text-amber-700 block">🔢 수·논리</span>
+            <span className="text-sm font-black text-amber-900">
+              {((appState.completedGames['counting_food'] || 0) + (appState.completedGames['size_comparison'] || 0) + (appState.completedGames['shape_color'] || 0) + (appState.completedGames['pattern_sequence'] || 0) + (appState.completedGames['size_ordering'] || 0))}회
+            </span>
+          </div>
+          <div className="p-2 bg-rose-50 rounded-xl border border-rose-100 text-center">
+            <span className="text-[10px] font-bold text-rose-700 block">💖 감성·생활</span>
+            <span className="text-sm font-black text-rose-900">
+              {((appState.completedGames['emotion_quiz'] || 0) + (appState.completedGames['tooth_brush'] || 0) + (appState.completedGames['feeding'] || 0) + (appState.completedGames['goodnight_sleep'] || 0))}회
+            </span>
+          </div>
+          <div className="p-2 bg-purple-50 rounded-xl border border-purple-100 text-center">
+            <span className="text-[10px] font-bold text-purple-700 block">🎨 신체·창의</span>
+            <span className="text-sm font-black text-purple-900">
+              {((appState.completedGames['rhythm_game'] || 0) + (appState.completedGames['bubble_pop'] || 0) + (appState.completedGames['animal_xylophone'] || 0) + (appState.completedGames['balloon_pop'] || 0) + (appState.completedGames['sensory_paint'] || 0))}회
+            </span>
+          </div>
+        </div>
 
         {/* 놀이 통계 시각화 */}
         <h3 className="text-xs font-black text-[#4A3E3D] text-left mb-2 flex items-center gap-1">

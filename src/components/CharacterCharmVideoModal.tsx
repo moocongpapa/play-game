@@ -5,7 +5,7 @@ import type { CharacterId } from '../types';
 import { CHARACTERS } from '../data/characters';
 import { CHARACTER_VIDEOS } from '../data/characterVideoData';
 import { CharacterAvatar } from './CharacterAvatar';
-import { playBubblePop, stopAllSpeech, stopPlaySounds, setBGMDucked } from '../utils/soundEngine';
+import { playBubblePop, stopAllSpeech, stopPlaySounds, setBGMDucked, speakText } from '../utils/soundEngine';
 import './CharacterCharmVideoModal.css';
 
 interface CharacterCharmVideoModalProps {
@@ -34,6 +34,7 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
   const [localMute, setLocalMute] = useState(false);
   const [progress, setProgress] = useState(0);
   const [hearts, setHearts] = useState<number[]>([]);
+  const [videoEnded, setVideoEnded] = useState(false);
   const buddy = CHARACTERS[id];
 
   async function requestPlay(restart = false) {
@@ -42,6 +43,7 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
     const request = ++playRequest.current;
     setSlow(false);
     setBusy(true);
+    setVideoEnded(false);
     if (failed || slow) { element.load(); setFailed(false); }
     if (restart) element.currentTime = 0;
     try {
@@ -56,6 +58,12 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
   }
 
   const pause = () => { playRequest.current += 1; video.current?.pause(); setBusy(false); };
+
+  const handleEnded = () => {
+    setPlaying(false);
+    setVideoEnded(true);
+    speakText('이제 나랑 신나게 놀자!', soundEnabled, { characterId: id });
+  };
 
   useEffect(() => {
     const element = video.current!;
@@ -97,28 +105,68 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
     playBubblePop(soundEnabled);
     setHearts(current => [...current.slice(-4), ++heartId.current]);
   };
+
+  const handleScreenClick = () => {
+    cheer();
+    if (videoEnded) return;
+    if (playing) pause();
+    else void requestPlay();
+  };
+
   const status = failed ? '영상을 다시 불러올 수 있어요.' : slow ? '준비하고 있어요. 친구와 먼저 인사해요!' : busy ? '영상을 준비하고 있어요.' : playing ? '영상 재생 중' : '재생 버튼을 눌러요.';
 
   return <dialog ref={dialog} className="character-theater" aria-label={`${buddy.name}의 작은 영화관`}
     onCancel={event => { event.preventDefault(); onClose(); }}>
     <div className="theater-landscape" aria-hidden="true" />
     <header className="theater-header">
-      <h2>{buddy.name}의 작은 영화관</h2>
+      <button
+        type="button"
+        className={`theater-back-play-button ${videoEnded ? 'pulse-attention' : ''}`}
+        onClick={onClose}
+        aria-label={`${buddy.name}랑 놀러가기`}
+      >
+        👈 {buddy.name}랑 놀자!
+      </button>
       <button className="theater-button theater-close" onClick={onClose} aria-label="영상 닫고 돌아가기" autoFocus><X /></button>
     </header>
     <div className="theater-body">
       <div className="theater-film-column">
-        <div className="theater-screen" aria-busy={busy}>
+        <div className="theater-screen" aria-busy={busy} onClick={handleScreenClick}>
           <video ref={video} src={CHARACTER_VIDEOS[id].videoUrl || `/videos/${id}.mp4`}
-            poster={`/videos/posters/${id}.jpg`} preload="metadata" playsInline loop muted={!soundEnabled || localMute}
-            onPlaying={() => { setPlaying(true); setBusy(false); setFailed(false); }}
+            poster={`/videos/posters/${id}.jpg`} preload="metadata" playsInline muted={!soundEnabled || localMute}
+            onPlaying={() => { setPlaying(true); setBusy(false); setFailed(false); setVideoEnded(false); }}
             onPause={() => setPlaying(false)} onWaiting={() => setBusy(true)}
+            onEnded={handleEnded}
             onError={() => { setFailed(true); setPlaying(false); setBusy(false); }}
             onTimeUpdate={event => { const v = event.currentTarget; setProgress(v.duration > 0 ? v.currentTime / v.duration : 0); }} />
-          {(!playing || slow || failed) && <button className="theater-big-play" onClick={() => void requestPlay()} aria-label={failed || slow ? '영상 다시 불러와 재생하기' : '영상 재생하기'}>
-            {failed || slow ? <RotateCcw /> : <Play fill="currentColor" />}
-          </button>}
-          {busy && !slow && <LoaderCircle className="theater-loading" aria-hidden="true" />}
+          {videoEnded ? (
+            <div className="theater-ended-overlay">
+              <button
+                type="button"
+                className="theater-ended-play-btn"
+                onClick={(e) => { e.stopPropagation(); onClose(); }}
+                autoFocus
+              >
+                🎮 {buddy.name}랑 놀자!
+              </button>
+              <button
+                type="button"
+                className="theater-ended-replay-btn"
+                onClick={(e) => { e.stopPropagation(); void requestPlay(true); }}
+              >
+                <RotateCcw size={18} /> 다시 보기
+              </button>
+            </div>
+          ) : (!playing || slow || failed) ? (
+            <button
+              className="theater-big-play"
+              onClick={(e) => { e.stopPropagation(); void requestPlay(); }}
+              aria-label={failed || slow ? '영상 다시 불러와 재생하기' : '영상 재생하기'}
+            >
+              {failed || slow ? <RotateCcw /> : <Play fill="currentColor" />}
+            </button>
+          ) : null}
+          {busy && !slow && !videoEnded && <LoaderCircle className="theater-loading" aria-hidden="true" />}
         </div>
         <div className="theater-progress" aria-hidden="true"><span style={{ width: `${progress * 100}%` }} /></div>
         <div className="theater-controls">
@@ -137,3 +185,4 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
     </div>
   </dialog>;
 }
+

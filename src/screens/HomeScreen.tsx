@@ -8,6 +8,7 @@ import { GameArtwork } from '../components/GameArtwork';
 import { ToyArtwork } from '../components/ToyArtwork';
 import { FRIEND_DAY } from '../data/friendDay';
 import { availableGameIds, GAME_CATALOG } from '../data/gameCatalog';
+import { getTimeGreeting } from '../data/characterGreetings';
 import { playJellyTap, speakText, stopAllSpeech } from '../utils/soundEngine';
 import type { ChildProfile, CharacterId, GameId } from '../types';
 import './HomeScreen.css';
@@ -38,6 +39,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   // Keep the same picture in the same place when the child changes friends.
   const games = availableGameIds(age);
+  const timeGreeting = getTimeGreeting();
 
   useEffect(() => () => stopAllSpeech(), []);
   useEffect(() => {
@@ -67,9 +69,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
   return <div className={`storybook-home home-${step}`}>
     <section className="welcome-scene">
       <button type="button" className="welcome-voice-surface" aria-label="배경을 눌러 선택 안내 듣기" disabled={!soundEnabled}
-        onClick={() => speakText(step === 'friends' ? `${childName}야, 같이 놀 친구를 골라줘!` : '어떤 게임 해볼까? 하고 싶은 그림을 눌러봐!', soundEnabled, { characterId: selectedCharacter })} />
+        onClick={() => speakText(step === 'friends' ? `${childName}야, 같이 놀 친구를 골라줘!` : timeGreeting.spoken, soundEnabled, { characterId: selectedCharacter })} />
       <div className="welcome-copy">
-        <p className="eyebrow"><span /> {childName}의 놀이숲</p>
+        <p className="eyebrow"><span /> {childName}의 놀이숲 · {timeGreeting.badge} {timeGreeting.label}</p>
         <h1 ref={headingRef} tabIndex={-1}>{step === 'friends' ? <>같이 놀 친구를<br />선택해줘~</> : <>어떤 게임<br />해볼까?</>}</h1>
         <p className="welcome-subtitle">{step === 'friends' ? '마음에 드는 친구를 콕!' : `${buddy.name}랑 함께, 하고 싶은 그림을 콕!`}</p>
       </div>

@@ -20,3 +20,43 @@ export const CHARACTER_GREETINGS: Record<CharacterId, CharacterGreeting> = {
   nurungji: { move: 'bow', title: '꼬리 흔들며 꾸벅', soundWord: '꾸벅! 살랑!', message: '꼬리 살랑살랑! 꾸벅, 안녕!', color: '#ead9ad' },
   pingu: { move: 'skate', title: '씽씽 스케이트', soundWord: '씽~ 씽~', message: '씽씽! 미끄러지며 안녕!', color: '#c3e4e4' },
 };
+
+export type TimeOfDayPeriod = 'morning' | 'afternoon' | 'evening';
+
+export interface TimeGreeting {
+  period: TimeOfDayPeriod;
+  badge: string;
+  label: string;
+  spoken: string;
+  childSpokenTemplate: string;
+}
+
+export function getTimeGreeting(now: Date = new Date()): TimeGreeting {
+  const hours = now.getHours();
+  if (hours >= 6 && hours < 12) {
+    return {
+      period: 'morning',
+      badge: '☀️',
+      label: '상쾌한 아침',
+      spoken: '좋은 아침이야! 오늘 하루도 신나게 놀아볼까?',
+      childSpokenTemplate: '{0}야, 좋은 아침이야!',
+    };
+  }
+  if (hours >= 12 && hours < 18) {
+    return {
+      period: 'afternoon',
+      badge: '🌤️',
+      label: '신나는 오후',
+      spoken: '신나는 오후야! 재미있는 놀이 해볼까?',
+      childSpokenTemplate: '{0}야, 신나는 오후야!',
+    };
+  }
+  return {
+    period: 'evening',
+    badge: '🌙',
+    label: '포근한 밤',
+    spoken: '포근한 밤이야! 도란도란 놀아볼까?',
+    childSpokenTemplate: '{0}야, 포근한 밤이야!',
+  };
+}
+
