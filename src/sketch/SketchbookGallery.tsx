@@ -69,7 +69,7 @@ export function SketchbookGallery({ savedId, revision, saving, onSave, onContinu
   </div>;
 
   return <div className="sketch-gallery">
-    {savedId && <div className="sketch-saved-banner" role="status"><Check aria-hidden="true" /><strong>멋진 그림을 전시했어요!</strong></div>}
+    {savedId && (loading || items.some(item => item.id === savedId)) && <div className="sketch-saved-banner" role="status"><Check aria-hidden="true" /><strong>멋진 그림을 전시했어요!</strong></div>}
     {loading ? <p role="status">그림을 가져오고 있어요…</p> : error ? <div role="alert" className="sketch-error">
       <p>{error}</p><button className="sketch-action" onClick={() => setRetry(value => value + 1)}>다시 불러오기</button>
     </div> : <>

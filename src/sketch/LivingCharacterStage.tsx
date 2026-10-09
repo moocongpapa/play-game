@@ -161,7 +161,7 @@ export const LivingCharacterStage: React.FC<LivingCharacterStageProps> = ({
   };
 
   return (
-    <div className="relative w-full h-full min-h-[85vh] bg-gradient-to-b from-[#BAE6FD] via-[#E0F2FE] to-[#86EFAC] rounded-[36px] border-4 border-amber-300 shadow-2xl overflow-hidden select-none flex flex-col justify-between p-4 sm:p-6">
+    <div className="sketch-living-stage relative w-full bg-gradient-to-b from-[#BAE6FD] via-[#E0F2FE] to-[#86EFAC] rounded-[36px] border-4 border-amber-300 shadow-2xl overflow-hidden select-none flex flex-col justify-between p-4 sm:p-6">
       {/* Sun & Floating Clouds Background Decoration */}
       <div className="absolute top-4 left-6 pointer-events-none flex items-center gap-2 animate-pulse">
         <span className="text-5xl filter drop-shadow-md">☀️</span>
@@ -182,15 +182,15 @@ export const LivingCharacterStage: React.FC<LivingCharacterStageProps> = ({
       </motion.div>
 
       {/* Top Header Bar */}
-      <div className="z-30 w-full flex items-center justify-between bg-white/90 backdrop-blur-xs p-3 rounded-3xl border-2 border-sky-300 shadow-md">
+      <div className="sketch-living-header z-30 w-full flex items-center justify-between bg-white/90 backdrop-blur-xs p-3 rounded-3xl border-2 border-sky-300 shadow-md">
         <button
           onClick={onBack}
-          className="px-3.5 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-full font-black text-xs sm:text-sm flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform border border-amber-300"
+          className="min-h-16 min-w-16 px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-2xl font-black text-xs sm:text-sm flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 transition-transform border border-amber-300"
         >
-          <ArrowLeft className="w-4 h-4" /> 🎨 다시 그리기
+          <ArrowLeft className="size-7" /> 다시 그리기
         </button>
 
-        <div className="text-center">
+        <div className="sketch-living-title text-center">
           <span className="text-xs font-black text-sky-600 block">
             🪄 {childName}의 살아 움직이는 캐릭터
           </span>
@@ -209,7 +209,7 @@ export const LivingCharacterStage: React.FC<LivingCharacterStageProps> = ({
       </div>
 
       {/* Speech Bubble from the character */}
-      <div className="z-30 w-full max-w-md mx-auto my-1 flex justify-center">
+      <div className="sketch-living-speech z-30 w-full max-w-md mx-auto my-1 flex justify-center">
         <AnimatePresence mode="wait">
           {speechBubble && (
             <motion.div
@@ -226,7 +226,7 @@ export const LivingCharacterStage: React.FC<LivingCharacterStageProps> = ({
       </div>
 
       {/* Living Character Play Stage */}
-      <div className="relative z-20 flex-1 flex items-center justify-center pointer-events-auto">
+      <div className="sketch-living-character relative z-20 flex-1 flex items-center justify-center pointer-events-auto">
         <motion.button type="button" aria-label={`${characterTitle} 친구와 놀기`}
           animate={getMotionAnimation()}
           onClick={handleTapCharacter}
@@ -255,7 +255,7 @@ export const LivingCharacterStage: React.FC<LivingCharacterStageProps> = ({
       </div>
 
       {/* Bottom Interactive Action Toolbar for Yuha */}
-      <div className="z-30 w-full flex flex-col items-center gap-2">
+      <div className="sketch-living-actions z-30 w-full flex flex-col items-center gap-2">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 w-full max-w-xl">
           <JellyButton
             onClick={() => handleAction('jump')}
