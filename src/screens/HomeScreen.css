@@ -1,73 +1,79 @@
-.storybook-home { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
-
-/* Fixed to the viewport; the content above reserves room for the whole dock. */
+/* The dock and scroll clearance share dimensions, including the home indicator. */
+.storybook-home {
+  --home-dock-height: 80px;
+  --home-dock-bottom: max(8px, env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(var(--home-dock-height) + var(--home-dock-bottom) + 16px);
+}
+.app-world[data-screen='home'] .app-main { padding-top: 8px; padding-bottom: 0; }
 .home-play-nav {
   position: fixed;
   inset: auto 0 0;
   z-index: 35;
-  padding: 8px max(8px, env(safe-area-inset-right, 0px)) 8px max(8px, env(safe-area-inset-left, 0px));
-  border-top: 1px solid #e7dece;
-  border-radius: 26px 26px 0 0;
-  background: #fffdf5f5;
-  box-shadow: 0 -6px 24px #786c5414, inset 0 2px 0 #ffffff;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  padding: 0 max(clamp(0px, calc(50vw - 160px), 12px), env(safe-area-inset-right, 0px)) var(--home-dock-bottom) max(clamp(0px, calc(50vw - 160px), 12px), env(safe-area-inset-left, 0px));
+  background: linear-gradient(transparent, #faf7ef 75%);
+  pointer-events: none;
 }
 .home-play-nav-items {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   align-items: center;
   justify-items: center;
-  gap: 4px;
-  max-width: 560px;
+  height: var(--home-dock-height);
+  max-width: 520px;
   margin: 0 auto;
+  padding-block: 8px;
+  border-radius: 28px;
+  background: #fffdf5f5;
+  box-shadow: inset 0 0 0 1px #e7dece, inset 0 2px 0 #fff, 0 4px 20px #786c5421;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  pointer-events: auto;
 }
+/* The hit cells stay 64px wide even at 320px; only the inset artwork gets smaller. */
 .home-play-nav .home-play-nav-button {
   display: grid;
   place-items: center;
   width: 100%;
   max-width: 88px;
-  min-height: 68px;
-  padding: 4px;
+  min-width: 0;
+  height: 64px;
+  padding: 0;
   border: 0;
-  border-radius: 24px;
+  border-radius: 22px;
   background: transparent;
   touch-action: manipulation;
-  transition: transform .15s ease;
+  scale: 1;
 }
-/* Each touch target includes the space around its inset icon. */
 .home-play-nav-icon {
   display: grid;
   place-items: center;
-  width: 100%;
-  min-height: 60px;
-  border: 2px solid #ffffffb3;
-  border-radius: 22px;
+  width: calc(100% - 12px);
+  max-width: 64px;
+  min-width: 0;
+  height: 58px;
+  margin-bottom: 2px;
+  border: 1px solid #e8dcc8;
+  border-radius: 20px;
   color: var(--nav-ink);
-  background: linear-gradient(160deg, #ffffff70, transparent 65%), var(--nav-color);
-  box-shadow: inset 0 2px 0 #ffffffb3, inset 0 -3px 0 #695d4310, 0 3px 0 var(--nav-shadow);
+  background: linear-gradient(145deg, #fffdf3c9, var(--nav-color));
+  box-shadow: inset 0 2px 0 #fff, 0 2px 0 var(--nav-shadow);
   pointer-events: none;
+  transition: transform .18s ease, box-shadow .18s ease;
 }
-
+.home-play-nav .nav-toy { width: min(52px, calc(100% - 8px)); height: auto; aspect-ratio: 1; }
 .home-play-nav-button.nav-drawing { --nav-color: #f2d9cd; --nav-ink: #a36157; --nav-shadow: #dfb7a7; }
 .home-play-nav-button.nav-bugs { --nav-color: #ede5b9; --nav-ink: #85772e; --nav-shadow: #d3c887; }
 .home-play-nav-button.nav-aquarium { --nav-color: #cce9ea; --nav-ink: #397f86; --nav-shadow: #9ccace; }
 .home-play-nav-button.nav-park { --nav-color: #e5dbf3; --nav-ink: #8460a4; --nav-shadow: #c4afdd; }
 .home-play-nav-button.nav-greeting { --nav-color: #d9e9d9; --nav-ink: #5b8062; --nav-shadow: #b1ceaf; }
-.home-play-nav-button:focus-visible { outline-offset: 3px; }
-.home-play-nav-button:active { transform: translateY(3px); }
-.home-play-nav-button:active .home-play-nav-icon { box-shadow: inset 0 2px 0 #ffffff99, inset 0 -1px 0 #695d4310; }
-@media (max-width: 419px) {
-  .home-play-nav { padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px); }
-  .home-play-nav-items { gap: 0; }
-  .home-play-nav-icon { border-radius: 19px; }
-
-}
+.home-play-nav-button:focus-visible { outline-offset: -3px; }
+.home-play-nav-button:active .home-play-nav-icon { transform: translateY(2px) scale(.96); box-shadow: inset 0 1px 2px #695d431a; }
 @media (hover: hover) {
-  .home-play-nav-button:hover { transform: translateY(-2px); }
+  .home-play-nav-button:hover .home-play-nav-icon { transform: translateY(-2px); }
+  .home-play-nav-button:active .home-play-nav-icon { transform: translateY(2px) scale(.96); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .home-play-nav .home-play-nav-button { transition: none; transform: none; }
+  .home-play-nav .home-play-nav-icon { transition: none; transform: none; }
 }
 
 /* Two sibling touch targets: the landscape speaks; the portrait changes friend. */
@@ -108,7 +114,6 @@
 .storybook-home .friend-day-copy > .day-mini-pictures { position: absolute; inset: 0; margin: 0; }
 .storybook-home .day-mini-pictures > .game-artwork { min-width: 0; height: 100%; aspect-ratio: auto; }
 /* Familiar toys, lit from the top left, on the same cream frames as the house. */
-.home-play-nav-icon { background: linear-gradient(145deg,#fffdf3c9,var(--nav-color)); border-width: 1px; border-color: #e8dcc8; box-shadow: inset 0 2px 0 #fff,0 3px 0 var(--nav-shadow); }
 .nav-toy { display: block; position: relative; width: 58px; height: 58px; pointer-events: none; }
 .nav-toy > svg { width: 100%; height: 100%; }
 .nav-toy-park > span { position: absolute; width: 74%; height: 74%; bottom: 8%; z-index: 1; }

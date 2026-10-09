@@ -3,6 +3,7 @@ import { Music2, Shield, Volume2, VolumeX } from 'lucide-react';
 import { CookieHouseIcon } from './CookieHouseIcon';
 import { CHARACTERS } from '../data/characters';
 import type { CharacterId } from '../types';
+import './Header.css';
 
 type Screen = 'home' | 'game' | 'day' | 'stickers' | 'aquarium' | 'park' | 'talk' | 'parent' | 'drawing';
 
@@ -47,8 +48,8 @@ export const Header: React.FC<HeaderProps> = ({
               : `${childName}의 놀이터`;
 
   return (
-    <header className="app-header sticky top-0 z-30 w-full">
-      <div className="header-content mx-auto flex w-full max-w-7xl items-center justify-between gap-2 px-3 sm:px-6">
+    <header className="app-header">
+      <div className="header-content">
         <button
           type="button"
           onClick={onGoHome}
@@ -59,20 +60,25 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
 
         <span className="header-page-label hidden min-w-0 truncate font-bold sm:block">{pageLabel}</span>
-        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+        <div className="header-controls">
+          <div className="header-audio-group" role="group" aria-label="음악과 소리">
+            <button
+              type="button"
+              onClick={onToggleBGM}
+              aria-label={bgmEnabled ? '배경음악 끄기' : '배경음악 켜기'}
+              aria-pressed={bgmEnabled}
+              className="header-audio-button header-music"
+            ><span className="header-audio-icon" aria-hidden="true"><Music2 /></span></button>
+            <button
+              type="button"
+              onClick={onToggleSound}
+              aria-label={soundEnabled ? '소리와 음성 끄기' : '소리와 음성 켜기'}
+              aria-pressed={soundEnabled}
+              className="header-audio-button header-sound"
+            ><span className="header-audio-icon" aria-hidden="true">{soundEnabled ? <Volume2 /> : <VolumeX />}</span></button>
+          </div>
           <button
-            onClick={onToggleBGM}
-            aria-label={bgmEnabled ? '배경음악 끄기' : '배경음악 켜기'}
-            aria-pressed={bgmEnabled}
-            className={`header-audio-button header-music ${bgmEnabled ? 'text-[#607861] hover:bg-[#eaf0e7]' : 'text-[#a0a3aa] hover:bg-[#f3f3f3]'}`}
-          ><Music2 className="size-5" /></button>
-          <button
-            onClick={onToggleSound}
-            aria-label={soundEnabled ? '소리와 음성 끄기' : '소리와 음성 켜기'}
-            aria-pressed={soundEnabled}
-            className={`header-audio-button header-sound ${soundEnabled ? 'text-[#607861] hover:bg-[#eaf0e7]' : 'text-[#a0a3aa] hover:bg-[#f3f3f3]'}`}
-          >{soundEnabled ? <Volume2 className="size-5" /> : <VolumeX className="size-5" />}</button>
-          <button
+            type="button"
             onClick={onOpenParentGate}
             aria-label="부모님 설정"
             className="header-parent-button"

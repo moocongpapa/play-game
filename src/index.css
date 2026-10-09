@@ -7,15 +7,8 @@ button:disabled { cursor: default; }
 button:focus-visible, [tabindex]:focus-visible { outline: 3px solid #357d76; outline-offset: 5px; }
 h1:focus { outline: none; }
 .app-world { background: radial-gradient(ellipse at 100% 28%, #f0e9dc80, transparent 45%), #faf7ef; }
-.app-header { background: #fffdf6f5; border-bottom: 1px solid #e7dece; padding-top: env(safe-area-inset-top); padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
 .app-main { padding-bottom: max(32px, env(safe-area-inset-bottom)); }
-.home-button { display: grid; place-items: center; flex-shrink: 0; width: 72px; height: 72px; margin: 2px 0 5px; padding: 2px; border: 1px solid #e8dcc8; border-radius: 23px; background: linear-gradient(150deg,#fffdf4,#f0e5d0); box-shadow: inset 0 2px 0 #fff, 0 3px 0 #d5c4a8; transition: transform .15s, box-shadow .15s; }
-.home-button:active { transform: translateY(2px) scale(1.04,.96); box-shadow: inset 0 1px 0 #fff, 0 1px 0 #d5c4a8; }
 .cookie-house-icon { display: inline-block; flex-shrink: 0; object-fit: contain; pointer-events: none; }
-.home-button-icon { width: 66px; height: 66px; transition: transform .2s; }
-@media (hover: hover) { .home-button:hover .home-button-icon { transform: rotate(-6deg) translateY(-1px); } }
-@media (prefers-reduced-motion: reduce) { .home-button, .home-button-icon { transition: none; }.home-button:hover .home-button-icon { transform: none; } }
-.header-page-label { color: #736759; }
 .storybook-home { max-width: 1000px; margin: auto; }
 .eyebrow { display: flex; align-items: center; gap: 8px; color: #65776d; font-size: 12px; font-weight: 800; letter-spacing: .04em; margin: 0 0 12px; }
 .eyebrow > span { width: 7px; height: 7px; border-radius: 50%; background: #80a891; }
