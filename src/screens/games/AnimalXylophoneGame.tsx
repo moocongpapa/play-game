@@ -27,6 +27,7 @@ export function AnimalXylophoneGame(props: ToddlerGameProps) {
   const [echoing, setEchoing] = useState(false);
   const [ready, setReady] = useState(false);
   const [concertDone, setConcertDone] = useState(false);
+  const concertAwarded = useRef(false);
   const help = useGentleHelp('music', echoing || concertDone);
   const history = useRef<MelodyNote[]>([]);
   const sequence = useRef(0);
@@ -47,12 +48,12 @@ export function AnimalXylophoneGame(props: ToddlerGameProps) {
   };
   useEffect(() => {
     const hide = () => {
-      if (document.hidden) { clearAudio(); clearGameTimeouts(); setEchoing(false); setActive([]); setNotes([]); setCelebrating(false); echoDue.current = false; }
+      if (document.hidden) { clearAudio(); clearGameTimeouts(); setEchoing(false); setActive([]); setNotes([]); setCelebrating(false); echoDue.current = false; if (day && concertAwarded.current) setConcertDone(true); }
     };
     document.addEventListener('visibilitychange', hide);
     return () => { clearAudio(); document.removeEventListener('visibilitychange', hide); };
   }, [clearGameTimeouts]);
-  useEffect(() => { if (!props.soundEnabled) { clearAudio(); setEchoing(false); setActive([]); echoDue.current = false; } }, [props.soundEnabled]);
+  useEffect(() => { if (!props.soundEnabled) { clearAudio(); setEchoing(false); setActive([]); echoDue.current = false; if (day && concertAwarded.current) setConcertDone(true); } }, [props.soundEnabled]);
   const showNote = (index: number) => {
     const id = ++visuals.current;
     activeStrikes.current.set(index, id);
@@ -76,6 +77,7 @@ export function AnimalXylophoneGame(props: ToddlerGameProps) {
     echoTimers.current.push(setTimeout(() => {
       setEchoing(false); setCelebrating(false);
       speakText('네 노래를 따라 해 봤어! 우리 멋진 음악회야!', latest.current.soundEnabled, { characterId: latest.current.buddy, playIntroSFX: false });
+      if (day && concertAwarded.current) setConcertDone(true);
     }, melody[melody.length - 1].at + 1000));
   };
   const strike = (index: number) => {
@@ -90,9 +92,12 @@ export function AnimalXylophoneGame(props: ToddlerGameProps) {
     setReady(history.current.length >= 3);
     sequence.current++;
     if (sequence.current % 12 === 0) {
-      if (!day || !concertDone) props.onCompleteQuiz(1);
-      setConcertDone(true); fireStarExplosion(); setCelebrating(true); echoDue.current = true;
+      if (!day || !concertAwarded.current) props.onCompleteQuiz(1);
+      concertAwarded.current = true;
+      if (!day) setConcertDone(true);
+      fireStarExplosion(); setCelebrating(true); echoDue.current = true;
     }
+    if (day && concertAwarded.current) echoDue.current = true;
     // A short gap lets the child finish their phrase before their friend answers.
     if (echoDue.current) echoTimer.current = setTimeout(echo, 1100);
   };

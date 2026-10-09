@@ -132,7 +132,7 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
       )}
 
       {/* Pattern Sequence Display Box */}
-      <div className="my-4 sm:my-6 p-4 sm:p-6 w-full bg-white rounded-3xl border-3 sm:border-4 border-[#C8E6C9] shadow-inner flex flex-col items-center justify-center">
+      <div data-play-area className="my-4 sm:my-6 p-4 sm:p-6 w-full bg-white rounded-3xl border-3 sm:border-4 border-[#C8E6C9] shadow-inner flex flex-col items-center justify-center">
         <span className="sr-only">패턴 레일</span>
         <div className="flex items-center justify-center gap-2 sm:gap-4 flex-wrap max-w-full">
           {targetItem.sequence.map((emoji, idx) => (

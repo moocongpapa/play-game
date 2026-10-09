@@ -1,7 +1,7 @@
 interface Clock { setTimeout: (run: () => void, ms: number) => number; clearTimeout: (id: number) => void }
 
 /** Wait for both the scene's minimum display time and the current voice to finish. */
-export function createJourneyTransition(next: () => void, delayMs: number, ready: () => boolean, clock: Clock) {
+export function createJourneyTransition(next: () => void, delayMs: number, ready: () => boolean, clock: Clock, maxReadyWaitMs = Infinity) {
   let timer: number | undefined;
   let generation = 0;
   let disposed = false;
@@ -12,9 +12,9 @@ export function createJourneyTransition(next: () => void, delayMs: number, ready
     if (disposed || advanced) return;
     pause();
     const ticket = generation;
-    const check = () => {
+    const check = (waited = 0) => {
       if (disposed || advanced || ticket !== generation) return;
-      if (!ready()) { timer = clock.setTimeout(check, 150); return; }
+      if (!ready() && waited < maxReadyWaitMs) { timer = clock.setTimeout(() => check(waited + 150), 150); return; }
       advanced = true; pause(); next();
     };
     timer = clock.setTimeout(check, expedited ? 0 : delayMs);

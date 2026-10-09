@@ -8,14 +8,12 @@
 .journey-path li[data-done=true] > .journey-check { display: block; }
 .journey-path li + li:before { content: ''; position: absolute; right: calc(100% + 4px); width: clamp(5px,2vw,20px); border-top: 3px dotted #ccbfa8; }
 .journey-cheer { min-height: 32px; display: flex; justify-content: center; align-items: center; gap: 20px; color: #bc9d58; }
-.journey-finale { position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; align-items: center; min-height: 360px; padding: 28px 16px 82px; border: 3px solid #fff8e9; border-radius: 32px; box-shadow: inset 0 0 0 2px #d7cdb470,0 5px 0 #d9ccb3; background: linear-gradient(#e4eee2,#f6e4bf); }
+.journey-finale { position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 360px; padding: 20px 16px; border: 3px solid #fff8e9; border-radius: 32px; box-shadow: inset 0 0 0 2px #d7cdb470,0 5px 0 #d9ccb3; background: linear-gradient(#e4eee2,#f6e4bf); }
 .journey-collection { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; width: 100%; position: relative; z-index: 1; }
 .journey-toy { position: relative; width: clamp(76px,18vw,120px); height: clamp(80px,20vw,130px); background: #fffdf15e; border: 2px solid #fff8e9; border-radius: 35%; padding: 8px; touch-action: none; }
 .journey-toy-art { display: block; width: 100%; height: 100%; }.journey-toy-art > svg,.journey-toy-art > .toy-art,.journey-toy-art > div { width: 100% !important; height: 100% !important; }
 .journey-toy-spark { position: absolute; top: -6px; right: -5px; color: #d6b565; pointer-events: none; animation: journey-spark 1s both; }
 .journey-companion { width: 160px; height: 155px; padding: 0; background: transparent; border: 0; margin-top: 14px; }
-.journey-next { position: absolute; bottom: 12px; right: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 104px; height: 64px; border: 2px solid #fff5dc; border-radius: 24px; color: #95845e; background: #f8e4b7; box-shadow: inset 0 3px #fff4d6,0 4px #cbb38c; }
-.journey-next > svg { width: 30px; height: 30px; }.journey-next > .game-artwork { width: 44px; height: 44px; }
 .finale-picnic { background: repeating-linear-gradient(0deg,#fff4e790 0 30px,#e7c4b590 30px 60px),repeating-linear-gradient(90deg,#fff8dc 0 30px,#f3d8ad 30px 60px); }
 .finale-mirror { background: radial-gradient(ellipse at 50% 42%,#fff9ec 0 43%,#d0dfcf 44% 49%,#eaf1e2 50%); }
 .finale-bedroom { background: linear-gradient(#e4d4d4 65%,#d5b397 65%); }
@@ -69,5 +67,5 @@
   .play-journey .trace-scene,.play-journey .peekaboo-garden { grid-column: 1 / -1; grid-row: 2; min-height: 185px; height: max(185px,calc(100dvh - 205px)); }
   .play-journey > .play-progress,.play-journey .journey-cheer { grid-column: 2; grid-row: 3; }
   .play-journey .menu-choices { grid-column: 1 / -1; grid-row: 2; grid-template-columns: repeat(3,minmax(0,1fr)); padding: 10px; }.play-journey .menu-plate { min-height: 185px; flex-wrap: wrap; padding: 6px; }.play-journey .menu-plate > .toy-art { width: 43%; height: 65px; }
-  .play-journey .journey-finale { grid-column: 1 / -1; grid-row: 2; min-height: 200px; padding: 12px 104px 12px 12px; flex-direction: row; }.play-journey .journey-collection { gap: 6px; }.play-journey .journey-toy { width: 76px; height: 80px; }.play-journey .journey-companion { width: 140px; height: 145px; flex-shrink: 0; margin: 0; }
+  .play-journey .journey-finale { grid-column: 1 / -1; grid-row: 2; min-height: 200px; padding: 12px; flex-direction: row; }.play-journey .journey-collection { gap: 6px; }.play-journey .journey-toy { width: 76px; height: 80px; }.play-journey .journey-companion { width: 140px; height: 145px; flex-shrink: 0; margin: 0; }
 }

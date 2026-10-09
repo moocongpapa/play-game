@@ -168,7 +168,7 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
       )}
 
       {/* Food Plate Container */}
-      <div className="my-3 sm:my-5 p-4 sm:p-6 w-full bg-white rounded-3xl sm:rounded-[40px] border-3 sm:border-4 border-[#FFCCBC] shadow-inner flex flex-col items-center justify-center">
+      <div data-play-area className="my-3 sm:my-5 p-4 sm:p-6 w-full bg-white rounded-3xl sm:rounded-[40px] border-3 sm:border-4 border-[#FFCCBC] shadow-inner flex flex-col items-center justify-center">
         <p className="sr-only">
           👇 음식을 손가락으로 누르면 숫자를 세어줘요!
         </p>

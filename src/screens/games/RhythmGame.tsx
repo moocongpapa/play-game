@@ -179,7 +179,7 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
       </div>
 
       {/* Rhythm Buttons Track Area */}
-      <div className="flex items-center justify-center gap-3 sm:gap-6 my-4 sm:my-6 w-full flex-wrap max-w-full">
+      <div data-play-area className="flex items-center justify-center gap-3 sm:gap-6 my-4 sm:my-6 w-full flex-wrap max-w-full">
         {targetItem.notes.map((note, index) => {
           const color = targetItem.colors[index] || '#FF9800';
           const emoji = targetItem.emojis[index] || '🎵';

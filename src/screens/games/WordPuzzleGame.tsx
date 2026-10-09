@@ -142,13 +142,13 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
         </span>
       </div>
 
-      <div className="word-drop-row">
+      <div data-play-area className="word-drop-row">
         {targetItem.letters.map((letter, index) => <DropSlot key={index} id={String(index)} label={`${index + 1}번째 ${letter}`} filled={!!placedLetters[index]} className="word-slot">
           {placedLetters[index] || letter}
         </DropSlot>)}
       </div>
       <DragHint>같은 글자 위에 쏙!</DragHint>
-      <div className="word-drop-row min-h-[100px] mb-4">
+      <div data-play-area className="word-drop-row min-h-[100px] mb-4">
         {lettersPool.map(piece => <DragPiece key={piece.id} id={piece.id} label={piece.letter} className="word-piece">
           {piece.letter}
         </DragPiece>)}

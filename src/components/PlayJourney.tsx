@@ -1,9 +1,9 @@
 import { useContext, useState, type ReactNode } from 'react';
 import { motion, MotionConfig, useReducedMotion } from 'motion/react';
-import { ArrowRight, Check, Flag, Flower2, Sparkles, TreeDeciduous, Cloud, Utensils, Rainbow } from 'lucide-react';
+import { Check, Flag, Flower2, Sparkles, TreeDeciduous, Cloud, Utensils, Rainbow } from 'lucide-react';
 import { CharacterAvatar } from './CharacterAvatar';
 import { GameCue } from './GameCue';
-import { DayContinuationContext, PlayHintsPausedContext } from './PlayFlowContext';
+import { PlayHintsPausedContext } from './PlayFlowContext';
 import { ToyArtwork } from './ToyArtwork';
 import { LandscapeArt, SeatArt, WingArt } from './development/DevelopmentArt';
 import { CareObjectArt, type CareObjectKind } from './development/CareRoutine';
@@ -44,7 +44,7 @@ export function JourneyFrame({ props, journey, className = '', children }: {
         </li>)}
       </ol>
       {children}
-      {journey.phase === 'celebrating' && <div className="journey-cheer" role="status"><Sparkles aria-hidden="true" /><span className="sr-only">잘했어! 다음 장면으로 이어져요.</span><ArrowRight aria-hidden="true" /></div>}
+      {journey.phase === 'celebrating' && <span className="sr-only" role="status">잘했어! 다음 장면으로 이어져요.</span>}
     </div>
   </PlayHintsPausedContext.Provider></MotionConfig>;
 }
@@ -65,18 +65,14 @@ export function JourneyToy({ props, label, voice, children, className = '' }: {
   </motion.button>;
 }
 
-export function JourneyFinale({ props, journey, scene = 'garden', children }: {
+export function JourneyFinale({ props, scene = 'garden', children }: {
   props: ToddlerGameProps; journey: PlayJourney; scene?: 'garden' | 'picnic' | 'mirror' | 'bedroom'; children: ReactNode;
 }) {
-  const day = useContext(DayContinuationContext);
   return <section className={`journey-finale finale-${scene}`} aria-label="완성한 이야기 놀이터">
     {scene === 'garden' && <LandscapeArt />}
     <div className="journey-collection">{children}</div>
     <JourneyToy props={props} className="journey-companion" label={`${CHARACTERS[props.buddy].name}와 기뻐하기`} voice="우리 함께 해냈어! 너랑 노니까 정말 즐거워!">
       <CharacterAvatar id={props.buddy} size="xl" mood="happy" />
     </JourneyToy>
-    <button type="button" className="journey-next" aria-label={day ? '다음 하루 놀이로' : '새 이야기 시작'} onClick={journey.restart}>
-      {day ? day.picture : <Flag aria-hidden="true" />}<ArrowRight aria-hidden="true" />
-    </button>
   </section>;
 }

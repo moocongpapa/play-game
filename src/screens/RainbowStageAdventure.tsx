@@ -15,12 +15,10 @@ import { useGameTimeouts } from '../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { CharacterAvatar } from '../components/CharacterAvatar';
-import { JellyButton } from '../components/JellyButton';
 import { speakText, isSpeechBusy, playDingDongDang, playJellyTap, playWrongBoing, playSparkleChime, playCelebrationFanfare, playBalloonPop } from '../utils/soundEngine';
 import { fireConfetti, fireStarExplosion, fireCelebrationFireworks, fireBalloonPopParticle } from '../utils/confetti';
 import { AgeGroup, CharacterId } from '../types';
 import { Sparkles, Trophy, RotateCcw, Star, Check } from 'lucide-react';
-import { CookieHouseIcon } from '../components/CookieHouseIcon';
 
 interface RainbowStageAdventureProps {
   buddy: CharacterId;
@@ -687,19 +685,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
             <CharacterAvatar id={buddy} size="lg" mood="dancing" />
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col items-center gap-3 w-full max-w-sm mt-2">
-            <RoundContinuation onNext={restartAdventure} delayMs={1800} label="새로운 모험이 곧 시작돼요!" />
-            <JellyButton
-              soundEnabled={soundEnabled}
-              onClick={onGoHome}
-              variant="secondary"
-              size="lg"
-              className="adventure-home"
-            >
-              <CookieHouseIcon className="size-12" /><span className="sr-only">홈으로 가기</span>
-            </JellyButton>
-          </div>
+          <RoundContinuation onNext={restartAdventure} delayMs={1800} label="새로운 모험이 곧 시작돼요!" />
         </motion.div>
       )}
     </div>

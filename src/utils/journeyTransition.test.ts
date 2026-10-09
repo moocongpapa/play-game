@@ -47,3 +47,22 @@ test('every new story line has an authored English version', () => {
     assert.equal(translateSpeech(ko.replace('{0}', '사과')), en.replace('{0}', 'apple'));
   }
 });
+
+test('automatic stories recover from a missing speech-end event, and pausing cancels the recovery timer', t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let scenes = 0;
+  const transition = createJourneyTransition(() => scenes++, 450, () => false, clock, 4500);
+  transition.resume();
+  t.mock.timers.tick(450);
+  for (let i = 0; i < 29; i++) t.mock.timers.tick(150);
+  assert.equal(scenes, 0);
+  t.mock.timers.tick(150);
+  assert.equal(scenes, 1, 'a stuck voice cannot permanently freeze a button-free story');
+  transition.resume(); t.mock.timers.tick(10000);
+  assert.equal(scenes, 1, 'recovery still advances only once');
+  const hidden = createJourneyTransition(() => scenes++, 450, () => false, clock, 4500);
+  hidden.resume(); t.mock.timers.tick(450); hidden.pause();
+  t.mock.timers.tick(10000);
+  assert.equal(scenes, 1, 'backgrounding or a parent gate cancels readiness recovery');
+  hidden.dispose();
+});

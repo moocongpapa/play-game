@@ -174,7 +174,7 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
       <div className="visual-prompt" aria-label="같은 글자 방울을 찾아요"><span className="text-4xl font-black">{targetItem.letter}</span><span aria-hidden="true">→</span><ToyArtwork emoji={targetItem.emoji} /></div>
 
       {/* Bubbles Playground */}
-      <div className={`relative w-full h-[280px] sm:h-[320px] my-3 sm:my-4 bg-gradient-to-b from-[#F3E5F5]/60 to-[#E1BEE7]/40 rounded-3xl border-3 sm:border-4 border-dashed border-[#CE93D8] overflow-hidden p-3 sm:p-4 gap-2 place-items-center ${
+      <div data-play-area className={`relative w-full h-[280px] sm:h-[320px] my-3 sm:my-4 bg-gradient-to-b from-[#F3E5F5]/60 to-[#E1BEE7]/40 rounded-3xl border-3 sm:border-4 border-dashed border-[#CE93D8] overflow-hidden p-3 sm:p-4 gap-2 place-items-center ${
         bubbles.length === 2 ? 'grid grid-cols-2' : 'grid grid-cols-2 sm:flex sm:items-center sm:justify-around'
       }`}>
         <AnimatePresence>

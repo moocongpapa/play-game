@@ -49,7 +49,7 @@ export function usePlayJourney(props: ToddlerGameProps, steps: readonly JourneyS
     speakText(steps[step].guide, p.soundEnabled, { characterId: p.buddy, playIntroSFX: false });
   }, [step, cycle, props.buddy, steps]);
   useEffect(() => {
-    if (phase === 'playing') return;
+    if (phase === 'playing' || paused) return;
     let praised = false;
     const voice = createJourneyTransition(() => {
       praised = true;
@@ -57,7 +57,7 @@ export function usePlayJourney(props: ToddlerGameProps, steps: readonly JourneyS
       speakText(praise.current, p.soundEnabled, { characterId: p.buddy, playIntroSFX: false });
     }, 0, () => !document.hidden && !latest.current.paused && !isSpeechBusy(), window);
     const transition = createJourneyTransition(() => {
-      if (!live.current) return;
+      if (!live.current || document.hidden || latest.current.paused) return;
       if (phase === 'finished') {
         if (latest.current.day) { latest.current.day.onNext(); return; }
         setStep(0); setCycle(value => value + 1);
@@ -69,12 +69,12 @@ export function usePlayJourney(props: ToddlerGameProps, steps: readonly JourneyS
       // Friend Day keeps a brief celebration, then the next screen owns speech.
       // Long praise or a pending voice download must not extend its 250/450 ms gap.
       return !!latest.current.day || (praised && !isSpeechBusy());
-    }, window);
+    }, window, 4500);
     transitionRef.current = transition;
     const pointers = new Set<number>();
     let focused = true;
     const sync = () => {
-      if (document.hidden || !focused) { transition.pause(); voice.pause(); return; }
+      if (document.hidden || !focused || latest.current.paused) { transition.pause(); voice.pause(); return; }
       voice.resume();
       if (pointers.size) transition.pause(); else transition.resume();
     };
@@ -102,7 +102,7 @@ export function usePlayJourney(props: ToddlerGameProps, steps: readonly JourneyS
       document.removeEventListener('pointercancel', up, true);
       document.removeEventListener('keydown', activity, true);
     };
-  }, [phase, cycle, step]);
+  }, [phase, cycle, step, paused]);
   return { step, cycle, phase, steps, current: steps[step], key, locked: phase !== 'playing', complete,
     restart: () => { if (phase === 'finished') transitionRef.current?.advance(); } };
 }
