@@ -1,3 +1,4 @@
+import { useRoundTimer } from '../../hooks/useRoundTimer';
 import { useIdleScaffolding } from '../../hooks/useIdleScaffolding';
 import { ScaffoldingHint } from '../../components/ScaffoldingHint';
 import { RoundContinuation } from '../../components/RoundContinuation';
@@ -6,7 +7,7 @@ import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { QuizItem, AgeGroup } from '../../types';
 import { OBJECT_ITEMS_BY_AGE } from '../../data/gameData';
@@ -48,9 +49,9 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
   const [questionPrompt, setQuestionPrompt] = useState('');
 
   // 타이머 상태 (꽃잎반/별님반)
-  const [timeLeft, setTimeLeft] = useState<number>(diffConfig.timeLimit);
-  const [timeOut, setTimeOut] = useState(false);
-  const gameTimerRef = useRef<number | null>(null);
+  const { timeLeft, timeOut, startRoundTimer, stopRoundTimer } = useRoundTimer(diffConfig.timeLimit, () => {
+    speakText(`아쉬워요! 시간이 다 되었어요. 다른 문제를 풀어볼까요?`, soundEnabled, { characterId: buddy });
+  });
 
   const { isIdle: showHint, reset: resetHint } = useIdleScaffolding({
     resetKey: targetItem.id, disabled: !!selectedCorrectId || timeOut || !options.length,
@@ -61,12 +62,10 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
     resetHint();
     clearGameTimeouts();
     // 기존 타이머 클리어
-    if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+    stopRoundTimer();
 
     setSelectedCorrectId(null);
     setShakingCardId(null);
-    setTimeOut(false);
-    setTimeLeft(diffConfig.timeLimit);
 
     const target = pickNextRound(itemPool, `GgomiObjectGame:${ageGroup}`);
     if (!target) return;
@@ -97,26 +96,13 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
       speakText(promptText, soundEnabled, { characterId: buddy });
     }
 
-    // 시간제한 타이머 구동
-    if (diffConfig.timeLimit > 0) {
-      gameTimerRef.current = window.setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            if (gameTimerRef.current) clearInterval(gameTimerRef.current);
-            setTimeOut(true);
-            speakText(`아쉬워요! 시간이 다 되었어요. 다른 문제를 풀어볼까요?`, soundEnabled, { characterId: buddy });
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+    startRoundTimer();
   };
 
   useEffect(() => {
     generateRound();
     return () => {
-      if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+      stopRoundTimer();
     };
   }, [ageGroup]);
 
@@ -124,7 +110,7 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
     if (selectedCorrectId || timeOut) return;
 
     if (item.id === targetItem.id) {
-      if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+      stopRoundTimer();
       
       setSelectedCorrectId(item.id);
       playCorrectFanfare(soundEnabled);

@@ -59,6 +59,7 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
 
   const reducedMotion = useReducedMotion();
   const poppedIds = useRef(new Set<string>());
+  const popCount = useRef(0);
   const [poppedCount, setPoppedCount] = useState(0);
   const [balloons, setBalloons] = useState<BalloonItem[]>([]);
   const [popPopups, setPopPopups] = useState<Array<{ id: string; x: number; y: number; text: string; color: string }>>([]);
@@ -104,7 +105,7 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
   }, []);
 
   const handlePop = (balloon: BalloonItem, event: React.MouseEvent | React.TouchEvent) => {
-    if (isCompleted || poppedIds.current.has(balloon.id)) return;
+    if (isCompleted || (isStageMode && popCount.current >= targetCount) || poppedIds.current.has(balloon.id)) return;
     poppedIds.current.add(balloon.id);
 
     // SFX
@@ -128,7 +129,7 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
     setBalloons((prev) => prev.filter((b) => b.id !== balloon.id));
 
     // Next count
-    const nextCount = poppedCount + 1;
+    const nextCount = ++popCount.current;
     setPoppedCount(nextCount);
 
     // Number popup
@@ -144,6 +145,7 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
 
     // Sound / Voice praise occasionally (every 5 pops)
     if (nextCount % 5 === 0) {
+      if (!isStageMode) onCompleteQuiz(1);
       playDingDongDang(soundEnabled);
       playSparkleChime(soundEnabled);
       speakText(`와아! 풍선을 정말 잘 터뜨려요! 팡팡!`, soundEnabled, {
@@ -175,6 +177,7 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
     poppedIds.current.clear();
     themeRef.current = pickNextRound(PLAY_THEMES, 'balloons:themes');
     setTheme(themeRef.current);
+    popCount.current = 0;
     setPoppedCount(0);
     setIsCompleted(false);
     setBalloons([]);

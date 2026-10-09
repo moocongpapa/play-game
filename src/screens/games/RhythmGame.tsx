@@ -1,3 +1,4 @@
+import { useRoundTimer } from '../../hooks/useRoundTimer';
 import { RoundContinuation } from '../../components/RoundContinuation';
 import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
@@ -45,9 +46,9 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
   const [isCompleted, setIsCompleted] = useState(false);
 
   // 타이머 상태
-  const [timeLeft, setTimeLeft] = useState<number>(diffConfig.timeLimit);
-  const [timeOut, setTimeOut] = useState(false);
-  const gameTimerRef = useRef<number | null>(null);
+  const { timeLeft, timeOut, startRoundTimer, stopRoundTimer } = useRoundTimer(diffConfig.timeLimit, () => {
+    speakText(`시간 초과! 다시 연주를 들어보아요!`, soundEnabled, { characterId: buddy });
+  }, isPlayingSequence);
 
   const resumeDemo = useRef(false);
   const latest = useRef({ soundEnabled, buddy });
@@ -92,11 +93,9 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
 
   const generateRound = () => {
     playback.cancel();
-    if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+    stopRoundTimer();
 
     setIsCompleted(false);
-    setTimeOut(false);
-    setTimeLeft(diffConfig.timeLimit);
     setUserSequence([]);
     setActiveButtonIdx(null);
 
@@ -106,27 +105,13 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
 
     playSequence(target);
 
-    // 시간제한 타이머 구동
-    if (diffConfig.timeLimit > 0) {
-      gameTimerRef.current = window.setInterval(() => {
-        if (document.hidden || playback.isPlaying()) return;
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            if (gameTimerRef.current) clearInterval(gameTimerRef.current);
-            setTimeOut(true);
-            speakText(`시간 초과! 다시 연주를 들어보아요!`, soundEnabled, { characterId: buddy });
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+    startRoundTimer();
   };
 
   useEffect(() => {
     generateRound();
     return () => {
-      if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+      stopRoundTimer();
       playback.cancel();
     };
   }, [ageGroup]);
@@ -144,7 +129,7 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
 
       // 리듬 완성 체크
       if (newSeq.length === targetItem.notes.length) {
-        if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+        stopRoundTimer();
 
         setIsCompleted(true);
         playCorrectFanfare(soundEnabled);

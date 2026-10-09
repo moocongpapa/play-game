@@ -10,6 +10,8 @@ import type { CharacterAudioStatus } from '../data/audioExperience';
 import { stopGeneratedEffects } from '../services/generatedEffects';
 import { CHARACTER_VOICES, type CharacterVoiceId } from '../data/characterVoices';
 import { CHARACTERS } from '../data/characters';
+import { GAME_CATALOG } from '../data/gameCatalog';
+import { summarizePlayActivity } from '../utils/playActivity';
 import { CharacterAvatar } from '../components/CharacterAvatar';
 
 interface ParentDashboardProps {
@@ -97,28 +99,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
     speakText('프로필 정보가 수정되었습니다!', appState.soundEnabled);
   };
 
-  // 게임 레이블 맵핑
-  const GAME_LABELS: Record<string, string> = {
-    object_recognition: '꼬미의 사물 인지',
-    shape_color: '라노의 모양 퍼즐',
-    korean_letters: '젤리의 한글 비누방울',
-    sound_quiz: '도치의 소리 퀴즈',
-    counting_food: '꿀꿀이의 수 세기',
-    cloud_shapes: '음메의 구름 퍼즐',
-    treasure_hunt: '누룽지의 보물 찾기',
-    emotion_quiz: '꼬미의 감정 퀴즈',
-    pattern_sequence: '라노의 패턴 놀이',
-    word_puzzle: '젤리의 단어 퍼즐',
-    rhythm_game: '도치의 리듬 놀이',
-    size_comparison: '꿀꿀이의 크기 비교',
-    memory_card: '누룽지의 기억력 카드',
-    shadow_quiz: '음메의 그림자 퀴즈',
-    tooth_brush: '치카치카 양치 놀이',
-    feeding: '냠냠 골고루 먹기',
-    bubble_pop: '비눗방울 톡톡',
-    peekaboo_hide: '어디 숨었지? 까꿍',
-    animal_xylophone: '동물 실로폰',
-  };
+  const activity = summarizePlayActivity(appState.completedGames);
 
   return (
     <div className="flex flex-col items-center justify-between w-full max-w-2xl mx-auto p-2.5 sm:p-4 min-h-[85vh] overflow-hidden">
@@ -225,30 +206,15 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
           <Sparkles className="w-3.5 h-3.5 text-amber-500" /> 발달 영역별 활동 요약
         </h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4 text-left">
-          <div className="p-2 bg-sky-50 rounded-xl border border-sky-100 text-center">
-            <span className="text-[10px] font-bold text-sky-700 block">🗣️ 언어·인지</span>
-            <span className="text-sm font-black text-sky-900">
-              {((appState.completedGames['korean_letters'] || 0) + (appState.completedGames['word_puzzle'] || 0) + (appState.completedGames['object_recognition'] || 0) + (appState.completedGames['sound_quiz'] || 0))}회
-            </span>
-          </div>
-          <div className="p-2 bg-amber-50 rounded-xl border border-amber-100 text-center">
-            <span className="text-[10px] font-bold text-amber-700 block">🔢 수·논리</span>
-            <span className="text-sm font-black text-amber-900">
-              {((appState.completedGames['counting_food'] || 0) + (appState.completedGames['size_comparison'] || 0) + (appState.completedGames['shape_color'] || 0) + (appState.completedGames['pattern_sequence'] || 0) + (appState.completedGames['size_ordering'] || 0))}회
-            </span>
-          </div>
-          <div className="p-2 bg-rose-50 rounded-xl border border-rose-100 text-center">
-            <span className="text-[10px] font-bold text-rose-700 block">💖 감성·생활</span>
-            <span className="text-sm font-black text-rose-900">
-              {((appState.completedGames['emotion_quiz'] || 0) + (appState.completedGames['tooth_brush'] || 0) + (appState.completedGames['feeding'] || 0) + (appState.completedGames['goodnight_sleep'] || 0))}회
-            </span>
-          </div>
-          <div className="p-2 bg-purple-50 rounded-xl border border-purple-100 text-center">
-            <span className="text-[10px] font-bold text-purple-700 block">🎨 신체·창의</span>
-            <span className="text-sm font-black text-purple-900">
-              {((appState.completedGames['rhythm_game'] || 0) + (appState.completedGames['bubble_pop'] || 0) + (appState.completedGames['animal_xylophone'] || 0) + (appState.completedGames['balloon_pop'] || 0) + (appState.completedGames['sensory_paint'] || 0))}회
-            </span>
-          </div>
+          {([
+            { id: 'language', label: '🗣️ 언어·인지', style: 'bg-sky-50 border-sky-100 text-sky-900' },
+            { id: 'logic', label: '🔢 수·논리', style: 'bg-amber-50 border-amber-100 text-amber-900' },
+            { id: 'care', label: '💖 감성·생활', style: 'bg-rose-50 border-rose-100 text-rose-900' },
+            { id: 'creative', label: '🎨 신체·창의', style: 'bg-purple-50 border-purple-100 text-purple-900' },
+          ] as const).map(area => <div key={area.id} className={`p-2 rounded-xl border text-center ${area.style}`}>
+            <span className="text-[10px] font-bold block">{area.label}</span>
+            <span className="text-sm font-black">{activity[area.id]}회</span>
+          </div>)}
         </div>
 
         {/* 놀이 통계 시각화 */}
@@ -256,11 +222,11 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> 놀이 종류별 완료 통계
         </h3>
         <div className="space-y-2 text-left max-h-32 overflow-y-auto pr-1">
-          {Object.entries(GAME_LABELS).map(([gameId, label]) => {
+          {Object.entries(GAME_CATALOG).map(([gameId, game]) => {
             const count = appState.completedGames[gameId] || 0;
             return (
               <div key={gameId} className="flex items-center justify-between text-xs">
-                <span className="font-bold text-[#8C7B79] truncate w-32">{label}</span>
+                <span className="font-bold text-[#8C7B79] truncate w-32">{game.title}</span>
                 <div className="flex-1 mx-3 bg-slate-100 h-2.5 rounded-full overflow-hidden relative">
                   <div
                     className="bg-emerald-400 h-full rounded-full transition-all duration-500"

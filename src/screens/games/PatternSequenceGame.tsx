@@ -1,3 +1,4 @@
+import { useRoundTimer } from '../../hooks/useRoundTimer';
 import { DragMatch, DragPiece, DropSlot, DragHint } from '../../components/DragMatch';
 import { RoundContinuation } from '../../components/RoundContinuation';
 import { pickNextRound } from '../../utils/roundDeck';
@@ -5,7 +6,7 @@ import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
@@ -42,18 +43,16 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
   const [shakingCardId, setShakingCardId] = useState<string | null>(null);
 
   // 타이머 상태
-  const [timeLeft, setTimeLeft] = useState<number>(diffConfig.timeLimit);
-  const [timeOut, setTimeOut] = useState(false);
-  const gameTimerRef = useRef<number | null>(null);
+  const { timeLeft, timeOut, startRoundTimer, stopRoundTimer } = useRoundTimer(diffConfig.timeLimit, () => {
+    speakText(`시간 초과! 다음 패턴 규칙을 찾아볼까요?`, soundEnabled, { characterId: buddy });
+  });
 
   const generateRound = () => {
     clearGameTimeouts();
-    if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+    stopRoundTimer();
 
     setSelectedCorrectId(null);
     setShakingCardId(null);
-    setTimeOut(false);
-    setTimeLeft(diffConfig.timeLimit);
 
     const target = pickNextRound(itemPool, `PatternSequenceGame:${ageGroup}`);
     if (!target) return;
@@ -68,26 +67,13 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
       speakText(`${friend.name}랑 신나는 패턴 놀이! 알맞은 그림을 물음표 상자로 옮겨 주세요!`, soundEnabled, { characterId: buddy });
     }
 
-    // 시간제한 타이머 구동
-    if (diffConfig.timeLimit > 0) {
-      gameTimerRef.current = window.setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            if (gameTimerRef.current) clearInterval(gameTimerRef.current);
-            setTimeOut(true);
-            speakText(`시간 초과! 다음 패턴 규칙을 찾아볼까요?`, soundEnabled, { characterId: buddy });
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+    startRoundTimer();
   };
 
   useEffect(() => {
     generateRound();
     return () => {
-      if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+      stopRoundTimer();
     };
   }, [ageGroup]);
 
@@ -95,7 +81,7 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
     if (selectedCorrectId || timeOut) return;
 
     if (ans === targetItem.answer) {
-      if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+      stopRoundTimer();
 
       setSelectedCorrectId(ans);
       playCorrectFanfare(soundEnabled);

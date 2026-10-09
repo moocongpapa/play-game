@@ -1,3 +1,4 @@
+import { useRoundTimer } from '../../hooks/useRoundTimer';
 import { DragMatch, DragPiece, DropSlot, DragHint } from '../../components/DragMatch';
 import { placeMatchingValue } from '../../utils/dropTarget';
 import { RoundContinuation } from '../../components/RoundContinuation';
@@ -6,7 +7,7 @@ import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
@@ -45,18 +46,16 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
   const [isCompleted, setIsCompleted] = useState(false);
 
   // 타이머 상태
-  const [timeLeft, setTimeLeft] = useState<number>(diffConfig.timeLimit);
-  const [timeOut, setTimeOut] = useState(false);
-  const gameTimerRef = useRef<number | null>(null);
+  const { timeLeft, timeOut, startRoundTimer, stopRoundTimer } = useRoundTimer(diffConfig.timeLimit, () => {
+    speakText(`시간 초과! 다음 글자 퍼즐을 맞춰볼까요?`, soundEnabled, { characterId: buddy });
+  });
 
   const generateRound = () => {
     clearGameTimeouts();
-    if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+    stopRoundTimer();
 
     setPlacedLetters([]);
     setIsCompleted(false);
-    setTimeOut(false);
-    setTimeLeft(diffConfig.timeLimit);
 
     const target = pickNextRound(currentPool, `WordPuzzleGame:${ageGroup}`);
     setTargetItem(target);
@@ -69,26 +68,13 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
       speakText(`글자를 잡아 똑같은 글자 칸에 쏙 넣어 '${target.word}' 단어를 만들어볼까요?`, soundEnabled, { characterId: buddy });
     }
 
-    // 시간제한 타이머 구동
-    if (diffConfig.timeLimit > 0) {
-      gameTimerRef.current = window.setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            if (gameTimerRef.current) clearInterval(gameTimerRef.current);
-            setTimeOut(true);
-            speakText(`시간 초과! 다음 글자 퍼즐을 맞춰볼까요?`, soundEnabled, { characterId: buddy });
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+    startRoundTimer();
   };
 
   useEffect(() => {
     generateRound();
     return () => {
-      if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+      stopRoundTimer();
     };
   }, [ageGroup]);
 
@@ -106,7 +92,7 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
     setPlacedLetters(next);
     setLettersPool(pool => pool.filter(letter => letter.id !== pieceId));
     if (next.every(letter => letter !== null)) {
-      if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+      stopRoundTimer();
       setIsCompleted(true);
       playCorrectFanfare(soundEnabled);
       speakText(`와아! 단어가 완성되었어요! ${targetItem.word}!`, soundEnabled, { characterId: buddy });

@@ -1,3 +1,4 @@
+import { useRoundTimer } from '../../hooks/useRoundTimer';
 import { useIdleScaffolding } from '../../hooks/useIdleScaffolding';
 import { ScaffoldingHint } from '../../components/ScaffoldingHint';
 import { DragMatch, DragPiece, DropSlot, DragHint } from '../../components/DragMatch';
@@ -8,7 +9,7 @@ import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
@@ -46,9 +47,9 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
   const [shakingIdx, setShakingIdx] = useState<number | null>(null);
 
   // 타이머 상태
-  const [timeLeft, setTimeLeft] = useState<number>(diffConfig.timeLimit);
-  const [timeOut, setTimeOut] = useState(false);
-  const gameTimerRef = useRef<number | null>(null);
+  const { timeLeft, timeOut, startRoundTimer, stopRoundTimer } = useRoundTimer(diffConfig.timeLimit, () => {
+    speakText(`시간이 완료되었어요. 다른 크기 놀이를 시작할게요!`, soundEnabled, { characterId: buddy });
+  });
 
   const { isIdle: showHint, reset: resetHint } = useIdleScaffolding({
     resetKey: targetItems.map(item => item.id).join(), disabled: isCompleted || timeOut || questionType === 'sort_ascending' || !targetItems.length,
@@ -58,13 +59,11 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
   const generateRound = () => {
     resetHint();
     clearGameTimeouts();
-    if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+    stopRoundTimer();
 
     setIsCompleted(false);
     setSelectedIndices([]);
     setShakingIdx(null);
-    setTimeOut(false);
-    setTimeLeft(diffConfig.timeLimit);
 
     // 연령 등급에 따라 질문 유형 정의
     let type: 'find_largest' | 'find_smallest' | 'sort_ascending' = 'find_largest';
@@ -96,26 +95,13 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
       speakText(audioMsg, soundEnabled, { characterId: buddy });
     }
 
-    // 시간제한 타이머 구동
-    if (diffConfig.timeLimit > 0) {
-      gameTimerRef.current = window.setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            if (gameTimerRef.current) clearInterval(gameTimerRef.current);
-            setTimeOut(true);
-            speakText(`시간이 완료되었어요. 다른 크기 놀이를 시작할게요!`, soundEnabled, { characterId: buddy });
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+    startRoundTimer();
   };
 
   useEffect(() => {
     generateRound();
     return () => {
-      if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+      stopRoundTimer();
     };
   }, [ageGroup]);
 
@@ -192,7 +178,7 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
     setSelectedIndices(next);
     playBubblePop(soundEnabled);
     if (next.every(item => item !== null)) {
-      if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+      stopRoundTimer();
       setIsCompleted(true);
       playCorrectFanfare(soundEnabled);
       speakText('우와! 작은 것부터 차례대로 모두 놓았어요!', soundEnabled, { characterId: buddy });

@@ -8,13 +8,17 @@ export function useGameTimeouts() {
     timers.current.clear();
   }, []);
   useEffect(() => clearGameTimeouts, [clearGameTimeouts]);
+  const cancelGameTimeout = useCallback((id: number | null) => {
+    if (id === null) return;
+    window.clearTimeout(id);
+    timers.current.delete(id);
+  }, []);
   const scheduleGameTimeout = useCallback((callback: () => void, delay: number) => {
     const id = window.setTimeout(() => {
-      timers.current.delete(id);
-      callback();
+      if (timers.current.delete(id)) callback();
     }, delay);
     timers.current.add(id);
     return id;
   }, []);
-  return { scheduleGameTimeout, clearGameTimeouts };
+  return { scheduleGameTimeout, cancelGameTimeout, clearGameTimeouts };
 }

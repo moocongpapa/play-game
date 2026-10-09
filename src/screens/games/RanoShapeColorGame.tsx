@@ -1,3 +1,4 @@
+import { useRoundTimer } from '../../hooks/useRoundTimer';
 import { DragMatch, DragPiece, DropSlot, DragHint } from '../../components/DragMatch';
 import { RoundContinuation } from '../../components/RoundContinuation';
 import { PlayResultScene } from '../../components/PlayResultScene';
@@ -5,7 +6,7 @@ import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { SHAPE_COLOR_ITEMS_BY_AGE } from '../../data/gameData';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
@@ -154,18 +155,17 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
   const [showComboBanner, setShowComboBanner] = useState(false);
 
   // 타이머 상태 (꽃잎반/별님반)
-  const [timeLeft, setTimeLeft] = useState<number>(diffConfig.timeLimit);
-  const [timeOut, setTimeOut] = useState(false);
-  const gameTimerRef = useRef<number | null>(null);
+  const { timeLeft, timeOut, startRoundTimer, stopRoundTimer } = useRoundTimer(diffConfig.timeLimit, () => {
+    setStreak(0);
+    speakText(`시간이 끝났어요. 다음 문제를 풀어보아요!`, soundEnabled, { characterId: buddy });
+  });
 
   const generateRound = () => {
     clearGameTimeouts();
-    if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+    stopRoundTimer();
 
     setSelectedCorrectId(null);
     setShakingCardId(null);
-    setTimeOut(false);
-    setTimeLeft(diffConfig.timeLimit);
 
     const target = pickNextRound(itemPool, `RanoShapeColorGame:${ageGroup}`);
     setTargetItem(target);
@@ -178,27 +178,13 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
       speakText(`${friend.name}와 함께 알록달록 ${target.colorName} ${target.shape}를 잡아 같은 모양 위에 올려 주세요!`, soundEnabled, { characterId: buddy });
     }
 
-    // 시간제한 타이머 구동
-    if (diffConfig.timeLimit > 0) {
-      gameTimerRef.current = window.setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            if (gameTimerRef.current) clearInterval(gameTimerRef.current);
-            setTimeOut(true);
-            setStreak(0);
-            speakText(`시간이 끝났어요. 다음 문제를 풀어보아요!`, soundEnabled, { characterId: buddy });
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+    startRoundTimer();
   };
 
   useEffect(() => {
     generateRound();
     return () => {
-      if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+      stopRoundTimer();
     };
   }, [ageGroup]);
 
@@ -206,7 +192,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
     if (selectedCorrectId || timeOut) return;
 
     if (item.id === targetItem.id) {
-      if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+      stopRoundTimer();
 
       setSelectedCorrectId(item.id);
       playCorrectFanfare(soundEnabled);

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useGameTimeouts } from '../hooks/useGameTimeouts';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { JellyButton } from '../components/JellyButton';
 import type { CharacterId } from '../types';
@@ -42,6 +43,8 @@ export const LivingCharacterStage: React.FC<LivingCharacterStageProps> = ({
   onBack,
   onSave,
 }) => {
+  const { scheduleGameTimeout, cancelGameTimeout } = useGameTimeouts();
+  const actionTimer = useRef<number | null>(null);
   const [motionMode, setMotionMode] = useState<MotionMode>('idle');
   const [speechBubble, setSpeechBubble] = useState<string>('');
   const [tapHearts, setTapHearts] = useState<Array<{ id: number; x: number; y: number }>>([]);
@@ -55,14 +58,16 @@ export const LivingCharacterStage: React.FC<LivingCharacterStageProps> = ({
     speakText(entranceVoice, soundEnabled, { characterId: buddy });
     setSpeechBubble(entranceVoice);
 
-    const timer = setTimeout(() => {
+    const timer = scheduleGameTimeout(() => {
       setSpeechBubble(`${childName}야 안녕! 나랑 같이 춤추자!`);
     }, 4500);
 
-    return () => clearTimeout(timer);
+    return () => cancelGameTimeout(timer);
   }, []);
 
   const handleAction = (mode: MotionMode) => {
+    cancelGameTimeout(actionTimer.current);
+    actionTimer.current = null;
     setMotionMode(mode);
 
     if (mode === 'jump') {
@@ -71,27 +76,27 @@ export const LivingCharacterStage: React.FC<LivingCharacterStageProps> = ({
       const msg = '높이높이 점프! 얏호!';
       setSpeechBubble(msg);
       speakText(msg, soundEnabled, { characterId: buddy });
-      setTimeout(() => setMotionMode('idle'), 2500);
+      actionTimer.current = scheduleGameTimeout(() => setMotionMode('idle'), 2500);
     } else if (mode === 'dance') {
       playDingDongDang(soundEnabled);
       fireConfetti();
       const msg = '신나게 덩실덩실 춤을 춰요!';
       setSpeechBubble(msg);
       speakText(msg, soundEnabled, { characterId: buddy });
-      setTimeout(() => setMotionMode('idle'), 4000);
+      actionTimer.current = scheduleGameTimeout(() => setMotionMode('idle'), 4000);
     } else if (mode === 'magic') {
       playSparkleChime(soundEnabled);
       fireStarExplosion();
       const msg = '반짝반짝 무지개 마법 얍!';
       setSpeechBubble(msg);
       speakText(msg, soundEnabled, { characterId: buddy });
-      setTimeout(() => setMotionMode('idle'), 3000);
+      actionTimer.current = scheduleGameTimeout(() => setMotionMode('idle'), 3000);
     } else if (mode === 'walk') {
       playJellyTap(soundEnabled);
       const msg = '아장아장 산책을 가요~';
       setSpeechBubble(msg);
       speakText(msg, soundEnabled, { characterId: buddy });
-      setTimeout(() => setMotionMode('idle'), 4500);
+      actionTimer.current = scheduleGameTimeout(() => setMotionMode('idle'), 4500);
     }
   };
 
@@ -108,7 +113,7 @@ export const LivingCharacterStage: React.FC<LivingCharacterStageProps> = ({
     // Add heart popup
     const newHeart = { id: Date.now(), x: cx, y: cy };
     setTapHearts((prev) => [...prev, newHeart]);
-    setTimeout(() => {
+    scheduleGameTimeout(() => {
       setTapHearts((prev) => prev.filter((h) => h.id !== newHeart.id));
     }, 1000);
 

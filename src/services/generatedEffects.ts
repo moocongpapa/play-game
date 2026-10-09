@@ -1,10 +1,11 @@
 import { PLAY_EFFECTS, PLAY_EFFECT_REVISION, type PlayEffectId } from '../data/audioExperience';
 import { isPageHidden } from '../utils/pageVisibility';
 import { readSavedAudio, saveAudio, deleteSavedAudio } from './audioCache';
-import { getCharacterAudioStatus, isGeminiTTSEnabled, isGeminiVoiceAvailable, rememberAudioResponse } from './geminiTTS';
+import { isGeminiTTSEnabled } from './geminiTTS';
 
 const buffers = new Map<PlayEffectId, AudioBuffer>();
 const sources = new Set<AudioBufferSourceNode>();
+const retryAfter = new Map<PlayEffectId, number>();
 let warming: AbortController | null = null;
 let generation = 0;
 let enabled = true;
@@ -15,7 +16,7 @@ export function setGeneratedEffectsEnabled(value: boolean) {
 }
 
 async function warmEffect(id: PlayEffectId, ctx: AudioContext) {
-  if (warming || !enabled || !isGeminiTTSEnabled() || isPageHidden()) return;
+  if (warming || !enabled || !isGeminiTTSEnabled() || isPageHidden() || Date.now() < (retryAfter.get(id) || 0)) return;
   const controller = new AbortController();
   warming = controller;
   const version = generation;
@@ -44,18 +45,10 @@ async function warmEffect(id: PlayEffectId, ctx: AudioContext) {
         }
         return;
       }
-    } catch { /* Older/offline installs may still use their server's catalog. */ }
-    if (!current() || !(await isGeminiVoiceAvailable()) || (await getCharacterAudioStatus()).engine !== 'elevenlabs' || !current()) return;
-    const response = await fetch('/api/speech', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ effectId: id }), signal: controller.signal });
-    rememberAudioResponse(response);
-    if (!response.ok || response.headers.get('X-Speech-Provider') !== 'elevenlabs') return;
-    const bytes = await response.arrayBuffer();
-    const buffer = await ctx.decodeAudioData(bytes.slice(0));
-    if (!current()) return;
-    buffers.set(id, buffer);
-    void saveAudio({ key, bytes, playbackRate: 1, savedAt: Date.now() });
-    // Never play a late network response. The next real gesture uses this buffer.
+    } catch { /* A missing or slow bundled clip uses the immediate procedural sound. */ }
+    // Every catalog effect is shipped with the app. Delivery failures must never
+    // spend credits regenerating it, or retry its download on every finger tap.
+    if (current()) retryAfter.set(id, Date.now() + 60_000);
   } catch { /* The immediate procedural effect has already played. */ }
   finally { clearTimeout(timeout); if (warming === controller) warming = null; }
 }

@@ -2,6 +2,7 @@ import {
   backgrounds,
   defaultView,
   exportBounds,
+  contentBounds,
   type ViewBox,
   random,
   stickerKinds,
@@ -100,6 +101,10 @@ export function drawBase(
         1.5,
       );
   }
+  drawTemplate(c, a);
+}
+
+function drawTemplate(c: CanvasRenderingContext2D, a: Artwork) {
   const t = templates.find((t) => t.id === a.template);
   if (!t) return;
   c.save();
@@ -344,15 +349,16 @@ export function prepareView(c: CanvasRenderingContext2D, view: ViewBox) {
   const scale = c.canvas.width / view.width;
   c.setTransform(scale, 0, 0, scale, -view.x * scale, -view.y * scale);
 }
-export function renderArtwork(a: Artwork) {
-  const view = exportBounds(a),
-    scale = Math.min(1, 2400 / Math.max(view.width, view.height));
+export function renderArtwork(a: Artwork, { transparent = false } = {}) {
+  const view = transparent ? contentBounds(a) : exportBounds(a),
+    scale = Math.min(transparent ? 2 : 1, 2400 / Math.max(view.width, view.height));
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(view.width * scale);
   canvas.height = Math.round(view.height * scale);
   const c = canvas.getContext('2d')!;
   prepareView(c, view);
-  drawBase(c, a, view);
+  if (transparent) drawTemplate(c, a);
+  else drawBase(c, a, view);
   const ink = document.createElement('canvas');
   ink.width = canvas.width;
   ink.height = canvas.height;
@@ -370,37 +376,5 @@ export function renderArtwork(a: Artwork) {
  * Render character sprite on transparent background for living character animation
  */
 export function renderCharacterSprite(a: Artwork): string {
-  const canvas = document.createElement('canvas');
-  canvas.width = 1200;
-  canvas.height = 900;
-  const c = canvas.getContext('2d')!;
-  c.clearRect(0, 0, 1200, 900);
-
-  const t = templates.find((tpl) => tpl.id === a.template);
-  if (t) {
-    c.save();
-    c.scale(2, 2);
-    c.strokeStyle = '#51493f';
-    c.lineWidth = 4;
-    c.lineJoin = 'round';
-    c.lineCap = 'round';
-    for (const r of t.regions) {
-      const p = path(r.d);
-      c.fillStyle = r.fixed || a.fills[r.id] || '#ffffff';
-      c.fill(p);
-      c.stroke(p);
-    }
-    for (const l of t.lines) {
-      c.stroke(path(l));
-    }
-    c.restore();
-  }
-
-  // Draw strokes
-  a.strokes.forEach((s) => drawStroke(c, s));
-
-  // Draw stickers
-  a.stickers.forEach((s) => drawSticker(c, s));
-
-  return canvas.toDataURL('image/png');
+  return renderArtwork(a, { transparent: true }).toDataURL('image/png');
 }

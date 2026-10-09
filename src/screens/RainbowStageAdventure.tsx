@@ -110,7 +110,8 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
 }) => {
   const friend = CHARACTERS[buddy];
   const { playClue, status: clueStatus } = useSoundClue(soundEnabled, buddy);
-  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+  const { scheduleGameTimeout, cancelGameTimeout, clearGameTimeouts } = useGameTimeouts();
+  const clueTimer = useRef<number | null>(null);
 
   const reducedMotion = useReducedMotion();
   const clearingLevel = useRef(false);
@@ -128,6 +129,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
   const [l1WrongId, setL1WrongId] = useState<string | null>(null);
 
   const initLevel1 = () => {
+    cancelGameTimeout(clueTimer.current);
     const target = pickNextRound(ANIMAL_QUIZ_LIST, 'adventure:animals');
     const others = ANIMAL_QUIZ_LIST.filter((a) => a.id !== target.id).sort(() => Math.random() - 0.5).slice(0, 2);
     const opts = [target, ...others].sort(() => Math.random() - 0.5);
@@ -136,7 +138,9 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
     setL1Options(opts);
     setL1WrongId(null);
 
-    scheduleGameTimeout(() => {
+    clueTimer.current = scheduleGameTimeout(() => {
+      clueTimer.current = null;
+      if (clearingLevel.current) return;
       playClue(target.soundKey, target.soundPrompt);
     }, 400);
   };
@@ -153,7 +157,10 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
       setL1WrongId(item.id);
       playWrongBoing(soundEnabled);
       speakText(`다시 소리를 잘 들어볼까요?`, soundEnabled, { characterId: buddy });
-      scheduleGameTimeout(() => {
+      cancelGameTimeout(clueTimer.current);
+      clueTimer.current = scheduleGameTimeout(() => {
+        clueTimer.current = null;
+        if (clearingLevel.current) return;
         setL1WrongId(null);
         playClue(l1Target.soundKey, l1Target.soundPrompt);
       }, 700);
@@ -320,6 +327,9 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
   const triggerStageClear = (levelNumber: number, praiseMessage: string) => {
     if (clearingLevel.current) return;
     clearingLevel.current = true;
+    cancelGameTimeout(clueTimer.current);
+    clueTimer.current = null;
+    setL1WrongId(null);
     setStampAnimationLevel(levelNumber);
     setClearedLevels((prev) => (prev.includes(levelNumber) ? prev : [...prev, levelNumber]));
     onCompleteQuiz(2);

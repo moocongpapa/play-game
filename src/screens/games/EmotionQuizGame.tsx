@@ -1,3 +1,4 @@
+import { useRoundTimer } from '../../hooks/useRoundTimer';
 import { RoundContinuation } from '../../components/RoundContinuation';
 import { EMOTION_SCENES } from '../../data/playThemes';
 import { pickNextRound } from '../../utils/roundDeck';
@@ -47,20 +48,18 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
   const hintTimerRef = useRef<number | null>(null);
 
   // 타이머 상태 (꽃잎반/별님반)
-  const [timeLeft, setTimeLeft] = useState<number>(diffConfig.timeLimit);
-  const [timeOut, setTimeOut] = useState(false);
-  const gameTimerRef = useRef<number | null>(null);
+  const { timeLeft, timeOut, startRoundTimer, stopRoundTimer } = useRoundTimer(diffConfig.timeLimit, () => {
+    speakText(`시간 초과! 다른 표정을 알아볼까요?`, soundEnabled, { characterId: buddy });
+  });
 
   const generateRound = () => {
     clearGameTimeouts();
     if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
-    if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+    stopRoundTimer();
 
     setSelectedCorrectId(null);
     setShakingCardId(null);
     setShowHint(false);
-    setTimeOut(false);
-    setTimeLeft(diffConfig.timeLimit);
 
     const target = pickNextRound(itemPool, `EmotionQuizGame:${ageGroup}`);
     if (!target) return;
@@ -84,27 +83,14 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
       }, diffConfig.hintDelaySec * 1000);
     }
 
-    // 시간제한 타이머 구동
-    if (diffConfig.timeLimit > 0) {
-      gameTimerRef.current = window.setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            if (gameTimerRef.current) clearInterval(gameTimerRef.current);
-            setTimeOut(true);
-            speakText(`시간 초과! 다른 표정을 알아볼까요?`, soundEnabled, { characterId: buddy });
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+    startRoundTimer();
   };
 
   useEffect(() => {
     generateRound();
     return () => {
       if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
-      if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+      stopRoundTimer();
     };
   }, [ageGroup]);
 
@@ -113,7 +99,7 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
 
     if (item.id === targetItem.id) {
       if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
-      if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+      stopRoundTimer();
 
       setSelectedCorrectId(item.id);
       playCorrectFanfare(soundEnabled);

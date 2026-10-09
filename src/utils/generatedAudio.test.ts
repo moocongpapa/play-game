@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { setImmediate } from 'node:timers/promises';
 import { tryGeneratedEffect, stopGeneratedEffects, setGeneratedEffectsEnabled } from '../services/generatedEffects';
 import { startGeneratedMusic, stopGeneratedMusic } from '../services/generatedMusic';
+import type { PlayEffectId } from '../data/audioExperience';
 
 test('generated effects stay instant, never play late, bound polyphony and stop on mute/navigation', async () => {
   const originals = new Map(['fetch', 'document', 'localStorage'].map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
@@ -58,6 +59,47 @@ test('generated effects stay instant, never play late, bound polyphony and stop 
     assert.equal(failures, 0);
   } finally {
     stopGeneratedEffects(); stopGeneratedMusic();
+    for (const [key, descriptor] of originals) { if (descriptor) Object.defineProperty(globalThis, key, descriptor); else Reflect.deleteProperty(globalThis, key); }
+  }
+});
+
+test('missing, slow, offline or undecodable bundled effects never request paid regeneration', async (t) => {
+  const originals = new Map(['fetch', 'document', 'localStorage'].map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
+  let now = Date.now();
+  t.mock.method(Date, 'now', () => now);
+  const requests: string[] = [];
+  let failure = '';
+  Object.defineProperties(globalThis, {
+    document: { configurable: true, value: { hidden: false } },
+    localStorage: { configurable: true, value: { getItem: () => null } },
+    fetch: { configurable: true, value: async (url: string) => {
+      requests.push(url);
+      if (url.startsWith('/api/')) return Response.json({ available: true, engine: 'elevenlabs' });
+      if (failure === 'offline') throw new TypeError('Network error');
+      if (failure === 'slow') throw new DOMException('Asset deadline', 'TimeoutError');
+      return new Response(new Uint8Array(150), { status: failure === 'missing' ? 404 : 200 });
+    } },
+  });
+  const ctx = { state: 'running', decodeAudioData: async () => { throw new Error('Bad MP3'); } } as unknown as AudioContext;
+  const flush = async () => { await setImmediate(); await setImmediate(); };
+  try {
+    for (const [kind, id] of [['missing', 'pop'], ['slow', 'bubble'], ['offline', 'sparkle'], ['decode', 'success']] as [string, PlayEffectId][]) {
+      failure = kind;
+      const before = requests.length;
+      assert.equal(tryGeneratedEffect(id, ctx), false);
+      await flush();
+      assert.equal(requests.length, before + 1);
+      assert.ok(requests.at(-1)!.startsWith('/audio/elevenlabs/'));
+      for (let tap = 0; tap < 10; tap++) assert.equal(tryGeneratedEffect(id, ctx), false);
+      await flush();
+      assert.equal(requests.length, before + 1, 'rapid taps use procedural audio without another download');
+      now += 60001;
+      tryGeneratedEffect(id, ctx); await flush();
+      assert.equal(requests.length, before + 2, 'a later gesture can recover the static file');
+    }
+    assert.ok(requests.every(url => !url.startsWith('/api/')), 'asset failures never reach the generation endpoint');
+  } finally {
+    stopGeneratedEffects();
     for (const [key, descriptor] of originals) { if (descriptor) Object.defineProperty(globalThis, key, descriptor); else Reflect.deleteProperty(globalThis, key); }
   }
 });

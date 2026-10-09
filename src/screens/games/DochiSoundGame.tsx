@@ -1,3 +1,4 @@
+import { useRoundTimer } from '../../hooks/useRoundTimer';
 import { useIdleScaffolding } from '../../hooks/useIdleScaffolding';
 import { ScaffoldingHint } from '../../components/ScaffoldingHint';
 import { RoundContinuation } from '../../components/RoundContinuation';
@@ -7,7 +8,7 @@ import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { SOUND_ITEMS_BY_AGE } from '../../data/gameData';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
@@ -54,9 +55,9 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
   const [selectedCorrectId, setSelectedCorrectId] = useState<string | null>(null);
 
   // 타이머 상태 (꽃잎반/별님반)
-  const [timeLeft, setTimeLeft] = useState<number>(diffConfig.timeLimit);
-  const [timeOut, setTimeOut] = useState(false);
-  const gameTimerRef = useRef<number | null>(null);
+  const { timeLeft, timeOut, startRoundTimer, stopRoundTimer } = useRoundTimer(diffConfig.timeLimit, () => {
+    speakText(`시간이 완료되었어요. 다른 소리를 들려줄게요!`, soundEnabled, { characterId: buddy });
+  });
 
   const { isIdle: showHint, reset: resetHint } = useIdleScaffolding({
     resetKey: targetItem.id, disabled: !!selectedCorrectId || timeOut || !options.length,
@@ -66,12 +67,10 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
   const generateRound = () => {
     resetHint();
     clearGameTimeouts();
-    if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+    stopRoundTimer();
 
     setSelectedCorrectId(null);
     setShakingCardId(null);
-    setTimeOut(false);
-    setTimeLeft(diffConfig.timeLimit);
 
     const target = pickNextRound(itemPool, `DochiSoundGame:${ageGroup}`);
     if (!target) return;
@@ -83,26 +82,13 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
 
     playClue(target.id, target.soundText);
 
-    // 시간제한 타이머 구동
-    if (diffConfig.timeLimit > 0) {
-      gameTimerRef.current = window.setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            if (gameTimerRef.current) clearInterval(gameTimerRef.current);
-            setTimeOut(true);
-            speakText(`시간이 완료되었어요. 다른 소리를 들려줄게요!`, soundEnabled, { characterId: buddy });
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+    startRoundTimer();
   };
 
   useEffect(() => {
     generateRound();
     return () => {
-      if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+      stopRoundTimer();
     };
   }, [ageGroup]);
 
@@ -112,7 +98,7 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
     if (selectedCorrectId || timeOut) return;
 
     if (item.id === targetItem.id) {
-      if (gameTimerRef.current) clearInterval(gameTimerRef.current);
+      stopRoundTimer();
 
       setSelectedCorrectId(item.id);
       playDingDongDang(soundEnabled);
