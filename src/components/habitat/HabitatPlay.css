@@ -68,9 +68,9 @@
 .habitat-controls button {
   display: grid;
   place-items: center;
-  width: 58px;
-  height: 58px;
-  min-height: 58px;
+  width: 64px;
+  height: 64px;
+  min-height: 64px;
   border: 3px solid #ffffff;
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.88);
