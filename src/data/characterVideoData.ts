@@ -29,7 +29,7 @@ export interface CharacterVideoData {
 }
 
 export const COMMON_VIDEO_STYLE =
-  '3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, 4k 24fps.';
+  '3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, 1080p 24fps.';
 
 export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
   pingu: {
@@ -525,7 +525,7 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
     commonStyle: COMMON_VIDEO_STYLE,
     videoPrompt: `${COMMON_VIDEO_STYLE}\n\nA 30-second lively 3D claymation featuring Nurungji, an adorable honey-golden puppy with floppy ears and a tail that wags like a helicopter.\n- 00s-08s (Scene 1 - Bounding Run): Nurungji trots happily across a green meadow holding a red squeaky ball in its mouth, stopping to tilt its head with perked ears.\n- 08s-16s (Scene 2 - Catch & Roll): Nurungji tosses the ball with its nose, chases it in circles, and rolls over onto its back asking for tummy rubs.\n- 16s-24s (Scene 3 - Digging Fun): Nurungji digs energetically in a sandbox, pulling out a sparkling toy star and doing an excited tail-spin dance.\n- 24s-30s (Scene 4 - Screen Lick): Nurungji trots up to the lens, gently gives a cute cartoon "lick" on the screen, and barks joyfully with a panting smile.`,
     dubbingScript:
-      '멍멍! 꼬리 살랑살랑 누룽지야! 유하야, 공놀이 정말 신난다! 모래밭에서 반짝이는 별도 찾았어! 유하가 너무 좋아서 뽀뽀 츄~ 해줄래! 언제나 유하 곁에 있을게!',
+      '멍멍! 꼬리 살랑살랑 누룽지야! 유하야, 공놀이 정말 신난다! 모래밭에서 반짝이는 별도 찾았어! 유하야, 뽀뽀 츄~ 사랑해! 늘 곁에 있을게!',
     scenes: [
       {
         timeStart: 0,
@@ -570,8 +570,8 @@ export const CHARACTER_VIDEOS: Record<CharacterId, CharacterVideoData> = {
         timeStart: 24.0,
         timeEnd: 30.0,
         title: '장면 4: 사랑의 뽀뽀와 약속 (24s-30s)',
-        subtitle: '유하가 너무 좋아서 뽀뽀 츄~ 해줄래! 언제나 유하 곁에 있을게!',
-        voiceText: '유하가 너무 좋아서 뽀뽀 츄~ 해줄래! 언제나 유하 곁에 있을게!',
+        subtitle: '유하야, 뽀뽀 츄~ 사랑해! 늘 곁에 있을게!',
+        voiceText: '유하야, 뽀뽀 츄~ 사랑해! 늘 곁에 있을게!',
         mood: 'happy',
         bgGradient: 'from-[#FFF8E1] via-[#FFECB3] to-[#FFE082]',
         bgDecorations: ['💖', '🎉', '🌟', '🐶'],

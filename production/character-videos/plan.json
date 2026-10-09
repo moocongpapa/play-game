@@ -1,11 +1,21 @@
 {
-  "status": "pingu_completed_remaining_deferred",
+  "status": "waiting_for_daily_video_quota",
   "source": "public/videos/PROMPTS.md",
-  "generatedCount": 1,
-  "generatedSceneCount": 4,
-  "completedCharacters": ["pingu"],
-  "deferredCharacters": ["ggomi", "rano", "jelly", "dochi", "ggulgguli", "eumme", "nurungji"],
-  "statusNote": "핑구의 4개 장면·한국어 더빙·30초 세로 영상 적용 완료. 2026-10-09 사용자 요청에 따라 나머지 7명은 추가 생성 없이 기존 영상을 유지합니다.",
+  "generatedCount": 3,
+  "generatedSceneCount": 15,
+  "completedCharacters": [
+    "pingu",
+    "ggomi",
+    "rano"
+  ],
+  "deferredCharacters": [
+    "jelly",
+    "dochi",
+    "ggulgguli",
+    "eumme",
+    "nurungji"
+  ],
+  "statusNote": "2026-10-09 꼬미·라노 Lite 1080p 더빙 완성본 적용. 젤리 1·3·4 장면 저장, 2 장면 HTTP 429 거절. AI Studio에서 Lite RPD 한도 10, 사용 11 확인. 나머지 7명 한국어 더빙 28개 저장 완료. 다음 영상 요청은 일일 한도 초기화 이후 재개합니다.",
   "productionPolicy": {
     "effectiveDate": "2026-10-09",
     "modelId": "veo-3.1-lite-generate-preview",
@@ -17,7 +27,8 @@
     "estimatedVideoUsdPerCharacter": 2.56,
     "allowAutomaticModelFallback": false,
     "requireApprovalForPaidRegeneration": true,
-    "note": "앞으로 새로 생성하는 모든 영상에 적용합니다. 유료 품질 재생성과 더 비싼 모델·해상도 사용은 사용자 명시적 승인 없이 진행하지 않습니다. 기존 핑구 영상 및 제작 기록은 보존합니다. 이번 변경은 설정만 갱신하며 새 영상을 생성하지 않습니다. 더빙 비용은 별도입니다."
+    "note": "앞으로 새로 생성하는 영상은 Lite 1080p만 사용합니다. 사용자 추가 충전 및 제작 재개 요청에 따라 7명 영상과 한국어 더빙을 제작합니다. 외형과 음성 품질을 준비·검수하되, 생성 후 품질 편차는 유료 재생성 없이 사용합니다. 더빙 비용은 별도입니다.",
+    "qualityPolicy": "외형·구도·더빙을 준비 단계에서 점검합니다. 생성 결과의 품질 편차는 추가 유료 재생성 없이 그대로 사용합니다."
   },
   "characters": [
     {
@@ -89,7 +100,7 @@
       "scenes": [
         {
           "scene": 1,
-          "startFrameImage": "starting-frames/ggomi/scene-1.png",
+          "startFrameImage": "starting-frames/ggomi/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -103,7 +114,7 @@
         },
         {
           "scene": 2,
-          "startFrameImage": "starting-frames/ggomi/scene-2.png",
+          "startFrameImage": "starting-frames/ggomi/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -117,7 +128,7 @@
         },
         {
           "scene": 3,
-          "startFrameImage": "starting-frames/ggomi/scene-3.png",
+          "startFrameImage": "starting-frames/ggomi/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -131,7 +142,7 @@
         },
         {
           "scene": 4,
-          "startFrameImage": "starting-frames/ggomi/scene-4.png",
+          "startFrameImage": "starting-frames/ggomi/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -153,7 +164,7 @@
       "scenes": [
         {
           "scene": 1,
-          "startFrameImage": "starting-frames/rano/scene-1.png",
+          "startFrameImage": "starting-frames/rano/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -167,7 +178,7 @@
         },
         {
           "scene": 2,
-          "startFrameImage": "starting-frames/rano/scene-2.png",
+          "startFrameImage": "starting-frames/rano/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -181,7 +192,7 @@
         },
         {
           "scene": 3,
-          "startFrameImage": "starting-frames/rano/scene-3.png",
+          "startFrameImage": "starting-frames/rano/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -195,7 +206,7 @@
         },
         {
           "scene": 4,
-          "startFrameImage": "starting-frames/rano/scene-4.png",
+          "startFrameImage": "starting-frames/rano/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -217,7 +228,7 @@
       "scenes": [
         {
           "scene": 1,
-          "startFrameImage": "starting-frames/jelly/scene-1.png",
+          "startFrameImage": "starting-frames/jelly/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -231,7 +242,7 @@
         },
         {
           "scene": 2,
-          "startFrameImage": "starting-frames/jelly/scene-2.png",
+          "startFrameImage": "starting-frames/jelly/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -245,7 +256,7 @@
         },
         {
           "scene": 3,
-          "startFrameImage": "starting-frames/jelly/scene-3.png",
+          "startFrameImage": "starting-frames/jelly/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -259,7 +270,7 @@
         },
         {
           "scene": 4,
-          "startFrameImage": "starting-frames/jelly/scene-4.png",
+          "startFrameImage": "starting-frames/jelly/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -281,7 +292,7 @@
       "scenes": [
         {
           "scene": 1,
-          "startFrameImage": "starting-frames/dochi/scene-1.png",
+          "startFrameImage": "starting-frames/dochi/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -295,7 +306,7 @@
         },
         {
           "scene": 2,
-          "startFrameImage": "starting-frames/dochi/scene-2.png",
+          "startFrameImage": "starting-frames/dochi/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -309,7 +320,7 @@
         },
         {
           "scene": 3,
-          "startFrameImage": "starting-frames/dochi/scene-3.png",
+          "startFrameImage": "starting-frames/dochi/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -323,7 +334,7 @@
         },
         {
           "scene": 4,
-          "startFrameImage": "starting-frames/dochi/scene-4.png",
+          "startFrameImage": "starting-frames/dochi/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -345,7 +356,7 @@
       "scenes": [
         {
           "scene": 1,
-          "startFrameImage": "starting-frames/ggulgguli/scene-1.png",
+          "startFrameImage": "starting-frames/ggulgguli/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -359,7 +370,7 @@
         },
         {
           "scene": 2,
-          "startFrameImage": "starting-frames/ggulgguli/scene-2.png",
+          "startFrameImage": "starting-frames/ggulgguli/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -373,7 +384,7 @@
         },
         {
           "scene": 3,
-          "startFrameImage": "starting-frames/ggulgguli/scene-3.png",
+          "startFrameImage": "starting-frames/ggulgguli/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -387,7 +398,7 @@
         },
         {
           "scene": 4,
-          "startFrameImage": "starting-frames/ggulgguli/scene-4.png",
+          "startFrameImage": "starting-frames/ggulgguli/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -409,7 +420,7 @@
       "scenes": [
         {
           "scene": 1,
-          "startFrameImage": "starting-frames/eumme/scene-1.png",
+          "startFrameImage": "starting-frames/eumme/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -423,7 +434,7 @@
         },
         {
           "scene": 2,
-          "startFrameImage": "starting-frames/eumme/scene-2.png",
+          "startFrameImage": "starting-frames/eumme/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -437,7 +448,7 @@
         },
         {
           "scene": 3,
-          "startFrameImage": "starting-frames/eumme/scene-3.png",
+          "startFrameImage": "starting-frames/eumme/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -451,7 +462,7 @@
         },
         {
           "scene": 4,
-          "startFrameImage": "starting-frames/eumme/scene-4.png",
+          "startFrameImage": "starting-frames/eumme/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -473,7 +484,7 @@
       "scenes": [
         {
           "scene": 1,
-          "startFrameImage": "starting-frames/nurungji/scene-1.png",
+          "startFrameImage": "starting-frames/nurungji/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -487,7 +498,7 @@
         },
         {
           "scene": 2,
-          "startFrameImage": "starting-frames/nurungji/scene-2.png",
+          "startFrameImage": "starting-frames/nurungji/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -501,7 +512,7 @@
         },
         {
           "scene": 3,
-          "startFrameImage": "starting-frames/nurungji/scene-3.png",
+          "startFrameImage": "starting-frames/nurungji/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -515,7 +526,7 @@
         },
         {
           "scene": 4,
-          "startFrameImage": "starting-frames/nurungji/scene-4.png",
+          "startFrameImage": "starting-frames/nurungji/opening.png",
           "modelId": "veo-3.1-lite-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
@@ -530,5 +541,43 @@
       ]
     }
   ],
-  "provider": "gemini"
+  "provider": "gemini",
+  "publishedSceneCount": 12,
+  "partialCharacters": [
+    {
+      "id": "jelly",
+      "completedScenes": [
+        1,
+        3,
+        4
+      ],
+      "remainingScenes": [
+        2
+      ],
+      "rejectedHttpStatus": 429,
+      "pendingOperation": false
+    }
+  ],
+  "dubbingCompletedCharacters": [
+    "ggomi",
+    "rano",
+    "jelly",
+    "dochi",
+    "ggulgguli",
+    "eumme",
+    "nurungji"
+  ],
+  "quotaCheckpoint": {
+    "checkedOn": "2026-10-09",
+    "requestsPerMinute": 2,
+    "requestsPerDay": 10,
+    "observedRequestsPerDay": 11,
+    "nextDailyReset": "2026-10-10T07:00:00Z",
+    "resetTimeZone": "America/Los_Angeles",
+    "remainingVideoScenes": 17,
+    "newSuccessfulVideoScenes": 11,
+    "newGeneratedVideoSeconds": 88,
+    "estimatedNewVideoUsd": 7.04,
+    "automaticRetry": false
+  }
 }

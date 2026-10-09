@@ -20,6 +20,9 @@ type Character = { id: CharacterId; targetWidth: number; targetHeight: number; s
 type Journal = { fingerprint: string; model: string; status: 'submitting' | 'submitted' | 'downloaded' | 'failed' | 'rejected'; operation?: string; error?: string; submittedAt: string };
 const plan = JSON.parse(await readFile('production/character-videos/plan.json', 'utf8')) as { characters: Character[] };
 const [command, id] = process.argv.slice(2);
+if (process.argv.some(arg => arg === '--parallel-scenes' || arg.startsWith('--parallel-scenes='))) {
+  throw new Error('Parallel scene generation is disabled to respect account rate limits. Remove --parallel-scenes and generate scenes sequentially.');
+}
 const character = plan.characters.find(c => c.id === id);
 if (!character || !['generate', 'build', 'publish'].includes(command)) throw new Error('Usage: tsx scripts/generate-portrait-videos.ts generate|build|publish <characterId>');
 const characterDirectory = `${directory}/${character.id}`;
@@ -92,7 +95,7 @@ try {
     const generateScene = async (scene: Scene) => {
       const base = `${characterDirectory}/scene-${scene.scene}`;
       const firstFrame = startingFrames.get(scene.scene)!;
-      const prompt = `${scene.prompt} Animate the supplied starting frame, preserving the character's exact colors, face proportions, outfit and accessories. One continuous shot, a stable gentle camera, spacious vertical framing. Only gentle natural foley and instrumental ambience; no intelligible voices or singing. No title cards or text.`;
+      const prompt = `${scene.prompt} Animate the supplied starting frame, preserving the character's exact colors, face proportions, outfit and accessories throughout every pose. Keep the same species and anatomy: do not invent ears, horns, spikes, extra limbs or costume pieces absent from the starting frame. Keep expressions warm and playful, never frightening. One continuous shot, a stable gentle camera, spacious vertical framing. Only gentle natural foley and instrumental ambience; no intelligible voices or singing. No title cards or text.`;
       const fingerprint = hash(JSON.stringify({ model, prompt, firstFrame: hash(firstFrame), resolution, aspectRatio: '9:16', duration: 8 }));
       let journal: Journal | undefined = await exists(`${base}.json`) ? JSON.parse(await readFile(`${base}.json`, 'utf8')) : undefined;
       if (journal?.status === 'rejected' && process.argv.includes('--retry-rejected')) {
@@ -103,7 +106,14 @@ try {
       if (journal && journal.fingerprint !== fingerprint) throw new Error(`Changed inputs for ${base}; review saved generation before requesting another.`);
       if (journal?.status === 'rejected') throw new Error(`Request rejected for ${base}; correct the account/configuration and explicitly use --retry-rejected.`);
       if (journal?.status === 'failed' || (journal?.status === 'submitting' && !journal.operation)) throw new Error(`Unresolved submission for ${base}; no automatic duplicate request. ${journal.error || ''}`);
-      if (await exists(`${base}.mp4`)) { await inspect(`${base}.mp4`, 8); console.log(`[CACHED] ${id} scene ${scene.scene}`); return; }
+      if (await exists(`${base}.mp4`)) {
+        await inspect(`${base}.mp4`, 8);
+        if (!journal?.operation) throw new Error(`Cached video has no generation record: ${base}; restore its journal before continuing.`);
+        // Recover a crash between saving the download and updating its journal.
+        if (journal.status !== 'downloaded') { journal.status = 'downloaded'; await json(`${base}.json`, journal); }
+        console.log(`[CACHED] ${id} scene ${scene.scene}`);
+        return;
+      }
       if (!journal) {
         journal = { fingerprint, model, status: 'submitting', submittedAt: new Date().toISOString() };
         await json(`${base}.json`, journal);
@@ -152,10 +162,12 @@ try {
         await new Promise(done => setTimeout(done, 20000));
       }
     };
-    // Stop at the first failure instead of spending on the remaining scenes.
     const onlyScene = process.argv.find(arg => arg.startsWith('--scene='))?.split('=')[1];
     if (onlyScene && !['1', '2', '3', '4'].includes(onlyScene)) throw new Error('Scene must be 1, 2, 3 or 4');
-    for (const scene of character.scenes.filter(scene => !onlyScene || scene.scene === Number(onlyScene))) await generateScene(scene);
+    const scenes = character.scenes.filter(scene => !onlyScene || scene.scene === Number(onlyScene));
+    // Stop at the first failure before spending on the next scene. Concurrent
+    // submissions exceed this account's low requests-per-minute allowance.
+    for (const scene of scenes) await generateScene(scene);
     console.log(`[GENERATED] ${id}: requested scenes saved. Build and review all four before starting the next character.`);
   }
   if (command === 'build') {

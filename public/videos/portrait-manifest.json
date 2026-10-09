@@ -10,5 +10,29 @@
     "scenes": 4,
     "dubbedLanguage": "ko",
     "revision": "331cb38e5c71"
+  },
+  "ggomi": {
+    "model": "veo-3.1-lite-generate-preview",
+    "width": 1080,
+    "height": 1920,
+    "duration": 30,
+    "fps": 24,
+    "bytes": 27352780,
+    "sha256": "3a51859a020f299bef73e0717038b05cd7697a2c806b33c5e1e6bc0bf943d552",
+    "scenes": 4,
+    "dubbedLanguage": "ko",
+    "revision": "3a51859a020f"
+  },
+  "rano": {
+    "model": "veo-3.1-lite-generate-preview",
+    "width": 1080,
+    "height": 1920,
+    "duration": 30,
+    "fps": 24,
+    "bytes": 28046429,
+    "sha256": "5289872b17643b7c404fe057dbc768ef8b5d5e03fbc36aefbdbbbb4be02f9fa3",
+    "scenes": 4,
+    "dubbedLanguage": "ko",
+    "revision": "5289872b1764"
   }
 }

@@ -1,0 +1,11 @@
+# Rano opening frame
+
+- Tool: built-in imagegen (one generation, no quality reruns).
+- Identity reference: `../../references/rano.png`
+- Material style reference: `../../references/pingu-clay.png`
+- Original retained: `/Users/wanseok/.codex/generated_images/01a11fba-76b6-73c2-ab46-8af03e5e0640/exec-ce636366-fb91-41aa-9d4f-ffaf250247da.png`
+- Delivery: `opening.png`, 1080 × 1920 PNG. FFmpeg resize preserving aspect with tiny aspect-ratio crop only.
+
+## Exact generation prompt
+
+Use case: stylized-concept. Create one premium children's stop-motion clay animation opening still, portrait 9:16, 1080x1920 composition. Input image1 is ONLY the exact character identity reference: Rano, cheerful mint-green baby dinosaur, round head, oval snout, big dark-green glossy eyes, rosy cheeks, cream-yellow belly, small rounded golden dorsal plates, two short arms, two chunky feet, curved tail. Recreate this same design as a tactile sculpted 3D clay puppet. Image2 is ONLY the physical clay materials, miniature set lighting and cinematic rendering style reference; do not include its penguin or snowy setting. Scene: Rano stands upright full-body smiling toward camera on a clean soft mossy clearing in a cozy pastel prehistoric garden. A tall broad friendly leafy fern is beside Rano, with colorful rounded flowers near edges. A single intact cream dinosaur egg with pastel rainbow spots rests on a low mossy stone within comfortable reach to one side, supporting later discovery, bubble play and a farewell high-five. Egg must remain a simple egg, not another character. Spacious clear ground supports little steps and hops. Vertical composition with generous headroom and margin around tail, all hands, feet and full body visible. Rano occupies about 52 percent frame height. Warm diffuse morning light, dimensional soft shadows, subtly handmade matte plasticine surfaces, pastel mint, cream, soft peach and gold. Friendly toddler-safe expression, simple clear anatomy, smooth rounded dorsal plates without sharp spikes, premium original animated picture-book film set. One character only. No words, letters, logos, watermarks, graphic overlays, speech bubbles, borders, scary teeth, human hands, or extra limbs. No baked motion blur.
