@@ -12,9 +12,9 @@ import { HABITAT_FRIENDS } from '../data/habitatFriends';
 import { EMOTION_SCENES } from '../data/playThemes';
 import { chooseSpeechVoice, localizeSpeech, normalizeSpeechLanguage, translateSpeech } from './speechLanguage';
 
-test('fresh, legacy and invalid preferences default to English; Korean remains selectable', () => {
-  for (const value of [undefined, null, '', 'en', 'fr', 2]) assert.equal(normalizeSpeechLanguage(value), 'en');
-  assert.equal(normalizeSpeechLanguage('ko'), 'ko');
+test('fresh, legacy and invalid preferences default to Korean; saved English remains selectable', () => {
+  for (const value of [undefined, null, '', 'ko', 'fr', 2]) assert.equal(normalizeSpeechLanguage(value), 'ko');
+  assert.equal(normalizeSpeechLanguage('en'), 'en');
   assert.equal(localizeSpeech('안녕! 나는 핑구야!', 'ko'), '안녕! 나는 핑구야!');
   assert.equal(localizeSpeech('하나', 'en'), 'one');
   assert.equal(localizeSpeech('음메', 'en'), 'Eumme');

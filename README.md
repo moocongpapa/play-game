@@ -19,7 +19,7 @@ View your app in AI Studio: https://ai.studio/apps/e9b7985c-a0f7-4008-8953-39da2
 3. Run the app:
    `npm run dev`
 
-The eight character voices use `/api/speech`, with Gemini and an optional ElevenLabs fallback. English is the default; the parent dashboard also offers Korean and voice previews. When AI speech is unavailable, the app uses an appropriate device voice in the selected language.
+The eight character voices use `/api/speech`, with Gemini and an optional ElevenLabs fallback. Korean is the default; the parent dashboard also offers English and voice previews. Saved language choices are preserved. When AI speech is unavailable, the app uses an appropriate device voice in the selected language.
 
 ## Speech API protection
 

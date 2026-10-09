@@ -228,9 +228,9 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
 
       <section className="w-full bg-white p-4 sm:p-5 rounded-3xl border-2 border-sky-200 shadow-sm mb-3 text-left" aria-labelledby="speech-language-title">
         <h2 id="speech-language-title" className="text-base sm:text-lg font-black text-[#4A3E3D] mb-2">음성 언어 · Voice language</h2>
-        <p className="text-xs sm:text-sm text-[#625d67] mb-3">안내, 칭찬, 캐릭터 대화와 말소리 효과의 언어를 선택해요. 기본 언어는 영어예요.</p>
+        <p className="text-xs sm:text-sm text-[#625d67] mb-3">안내, 칭찬, 캐릭터 대화와 말소리 효과의 언어를 선택해요. 기본 언어는 한국어예요.</p>
         <div className="grid grid-cols-2 gap-3" role="group" aria-label="음성 언어 선택">
-          {([{ id: 'en', label: 'English', detail: '영어 · 기본값' }, { id: 'ko', label: '한국어', detail: 'Korean' }] as const).map(language => <button
+          {([{ id: 'ko', label: '한국어', detail: 'Korean · 기본값' }, { id: 'en', label: 'English', detail: '영어' }] as const).map(language => <button
             key={language.id} type="button" aria-pressed={appState.speechLanguage === language.id}
             onClick={() => { setPreviewStatus(''); onUpdateSpeechLanguage(language.id); }}
             className={`min-h-16 px-4 py-3 rounded-2xl border-2 text-left cursor-pointer focus-visible:outline-2 focus-visible:outline-sky-700 ${appState.speechLanguage === language.id ? 'bg-sky-100 border-sky-500 text-sky-950' : 'bg-white border-slate-200 text-slate-600'}`}

@@ -1,5 +1,5 @@
 import { PlayHintsPausedContext } from './components/PlayFlowContext';
-import { normalizeSpeechLanguage } from './utils/speechLanguage';
+import { DEFAULT_SPEECH_LANGUAGE, normalizeSpeechLanguage } from './utils/speechLanguage';
 import React, { useState, useEffect, useLayoutEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { AppState, CharacterId, GameId, ChildProfile } from './types';
 import { CharacterAvatar } from './components/CharacterAvatar';
@@ -103,7 +103,7 @@ export default function App() {
       bgmVolume: 0.15,
       sfxVolume: 1.0,
       ttsEnabled: true,
-      speechLanguage: 'en',
+      speechLanguage: DEFAULT_SPEECH_LANGUAGE,
       hapticsEnabled: true,
       timerMinutes: 0, // 0 = unlimited
       playTimeSeconds: 0,

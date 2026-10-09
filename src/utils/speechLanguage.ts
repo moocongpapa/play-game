@@ -5,9 +5,9 @@ import { SPEECH_WORDS } from '../data/speechWords';
 
 import type { SpeechLanguage } from '../types';
 export type { SpeechLanguage } from '../types';
-export const DEFAULT_SPEECH_LANGUAGE: SpeechLanguage = 'en';
+export const DEFAULT_SPEECH_LANGUAGE: SpeechLanguage = 'ko';
 export function normalizeSpeechLanguage(value: unknown): SpeechLanguage {
-  return value === 'ko' ? 'ko' : DEFAULT_SPEECH_LANGUAGE;
+  return value === 'en' ? 'en' : DEFAULT_SPEECH_LANGUAGE;
 }
 
 // Strip decorative emoji and normalize pauses, but keep meaningful Korean letters.

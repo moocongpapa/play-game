@@ -63,18 +63,18 @@ test('speech playback respects preferences, navigation and uninterrupted repeate
   try {
     engine.speakText('유하야, 안녕! 나는 젤리야. 우리 같이 신나게 놀자!', true, { characterId: 'jelly' });
     await flush();
-    assert.equal(requests[0].text, 'Hello, Yuha! I am Jelly. Let us have fun together!');
-    assert.equal(requests[0].language, 'en');
+    assert.equal(requests[0].text, '유하야, 안녕! 나는 젤리야. 우리 같이 신나게 놀자!');
+    assert.equal(requests[0].language, 'ko');
     assert.equal(requests[0].characterId, 'jelly');
     assert.equal(starts, 1);
     assert.equal(playbackRates[0], 1);
 
-    engine.setSpeechLanguage('ko');
+    engine.setSpeechLanguage('en');
     assert.equal(stops, 1, 'Language change stops the previous AI clip');
     engine.speakText('사과', true, { characterId: 'pingu' });
     await flush();
-    assert.equal(requests[1].text, '사과');
-    assert.equal(requests[1].language, 'ko');
+    assert.equal(requests[1].text, 'apple');
+    assert.equal(requests[1].language, 'en');
 
     // Same text in different languages still requires a separate audio buffer.
     engine.setSpeechLanguage('en'); engine.speakText('Hello'); await flush();

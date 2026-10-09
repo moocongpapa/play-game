@@ -86,7 +86,7 @@ test('speech endpoint uses a gentle ElevenLabs fallback with character pacing', 
   }
 });
 
-test('speech defaults to English and prioritizes childlike Gemini delivery', async () => {
+test('speech defaults to Korean and prioritizes childlike Gemini delivery', async () => {
   const originalFetch = globalThis.fetch;
   const requests: Array<{ url: string; body: { input?: Array<{ content: Array<{ annotations: Array<{ style: string }> }> }> } }> = [];
   const wav = Buffer.alloc(44);
@@ -97,11 +97,11 @@ test('speech defaults to English and prioritizes childlike Gemini delivery', asy
     return Response.json({ steps: [{ type: 'model_output', content: [{ type: 'audio', data: wav.toString('base64') }] }] });
   };
   try {
-    const response = await handleSpeechRequest('POST', { text: 'Hello, Yuha!', characterId: 'jelly' }, { elevenLabsApiKey: 'test', geminiApiKey: 'test' });
+    const response = await handleSpeechRequest('POST', { text: '안녕, 유하야!', characterId: 'jelly' }, { elevenLabsApiKey: 'test', geminiApiKey: 'test' });
     assert.equal(response.status, 200);
     assert.equal(requests.length, 1);
     assert.ok(requests[0].url.includes('generativelanguage.googleapis.com'));
-    assert.equal(requests[0].body.input?.[0].content[0].annotations[0].style, CHARACTER_VOICES.jelly.style.replace('Speak natural Korean', 'Speak natural English'));
+    assert.equal(requests[0].body.input?.[0].content[0].annotations[0].style, CHARACTER_VOICES.jelly.style);
     for (const language of ['fr', null, {}, 1]) {
       assert.equal((await handleSpeechRequest('POST', { text: 'Hello', language }, 'test')).status, 400);
     }

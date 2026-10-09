@@ -1,4 +1,4 @@
-import { chooseSpeechVoice, localizeSpeech, type SpeechLanguage } from './speechLanguage';
+import { DEFAULT_SPEECH_LANGUAGE, chooseSpeechVoice, localizeSpeech, type SpeechLanguage } from './speechLanguage';
 import { getCharacterVoice } from '../data/characterVoices';
 import { randomEffectPitch } from './juice';
 import { BACKGROUND_MUSIC, SLEEP_MUSIC, type MusicTrack } from '../data/backgroundMusic';
@@ -13,7 +13,7 @@ import { playGeminiSpeech, stopGeminiAudio, isGeminiTTSEnabled, getCachedGeminiV
 
 let masterSoundEnabled = true;
 let speechEnabled = true;
-let speechLanguage: SpeechLanguage = 'en';
+let speechLanguage: SpeechLanguage = DEFAULT_SPEECH_LANGUAGE;
 let spokenChildName = '유하';
 
 export function setSpeechLanguage(language: SpeechLanguage, childName = spokenChildName) {
