@@ -21,3 +21,8 @@ export function brushStroke(progress: readonly number[], from: BrushPoint, to: B
     ? Math.min(CLEAN_STROKES, (progress[index] || 0) + Math.min(28, distance))
     : progress[index] || 0);
 }
+
+/** A row stays clean between scenes; incidental strokes cannot skip the next row. */
+export function brushRow(progress: readonly number[], from: BrushPoint, to: BrushPoint, row: number): number[] {
+  return brushStroke(progress, from, to).map((value, i) => Math.floor(i / 4) === row ? value : progress[i]);
+}

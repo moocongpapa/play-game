@@ -509,6 +509,9 @@ let currentVoiceToneMode: 'cheerful' | 'gentle' | 'energetic' = 'cheerful';
 let speechRequestId = 0;
 let activeSpeech: { key: string; provider?: 'ai' | 'browser'; onCancel?: () => void } | null = null;
 
+/** Read-only gate for story transitions; includes pending voice downloads. */
+export function isSpeechBusy() { return activeSpeech !== null || animalClueActive; }
+
 /** False means busy; the idle hook may try again if the child is still resting. */
 export function trySpeakIdleHint(text: string, enabled: boolean, characterId: string): boolean {
   if (!enabled || !masterSoundEnabled || !speechEnabled || isPageHidden()) return true;

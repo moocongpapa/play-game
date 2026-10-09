@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { brushStroke, CLEAN_STROKES, TEETH } from './brushing';
+import { brushRow, brushStroke, CLEAN_STROKES, TEETH } from './brushing';
 
 test('holding still, tiny jitter and rubbing outside the mouth cannot clean teeth', () => {
   const empty = TEETH.map(() => 0);
@@ -21,4 +21,14 @@ test('fast strokes clean crossed teeth, preserve the other row, and need repeate
   let progress = brushStroke(second, from, to);
   for (let i = 0; i < 4; i++) progress = brushStroke(progress, { x: 70, y: 187 }, { x: 230, y: 187 });
   assert.deepEqual(progress, Array(8).fill(CLEAN_STROKES), 'both rows can finish without overshooting');
+});
+
+test('the guided row preserves past work and cannot finish the following scene early', () => {
+  const empty = Array(8).fill(0);
+  assert.deepEqual(brushRow(empty, { x: 70, y: 187 }, { x: 230, y: 187 }, 0), empty);
+  let clean = empty;
+  for (let i = 0; i < 3; i++) clean = brushRow(clean, { x: 70, y: 148 }, { x: 230, y: 148 }, 0);
+  assert.deepEqual(clean, [80,80,80,80,0,0,0,0]);
+  for (let i = 0; i < 3; i++) clean = brushRow(clean, { x: 70, y: 187 }, { x: 230, y: 187 }, 1);
+  assert.deepEqual(clean, Array(8).fill(80));
 });

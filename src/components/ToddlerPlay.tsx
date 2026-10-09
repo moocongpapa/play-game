@@ -73,6 +73,6 @@ export function CareFriend({ buddy, mouth = 'open', children, className = '', sm
   </svg>;
 }
 
-export function ToothBrushArt() {
-  return <svg viewBox="0 0 210 74" aria-hidden="true"><path d="M65 36 H181 Q200 36 200 48 Q200 60 181 60 H66Z" fill="#94c4ce" stroke="#6296a3" strokeWidth="3" /><path d="M105 45 H174" stroke="#d4eced" strokeWidth="5" strokeLinecap="round" /><rect x="12" y="24" width="63" height="38" rx="12" fill="#edb6c6" stroke="#c78c9c" strokeWidth="3" />{Array.from({ length: 9 }, (_, i) => <path key={i} d={`M${20 + i * 6} 23 V8`} stroke={i % 2 ? '#d4eef0' : '#fffdf7'} strokeWidth="5" strokeLinecap="round" />)}<path d="M21 9 Q35 -1 47 8 Q60 0 68 10" stroke="#c8ded1" strokeWidth="7" strokeLinecap="round" fill="none" /></svg>;
+export function ToothBrushArt({ paste = true }: { paste?: boolean } = {}) {
+  return <svg viewBox="0 0 210 74" aria-hidden="true"><path d="M65 36 H181 Q200 36 200 48 Q200 60 181 60 H66Z" fill="#94c4ce" stroke="#6296a3" strokeWidth="3" /><path d="M105 45 H174" stroke="#d4eced" strokeWidth="5" strokeLinecap="round" /><rect x="12" y="24" width="63" height="38" rx="12" fill="#edb6c6" stroke="#c78c9c" strokeWidth="3" />{Array.from({ length: 9 }, (_, i) => <path key={i} d={`M${20 + i * 6} 23 V8`} stroke={i % 2 ? '#d4eef0' : '#fffdf7'} strokeWidth="5" strokeLinecap="round" />)}{paste && <path d="M21 9 Q35 -1 47 8 Q60 0 68 10" stroke="#c8ded1" strokeWidth="7" strokeLinecap="round" fill="none" />}</svg>;
 }

@@ -91,9 +91,11 @@ test('speech playback respects preferences, navigation and uninterrupted repeate
 
     holdRequest = true;
     engine.speakText('아직 준비 중인 음성'); await flush();
+    assert.equal(engine.isSpeechBusy(), true, 'story transitions must wait even while speech is downloading');
     const beforeChange = starts;
     engine.setSpeechLanguage('en');
     assert.equal(requests.at(-1)?.signal.aborted, true);
+    assert.equal(engine.isSpeechBusy(), false, 'cancelling a download releases the story voice gate');
     release!(new Response(new Uint8Array(44))); await flush();
     assert.equal(starts, beforeChange, 'Late response cannot play after a language change');
     assert.equal(spoken.length, 0, 'Cancelled AI speech cannot trigger a browser fallback');
@@ -103,7 +105,9 @@ test('speech playback respects preferences, navigation and uninterrupted repeate
     engine.speakText('바나나', true, { characterId: 'jelly' }); await flush();
     const liftedRate = playbackRates.at(-1)!;
     assert.ok(liftedRate >= 1.08 && liftedRate <= 1.16);
+    assert.equal(engine.isSpeechBusy(), true, 'AI audio playback keeps the next story scene waiting');
     sources.at(-1)?.onended?.();
+    assert.equal(engine.isSpeechBusy(), false, 'the actual audio ending releases the next scene');
     const beforeReplay = requests.length;
     engine.speakText('바나나', true, { characterId: 'jelly' }); await flush();
     assert.equal(requests.length, beforeReplay);
@@ -136,7 +140,9 @@ test('speech playback respects preferences, navigation and uninterrupted repeate
     window.speechSynthesis.onvoiceschanged!(new Event('voiceschanged'));
     assert.equal(spoken.length, 3);
     assert.equal(spoken.at(-1)?.voice, voices[0]);
+    assert.equal(engine.isSpeechBusy(), true, 'browser fallback also holds story transitions');
     spoken.at(-1)?.onend?.();
+    assert.equal(engine.isSpeechBusy(), false);
     voices = [{ name: 'Microsoft Guy Online (Natural)', lang: 'en-US' }];
     window.speechSynthesis.onvoiceschanged!(new Event('voiceschanged'));
     let unavailable = false;

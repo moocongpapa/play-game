@@ -1,0 +1,73 @@
+.play-journey { width: 100%; gap: 10px; }
+.journey-path { display: flex; justify-content: center; gap: clamp(10px,4vw,32px); margin: 0; padding: 0; list-style: none; }
+.journey-path li { position: relative; display: grid; place-items: center; width: 52px; height: 48px; padding: 6px; border: 2px solid #e6dac8; border-radius: 17px; background: #fff9eb; color: #b3987f; opacity: .5; }
+.journey-path li > svg { width: 100%; height: 100%; }.journey-path li > .toy-art { width: 100%; height: 100%; }
+.journey-path li[aria-current] { border-color: #bd9c73; box-shadow: 0 3px 0 #d4bea2; opacity: 1; background: #fff3ce; }
+.journey-path li[data-done=true] { opacity: 1; background: #e4efdc; border-color: #a3b79a; }
+.journey-path li > .journey-check { position: absolute; bottom: -4px; right: -5px; width: 20px; height: 20px; padding: 2px; background: #8fab87; color: white; border-radius: 50%; display: none; }
+.journey-path li[data-done=true] > .journey-check { display: block; }
+.journey-path li + li:before { content: ''; position: absolute; right: calc(100% + 4px); width: clamp(5px,2vw,20px); border-top: 3px dotted #ccbfa8; }
+.journey-cheer { min-height: 32px; display: flex; justify-content: center; align-items: center; gap: 20px; color: #bc9d58; }
+.journey-finale { position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; align-items: center; min-height: 360px; padding: 28px 16px 82px; border: 3px solid #fff8e9; border-radius: 32px; box-shadow: inset 0 0 0 2px #d7cdb470,0 5px 0 #d9ccb3; background: linear-gradient(#e4eee2,#f6e4bf); }
+.journey-collection { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; width: 100%; position: relative; z-index: 1; }
+.journey-toy { position: relative; width: clamp(76px,18vw,120px); height: clamp(80px,20vw,130px); background: #fffdf15e; border: 2px solid #fff8e9; border-radius: 35%; padding: 8px; touch-action: none; }
+.journey-toy-art { display: block; width: 100%; height: 100%; }.journey-toy-art > svg,.journey-toy-art > .toy-art,.journey-toy-art > div { width: 100% !important; height: 100% !important; }
+.journey-toy-spark { position: absolute; top: -6px; right: -5px; color: #d6b565; pointer-events: none; animation: journey-spark 1s both; }
+.journey-companion { width: 160px; height: 155px; padding: 0; background: transparent; border: 0; margin-top: 14px; }
+.journey-next { position: absolute; bottom: 12px; right: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; width: 104px; height: 64px; border: 2px solid #fff5dc; border-radius: 24px; color: #95845e; background: #f8e4b7; box-shadow: inset 0 3px #fff4d6,0 4px #cbb38c; }
+.journey-next > svg { width: 30px; height: 30px; }.journey-next > .game-artwork { width: 44px; height: 44px; }
+.finale-picnic { background: repeating-linear-gradient(0deg,#fff4e790 0 30px,#e7c4b590 30px 60px),repeating-linear-gradient(90deg,#fff8dc 0 30px,#f3d8ad 30px 60px); }
+.finale-mirror { background: radial-gradient(ellipse at 50% 42%,#fff9ec 0 43%,#d0dfcf 44% 49%,#eaf1e2 50%); }
+.finale-bedroom { background: linear-gradient(#e4d4d4 65%,#d5b397 65%); }
+.journey-butterfly { position: relative; display: flex; width: 100%; height: 100%; }.journey-butterfly > svg { width: 50%; height: 100%; }.journey-butterfly:after { content: ''; position: absolute; width: 7%; height: 70%; left: 46%; top: 23%; border-radius: 50%; background: #a78aa2; }
+.care-object-art { display: block; width: 100%; height: 100%; }
+.care-routine { min-height: 300px; }.care-routine-friend { position: relative; width: min(100%,300px); }
+.care-tools { display: flex; justify-content: center; padding: 10px 0; }.care-tool { width: 120px; height: 110px; padding: 7px; border: 2px solid #d8c9b5; border-radius: 26px; background: #fffaef; box-shadow: 0 4px #d8c9b580; }.care-tool:disabled { opacity: .22; }
+.paste-brush.drop-slot { position: relative; width: min(100%,280px); min-height: 84px; padding: 8px; border: 3px dashed #b2c5ba; border-radius: 25px; background: #fffdf0; }.paste-brush > svg { width: 100%; height: 70px; }
+.fresh-paste { position: absolute; width: 44px; height: 12px; left: 18px; top: 14px; background: #b3d4b8; border: 2px solid #e1f2d8; border-radius: 70% 100% 30% 50%; }
+.routine-action { position: absolute; width: 94px; height: 94px; top: 48%; left: 38%; pointer-events: none; animation: care-use 1.1s ease-out both; }.action-wipe { animation: care-wipe 1.1s ease-in-out both; }
+.meal-smudge { position: absolute; width: 26px; height: 15px; border-radius: 60%; background: #c7875b99; left: 68%; top: 64%; }
+.rinse-finish { position: relative; width: 90px; height: 76px; border-radius: 28px; color: #5f98a5; background: #e1f4ed; border: 3px solid #b3d4d1; }.rinse-finish > svg { width: 48px; height: 48px; margin: auto; }
+.menu-choices { display: grid; gap: 14px; padding: 14px; border-radius: 30px; background: #e7dbc4; }.menu-plate { position: relative; display: flex; align-items: center; justify-content: center; padding: 14px; min-height: 116px; border-radius: 50px; background: #fff9eb; border: 4px solid #dfbc97; box-shadow: inset 0 0 0 4px #fffdf7,0 5px 0 #cbb997; }.menu-plate > .toy-art { width: 22%; max-width: 105px; height: 83px; }
+.journey-keepsakes { display: flex; justify-content: center; align-items: center; gap: 8px; height: 40px; }.journey-keepsakes > span { display: block; width: 40px; height: 40px; }.journey-keepsakes svg,.journey-keepsakes .toy-art,.journey-keepsakes span > div { width: 100% !important; height: 100% !important; }
+.harvest-picnic { min-height: 280px; padding: 30px 8px; display: grid; align-items: center; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; border-radius: 28px; background: repeating-linear-gradient(0deg,#e5b9ad55 0 26px,#fff0de55 26px 52px),repeating-linear-gradient(90deg,#e5b9ad55 0 26px,#fff0de 26px 52px); }
+.picnic-plate.drop-slot { height: 120px; min-width: 64px; border-radius: 48%; background: #fff7e5; border: 4px solid #dcc4a0; padding: 12px; }.picnic-plate > .toy-art { width: 100%; height: 100%; }.picnic-plate:not([data-filled=true]) > .toy-art { opacity: .3; }
+.picnic-fruit-choices { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }.picnic-fruit-choices button { height: 100px; border-radius: 25px; padding: 12px; background: #fff9eb; border: 2px solid #deceb5; }.picnic-fruit-choices .toy-art { width: 100%; height: 100%; }.picnic-fruit-choices button:disabled { opacity: .2; }
+.play-journey .brush-tool { margin: auto; }.active-tooth { filter: drop-shadow(0 0 2px #e7c052); }
+.bear-care-item { position: absolute; bottom: 0; left: 50%; translate: -50% 0; max-width: 100%; height: 60%; z-index: 2; }.bear-care-item > svg { width: 100%; height: 100%; }.bear-bed { position: absolute; left: 0; right: 0; bottom: 0; height: 20%; background: #f9e2cf; border: 3px solid #bd9d81; border-radius: 20px; }
+.trace-scene.theme-river { background: #cee9ec; }.trace-scene.theme-river .discovery-landscape { opacity: .7; }.trace-theme-art { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.peek-theme-playground { background: linear-gradient(#dbecdf 55%,#e4d4af 56%) !important; }.peek-theme-clouds { background: linear-gradient(#cedaed,#f4dfdc) !important; }.peek-theme-clouds .garden-tree,.peek-theme-clouds .garden-path { display: none; }.peek-theme-clouds .garden-flower { color: #fff7d0; }
+@keyframes journey-spark { 0% { transform: scale(.5); opacity: 0; } 25% { transform: scale(1.2); opacity: 1; } 100% { transform: translateY(-20px); opacity: 0; } }
+@keyframes care-use { 0% { transform: translateY(25px) rotate(-15deg); } 50% { transform: rotate(20deg); } 100% { opacity: 0; transform: translateY(25px); } }
+@keyframes care-wipe { 0%,100% { transform: translateX(-25px); } 30%,70% { transform: translateX(25px) rotate(10deg); } 100% { opacity: 0; } }
+@media (max-width: 380px) { .journey-path { gap: 12px; }.journey-path li { width: 46px; height: 44px; }.care-routine { padding: 12px 8px; }.journey-finale { padding-inline: 8px; }.journey-collection { gap: 8px; } }
+@media (min-width: 700px) { .menu-choices { grid-template-columns: repeat(3,minmax(0,1fr)); }.menu-plate { min-height: 215px; flex-wrap: wrap; border-radius: 48%; }.menu-plate > .toy-art { width: 48%; }.journey-finale { min-height: 450px; }.journey-companion { width: 210px; height: 195px; } }
+@media (prefers-reduced-motion: reduce) { .play-journey *, .play-journey *:before, .play-journey *:after { animation: none !important; transition: none !important; } }
+.harvest-orchard-1 .discovery-landscape { filter: hue-rotate(-14deg); }.harvest-orchard-2 .discovery-landscape { filter: hue-rotate(13deg); }
+.journey-keepsakes:empty { display: none; }
+.play-journey .symmetry-scene { height: clamp(230px,calc(100dvh - 435px),400px); min-height: 230px; }
+.play-journey .harvest-scene { height: clamp(230px,calc(100dvh - 445px),365px); min-height: 230px; }
+.journey-bear-rest { position: relative; display: block; height: 100%; margin: auto; border-radius: 16px; background: #fff4e466; }
+.journey-bear-rest > div { position: absolute; top: 0; left: 0; width: 100% !important; height: 85% !important; }
+.journey-bear-rest > .care-object-art { position: absolute; left: 0; bottom: -10%; width: 100%; height: 65%; }
+/* Keep sources and destinations visible together when a phone is held sideways. */
+@media (min-width: 650px) and (max-height: 540px) {
+  .play-journey { display: grid; grid-template-columns: minmax(0,1fr) minmax(210px,.52fr); align-items: center; gap: 8px 12px; }
+  .play-journey .discovery-guide { grid-column: 1; grid-row: 1; min-height: 64px; }
+  .play-journey .journey-path { grid-column: 2; grid-row: 1; gap: 10px; }.play-journey .journey-path li { width: 43px; height: 42px; }
+  .play-journey .journey-keepsakes { grid-column: 1; grid-row: 3; height: 28px; }.play-journey .journey-keepsakes > span { height: 28px; width: 28px; }
+  .play-journey :is(.symmetry-scene,.harvest-scene,.bear-room,.care-routine,.feeding-scene,.bathroom-scene,.harvest-picnic) { grid-column: 1; grid-row: 2; height: max(185px,calc(100dvh - 205px)); min-height: 185px; }
+  .play-journey :is(.wing-choices,.harvest-baskets,.bear-family,.care-tools,.food-plate,.brush-tool,.picnic-fruit-choices) { grid-column: 2; grid-row: 2; }
+  .play-journey .symmetry-friend { height: max(150px,calc(100dvh - 225px)); width: max(210px,calc((100dvh - 225px) * 1.4)); max-width: 95%; }
+  .play-journey .harvest-fruit { width: 64px; height: 64px; }
+  .play-journey :is(.wing-choice,.bear-piece) { height: 110px; }.play-journey .harvest-basket.drop-slot { height: 95px; }
+  .play-journey .food-plate { grid-template-columns: repeat(2,minmax(64px,1fr)); padding: 5px; gap: 5px; }.play-journey .food-piece { min-height: 80px; padding: 2px; }.play-journey .food-piece .toy-art { height: 54px; width: 54px; }
+  .play-journey :is(.feeding-friend,.brushing-friend) { width: min(100%,160px); }.play-journey .care-routine-friend { width: 158px; }.play-journey .routine-paste .care-routine-friend { width: 115px; }
+  .play-journey .care-routine { padding: 6px; }.play-journey .paste-brush.drop-slot { position: absolute; bottom: 6px; width: 210px; min-height: 70px; height: 70px; padding: 2px; }.play-journey .paste-brush > svg { height: 60px; }
+  .play-journey .rinse-finish { position: absolute; bottom: 10px; right: 10px; width: 70px; height: 64px; }
+  .play-journey :is(.bathroom-scene,.feeding-scene) { padding: 4px 10px; }.play-journey .sink-rim { margin-bottom: 0; }
+  .play-journey .trace-scene,.play-journey .peekaboo-garden { grid-column: 1 / -1; grid-row: 2; min-height: 185px; height: max(185px,calc(100dvh - 205px)); }
+  .play-journey > .play-progress,.play-journey .journey-cheer { grid-column: 2; grid-row: 3; }
+  .play-journey .menu-choices { grid-column: 1 / -1; grid-row: 2; grid-template-columns: repeat(3,minmax(0,1fr)); padding: 10px; }.play-journey .menu-plate { min-height: 185px; flex-wrap: wrap; padding: 6px; }.play-journey .menu-plate > .toy-art { width: 43%; height: 65px; }
+  .play-journey .journey-finale { grid-column: 1 / -1; grid-row: 2; min-height: 200px; padding: 12px 104px 12px 12px; flex-direction: row; }.play-journey .journey-collection { gap: 6px; }.play-journey .journey-toy { width: 76px; height: 80px; }.play-journey .journey-companion { width: 140px; height: 145px; flex-shrink: 0; margin: 0; }
+}

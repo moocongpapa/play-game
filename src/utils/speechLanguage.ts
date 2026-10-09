@@ -1,3 +1,4 @@
+import { PLAY_JOURNEY_SPEECH } from '../data/playJourneySpeech';
 import { SPEECH_ENGLISH } from '../data/speechEnglish';
 import { FRIEND_SPEECH_ENGLISH } from '../data/speechFriendsEnglish';
 import { PARK_SPEECH_ENGLISH } from '../data/characterPark';
@@ -14,7 +15,7 @@ export function normalizeSpeechLanguage(value: unknown): SpeechLanguage {
 const normalize = (text: string) => text.replace(/\p{Extended_Pictographic}|[\uFE0F\u200D]/gu, '').replace(/[#*`_]/g, '').replace(/\s+/g, ' ').trim();
 const stripPause = (text: string) => text.replace(/[.!?,~]+$/g, '').trim();
 const korean = /[가-힣ㄱ-ㅎㅏ-ㅣ]/;
-const phrases = [...SPEECH_ENGLISH, ...FRIEND_SPEECH_ENGLISH, ...PARK_SPEECH_ENGLISH];
+const phrases = [...PLAY_JOURNEY_SPEECH, ...SPEECH_ENGLISH, ...FRIEND_SPEECH_ENGLISH, ...PARK_SPEECH_ENGLISH];
 const exact = new Map(phrases.filter(([ko]) => !/\{\d+\}/.test(ko)).map(([ko, en]) => [normalize(ko), en]));
 const words = new Map(Object.entries(SPEECH_WORDS).map(([ko, en]) => [normalize(ko), en]));
 const templates = phrases.filter(([ko]) => /\{\d+\}/.test(ko)).map(([ko, en]) => {

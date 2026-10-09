@@ -1,22 +1,43 @@
-import { useEffect, useRef, useState, type PointerEvent } from 'react';
+import { useContext, useEffect, useRef, useState, type PointerEvent } from 'react';
 import { Sparkles } from 'lucide-react';
-import { CareFriend, PlayGuide, PlayHint, PlayProgress, PlayShell, ToothBrushArt } from '../../components/ToddlerPlay';
-import { RoundContinuation } from '../../components/RoundContinuation';
-import { useToddlerPlay, type ToddlerGameProps } from '../../hooks/useToddlerPlay';
-import { brushStroke, CLEAN_STROKES, TEETH, type BrushPoint } from '../../utils/brushing';
+import { CareFriend, PlayProgress, ToothBrushArt } from '../../components/ToddlerPlay';
+import { JourneyFrame, JourneyFinale, JourneyToy } from '../../components/PlayJourney';
+import { CareRoutine, CareObjectArt } from '../../components/development/CareRoutine';
+import { usePlayJourney, type JourneyStep } from '../../hooks/usePlayJourney';
+import { type ToddlerGameProps } from '../../hooks/useToddlerPlay';
+import { brushRow, CLEAN_STROKES, TEETH, type BrushPoint } from '../../utils/brushing';
 import { playCareSound, speakText } from '../../utils/soundEngine';
 import { useGentleHelp } from '../../hooks/useGentleHelp';
+import { PlayHintsPausedContext } from '../../components/PlayFlowContext';
 import { GentleHint } from '../../components/GentleHint';
-import { PlayResultScene } from '../../components/PlayResultScene';
 
-const GUIDE = '칫솔을 잡고 이 위를 왔다 갔다, 쓱싹쓱싹 닦아 줘!';
+const STEPS: JourneyStep[] = [
+  { id: 'paste', label: '치약을 조금, 쏙!', picture: 'paste', guide: '칫솔에 치약을 조금 짜 볼까? 치약을 칫솔로 옮겨 줘.' },
+  { id: 'upper', label: '윗니를 쓱싹쓱싹', picture: 'teeth', guide: '반짝이는 윗니부터 왔다 갔다, 쓱싹쓱싹 닦아 줘!' },
+  { id: 'lower', label: '아랫니도 반짝반짝', picture: 'teeth', guide: '윗니가 깨끗해졌어! 이번에는 아랫니도 꼼꼼하게 닦자.' },
+  { id: 'rinse', label: '우르르, 퉤!', picture: 'rinse', guide: '물컵으로 입을 헹구고, 물방울을 눌러 우르르 퉤! 뱉어 보자.' },
+];
 export function ToothBrushGame(props: ToddlerGameProps) {
-  const { round, completed, finish, next } = useToddlerPlay(props, GUIDE);
-  const help = useGentleHelp(round, completed);
+  const journey = usePlayJourney(props, STEPS);
+  const [clean, setClean] = useState<number[]>(() => TEETH.map(() => 0));
+  return <JourneyFrame props={props} journey={journey} className="brush-play">
+    {journey.phase === 'finished' ? <JourneyFinale props={props} journey={journey} scene="mirror">
+      <JourneyToy props={props} label="반짝이는 이 살펴보기" voice="이가 반짝반짝! 활짝 웃어 볼까?"><CareObjectArt kind="teeth"/></JourneyToy>
+      <JourneyToy props={props} label="칫솔 씻고 정리하기" voice="칫솔도 깨끗하게 씻고 제자리에! 다음에도 함께 닦자!"><ToothBrushArt/></JourneyToy>
+    </JourneyFinale> : journey.step === 0 || journey.step === 3 ?
+      <CareRoutine key={journey.key} props={props} kind={journey.step === 0 ? 'paste' : 'rinse'} locked={journey.locked} onComplete={text => { if (journey.step === 0) setClean(TEETH.map(() => 0)); journey.complete(text); }}/>
+      : <BrushingRow key={journey.key} props={props} row={journey.step - 1} round={journey.cycle} completed={journey.locked} initialClean={clean} onClean={setClean} finish={journey.complete}/>}
+  </JourneyFrame>;
+}
+function BrushingRow({ props, row, round, completed, initialClean, onClean, finish }: {
+  props: ToddlerGameProps; row: number; round: number; completed: boolean; initialClean: number[]; onClean: (values: number[]) => void; finish: (text: string) => void;
+}) {
+  const paused = useContext(PlayHintsPausedContext);
+  const help = useGentleHelp(round, completed || paused);
   useEffect(() => {
     if (help.level === 3) speakText('이 위에서 칫솔을 왔다 갔다, 쓱싹쓱싹!', props.soundEnabled, { characterId: props.buddy, playIntroSFX: false });
   }, [help.level]);
-  const [clean, setClean] = useState<number[]>(() => TEETH.map(() => 0));
+  const [clean, setClean] = useState<number[]>(initialClean);
   const progress = useRef(clean);
   const stage = useRef<HTMLButtonElement>(null);
   const gesture = useRef<{ id: number; point: BrushPoint; element: HTMLButtonElement; cleaned: boolean } | null>(null);
@@ -49,10 +70,10 @@ export function ToothBrushGame(props: ToddlerGameProps) {
   const update = (values: number[]) => {
     progress.current = values;
     help.progress();
-    setClean(values);
-    if (values.every(value => value >= CLEAN_STROKES)) {
+    setClean(values); onClean(values);
+    if (values.slice(row * 4, row * 4 + 4).every(value => value >= CLEAN_STROKES)) {
       cancel();
-      finish(`${props.childName}야, 이가 반짝반짝 하얘졌어! 꼼꼼하게 닦아 줘서 고마워!`);
+      finish(row === 0 ? '윗니가 반짝반짝! 아랫니도 닦아 볼까?' : '모든 이가 하얘졌어! 이제 입을 헹구자.');
     }
   };
   const locate = (event: PointerEvent<HTMLButtonElement>): BrushPoint => {
@@ -71,7 +92,7 @@ export function ToothBrushGame(props: ToddlerGameProps) {
     const current = gesture.current;
     if (!current || current.id !== event.pointerId || completed) return;
     const point = locate(event);
-    const values = brushStroke(progress.current, current.point, point);
+    const values = brushRow(progress.current, current.point, point, row);
     const changed = values.some((value, i) => value > progress.current[i]);
     current.point = point;
     setBrush(point);
@@ -83,11 +104,11 @@ export function ToothBrushGame(props: ToddlerGameProps) {
   };
   const keyboardBrush = () => {
     if (completed) return;
-    const index = progress.current.findIndex(value => value < CLEAN_STROKES);
+    const index = progress.current.findIndex((value, i) => Math.floor(i / 4) === row && value < CLEAN_STROKES);
     if (index < 0) return;
     const tooth = TEETH[index];
     playCareSound('brush', props.soundEnabled);
-    update(brushStroke(progress.current, { x: tooth.x - 14, y: tooth.y }, { x: tooth.x + 14, y: tooth.y }));
+    update(brushRow(progress.current, { x: tooth.x - 14, y: tooth.y }, { x: tooth.x + 14, y: tooth.y }, row));
   };
   const pointerProps = {
     onPointerDown: start, onPointerMove: move,
@@ -96,14 +117,13 @@ export function ToothBrushGame(props: ToddlerGameProps) {
     onLostPointerCapture: (event: PointerEvent<HTMLButtonElement>) => { if (gesture.current?.id === event.pointerId) cancel(); },
     onContextMenu: (event: React.MouseEvent) => event.preventDefault(),
   };
-  return <PlayShell className="brush-play">
-    <PlayGuide {...props} title={completed ? '반짝반짝 깨끗해!' : '쓱싹쓱싹, 치카치카!'} guide={GUIDE} happy={completed} />
-    {completed ? <PlayResultScene kind="mirror" buddy={props.buddy} /> : <div className="bathroom-scene" data-help={help.level >= 2}>
+  return <>
+    <div className="bathroom-scene" data-help={help.level >= 2}>
       <span className="bathroom-sparkle" aria-hidden="true"><Sparkles /></span>
       <button ref={stage} type="button" className={`brushing-friend ${brush ? 'is-brushing' : ''}`} aria-label="이를 쓱싹 닦기" disabled={completed} {...pointerProps} onClick={event => { if (event.detail === 0) keyboardBrush(); }}>
         <CareFriend buddy={props.buddy} smilingEyes={completed}>
-          {TEETH.map((tooth, i) => <g key={i}>
-            <rect x={tooth.x - 16} y={tooth.y - 14} width="32" height="29" rx="8" fill={clean[i] >= CLEAN_STROKES ? '#fffef7' : '#f4ead1'} stroke="#e5d6bc" strokeWidth="1.5" />
+          {TEETH.map((tooth, i) => <g key={i} className={Math.floor(i / 4) === row ? 'active-tooth' : undefined}>
+            <rect x={tooth.x - 16} y={tooth.y - 14} width="32" height="29" rx="8" fill={clean[i] >= CLEAN_STROKES ? '#fffef7' : '#f4ead1'} stroke={Math.floor(i / 4) === row ? '#dab777' : '#e5d6bc'} strokeWidth={Math.floor(i / 4) === row ? 3 : 1.5} />
             <g opacity={Math.max(0, 1 - clean[i] / CLEAN_STROKES)}>
               <path d={`M${tooth.x - 10} ${tooth.y - 4} q8 -12 18 0 q8 13 -6 15 q-18 0 -12 -15`} fill={['#baa2bb', '#c9ae7f', '#a4b996'][(i + round) % 3]} opacity=".75" />
               <circle cx={tooth.x - 3} cy={tooth.y} r="1.5" fill="#7d6d70" /><circle cx={tooth.x + 4} cy={tooth.y} r="1.5" fill="#7d6d70" />
@@ -118,10 +138,7 @@ export function ToothBrushGame(props: ToddlerGameProps) {
       </button>
       <div className="sink-rim" aria-hidden="true" />
       <PlayProgress total={8} done={clean.filter(value => value >= CLEAN_STROKES).length} label="깨끗해진 이" />
-    </div>}
-    {completed ? <RoundContinuation onNext={() => { cancel(); progress.current = TEETH.map(() => 0); setClean(progress.current); next(); }} delayMs={5500} /> : <>
-      <button type="button" className="brush-tool" data-help={help.level >= 1} aria-label="칫솔 잡고 옮기기" {...pointerProps} onClick={event => { if (event.detail === 0) stage.current?.focus(); }}><ToothBrushArt /></button>
-      <PlayHint>칫솔로 쓱싹쓱싹!</PlayHint>
-    </>}
-  </PlayShell>;
+    </div>
+    <button type="button" className="brush-tool" data-help={help.level >= 1} aria-label="칫솔 잡고 옮기기" disabled={completed} {...pointerProps} onClick={event => { if (event.detail === 0) stage.current?.focus(); }}><ToothBrushArt /></button>
+  </>;
 }
