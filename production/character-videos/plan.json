@@ -1,7 +1,11 @@
 {
-  "status": "prepared_not_submitted",
+  "status": "pingu_completed_remaining_deferred",
   "source": "public/videos/PROMPTS.md",
-  "generatedCount": 0,
+  "generatedCount": 1,
+  "generatedSceneCount": 4,
+  "completedCharacters": ["pingu"],
+  "deferredCharacters": ["ggomi", "rano", "jelly", "dochi", "ggulgguli", "eumme", "nurungji"],
+  "statusNote": "핑구의 4개 장면·한국어 더빙·30초 세로 영상 적용 완료. 2026-10-09 사용자 요청에 따라 나머지 7명은 추가 생성 없이 기존 영상을 유지합니다.",
   "characters": [
     {
       "id": "pingu",
@@ -11,11 +15,11 @@
       "scenes": [
         {
           "scene": 1,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/pingu.png",
           "referenceRole": "subject",
           "outputStartSeconds": 0,
@@ -24,11 +28,11 @@
         },
         {
           "scene": 2,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/pingu.png",
           "referenceRole": "subject",
           "outputStartSeconds": 8,
@@ -37,29 +41,30 @@
         },
         {
           "scene": 3,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/pingu.png",
           "referenceRole": "subject",
           "outputStartSeconds": 16,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second whimsical 3D claymation cartoon featuring Pingu, an adorable slate-blue baby penguin with a cream face and belly, golden beak and feet, and a mint-green scarf with pale stripes, matching the supplied in-game Pingu reference. Generate only this individual scene: - 16s-24s (Scene 3 - Creative Moment): Pingu rolls a tiny snowball that grows into a cute mini snowman, placing a mint flower on its head and clapping wings with pride. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second whimsical 3D claymation cartoon featuring Pingu, an adorable slate-blue baby penguin with a cream face and belly, golden beak and feet, and a mint-green scarf with pale stripes, matching the supplied in-game Pingu reference. Generate only this individual scene: - 16s-24s (Scene 3 - Creative Moment): Pingu rolls a tiny snowball that grows into a cute mini snowman, placing a mint flower on its head and clapping wings with pride. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Match the sculpted penguin in the second reference exactly. It has a smooth round penguin head with a single tiny blue feather tuft and absolutely no outer ears. Keep exactly two flippers, two golden webbed feet, the same mint striped scarf and cream belly. The snowman is the only second figure. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays.",
+          "continuityImage": "references/pingu-clay.png"
         },
         {
           "scene": 4,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/pingu.png",
           "referenceRole": "subject",
           "outputStartSeconds": 24,
           "usedDurationSeconds": 6,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second whimsical 3D claymation cartoon featuring Pingu, an adorable slate-blue baby penguin with a cream face and belly, golden beak and feet, and a mint-green scarf with pale stripes, matching the supplied in-game Pingu reference. Generate only this individual scene: - 24s-30s (Scene 4 - Hug Ending): Pingu waddles close to the screen, taps the glass lightly, blows a glowing icy heart toward Yuha, and gives a warm penguin bow. Preserve all identity details from the reference image. Finish the farewell action within the first six seconds; hold a gentle smile for the remaining two seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second whimsical 3D claymation cartoon featuring Pingu, an adorable slate-blue baby penguin with a cream face and belly, golden beak and feet, and a mint-green scarf with pale stripes, matching the supplied in-game Pingu reference. Generate only this individual scene: - 24s-30s (Scene 4 - Hug Ending): Pingu stands outdoors on the snow beside the same ice-blue igloo. Pingu waddles toward the camera, waves one wing, blows a small translucent heart-shaped snowflake toward the viewer, and bows. The entire set is an unlabelled natural snowy landscape; there is no physical screen, picture frame, writing, typography or lettering anywhere. Keep the full penguin body visible. A single small heart drifts to one side without obscuring the face. Preserve all identity details from the reference image. Finish the farewell action within the first six seconds; hold a gentle smile for the remaining two seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         }
       ]
     },
@@ -71,55 +76,55 @@
       "scenes": [
         {
           "scene": 1,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/ggomi.png",
           "referenceRole": "subject",
           "outputStartSeconds": 0,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second heartwarming 3D claymation featuring Ggomi, a chubby caramel-brown teddy bear with a cream muzzle, pink ear ribbon, and pink pinafore dress with a cream heart and pale trim, matching the supplied in-game Ggomi reference. Generate only this individual scene: - 00s-08s (Scene 1 - Peekaboo): Ggomi peeks out from behind a giant fluffy pink pillow in a cozy nursery room, giggling softly and waving with both padded paws. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second heartwarming 3D claymation featuring Ggomi, a chubby caramel-brown teddy bear with a cream muzzle, pink ear ribbon, and pink pinafore dress with a cream heart and pale trim, matching the supplied in-game Ggomi reference. Generate only this individual scene: - 00s-08s (Scene 1 - Peekaboo): Ggomi peeks out from behind a giant fluffy pink pillow in a cozy nursery room, giggling softly and waving with both padded paws. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 2,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/ggomi.png",
           "referenceRole": "subject",
           "outputStartSeconds": 8,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second heartwarming 3D claymation featuring Ggomi, a chubby caramel-brown teddy bear with a cream muzzle, pink ear ribbon, and pink pinafore dress with a cream heart and pale trim, matching the supplied in-game Ggomi reference. Generate only this individual scene: - 08s-16s (Scene 2 - Making Treat): Ggomi sits at a small wooden table, carefully placing a bright red strawberry on top of a whipped cream cupcake, licking its lips cutely. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second heartwarming 3D claymation featuring Ggomi, a chubby caramel-brown teddy bear with a cream muzzle, pink ear ribbon, and pink pinafore dress with a cream heart and pale trim, matching the supplied in-game Ggomi reference. Generate only this individual scene: - 08s-16s (Scene 2 - Making Treat): Ggomi sits at a small wooden table, carefully placing a bright red strawberry on top of a whipped cream cupcake, licking its lips cutely. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 3,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/ggomi.png",
           "referenceRole": "subject",
           "outputStartSeconds": 16,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second heartwarming 3D claymation featuring Ggomi, a chubby caramel-brown teddy bear with a cream muzzle, pink ear ribbon, and pink pinafore dress with a cream heart and pale trim, matching the supplied in-game Ggomi reference. Generate only this individual scene: - 16s-24s (Scene 3 - Happy Dance): Holding the cupcake, Ggomi does a gentle side-to-side wiggle dance, surrounded by floating pink sparkles and musical notes. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second heartwarming 3D claymation featuring Ggomi, a chubby caramel-brown teddy bear with a cream muzzle, pink ear ribbon, and pink pinafore dress with a cream heart and pale trim, matching the supplied in-game Ggomi reference. Generate only this individual scene: - 16s-24s (Scene 3 - Happy Dance): Holding the cupcake, Ggomi does a gentle side-to-side wiggle dance, surrounded by floating pink sparkles and musical notes. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 4,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/ggomi.png",
           "referenceRole": "subject",
           "outputStartSeconds": 24,
           "usedDurationSeconds": 6,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second heartwarming 3D claymation featuring Ggomi, a chubby caramel-brown teddy bear with a cream muzzle, pink ear ribbon, and pink pinafore dress with a cream heart and pale trim, matching the supplied in-game Ggomi reference. Generate only this individual scene: - 24s-30s (Scene 4 - Sharing Love): Ggomi offers the cupcake toward the camera, then spreads arms wide for a warm, soft bear hug, smiling with sparkling eyes. Preserve all identity details from the reference image. Finish the farewell action within the first six seconds; hold a gentle smile for the remaining two seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second heartwarming 3D claymation featuring Ggomi, a chubby caramel-brown teddy bear with a cream muzzle, pink ear ribbon, and pink pinafore dress with a cream heart and pale trim, matching the supplied in-game Ggomi reference. Generate only this individual scene: - 24s-30s (Scene 4 - Sharing Love): Ggomi offers the cupcake toward the camera, then spreads arms wide for a warm, soft bear hug, smiling with sparkling eyes. Preserve all identity details from the reference image. Finish the farewell action within the first six seconds; hold a gentle smile for the remaining two seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         }
       ]
     },
@@ -131,55 +136,55 @@
       "scenes": [
         {
           "scene": 1,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/rano.png",
           "referenceRole": "subject",
           "outputStartSeconds": 0,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second energetic and cute 3D claymation featuring Rano, a cheerful mint-green baby dinosaur with a cream-yellow belly, golden rounded dorsal plates, short limbs and a curved tail, matching the supplied in-game Rano reference. Generate only this individual scene: - 00s-08s (Scene 1 - Brave Roar): Rano pops out from behind a giant leafy fern, stomps its chubby feet playfully, and lets out a tiny, adorable \"Roar!\" before giggling. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second energetic and cute 3D claymation featuring Rano, a cheerful mint-green baby dinosaur with a cream-yellow belly, golden rounded dorsal plates, short limbs and a curved tail, matching the supplied in-game Rano reference. Generate only this individual scene: - 00s-08s (Scene 1 - Brave Roar): Rano pops out from behind a giant leafy fern, stomps its chubby feet playfully, and lets out a tiny, adorable \"Roar!\" before giggling. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 2,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/rano.png",
           "referenceRole": "subject",
           "outputStartSeconds": 8,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second energetic and cute 3D claymation featuring Rano, a cheerful mint-green baby dinosaur with a cream-yellow belly, golden rounded dorsal plates, short limbs and a curved tail, matching the supplied in-game Rano reference. Generate only this individual scene: - 08s-16s (Scene 2 - Discovery): Rano hops through colorful prehistoric flower bushes and discovers a glowing rainbow-spotted dinosaur egg wobbling on a mossy stone. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second energetic and cute 3D claymation featuring Rano, a cheerful mint-green baby dinosaur with a cream-yellow belly, golden rounded dorsal plates, short limbs and a curved tail, matching the supplied in-game Rano reference. Generate only this individual scene: - 08s-16s (Scene 2 - Discovery): Rano hops through colorful prehistoric flower bushes and discovers a glowing rainbow-spotted dinosaur egg wobbling on a mossy stone. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 3,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/rano.png",
           "referenceRole": "subject",
           "outputStartSeconds": 16,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second energetic and cute 3D claymation featuring Rano, a cheerful mint-green baby dinosaur with a cream-yellow belly, golden rounded dorsal plates, short limbs and a curved tail, matching the supplied in-game Rano reference. Generate only this individual scene: - 16s-24s (Scene 3 - Hatching Joy): The egg gently cracks open and pops out a bunch of flying soap bubbles! Rano jumps in the air, popping bubbles with its little snout and tail. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second energetic and cute 3D claymation featuring Rano, a cheerful mint-green baby dinosaur with a cream-yellow belly, golden rounded dorsal plates, short limbs and a curved tail, matching the supplied in-game Rano reference. Generate only this individual scene: - 16s-24s (Scene 3 - Hatching Joy): The egg gently cracks open and pops out a bunch of flying soap bubbles! Rano jumps in the air, popping bubbles with its little snout and tail. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 4,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/rano.png",
           "referenceRole": "subject",
           "outputStartSeconds": 24,
           "usedDurationSeconds": 6,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second energetic and cute 3D claymation featuring Rano, a cheerful mint-green baby dinosaur with a cream-yellow belly, golden rounded dorsal plates, short limbs and a curved tail, matching the supplied in-game Rano reference. Generate only this individual scene: - 24s-30s (Scene 4 - High-Five): Rano dashes toward the camera, gives an energetic high-five against the screen, and flexes its tiny arms proudly. Preserve all identity details from the reference image. Finish the farewell action within the first six seconds; hold a gentle smile for the remaining two seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second energetic and cute 3D claymation featuring Rano, a cheerful mint-green baby dinosaur with a cream-yellow belly, golden rounded dorsal plates, short limbs and a curved tail, matching the supplied in-game Rano reference. Generate only this individual scene: - 24s-30s (Scene 4 - High-Five): Rano dashes toward the camera, gives an energetic high-five against the screen, and flexes its tiny arms proudly. Preserve all identity details from the reference image. Finish the farewell action within the first six seconds; hold a gentle smile for the remaining two seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         }
       ]
     },
@@ -191,55 +196,55 @@
       "scenes": [
         {
           "scene": 1,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/jelly.png",
           "referenceRole": "subject",
           "outputStartSeconds": 0,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second bubbly 3D claymation featuring Jelly, a sweet pearl-lavender bunny with long upright pink-inner ears, a pink flower by one ear, a lavender pinafore dress with a cream heart and pale trim, and rosy cheeks, matching the supplied in-game Jelly reference. Generate only this individual scene: - 00s-08s (Scene 1 - Bouncing In): Jelly bounces rhythmically into a sunny vegetable garden, long ears flopping happily, stopping to twitch its pink nose at the camera. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second bubbly 3D claymation featuring Jelly, a sweet pearl-lavender bunny with long upright pink-inner ears, a pink flower by one ear, a lavender pinafore dress with a cream heart and pale trim, and rosy cheeks, matching the supplied in-game Jelly reference. Generate only this individual scene: - 00s-08s (Scene 1 - Bouncing In): Jelly bounces rhythmically into a sunny vegetable garden, long ears flopping happily, stopping to twitch its pink nose at the camera. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 2,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/jelly.png",
           "referenceRole": "subject",
           "outputStartSeconds": 8,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second bubbly 3D claymation featuring Jelly, a sweet pearl-lavender bunny with long upright pink-inner ears, a pink flower by one ear, a lavender pinafore dress with a cream heart and pale trim, and rosy cheeks, matching the supplied in-game Jelly reference. Generate only this individual scene: - 08s-16s (Scene 2 - Big Carrot): Jelly tries to pull a huge cartoon carrot from the ground; with a big tug, it plops backward softly onto a bed of clover leaves, laughing cheerfully. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second bubbly 3D claymation featuring Jelly, a sweet pearl-lavender bunny with long upright pink-inner ears, a pink flower by one ear, a lavender pinafore dress with a cream heart and pale trim, and rosy cheeks, matching the supplied in-game Jelly reference. Generate only this individual scene: - 08s-16s (Scene 2 - Big Carrot): Jelly tries to pull a huge cartoon carrot from the ground; with a big tug, it plops backward softly onto a bed of clover leaves, laughing cheerfully. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 3,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/jelly.png",
           "referenceRole": "subject",
           "outputStartSeconds": 16,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second bubbly 3D claymation featuring Jelly, a sweet pearl-lavender bunny with long upright pink-inner ears, a pink flower by one ear, a lavender pinafore dress with a cream heart and pale trim, and rosy cheeks, matching the supplied in-game Jelly reference. Generate only this individual scene: - 16s-24s (Scene 3 - Butterfly Waltz): A sparkling yellow butterfly lands gently on Jelly's nose. Jelly giggles, sneezes softly, and spins around playing tag with the butterfly. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second bubbly 3D claymation featuring Jelly, a sweet pearl-lavender bunny with long upright pink-inner ears, a pink flower by one ear, a lavender pinafore dress with a cream heart and pale trim, and rosy cheeks, matching the supplied in-game Jelly reference. Generate only this individual scene: - 16s-24s (Scene 3 - Butterfly Waltz): A sparkling yellow butterfly lands gently on Jelly's nose. Jelly giggles, sneezes softly, and spins around playing tag with the butterfly. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 4,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/jelly.png",
           "referenceRole": "subject",
           "outputStartSeconds": 24,
           "usedDurationSeconds": 6,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second bubbly 3D claymation featuring Jelly, a sweet pearl-lavender bunny with long upright pink-inner ears, a pink flower by one ear, a lavender pinafore dress with a cream heart and pale trim, and rosy cheeks, matching the supplied in-game Jelly reference. Generate only this individual scene: - 24s-30s (Scene 4 - Finger Heart): Jelly sits up, makes a cute heart shape with its long bunny ears, and sends flying kisses toward the screen. Preserve all identity details from the reference image. Finish the farewell action within the first six seconds; hold a gentle smile for the remaining two seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second bubbly 3D claymation featuring Jelly, a sweet pearl-lavender bunny with long upright pink-inner ears, a pink flower by one ear, a lavender pinafore dress with a cream heart and pale trim, and rosy cheeks, matching the supplied in-game Jelly reference. Generate only this individual scene: - 24s-30s (Scene 4 - Finger Heart): Jelly sits up, makes a cute heart shape with its long bunny ears, and sends flying kisses toward the screen. Preserve all identity details from the reference image. Finish the farewell action within the first six seconds; hold a gentle smile for the remaining two seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         }
       ]
     },
@@ -251,55 +256,55 @@
       "scenes": [
         {
           "scene": 1,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/dochi.png",
           "referenceRole": "subject",
           "outputStartSeconds": 0,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second curious and sweet 3D claymation featuring Dochi, a round little hedgehog with soft golden-honey rounded spines, a warm cream face, a tiny dark nose and a sage-mint triangular neckerchief, matching the supplied in-game Dochi reference. Generate only this individual scene: - 00s-08s (Scene 1 - Rolling Ball): A round prickly ball rolls in through autumn leaves, unfurls, and reveals Dochi’s adorable face blinking curiously at the viewer. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second curious and sweet 3D claymation featuring Dochi, a round little hedgehog with soft golden-honey rounded spines, a warm cream face, a tiny dark nose and a sage-mint triangular neckerchief, matching the supplied in-game Dochi reference. Generate only this individual scene: - 00s-08s (Scene 1 - Rolling Ball): A round prickly ball rolls in through autumn leaves, unfurls, and reveals Dochi’s adorable face blinking curiously at the viewer. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 2,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/dochi.png",
           "referenceRole": "subject",
           "outputStartSeconds": 8,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second curious and sweet 3D claymation featuring Dochi, a round little hedgehog with soft golden-honey rounded spines, a warm cream face, a tiny dark nose and a sage-mint triangular neckerchief, matching the supplied in-game Dochi reference. Generate only this individual scene: - 08s-16s (Scene 2 - Treasure Hunt): Dochi sniffs the ground and finds a giant shiny golden acorn. It polishes the acorn with its little tummy until it gleams. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second curious and sweet 3D claymation featuring Dochi, a round little hedgehog with soft golden-honey rounded spines, a warm cream face, a tiny dark nose and a sage-mint triangular neckerchief, matching the supplied in-game Dochi reference. Generate only this individual scene: - 08s-16s (Scene 2 - Treasure Hunt): Dochi sniffs the ground and finds a giant shiny golden acorn. It polishes the acorn with its little tummy until it gleams. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 3,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/dochi.png",
           "referenceRole": "subject",
           "outputStartSeconds": 16,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second curious and sweet 3D claymation featuring Dochi, a round little hedgehog with soft golden-honey rounded spines, a warm cream face, a tiny dark nose and a sage-mint triangular neckerchief, matching the supplied in-game Dochi reference. Generate only this individual scene: - 16s-24s (Scene 3 - Leaf Crown): Leaves fall gently; Dochi sticks three colorful maple leaves onto its back spines like a festive crown and wiggles with joy. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second curious and sweet 3D claymation featuring Dochi, a round little hedgehog with soft golden-honey rounded spines, a warm cream face, a tiny dark nose and a sage-mint triangular neckerchief, matching the supplied in-game Dochi reference. Generate only this individual scene: - 16s-24s (Scene 3 - Leaf Crown): Leaves fall gently; Dochi sticks three colorful maple leaves onto its back spines like a festive crown and wiggles with joy. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 4,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/dochi.png",
           "referenceRole": "subject",
           "outputStartSeconds": 24,
           "usedDurationSeconds": 6,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second curious and sweet 3D claymation featuring Dochi, a round little hedgehog with soft golden-honey rounded spines, a warm cream face, a tiny dark nose and a sage-mint triangular neckerchief, matching the supplied in-game Dochi reference. Generate only this individual scene: - 24s-30s (Scene 4 - Peeking Wave): Dochi curls into a ball, peeks one eye out, giggles, and waves its tiny paw warmly. Preserve all identity details from the reference image. Finish the farewell action within the first six seconds; hold a gentle smile for the remaining two seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second curious and sweet 3D claymation featuring Dochi, a round little hedgehog with soft golden-honey rounded spines, a warm cream face, a tiny dark nose and a sage-mint triangular neckerchief, matching the supplied in-game Dochi reference. Generate only this individual scene: - 24s-30s (Scene 4 - Peeking Wave): Dochi curls into a ball, peeks one eye out, giggles, and waves its tiny paw warmly. Preserve all identity details from the reference image. Finish the farewell action within the first six seconds; hold a gentle smile for the remaining two seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         }
       ]
     },
@@ -311,55 +316,55 @@
       "scenes": [
         {
           "scene": 1,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/ggulgguli.png",
           "referenceRole": "subject",
           "outputStartSeconds": 0,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second playful 3D claymation featuring Ggulgguli, a chubby rosy-pink piglet with a curly spring tail, a friendly pink snout, small dark hooves and a butter-yellow triangular neckerchief, matching the supplied in-game Ggulgguli reference. Generate only this individual scene: - 00s-08s (Scene 1 - Snout Wiggle): Ggulgguli wiggles its round snout directly in front of the lens with funny sound effects, then steps back dancing on its hind hooves. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second playful 3D claymation featuring Ggulgguli, a chubby rosy-pink piglet with a curly spring tail, a friendly pink snout, small dark hooves and a butter-yellow triangular neckerchief, matching the supplied in-game Ggulgguli reference. Generate only this individual scene: - 00s-08s (Scene 1 - Snout Wiggle): Ggulgguli wiggles its round snout directly in front of the lens with funny sound effects, then steps back dancing on its hind hooves. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 2,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/ggulgguli.png",
           "referenceRole": "subject",
           "outputStartSeconds": 8,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second playful 3D claymation featuring Ggulgguli, a chubby rosy-pink piglet with a curly spring tail, a friendly pink snout, small dark hooves and a butter-yellow triangular neckerchief, matching the supplied in-game Ggulgguli reference. Generate only this individual scene: - 08s-16s (Scene 2 - Strawberry Feast): Ggulgguli spots a bowl of giant juicy strawberries, juggles three of them cutely, and munches happily with puffed cheeks. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second playful 3D claymation featuring Ggulgguli, a chubby rosy-pink piglet with a curly spring tail, a friendly pink snout, small dark hooves and a butter-yellow triangular neckerchief, matching the supplied in-game Ggulgguli reference. Generate only this individual scene: - 08s-16s (Scene 2 - Strawberry Feast): Ggulgguli spots a bowl of giant juicy strawberries, juggles three of them cutely, and munches happily with puffed cheeks. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 3,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/ggulgguli.png",
           "referenceRole": "subject",
           "outputStartSeconds": 16,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second playful 3D claymation featuring Ggulgguli, a chubby rosy-pink piglet with a curly spring tail, a friendly pink snout, small dark hooves and a butter-yellow triangular neckerchief, matching the supplied in-game Ggulgguli reference. Generate only this individual scene: - 16s-24s (Scene 3 - Bubble Bath): Ggulgguli jumps playfully into a shallow warm bubble pool, splashing pink bubbles everywhere and wearing a bubble hat. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second playful 3D claymation featuring Ggulgguli, a chubby rosy-pink piglet with a curly spring tail, a friendly pink snout, small dark hooves and a butter-yellow triangular neckerchief, matching the supplied in-game Ggulgguli reference. Generate only this individual scene: - 16s-24s (Scene 3 - Bubble Bath): Ggulgguli jumps playfully into a shallow warm bubble pool, splashing pink bubbles everywhere and wearing a bubble hat. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 4,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/ggulgguli.png",
           "referenceRole": "subject",
           "outputStartSeconds": 24,
           "usedDurationSeconds": 6,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second playful 3D claymation featuring Ggulgguli, a chubby rosy-pink piglet with a curly spring tail, a friendly pink snout, small dark hooves and a butter-yellow triangular neckerchief, matching the supplied in-game Ggulgguli reference. Generate only this individual scene: - 24s-30s (Scene 4 - Tail Wag): Ggulgguli turns around, wiggles its curly tail like a propeller, and turns back to give a huge cheerful smile. Preserve all identity details from the reference image. Finish the farewell action within the first six seconds; hold a gentle smile for the remaining two seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second playful 3D claymation featuring Ggulgguli, a chubby rosy-pink piglet with a curly spring tail, a friendly pink snout, small dark hooves and a butter-yellow triangular neckerchief, matching the supplied in-game Ggulgguli reference. Generate only this individual scene: - 24s-30s (Scene 4 - Tail Wag): Ggulgguli turns around, wiggles its curly tail like a propeller, and turns back to give a huge cheerful smile. Preserve all identity details from the reference image. Finish the farewell action within the first six seconds; hold a gentle smile for the remaining two seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         }
       ]
     },
@@ -371,55 +376,55 @@
       "scenes": [
         {
           "scene": 1,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/eumme.png",
           "referenceRole": "subject",
           "outputStartSeconds": 0,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second dreamy and soothing 3D claymation featuring Eumme, an ultra-fluffy ivory-white lamb with short golden curled horns, a cream face, a sky-blue triangular neckerchief and a tiny golden bell, matching the supplied in-game Eumme reference. Generate only this individual scene: - 00s-08s (Scene 1 - Cloud Drift): Eumme floats gently into the lavender pastel sky sitting atop a fluffy pink cotton-candy cloud, humming a soft tune. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second dreamy and soothing 3D claymation featuring Eumme, an ultra-fluffy ivory-white lamb with short golden curled horns, a cream face, a sky-blue triangular neckerchief and a tiny golden bell, matching the supplied in-game Eumme reference. Generate only this individual scene: - 00s-08s (Scene 1 - Cloud Drift): Eumme floats gently into the lavender pastel sky sitting atop a fluffy pink cotton-candy cloud, humming a soft tune. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 2,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/eumme.png",
           "referenceRole": "subject",
           "outputStartSeconds": 8,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second dreamy and soothing 3D claymation featuring Eumme, an ultra-fluffy ivory-white lamb with short golden curled horns, a cream face, a sky-blue triangular neckerchief and a tiny golden bell, matching the supplied in-game Eumme reference. Generate only this individual scene: - 08s-16s (Scene 2 - Star Catching): Eumme reaches out a tiny hoof and catches a falling yellow star, which glows softly and chimes like a music box. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second dreamy and soothing 3D claymation featuring Eumme, an ultra-fluffy ivory-white lamb with short golden curled horns, a cream face, a sky-blue triangular neckerchief and a tiny golden bell, matching the supplied in-game Eumme reference. Generate only this individual scene: - 08s-16s (Scene 2 - Star Catching): Eumme reaches out a tiny hoof and catches a falling yellow star, which glows softly and chimes like a music box. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 3,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/eumme.png",
           "referenceRole": "subject",
           "outputStartSeconds": 16,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second dreamy and soothing 3D claymation featuring Eumme, an ultra-fluffy ivory-white lamb with short golden curled horns, a cream face, a sky-blue triangular neckerchief and a tiny golden bell, matching the supplied in-game Eumme reference. Generate only this individual scene: - 16s-24s (Scene 3 - Cloud Pillow): Eumme fluffs up a mini cloud like a marshmallow pillow, rests its head, and yawns cutely as tiny crescent moons float by. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second dreamy and soothing 3D claymation featuring Eumme, an ultra-fluffy ivory-white lamb with short golden curled horns, a cream face, a sky-blue triangular neckerchief and a tiny golden bell, matching the supplied in-game Eumme reference. Generate only this individual scene: - 16s-24s (Scene 3 - Cloud Pillow): Eumme fluffs up a mini cloud like a marshmallow pillow, rests its head, and yawns cutely as tiny crescent moons float by. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 4,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/eumme.png",
           "referenceRole": "subject",
           "outputStartSeconds": 24,
           "usedDurationSeconds": 6,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second dreamy and soothing 3D claymation featuring Eumme, an ultra-fluffy ivory-white lamb with short golden curled horns, a cream face, a sky-blue triangular neckerchief and a tiny golden bell, matching the supplied in-game Eumme reference. Generate only this individual scene: - 24s-30s (Scene 4 - Sweet Dreams): Eumme waves slowly and warmly, eyes twinkling with kindness, surrounded by soft celestial glow. Preserve all identity details from the reference image. Finish the farewell action within the first six seconds; hold a gentle smile for the remaining two seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second dreamy and soothing 3D claymation featuring Eumme, an ultra-fluffy ivory-white lamb with short golden curled horns, a cream face, a sky-blue triangular neckerchief and a tiny golden bell, matching the supplied in-game Eumme reference. Generate only this individual scene: - 24s-30s (Scene 4 - Sweet Dreams): Eumme waves slowly and warmly, eyes twinkling with kindness, surrounded by soft celestial glow. Preserve all identity details from the reference image. Finish the farewell action within the first six seconds; hold a gentle smile for the remaining two seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         }
       ]
     },
@@ -431,57 +436,58 @@
       "scenes": [
         {
           "scene": 1,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/nurungji.png",
           "referenceRole": "subject",
           "outputStartSeconds": 0,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second lively 3D claymation featuring Nurungji, an adorable honey-golden puppy with caramel floppy ears, a cream muzzle and belly, a sage-green triangular neckerchief and a wagging curved tail, matching the supplied in-game Nurungji reference. Generate only this individual scene: - 00s-08s (Scene 1 - Bounding Run): Nurungji trots happily across a green meadow holding a red squeaky ball in its mouth, stopping to tilt its head with perked ears. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second lively 3D claymation featuring Nurungji, an adorable honey-golden puppy with caramel floppy ears, a cream muzzle and belly, a sage-green triangular neckerchief and a wagging curved tail, matching the supplied in-game Nurungji reference. Generate only this individual scene: - 00s-08s (Scene 1 - Bounding Run): Nurungji trots happily across a green meadow holding a red squeaky ball in its mouth, stopping to tilt its head with perked ears. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 2,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/nurungji.png",
           "referenceRole": "subject",
           "outputStartSeconds": 8,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second lively 3D claymation featuring Nurungji, an adorable honey-golden puppy with caramel floppy ears, a cream muzzle and belly, a sage-green triangular neckerchief and a wagging curved tail, matching the supplied in-game Nurungji reference. Generate only this individual scene: - 08s-16s (Scene 2 - Catch & Roll): Nurungji tosses the ball with its nose, chases it in circles, and rolls over onto its back asking for tummy rubs. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second lively 3D claymation featuring Nurungji, an adorable honey-golden puppy with caramel floppy ears, a cream muzzle and belly, a sage-green triangular neckerchief and a wagging curved tail, matching the supplied in-game Nurungji reference. Generate only this individual scene: - 08s-16s (Scene 2 - Catch & Roll): Nurungji tosses the ball with its nose, chases it in circles, and rolls over onto its back asking for tummy rubs. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 3,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/nurungji.png",
           "referenceRole": "subject",
           "outputStartSeconds": 16,
           "usedDurationSeconds": 8,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second lively 3D claymation featuring Nurungji, an adorable honey-golden puppy with caramel floppy ears, a cream muzzle and belly, a sage-green triangular neckerchief and a wagging curved tail, matching the supplied in-game Nurungji reference. Generate only this individual scene: - 16s-24s (Scene 3 - Digging Fun): Nurungji digs energetically in a sandbox, pulling out a sparkling toy star and doing an excited tail-spin dance. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second lively 3D claymation featuring Nurungji, an adorable honey-golden puppy with caramel floppy ears, a cream muzzle and belly, a sage-green triangular neckerchief and a wagging curved tail, matching the supplied in-game Nurungji reference. Generate only this individual scene: - 16s-24s (Scene 3 - Digging Fun): Nurungji digs energetically in a sandbox, pulling out a sparkling toy star and doing an excited tail-spin dance. Preserve all identity details from the reference image. Perform the complete action gently within eight seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         },
         {
           "scene": 4,
-          "modelId": "veo-3.1-generate-001",
+          "modelId": "veo-3.1-fast-generate-preview",
           "durationSecs": 8,
           "aspectRatio": "9:16",
-          "resolution": "4K",
-          "generateAudio": false,
+          "resolution": "4k",
+          "generateAudio": true,
           "referenceImage": "references/nurungji.png",
           "referenceRole": "subject",
           "outputStartSeconds": 24,
           "usedDurationSeconds": 6,
-          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second lively 3D claymation featuring Nurungji, an adorable honey-golden puppy with caramel floppy ears, a cream muzzle and belly, a sage-green triangular neckerchief and a wagging curved tail, matching the supplied in-game Nurungji reference. Generate only this individual scene: - 24s-30s (Scene 4 - Screen Lick): Nurungji trots up to the lens, gently gives a cute cartoon \"lick\" on the screen, and barks joyfully with a panting smile. Preserve all identity details from the reference image. Finish the farewell action within the first six seconds; hold a gentle smile for the remaining two seconds."
+          "prompt": "3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. This is one scene from a planned 30-second lively 3D claymation featuring Nurungji, an adorable honey-golden puppy with caramel floppy ears, a cream muzzle and belly, a sage-green triangular neckerchief and a wagging curved tail, matching the supplied in-game Nurungji reference. Generate only this individual scene: - 24s-30s (Scene 4 - Screen Lick): Nurungji trots up to the lens, gently gives a cute cartoon \"lick\" on the screen, and barks joyfully with a panting smile. Preserve all identity details from the reference image. Finish the farewell action within the first six seconds; hold a gentle smile for the remaining two seconds. Pure wordless puppet animation: every surface is unlettered, and the composition contains only the character, scenery and props, with zero graphic overlays."
         }
       ]
     }
-  ]
+  ],
+  "provider": "gemini"
 }

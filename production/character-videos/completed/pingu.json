@@ -1,0 +1,35 @@
+{
+  "model": "veo-3.1-fast-generate-preview",
+  "width": 2160,
+  "height": 3840,
+  "duration": 30,
+  "fps": 24,
+  "bytes": 55793343,
+  "sha256": "331cb38e5c7154d4dc6c6f6bd272e67e676648188a3a1af3a188d9ac1f04e140",
+  "scenes": 4,
+  "dubbedLanguage": "ko",
+  "revision": "331cb38e5c71",
+  "publishedAt": "2026-10-09T07:48:26.699Z",
+  "sources": [
+    {
+      "scene": 1,
+      "model": "veo-3.1-fast-generate-preview",
+      "fingerprint": "0337a2f5166cd2a79f5e7ab63c24f0de70556df347c20143fe66eff7d3b9828b"
+    },
+    {
+      "scene": 2,
+      "model": "veo-3.1-fast-generate-preview",
+      "fingerprint": "ffc20a48549c3f311ca2b69594873baec8718c5e13fcf1d9a9818e60b2e18fde"
+    },
+    {
+      "scene": 3,
+      "model": "veo-3.1-fast-generate-preview",
+      "fingerprint": "06beb9edb90b5de7d9cf456659beb6cedeea0d0351148158b58e9f9f5f269c63"
+    },
+    {
+      "scene": 4,
+      "model": "veo-3.1-fast-generate-preview",
+      "fingerprint": "4cb88f68f13accdc532999c3d7927198b37ec61af5665beea071f469a4945147"
+    }
+  ]
+}

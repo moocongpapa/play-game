@@ -1,0 +1,14 @@
+{
+  "pingu": {
+    "model": "veo-3.1-fast-generate-preview",
+    "width": 2160,
+    "height": 3840,
+    "duration": 30,
+    "fps": 24,
+    "bytes": 55793343,
+    "sha256": "331cb38e5c7154d4dc6c6f6bd272e67e676648188a3a1af3a188d9ac1f04e140",
+    "scenes": 4,
+    "dubbedLanguage": "ko",
+    "revision": "331cb38e5c71"
+  }
+}

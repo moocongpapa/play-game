@@ -2,17 +2,18 @@
 
 ## 세로 영상 제작 규격 (2026-10-09)
 
+- **현재 적용**: 핑구의 네 장면·한국어 더빙·30초 세로 영상 완료. 이번에는 핑구만 적용하며 나머지 7명은 기존 영상을 유지합니다.
 - **납품 목표**: 캐릭터별 30초, 세로 9:16, 4K 원본(2160×3840), 24fps MP4. 실제 출력 해상도와 길이를 검증한 후 적용합니다.
 - **외형 기준**: `production/character-videos/references/<캐릭터ID>.png`는 게임의 `CharacterArtwork.tsx`를 그대로 렌더링한 1024×1024 참조 이미지입니다. 아래 스토리와 함께 참조 이미지를 전달하여 색·의상·장식·얼굴 비율을 유지합니다.
 - **장면 구성**: 기존 00–08 / 08–16 / 16–24 / 24–30초의 네 장면을 각각 생성합니다. Veo의 이미지 참조는 8초 생성을 요구하므로 네 클립을 각각 8초로 만들고 마지막 클립에서 완결된 6초를 사용합니다. 마지막 인사 동작은 6초 안에 끝나도록 지시합니다.
 - **연속성**: 각 장면에 같은 캐릭터 참조와 스타일을 사용하고, 팔·다리·의상 변화와 장면 연결을 눈으로 확인합니다. 이전 짧은 영상의 반복·줌·색 변경으로 30초를 채우는 기존 빌드 스크립트는 새 제작에 사용하지 않습니다.
 - **오디오**: 장면별 아래 한국어 대사를 ElevenLabs의 기존 캐릭터 음성 설정으로 더빙합니다. 영상 모델에는 사람 말·자막을 생성하지 않도록 지시합니다. 어린 목소리 톤, 음악 덕킹, 짧고 부드러운 효과음을 유지합니다.
 - **크레딧**: 포함 크레딧 안에서 사용하며, 생성 ID와 결과 파일을 저장하여 중복 생성하지 않습니다. 추가 과금이나 플랜 변경을 자동 실행하지 않습니다.
-- **교체 조건**: 8개 새 영상의 해상도·재생 길이·캐릭터 일관성·더빙·모바일 재생 확인 후 `public/videos/<캐릭터ID>.mp4`를 교체합니다. 원본 백업은 `backups/character-videos/2026-10-09-landscape/`입니다.
-- **현재 상태**: 제작 자료 준비 완료, 신규 생성 0개. 2026-10-09 현재 연결 계정이 Starter여서 영상 API가 HTTP 402 `paid_plan_required`로 거절되었습니다. Pro 이상 플랜과 Image & Video/Flows 권한이 필요합니다.
+- **교체 조건**: 캐릭터 한 명의 4개 장면을 모두 생성하고 해상도·재생 길이·캐릭터 일관성·더빙·모바일 재생을 확인한 뒤 해당 캐릭터의 `public/videos/<캐릭터ID>.mp4`를 교체합니다. 원본 백업은 `backups/character-videos/2026-10-09-landscape/`입니다.
+- **제작 경로**: 2026-10-09 Gemini API의 `veo-3.1-fast-generate-preview`로 제작을 재개합니다. 각 캐릭터를 완성하고 적용한 뒤 다음 캐릭터를 생성합니다. 실제 완료 상태는 `portrait-manifest.json`을 확인합니다.
 
-공식 API: https://elevenlabs.io/docs/eleven-api/guides/cookbooks/image-and-video
-참조 이미지 규격: https://elevenlabs.io/docs/eleven-api/guides/how-to/image-and-video/references
+공식 영상 API: https://ai.google.dev/gemini-api/docs/veo
+생성 도구와 재개 방법: `../../production/character-videos/README.md`
 
 ## 1. 공통 스타일 키워드 (모든 영상 적용)
 ```text

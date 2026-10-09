@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { Heart, LoaderCircle, Pause, Play, RotateCcw, Volume2, VolumeX, X } from 'lucide-react';
+import { Gamepad2, Heart, LoaderCircle, Pause, Play, RotateCcw, Volume2, VolumeX, X } from 'lucide-react';
 import type { CharacterId } from '../types';
 import { CHARACTERS } from '../data/characters';
-import { CHARACTER_VIDEOS } from '../data/characterVideoData';
+import { getCharacterVideoPresentation } from './characterVideoPresentation';
 import { CharacterAvatar } from './CharacterAvatar';
 import { playBubblePop, stopAllSpeech, stopPlaySounds, setBGMDucked, speakText } from '../utils/soundEngine';
 import './CharacterCharmVideoModal.css';
@@ -20,6 +20,7 @@ export function CharacterCharmVideoModal({ isOpen, ...props }: CharacterCharmVid
 }
 
 function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<CharacterCharmVideoModalProps, 'isOpen'>) {
+  const presentation = getCharacterVideoPresentation(id);
   const dialog = useRef<HTMLDialogElement>(null);
   const [opener] = useState(() => document.activeElement instanceof HTMLElement ? document.activeElement : null);
   const video = useRef<HTMLVideoElement>(null);
@@ -35,6 +36,7 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
   const [progress, setProgress] = useState(0);
   const [hearts, setHearts] = useState<number[]>([]);
   const [videoEnded, setVideoEnded] = useState(false);
+  const [filmAspect, setFilmAspect] = useState(presentation.aspectRatio);
   const buddy = CHARACTERS[id];
 
   async function requestPlay(restart = false) {
@@ -116,6 +118,8 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
   const status = failed ? '영상을 다시 불러올 수 있어요.' : slow ? '준비하고 있어요. 친구와 먼저 인사해요!' : busy ? '영상을 준비하고 있어요.' : playing ? '영상 재생 중' : '재생 버튼을 눌러요.';
 
   return <dialog ref={dialog} className="character-theater" aria-label={`${buddy.name}의 작은 영화관`}
+    data-film-format={filmAspect < 1 ? 'portrait' : 'landscape'}
+    style={{ '--film-aspect': filmAspect } as CSSProperties}
     onCancel={event => { event.preventDefault(); onClose(); }}>
     <div className="theater-landscape" aria-hidden="true" />
     <header className="theater-header">
@@ -132,8 +136,12 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
     <div className="theater-body">
       <div className="theater-film-column">
         <div className="theater-screen" aria-busy={busy} onClick={handleScreenClick}>
-          <video ref={video} src={CHARACTER_VIDEOS[id].videoUrl || `/videos/${id}.mp4`}
-            poster={`/videos/posters/${id}.jpg`} preload="metadata" playsInline muted={!soundEnabled || localMute}
+          <video ref={video} src={presentation.videoUrl}
+            poster={presentation.posterUrl} preload="metadata" playsInline muted={!soundEnabled || localMute}
+            onLoadedMetadata={event => {
+              const element = event.currentTarget;
+              if (element.videoWidth > 0 && element.videoHeight > 0) setFilmAspect(element.videoWidth / element.videoHeight);
+            }}
             onPlaying={() => { setPlaying(true); setBusy(false); setFailed(false); setVideoEnded(false); }}
             onPause={() => setPlaying(false)} onWaiting={() => setBusy(true)}
             onEnded={handleEnded}
@@ -145,16 +153,18 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
                 type="button"
                 className="theater-ended-play-btn"
                 onClick={(e) => { e.stopPropagation(); onClose(); }}
+                aria-label={`${buddy.name}랑 놀러가기`}
                 autoFocus
               >
-                🎮 {buddy.name}랑 놀자!
+                <Gamepad2 aria-hidden="true" />
               </button>
               <button
                 type="button"
                 className="theater-ended-replay-btn"
                 onClick={(e) => { e.stopPropagation(); void requestPlay(true); }}
+                aria-label="영상 다시 보기"
               >
-                <RotateCcw size={18} /> 다시 보기
+                <RotateCcw aria-hidden="true" />
               </button>
             </div>
           ) : (!playing || slow || failed) ? (
@@ -173,16 +183,15 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
           <button className="theater-button" onClick={() => void requestPlay(true)} aria-label="처음부터 다시 보기"><RotateCcw /></button>
           <button className="theater-button theater-primary" onClick={() => playing ? pause() : void requestPlay()} aria-label={playing ? '영상 잠깐 멈추기' : '영상 재생하기'}>{playing ? <Pause fill="currentColor" /> : <Play fill="currentColor" />}</button>
           <button className="theater-button" disabled={!soundEnabled} onClick={() => setLocalMute(value => !value)} aria-label={!soundEnabled ? '앱 소리가 꺼져 있어요' : localMute ? '영상 소리 켜기' : '영상 소리 끄기'} aria-pressed={soundEnabled && !localMute}>{soundEnabled && !localMute ? <Volume2 /> : <VolumeX />}</button>
+          <button className="theater-friend" onClick={cheer} aria-label={`${buddy.name}에게 하트 보내기`}>
+            <CharacterAvatar id={id} mood={hearts.length && !reduced ? 'happy' : 'still'} />
+            <span className="theater-heart-badge" aria-hidden="true"><Heart fill="currentColor" /></span>
+            <span className="theater-hearts" aria-hidden="true">{hearts.map((key, i) => <motion.span key={key}
+              initial={{ opacity: 1, y: 0, scale: .8 }} animate={reduced ? { opacity: 0 } : { y: -90, opacity: 0, scale: 1.3 }} transition={{ duration: 1.3 }} style={{ left: `${25 + i * 12}%` }}><Heart fill="currentColor" /></motion.span>)}</span>
+          </button>
         </div>
         <p className="sr-only" role="status">{status}</p>
       </div>
-      <button className="theater-friend" onClick={cheer} aria-label={`${buddy.name}에게 하트 보내기`}>
-        <CharacterAvatar id={id} mood={hearts.length && !reduced ? 'happy' : 'still'} />
-        <span className="theater-heart-badge" aria-hidden="true"><Heart fill="currentColor" /></span>
-        <span className="theater-hearts" aria-hidden="true">{hearts.map((key, i) => <motion.span key={key}
-          initial={{ opacity: 1, y: 0, scale: .8 }} animate={reduced ? { opacity: 0 } : { y: -90, opacity: 0, scale: 1.3 }} transition={{ duration: 1.3 }} style={{ left: `${25 + i * 12}%` }}><Heart fill="currentColor" /></motion.span>)}</span>
-      </button>
     </div>
   </dialog>;
 }
-
