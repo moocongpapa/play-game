@@ -1,5 +1,5 @@
 /** Maintainer-only. One character at a time; never run from the app or build. */
-import { GoogleGenAI, GenerateVideosOperation, VideoGenerationReferenceType } from '@google/genai';
+import { GoogleGenAI, GenerateVideosOperation } from '@google/genai';
 import { loadEnv } from 'vite';
 import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
@@ -11,10 +11,12 @@ import type { CharacterId } from '../src/types';
 const run = promisify(execFile);
 const env = loadEnv('development', process.cwd(), '');
 const ffmpeg = process.env.FFMPEG_PATH || 'ffmpeg';
-const model = process.env.VEO_MODEL || 'veo-3.1-fast-generate-preview';
+// User's cost policy: never silently upgrade the model or resolution.
+const model = 'veo-3.1-lite-generate-preview';
+const resolution = '1080p';
 const directory = '.video-generation/portrait-v1';
-type Scene = { scene: number; prompt: string; referenceImage: string; continuityImage?: string; usedDurationSeconds: number };
-type Character = { id: CharacterId; scenes: Scene[] };
+type Scene = { scene: number; prompt: string; modelId: string; resolution: string; durationSecs: number; startFrameImage?: string; usedDurationSeconds: number };
+type Character = { id: CharacterId; targetWidth: number; targetHeight: number; scenes: Scene[] };
 type Journal = { fingerprint: string; model: string; status: 'submitting' | 'submitted' | 'downloaded' | 'failed' | 'rejected'; operation?: string; error?: string; submittedAt: string };
 const plan = JSON.parse(await readFile('production/character-videos/plan.json', 'utf8')) as { characters: Character[] };
 const [command, id] = process.argv.slice(2);
@@ -36,10 +38,10 @@ async function inspect(path: string, seconds: number) {
   const dimensions = info.match(/Video:.*?\b(\d{3,5})x(\d{3,5})\b/);
   const fps = info.match(/Video:.*? ([\d.]+) fps/);
   const actual = duration ? +duration[1] * 3600 + +duration[2] * 60 + +duration[3] : 0;
-  if (!dimensions || +dimensions[1] !== 2160 || +dimensions[2] !== 3840 || Math.abs(actual - seconds) > .1 || Number(fps?.[1]) !== 24) {
+  if (!dimensions || +dimensions[1] !== character.targetWidth || +dimensions[2] !== character.targetHeight || Math.abs(actual - seconds) > .1 || Number(fps?.[1]) !== 24) {
     throw new Error(`Unexpected media: ${path}: ${dimensions?.[0]}, ${actual}s, ${fps?.[1]}fps`);
   }
-  return { width: 2160, height: 3840, duration: actual, fps: 24, bytes: await exists(path) };
+  return { width: +dimensions[1], height: +dimensions[2], duration: actual, fps: 24, bytes: await exists(path) };
 }
 if (command === 'generate' && await exists('public/videos/portrait-manifest.json')) {
   const completed = JSON.parse(await readFile('public/videos/portrait-manifest.json', 'utf8'))[character.id];
@@ -69,15 +71,29 @@ try {
   // Fail before spending credits if the local video toolchain is unavailable.
   await run(ffmpeg, ['-version']);
   if (command === 'generate') {
+    if (process.env.VEO_MODEL && process.env.VEO_MODEL !== model) throw new Error('Cost policy only permits Veo 3.1 Lite; remove the VEO_MODEL override.');
+    if (character.targetWidth !== 1080 || character.targetHeight !== 1920 || character.scenes.length !== 4 || character.scenes.some((scene, index) => scene.scene !== index + 1 || scene.modelId !== model || scene.resolution !== resolution || scene.durationSecs !== 8)) {
+      throw new Error('New generation must use four 8-second Veo 3.1 Lite scenes at 1080×1920. Completed legacy films remain reusable.');
+    }
+    // Lite supports a first image, not referenceImages. Validate all reviewed
+    // portrait starting frames before spending anything on the first scene.
+    const startingFrames = new Map<number, Buffer>();
+    for (const scene of character.scenes) {
+      if (!scene.startFrameImage) throw new Error(`Scene ${scene.scene} needs a reviewed startFrameImage before generation.`);
+      const bytes = await readFile(`production/character-videos/${scene.startFrameImage}`);
+      if (bytes.length < 24 || bytes.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a' || bytes.readUInt32BE(16) !== 1080 || bytes.readUInt32BE(20) !== 1920) {
+        throw new Error(`Scene ${scene.scene}: starting frame must be a reviewed 1080×1920 PNG.`);
+      }
+      startingFrames.set(scene.scene, bytes);
+    }
     const key = process.env.GEMINI_API_KEY || env.GEMINI_API_KEY;
     if (!key) throw new Error('Server-only GEMINI_API_KEY is missing');
     const ai = new GoogleGenAI({ apiKey: key, httpOptions: { timeout: 120000, retryOptions: { attempts: 1 } } });
     const generateScene = async (scene: Scene) => {
       const base = `${characterDirectory}/scene-${scene.scene}`;
-      const reference = await readFile(`production/character-videos/${scene.referenceImage}`);
-      const continuity = scene.continuityImage ? await readFile(`production/character-videos/${scene.continuityImage}`) : undefined;
-      const prompt = `${scene.prompt} Translate the supplied illustrated character into a beautifully crafted three-dimensional clay puppet, preserving its exact colors, face proportions, outfit and accessories. One continuous shot, a stable gentle camera, spacious vertical framing. Only gentle natural foley and instrumental ambience; no intelligible voices or singing. No title cards or text.`;
-      const fingerprint = hash(JSON.stringify({ model, prompt, reference: hash(reference), resolution: '4k', aspectRatio: '9:16', duration: 8, continuity: continuity ? hash(continuity) : undefined }));
+      const firstFrame = startingFrames.get(scene.scene)!;
+      const prompt = `${scene.prompt} Animate the supplied starting frame, preserving the character's exact colors, face proportions, outfit and accessories. One continuous shot, a stable gentle camera, spacious vertical framing. Only gentle natural foley and instrumental ambience; no intelligible voices or singing. No title cards or text.`;
+      const fingerprint = hash(JSON.stringify({ model, prompt, firstFrame: hash(firstFrame), resolution, aspectRatio: '9:16', duration: 8 }));
       let journal: Journal | undefined = await exists(`${base}.json`) ? JSON.parse(await readFile(`${base}.json`, 'utf8')) : undefined;
       if (journal?.status === 'rejected' && process.argv.includes('--retry-rejected')) {
         await copyFile(`${base}.json`, `${base}.rejected-${Date.now()}.json`);
@@ -91,11 +107,10 @@ try {
       if (!journal) {
         journal = { fingerprint, model, status: 'submitting', submittedAt: new Date().toISOString() };
         await json(`${base}.json`, journal);
-        console.log(`[SUBMIT] ${id} scene ${scene.scene}/4 (${model}, 4k, 9:16, 8s)`);
+        console.log(`[SUBMIT] ${id} scene ${scene.scene}/4 (${model}, ${resolution}, 9:16, 8s, estimated $0.64)`);
         try {
-          const result = await ai.models.generateVideos({ model, source: { prompt }, config: {
-            numberOfVideos: 1, durationSeconds: 8, aspectRatio: '9:16', resolution: '4k',
-            referenceImages: [reference, ...(continuity ? [continuity] : [])].map(bytes => ({ image: { imageBytes: bytes.toString('base64'), mimeType: 'image/png' }, referenceType: VideoGenerationReferenceType.ASSET })),
+          const result = await ai.models.generateVideos({ model, source: { prompt, image: { imageBytes: firstFrame.toString('base64'), mimeType: 'image/png' } }, config: {
+            numberOfVideos: 1, durationSeconds: 8, aspectRatio: '9:16', resolution,
           } });
           if (!result.name) throw new Error('No operation ID received; submission outcome unknown');
           journal.operation = result.name;
@@ -137,13 +152,10 @@ try {
         await new Promise(done => setTimeout(done, 20000));
       }
     };
-    // Only this character's four scenes may run together. All settle (and every
-    // completed result is saved) before releasing the lock or moving onward.
+    // Stop at the first failure instead of spending on the remaining scenes.
     const onlyScene = process.argv.find(arg => arg.startsWith('--scene='))?.split('=')[1];
     if (onlyScene && !['1', '2', '3', '4'].includes(onlyScene)) throw new Error('Scene must be 1, 2, 3 or 4');
-    const results = await Promise.allSettled(character.scenes.filter(scene => !onlyScene || scene.scene === Number(onlyScene)).map(generateScene));
-    const errors = results.filter(result => result.status === 'rejected');
-    if (errors.length) throw new Error(errors.map(result => String(result.reason)).join('\n'));
+    for (const scene of character.scenes.filter(scene => !onlyScene || scene.scene === Number(onlyScene))) await generateScene(scene);
     console.log(`[GENERATED] ${id}: requested scenes saved. Build and review all four before starting the next character.`);
   }
   if (command === 'build') {

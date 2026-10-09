@@ -3,26 +3,28 @@
 ## 세로 영상 제작 규격 (2026-10-09)
 
 - **현재 적용**: 핑구의 네 장면·한국어 더빙·30초 세로 영상 완료. 이번에는 핑구만 적용하며 나머지 7명은 기존 영상을 유지합니다.
-- **납품 목표**: 캐릭터별 30초, 세로 9:16, 4K 원본(2160×3840), 24fps MP4. 실제 출력 해상도와 길이를 검증한 후 적용합니다.
-- **외형 기준**: `production/character-videos/references/<캐릭터ID>.png`는 게임의 `CharacterArtwork.tsx`를 그대로 렌더링한 1024×1024 참조 이미지입니다. 아래 스토리와 함께 참조 이미지를 전달하여 색·의상·장식·얼굴 비율을 유지합니다.
-- **장면 구성**: 기존 00–08 / 08–16 / 16–24 / 24–30초의 네 장면을 각각 생성합니다. Veo의 이미지 참조는 8초 생성을 요구하므로 네 클립을 각각 8초로 만들고 마지막 클립에서 완결된 6초를 사용합니다. 마지막 인사 동작은 6초 안에 끝나도록 지시합니다.
+- **앞으로의 제작 규격**: 사용자 요청에 따라 Veo 3.1 Lite (`veo-3.1-lite-generate-preview`), 1080p 세로(1080×1920), 9:16, 24fps, 최종 30초 MP4만 사용합니다. 완성된 핑구의 4K 영상과 제작 기록은 그대로 보존합니다.
+- **외형 기준**: `production/character-videos/references/<캐릭터ID>.png`는 게임의 `CharacterArtwork.tsx`를 그대로 렌더링한 1024×1024 외형 기준입니다. Lite는 `referenceImages`를 지원하지 않으므로 장면에 맞게 준비하고 검토한 세로 시작 프레임을 `image`로 전달합니다. 배경과 색·의상·장식·얼굴 비율을 먼저 확인하며, 시작 프레임이 준비되지 않았다면 생성 요청 전에 멈춥니다.
+- **장면 구성**: 기존 00–08 / 08–16 / 16–24 / 24–30초의 네 장면을 각각 생성합니다. Lite의 1080p 출력은 8초 생성을 요구하므로 네 클립을 각각 8초로 만들고 마지막 클립에서 완결된 6초를 사용합니다. 마지막 인사 동작은 6초 안에 끝나도록 지시합니다.
 - **연속성**: 각 장면에 같은 캐릭터 참조와 스타일을 사용하고, 팔·다리·의상 변화와 장면 연결을 눈으로 확인합니다. 이전 짧은 영상의 반복·줌·색 변경으로 30초를 채우는 기존 빌드 스크립트는 새 제작에 사용하지 않습니다.
 - **오디오**: 장면별 아래 한국어 대사를 ElevenLabs의 기존 캐릭터 음성 설정으로 더빙합니다. 영상 모델에는 사람 말·자막을 생성하지 않도록 지시합니다. 어린 목소리 톤, 음악 덕킹, 짧고 부드러운 효과음을 유지합니다.
-- **크레딧**: 포함 크레딧 안에서 사용하며, 생성 ID와 결과 파일을 저장하여 중복 생성하지 않습니다. 추가 과금이나 플랜 변경을 자동 실행하지 않습니다.
+- **비용 제한**: Lite 1080p는 생성 초당 $0.08로, 8초 × 4장면 = 캐릭터당 영상 생성 예상 $2.56입니다(더빙 별도). 생성 ID와 결과를 재사용합니다. 비싼 모델·해상도로 자동 전환하거나 품질 수정을 위한 유료 재생성을 자동 실행하지 않습니다. 추가 비용이 필요한 재생성은 사용자에게 예상 비용을 알리고 명시적 승인을 받은 후에만 진행합니다.
 - **교체 조건**: 캐릭터 한 명의 4개 장면을 모두 생성하고 해상도·재생 길이·캐릭터 일관성·더빙·모바일 재생을 확인한 뒤 해당 캐릭터의 `public/videos/<캐릭터ID>.mp4`를 교체합니다. 원본 백업은 `backups/character-videos/2026-10-09-landscape/`입니다.
-- **제작 경로**: 2026-10-09 Gemini API의 `veo-3.1-fast-generate-preview`로 제작을 재개합니다. 각 캐릭터를 완성하고 적용한 뒤 다음 캐릭터를 생성합니다. 실제 완료 상태는 `portrait-manifest.json`을 확인합니다.
+- **제작 경로**: 이후 생성은 Gemini API의 `veo-3.1-lite-generate-preview`만 사용하며, 한 캐릭터를 완성하고 적용한 뒤 다음 캐릭터를 생성합니다. 현재는 설정만 변경하며 추가 생성하지 않습니다. 실제 완료 상태는 `portrait-manifest.json`을 확인합니다.
 
 공식 영상 API: https://ai.google.dev/gemini-api/docs/veo
 생성 도구와 재개 방법: `../../production/character-videos/README.md`
 
 ## 1. 공통 스타일 키워드 (모든 영상 적용)
 ```text
-3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights.
+3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 1080p 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights.
 ```
 
 ---
 
 ## 2. 핑구 (Pingu)
+
+> 아래는 이미 완성된 4K 제작 당시의 스토리보드입니다. 새 생성에는 위의 Lite 1080p 정책을 적용합니다.
 
 - **캐릭터**: 핑구 (Pingu) - 민트 목도리와 크림색 배, 푸른 회색 몸의 아기 펭귄
 - **스토리 테마**: 반짝반짝 얼음 미끄럼틀과 눈사람 만들기
@@ -60,7 +62,7 @@
 
 ### [Veo / AI Video Prompt - 30s Storyboard]
 ```text
-3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second heartwarming 3D claymation featuring Ggomi, a chubby caramel-brown teddy bear with a cream muzzle, pink ear ribbon, and pink pinafore dress with a cream heart and pale trim, matching the supplied in-game Ggomi reference.
+3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 1080p 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second heartwarming 3D claymation featuring Ggomi, a chubby caramel-brown teddy bear with a cream muzzle, pink ear ribbon, and pink pinafore dress with a cream heart and pale trim, matching the supplied in-game Ggomi reference.
 - 00s-08s (Scene 1 - Peekaboo): Ggomi peeks out from behind a giant fluffy pink pillow in a cozy nursery room, giggling softly and waving with both padded paws.
 - 08s-16s (Scene 2 - Making Treat): Ggomi sits at a small wooden table, carefully placing a bright red strawberry on top of a whipped cream cupcake, licking its lips cutely.
 - 16s-24s (Scene 3 - Happy Dance): Holding the cupcake, Ggomi does a gentle side-to-side wiggle dance, surrounded by floating pink sparkles and musical notes.
@@ -89,7 +91,7 @@
 
 ### [Veo / AI Video Prompt - 30s Storyboard]
 ```text
-3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second energetic and cute 3D claymation featuring Rano, a cheerful mint-green baby dinosaur with a cream-yellow belly, golden rounded dorsal plates, short limbs and a curved tail, matching the supplied in-game Rano reference.
+3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 1080p 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second energetic and cute 3D claymation featuring Rano, a cheerful mint-green baby dinosaur with a cream-yellow belly, golden rounded dorsal plates, short limbs and a curved tail, matching the supplied in-game Rano reference.
 - 00s-08s (Scene 1 - Brave Roar): Rano pops out from behind a giant leafy fern, stomps its chubby feet playfully, and lets out a tiny, adorable "Roar!" before giggling.
 - 08s-16s (Scene 2 - Discovery): Rano hops through colorful prehistoric flower bushes and discovers a glowing rainbow-spotted dinosaur egg wobbling on a mossy stone.
 - 16s-24s (Scene 3 - Hatching Joy): The egg gently cracks open and pops out a bunch of flying soap bubbles! Rano jumps in the air, popping bubbles with its little snout and tail.
@@ -118,7 +120,7 @@
 
 ### [Veo / AI Video Prompt - 30s Storyboard]
 ```text
-3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second bubbly 3D claymation featuring Jelly, a sweet pearl-lavender bunny with long upright pink-inner ears, a pink flower by one ear, a lavender pinafore dress with a cream heart and pale trim, and rosy cheeks, matching the supplied in-game Jelly reference.
+3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 1080p 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second bubbly 3D claymation featuring Jelly, a sweet pearl-lavender bunny with long upright pink-inner ears, a pink flower by one ear, a lavender pinafore dress with a cream heart and pale trim, and rosy cheeks, matching the supplied in-game Jelly reference.
 - 00s-08s (Scene 1 - Bouncing In): Jelly bounces rhythmically into a sunny vegetable garden, long ears flopping happily, stopping to twitch its pink nose at the camera.
 - 08s-16s (Scene 2 - Big Carrot): Jelly tries to pull a huge cartoon carrot from the ground; with a big tug, it plops backward softly onto a bed of clover leaves, laughing cheerfully.
 - 16s-24s (Scene 3 - Butterfly Waltz): A sparkling yellow butterfly lands gently on Jelly's nose. Jelly giggles, sneezes softly, and spins around playing tag with the butterfly.
@@ -147,7 +149,7 @@
 
 ### [Veo / AI Video Prompt - 30s Storyboard]
 ```text
-3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second curious and sweet 3D claymation featuring Dochi, a round little hedgehog with soft golden-honey rounded spines, a warm cream face, a tiny dark nose and a sage-mint triangular neckerchief, matching the supplied in-game Dochi reference.
+3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 1080p 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second curious and sweet 3D claymation featuring Dochi, a round little hedgehog with soft golden-honey rounded spines, a warm cream face, a tiny dark nose and a sage-mint triangular neckerchief, matching the supplied in-game Dochi reference.
 - 00s-08s (Scene 1 - Rolling Ball): A round prickly ball rolls in through autumn leaves, unfurls, and reveals Dochi’s adorable face blinking curiously at the viewer.
 - 08s-16s (Scene 2 - Treasure Hunt): Dochi sniffs the ground and finds a giant shiny golden acorn. It polishes the acorn with its little tummy until it gleams.
 - 16s-24s (Scene 3 - Leaf Crown): Leaves fall gently; Dochi sticks three colorful maple leaves onto its back spines like a festive crown and wiggles with joy.
@@ -176,7 +178,7 @@
 
 ### [Veo / AI Video Prompt - 30s Storyboard]
 ```text
-3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second playful 3D claymation featuring Ggulgguli, a chubby rosy-pink piglet with a curly spring tail, a friendly pink snout, small dark hooves and a butter-yellow triangular neckerchief, matching the supplied in-game Ggulgguli reference.
+3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 1080p 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second playful 3D claymation featuring Ggulgguli, a chubby rosy-pink piglet with a curly spring tail, a friendly pink snout, small dark hooves and a butter-yellow triangular neckerchief, matching the supplied in-game Ggulgguli reference.
 - 00s-08s (Scene 1 - Snout Wiggle): Ggulgguli wiggles its round snout directly in front of the lens with funny sound effects, then steps back dancing on its hind hooves.
 - 08s-16s (Scene 2 - Strawberry Feast): Ggulgguli spots a bowl of giant juicy strawberries, juggles three of them cutely, and munches happily with puffed cheeks.
 - 16s-24s (Scene 3 - Bubble Bath): Ggulgguli jumps playfully into a shallow warm bubble pool, splashing pink bubbles everywhere and wearing a bubble hat.
@@ -205,7 +207,7 @@
 
 ### [Veo / AI Video Prompt - 30s Storyboard]
 ```text
-3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second dreamy and soothing 3D claymation featuring Eumme, an ultra-fluffy ivory-white lamb with short golden curled horns, a cream face, a sky-blue triangular neckerchief and a tiny golden bell, matching the supplied in-game Eumme reference.
+3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 1080p 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second dreamy and soothing 3D claymation featuring Eumme, an ultra-fluffy ivory-white lamb with short golden curled horns, a cream face, a sky-blue triangular neckerchief and a tiny golden bell, matching the supplied in-game Eumme reference.
 - 00s-08s (Scene 1 - Cloud Drift): Eumme floats gently into the lavender pastel sky sitting atop a fluffy pink cotton-candy cloud, humming a soft tune.
 - 08s-16s (Scene 2 - Star Catching): Eumme reaches out a tiny hoof and catches a falling yellow star, which glows softly and chimes like a music box.
 - 16s-24s (Scene 3 - Cloud Pillow): Eumme fluffs up a mini cloud like a marshmallow pillow, rests its head, and yawns cutely as tiny crescent moons float by.
@@ -234,7 +236,7 @@
 
 ### [Veo / AI Video Prompt - 30s Storyboard]
 ```text
-3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second lively 3D claymation featuring Nurungji, an adorable honey-golden puppy with caramel floppy ears, a cream muzzle and belly, a sage-green triangular neckerchief and a wagging curved tail, matching the supplied in-game Nurungji reference.
+3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 1080p 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second lively 3D claymation featuring Nurungji, an adorable honey-golden puppy with caramel floppy ears, a cream muzzle and belly, a sage-green triangular neckerchief and a wagging curved tail, matching the supplied in-game Nurungji reference.
 - 00s-08s (Scene 1 - Bounding Run): Nurungji trots happily across a green meadow holding a red squeaky ball in its mouth, stopping to tilt its head with perked ears.
 - 08s-16s (Scene 2 - Catch & Roll): Nurungji tosses the ball with its nose, chases it in circles, and rolls over onto its back asking for tummy rubs.
 - 16s-24s (Scene 3 - Digging Fun): Nurungji digs energetically in a sandbox, pulling out a sparkling toy star and doing an excited tail-spin dance.
