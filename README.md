@@ -23,14 +23,29 @@ View your app in AI Studio: https://ai.studio/apps/e9b7985c-a0f7-4008-8953-39da2
 
 The eight character profiles use the official `@elevenlabs/elevenlabs-js` Node SDK through `/api/speech`. ElevenLabs is the first provider. Korean remains the default; parent settings offer English, character previews, AI sound preferences, remaining included credits, and the provider's next reset date. Jessica/Laura are light female base voices, with character-specific pacing and a modest cartoon pitch lift; they are not recordings of children.
 
-- Every new generation rechecks the provider's live account-wide allowance. **Free and Starter are supported only with usage-based billing disabled** (`max_credit_limit_extension: 0`, extension flags false). No upgrades, credit purchases, Music API calls from the child UI, or automatic paid-provider failover occur. Provider errors/unknown allowance fail closed. SDK generation retries are disabled because an interrupted request may already consume credits.
+- Every live game generation rechecks the provider's account-wide allowance. **Free and Starter are supported only with usage-based billing disabled** (`max_credit_limit_extension: 0`, extension flags false). No upgrades, credit purchases, Music API calls from the child UI, or automatic paid-provider failover occur. Provider errors/unknown allowance fail closed. SDK generation retries are disabled because an interrupted request may already consume credits.
 - Included credits renew on the provider's billing cycle, not a guessed calendar date. Needed new lines resume on subsequent play after renewal (availability refreshes within one minute). The app does not generate unused content just to exhaust a monthly balance.
-- Speech uses Multilingual v2, 128 kbps MP3, and the selected character/language. Repeat taps preserve the first line through completion. Compressed ElevenLabs clips are saved in IndexedDB (at most 200 clips / 12 MiB) and replay before checking network availability. Browser storage can be evicted or unavailable; short in-memory playback and the selected-language device voice remain fallbacks.
+- Speech uses Multilingual v2, 128 kbps MP3, and the selected character/language. Common Korean guides, greetings, praise, and core English lines are pre-generated in `public/audio/elevenlabs/speech/`. The catalog records exact text, characters, sizes and file checksums. These files play without API access or generation credits, including a new installation. Equal synthesis requests share a file while each character keeps its own playback pitch. The exact-request manifest also works on local HTTP/LAN without Web Crypto.
+- Repeat taps preserve the first line through completion. Compressed speech, music and effects are saved in IndexedDB (at most 200 clips / 12 MiB) and replay before checking network availability. Only lines absent from the speech bank (for example a changed child's name or a dynamic game question) use live generation and device-local persistence. A missing bundled file falls back to device speech instead of spending credits to regenerate it. Browser storage can be evicted or unavailable; bundled originals remain reloadable from the app, and device speech/procedural sounds remain fallbacks. Files are loaded on demand, not all at startup.
 - Four original ElevenLabs instrumental recordings are bundled: three shuffled play tracks and one quiet lullaby. They play through the same BGM gain/ducking path. If files cannot load, six original procedural arrangements with layered marimba/flute/music-box timbres remain available. Sleep music stays quieter.
-- Six short ElevenLabs effects are bundled and cached: tap, bounce, pop, bubble, sparkle, success. A first gesture responds immediately with synthesis while its recording loads; a late download never makes a late sound. Missing recordings may be generated from a fixed, short server catalog using included credits. Polyphony, mute, navigation cancellation, and pitch variation are bounded. Recorded real animal sounds and tuned xylophone notes are preserved.
+- Six short ElevenLabs effects are bundled and cached: tap, bounce, pop, bubble, sparkle, success. A first gesture responds immediately with synthesis while its recording loads; a late download never makes a late sound. Missing recordings use the procedural effect without a generation request. Polyphony, mute, navigation cancellation, and pitch variation are bounded. Recorded real animal sounds and tuned xylophone notes are preserved.
 - No microphone, chat agent, Speech Engine session or transcript server is introduced. This change covers game guidance, praise, music and effects.
 
 ### Audio asset maintenance
+
+Preview missing speech without API calls:
+
+```sh
+node --import tsx scripts/generate-speech-library.ts
+```
+
+Generate only missing reviewed lines within an explicit conservative ceiling:
+
+```sh
+node --import tsx scripts/generate-speech-library.ts --generate --budget=20000
+```
+
+The script extracts spoken literals/constant guides from the games, adds character greetings/praise, and localizes authored English. It reserves the full batch against verified included credits, debits each request locally, refreshes the live allowance once a minute to respect subscription-read rate limits, and stops at a plan/billing-cycle change. It never retries a generation POST automatically. An ignored `.audio-generation/` journal plus provider history can recover an interrupted response without regenerating it; uncertain requests stop for review. API permissions for subscription reads and speech history/downloads are needed. Successful files are published with an exact-request manifest and checksum catalog. Rerunning skips valid saved files; builds and app startup never run this generator. Review the catalog and listen to samples before committing.
 
 `scripts/generate-play-audio.ts` generates **missing** originals with the official SDK. Run deliberately with `node --import tsx scripts/generate-play-audio.ts`; it is not a build/startup hook. It verifies included credits and disabled overages before each request, skips existing assets, stops across a billing reset, and limits a batch to 5,000 credits with conservative per-request reserves. Music generation requires Starter. Review new output before committing. Prompts and track names live in `src/data/generatedMusic.ts`; effect prompts and revisions are in `src/data/audioExperience.ts`. Existing assets cost no credits to replay.
 

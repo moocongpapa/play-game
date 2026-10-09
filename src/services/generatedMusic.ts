@@ -1,6 +1,7 @@
 import { GENERATED_MUSIC, generatedMusicUrl } from '../data/generatedMusic';
 import { createRoundDeck } from '../utils/roundDeck';
 import { isPageHidden } from '../utils/pageVisibility';
+import { readSavedAudio, saveAudio, deleteSavedAudio } from './audioCache';
 
 const nextTrack = createRoundDeck();
 const buffers = new Map<string, AudioBuffer>();
@@ -32,9 +33,20 @@ export function startGeneratedMusic(ctx: AudioContext, destination: AudioNode, s
   const choices = GENERATED_MUSIC.filter(track => track.scene === scene);
   const load = async (id: string) => {
     if (buffers.has(id)) return buffers.get(id)!;
-    const response = await fetch(generatedMusicUrl(id), { signal: AbortSignal.any([signal, AbortSignal.timeout(8000)]) });
-    if (!response.ok) throw new Error('Music file unavailable');
-    const buffer = await ctx.decodeAudioData(await response.arrayBuffer());
+    const key = `music:v1:${id}`;
+    const saved = await readSavedAudio(key);
+    let buffer: AudioBuffer | undefined;
+    if (saved) {
+      try { buffer = await ctx.decodeAudioData(saved.bytes); }
+      catch { void deleteSavedAudio(key); }
+    }
+    if (!buffer) {
+      const response = await fetch(generatedMusicUrl(id), { signal: AbortSignal.any([signal, AbortSignal.timeout(8000)]) });
+      if (!response.ok) throw new Error('Music file unavailable');
+      const bytes = await response.arrayBuffer();
+      buffer = await ctx.decodeAudioData(bytes.slice(0));
+      void saveAudio({ key, bytes, playbackRate: 1, savedAt: Date.now() });
+    }
     if (buffers.size >= 2) buffers.delete(buffers.keys().next().value!);
     buffers.set(id, buffer);
     return buffer;

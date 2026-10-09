@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { setImmediate } from 'node:timers/promises';
+import { createHash } from 'node:crypto';
 
 test('speech playback respects preferences, navigation and uninterrupted repeated taps', async t => {
-  const original = new Map(['window', 'document', 'localStorage', 'SpeechSynthesisUtterance', 'fetch', 'Audio'].map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
+  const original = new Map(['window', 'document', 'localStorage', 'SpeechSynthesisUtterance', 'fetch', 'Audio', 'crypto'].map(key => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
   const storage = new Map<string, string>();
   const page = { hidden: false };
   let voices = [{ name: 'Korean natural', lang: 'ko-KR' }, { name: 'English natural', lang: 'en-US' }];
@@ -45,6 +46,10 @@ test('speech playback respects preferences, navigation and uninterrupted repeate
   let failureStatus = 502;
   let release: ((response: Response) => void) | undefined;
   Object.defineProperties(globalThis, {
+    // This suite controls playback microtasks; avoid depending on the OS crypto
+    // worker pool's timing. Real Web Crypto identities are tested in bundledSpeech.
+    crypto: { configurable: true, value: { subtle: { digest: async (_algorithm: string, data: Uint8Array) =>
+      new Uint8Array(createHash('sha256').update(data).digest()).buffer } } },
     document: { configurable: true, value: page },
     window: { configurable: true, value: { AudioContext: Context, SpeechSynthesisUtterance: Utterance, setTimeout, clearTimeout, speechSynthesis: {
       getVoices: () => voices, cancel: () => { cancelled++; }, speak: (utterance: Utterance) => { spoken.push(utterance); utterance.onstart?.(); },
@@ -61,9 +66,9 @@ test('speech playback respects preferences, navigation and uninterrupted repeate
   const ai = await import('../services/geminiTTS');
   const flush = async () => { await setImmediate(); await setImmediate(); };
   try {
-    engine.speakText('유하야, 안녕! 나는 젤리야. 우리 같이 신나게 놀자!', true, { characterId: 'jelly' });
+    engine.speakText('유하야, 젤리의 새로운 이야기를 들어볼까?', true, { characterId: 'jelly' });
     await flush();
-    assert.equal(requests[0].text, '유하야, 안녕! 나는 젤리야. 우리 같이 신나게 놀자!');
+    assert.equal(requests[0].text, '유하야, 젤리의 새로운 이야기를 들어볼까?');
     assert.equal(requests[0].language, 'ko');
     assert.equal(requests[0].characterId, 'jelly');
     assert.equal(starts, 1);
