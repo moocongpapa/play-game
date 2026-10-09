@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeftRight, ArrowRight, Bug, Fish, Hand, Heart, Palette, PawPrint, Play } from 'lucide-react';
 import { CHARACTER_LIST, CHARACTERS } from '../data/characters';
 import { CharacterAvatar } from '../components/CharacterAvatar';
+import { CharacterCharmVideoModal } from '../components/CharacterCharmVideoModal';
 import { GameArtwork } from '../components/GameArtwork';
 import { ToyArtwork } from '../components/ToyArtwork';
 import { FRIEND_DAY } from '../data/friendDay';
@@ -33,6 +34,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
   const age = childProfile?.ageGroup || 'sprout';
   const headingRef = useRef<HTMLHeadingElement>(null);
   const [hasNavigated, setHasNavigated] = useState(false);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const available = availableGameIds(age);
   const preferred = ([buddy.gameId, buddy.subGameId, 'balloon_pop', 'stage_adventure'] as Array<GameId | undefined>).filter((id): id is GameId => Boolean(id) && available.includes(id!));
   const games = [...new Set([...preferred, ...available])];
@@ -74,7 +76,43 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
         <p className="welcome-subtitle">{step === 'friends' ? '마음에 드는 친구를 콕!' : `${buddy.name}랑 함께, 하고 싶은 그림을 콕!`}</p>
       </div>
       <div className="welcome-friends" aria-hidden={step === 'friends' ? true : undefined}>
-        {step === 'friends' ? <><CharacterAvatar id="jelly" size="xl" mood="waving" className="hero-bunny" /><CharacterAvatar id="ggomi" size="2xl" mood="waving" className="hero-bear" /><CharacterAvatar id="rano" size="xl" mood="happy" className="hero-dino" /></> : <><button type="button" className="selected-buddy-halo" onClick={changeFriend} aria-label={`${buddy.name}, 다른 친구 선택`}><CharacterAvatar id={selectedCharacter} mood="happy" className="!w-full !h-full" /><span aria-hidden="true"><ArrowLeftRight size={18} /> {buddy.name}</span></button><ToyArtwork emoji="⭐" className="hero-star" /></>}
+        {step === 'friends' ? (
+          <>
+            <CharacterAvatar id="jelly" size="xl" mood="waving" className="hero-bunny" />
+            <CharacterAvatar id="ggomi" size="2xl" mood="waving" className="hero-bear" />
+            <CharacterAvatar id="rano" size="xl" mood="happy" className="hero-dino" />
+          </>
+        ) : (
+          <>
+            <div className="selected-buddy-stage">
+              <button
+                type="button"
+                className="selected-buddy-halo"
+                onClick={changeFriend}
+                aria-label={`${buddy.name}, 다른 친구 선택`}
+              >
+                <CharacterAvatar id={selectedCharacter} mood="happy" className="!w-full !h-full" />
+                <span aria-hidden="true"><ArrowLeftRight size={18} /> {buddy.name}</span>
+              </button>
+              <button
+                type="button"
+                className="buddy-video-badge"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  stopAllSpeech();
+                  playJellyTap(soundEnabled);
+                  setIsVideoModalOpen(true);
+                }}
+                aria-label={`${buddy.name} 영상 보기`}
+                title={`${buddy.name} 영상 보기`}
+              >
+                <span className="buddy-video-badge-icon" aria-hidden="true">📹</span>
+                <span className="sr-only">영상 보기</span>
+              </button>
+            </div>
+            <ToyArtwork emoji="⭐" className="hero-star" />
+          </>
+        )}
       </div>
       <span className="welcome-cloud" aria-hidden="true" />
     </section>
@@ -113,5 +151,15 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
         ><span className="home-play-nav-icon" aria-hidden="true"><Icon /></span></button>)}
       </div>
     </nav>
+
+    <CharacterCharmVideoModal
+      isOpen={isVideoModalOpen}
+      onClose={() => {
+        stopAllSpeech();
+        setIsVideoModalOpen(false);
+      }}
+      initialCharacterId={selectedCharacter}
+      soundEnabled={soundEnabled}
+    />
   </div>;
 };

@@ -1,57 +1,28 @@
 import React, { useState, useEffect, useRef, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import DrawingCanvas from '../sketch/DrawingCanvas';
 import { LivingCharacterStage } from '../sketch/LivingCharacterStage';
+import { SketchbookDialog } from '../sketch/SketchbookDialog';
+import { SketchbookGallery } from '../sketch/SketchbookGallery';
 import {
-  backgrounds,
-  colors,
-  stickerKinds,
-  freshArtwork,
-  change,
-  undo,
-  redo,
-  type Artwork,
-  type Brush,
-  type History,
+  backgrounds, colors, stickerKinds, freshArtwork, change, undo, redo,
+  type Artwork, type Brush, type History,
 } from '../sketch/model';
 import { templates, templateUrl } from '../sketch/art';
 import { renderArtwork, renderCharacterSprite } from '../sketch/render';
 import { playDrawingSound, playSound } from '../sketch/sound';
-import { loadDraft, saveDraft, saveGallery, listGallery, deleteGallery, type SavedArt } from '../sketch/storage';
+import { loadDraft, saveDraft, saveGallery } from '../sketch/storage';
 import { createDraftAutosave } from '../utils/draftAutosave';
 import {
-  Undo2,
-  Redo2,
-  Volume2,
-  VolumeX,
-  Sparkles,
-  Eraser,
-  Paintbrush,
-  Pencil,
-  Highlighter,
-  PaintBucket,
-  Trash2,
-  X,
-  Sticker as StickerIcon,
-  Zap,
-  CircleDot,
-  Wand2,
-  Download,
-  RotateCcw,
-  Palette,
-  Home,
-  Images,
-  FolderHeart,
-  ZoomIn,
-  ZoomOut,
-  RotateCw,
+  Undo2, Redo2, Sparkles, Eraser, Paintbrush, Pencil, Highlighter, PaintBucket,
+  Trash2, Sticker as StickerIcon, Zap, CircleDot, Wand2, Palette, Images,
+  ImagePlus, ZoomIn, ZoomOut, RotateCw, BookOpen, FilePlus2, Rabbit, PawPrint, Apple, Car,
 } from 'lucide-react';
-import { JellyButton } from '../components/JellyButton';
 import { speakText } from '../utils/soundEngine';
 import type { CharacterId } from '../types';
 import { CharacterAvatar } from '../components/CharacterAvatar';
 import { CHARACTERS } from '../data/characters';
 import { fireConfetti } from '../utils/confetti';
+import './SketchbookScreen.css';
 
 interface SketchbookScreenProps {
   buddy: CharacterId;
@@ -59,40 +30,31 @@ interface SketchbookScreenProps {
   soundEnabled: boolean;
   childName?: string;
 }
-
 export type ToolType = Brush | 'fill' | 'magic' | 'sticker';
-type Panel = 'tools' | 'colors' | 'background' | 'stickers' | 'templates' | 'gallery' | null;
-
+type Panel = 'tools' | 'colors' | 'stickers' | 'templates' | 'gallery' | null;
 const brushes: { id: Brush; name: string; icon: ReactNode; color: string }[] = [
-  { id: 'crayon', name: '크레파스', icon: <Pencil className="w-5 h-5" />, color: '#e3a851' },
-  { id: 'pen', name: '싸인펜', icon: <Highlighter className="w-5 h-5" />, color: '#dc8192' },
-  { id: 'pencil', name: '색연필', icon: <Pencil className="w-5 h-5" />, color: '#91a961' },
-  { id: 'water', name: '물감', icon: <Paintbrush className="w-5 h-5" />, color: '#84b6d2' },
-  { id: 'rainbow', name: '무지개펜', icon: <Sparkles className="w-5 h-5" />, color: '#ff6fb5' },
-  { id: 'neon', name: '네온펜', icon: <Zap className="w-5 h-5" />, color: '#2ee6a8' },
-  { id: 'bubble', name: '버블펜', icon: <CircleDot className="w-5 h-5" />, color: '#54c7ec' },
+  { id: 'crayon', name: '크레파스', icon: <Pencil />, color: '#bd8229' },
+  { id: 'pen', name: '싸인펜', icon: <Highlighter />, color: '#c75f7d' },
+  { id: 'pencil', name: '색연필', icon: <Pencil />, color: '#72913e' },
+  { id: 'water', name: '물감', icon: <Paintbrush />, color: '#518db6' },
+  { id: 'rainbow', name: '무지개펜', icon: <Sparkles />, color: '#d34691' },
+  { id: 'neon', name: '네온펜', icon: <Zap />, color: '#138e71' },
+  { id: 'bubble', name: '버블펜', icon: <CircleDot />, color: '#268da9' },
+];
+const brushWidths: Record<Brush, number[]> = {
+  pen: [7, 16, 32], crayon: [14, 30, 54], pencil: [5, 12, 22], water: [30, 58, 94],
+  eraser: [22, 46, 80], rainbow: [10, 22, 44], neon: [8, 18, 36], bubble: [26, 48, 80],
+};
+const categories = [
+  { name: '친구들', Icon: Rabbit }, { name: '동물', Icon: PawPrint },
+  { name: '과일', Icon: Apple }, { name: '탈것', Icon: Car },
 ];
 
-const brushWidths: Record<Brush, number[]> = {
-  pen: [7, 16, 32],
-  crayon: [14, 30, 54],
-  pencil: [5, 12, 22],
-  water: [30, 58, 94],
-  eraser: [22, 46, 80],
-  rainbow: [10, 22, 44],
-  neon: [8, 18, 36],
-  bubble: [26, 48, 80],
-};
-
-export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
-  buddy,
-  onGoHome,
-  soundEnabled,
-  childName = '유하',
-}) => {
+export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({ buddy, soundEnabled, childName = '유하' }) => {
   const [history, setHistory] = useState<History | null>(null);
   const historyRef = useRef<History | null>(null);
-
+  const active = useRef(true);
+  const savingRef = useRef(false);
   const [tool, setTool] = useState<ToolType>('pen');
   const [color, setColor] = useState(colors[0][1]);
   const [size, setSize] = useState(1);
@@ -101,86 +63,101 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
   const [category, setCategory] = useState('친구들');
   const [stickerKind, setStickerKind] = useState('heart');
   const [selectedSticker, setSelectedSticker] = useState<string | null>(null);
-  const [gallery, setGallery] = useState<SavedArt[]>([]);
   const [notice, setNotice] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const [galleryRevision, setGalleryRevision] = useState(0);
+  const [characterSpriteUrl, setCharacterSpriteUrl] = useState<string | null>(null);
   const [autosave] = useState(() => createDraftAutosave<Artwork>(saveDraft, () => {
     console.warn('Sketchbook draft could not be saved; retaining the latest edit for retry.');
   }));
-
-  // Living Character Animation Mode state
-  const [isLivingCharacterActive, setIsLivingCharacterActive] = useState(false);
-  const [characterSpriteUrl, setCharacterSpriteUrl] = useState<string | null>(null);
-
   const art = history?.present;
+  const currentTemplate = templates.find(item => item.id === art?.template);
+  const characterTitle = currentTemplate ? currentTemplate.name : `${childName}의 그림`;
 
-  const setH = (h: History) => {
-    historyRef.current = h;
-    autosave.schedule(h.present);
-    setHistory(h);
+  const setH = (next: History) => {
+    historyRef.current = next;
+    autosave.schedule(next.present);
+    setHistory(next);
   };
-
-  const commit = (a: Artwork) => {
-    const h = historyRef.current;
-    if (h) setH(change(h, a));
+  const commit = (next: Artwork) => {
+    if (historyRef.current) setH(change(historyRef.current, next));
   };
-
-  const sound = (kind: 'tap' | 'sticker' | 'fanfare' | 'magic' | 'pop' | 'clear' = 'tap') => {
-    playSound(kind, !soundEnabled);
-  };
-
-  const chooseTool = (t: ToolType) => {
-    setTool(t);
-    setPanel(null);
+  const sound = (kind: 'tap' | 'sticker' | 'fanfare' | 'magic' | 'pop' | 'clear' = 'tap') => playSound(kind, !soundEnabled);
+  const closePanel = () => { setPanel(null); setNotice(''); };
+  const openPanel = (next: Panel) => {
     setSelectedSticker(null);
-    if (t === 'magic') playSound('magic', !soundEnabled);
-    else sound();
+    setNotice('');
+    if (next === 'gallery') setSavedId(null);
+    setPanel(next);
+    sound();
+  };
+  const chooseTool = (next: ToolType) => {
+    setTool(next);
+    setSelectedSticker(null);
+    closePanel();
+    sound(next === 'magic' ? 'magic' : 'tap');
   };
 
-  // Launch the Living Animated Character experience
-  const handleLaunchLivingCharacter = () => {
-    if (!art) return;
-    const spriteUrl = renderCharacterSprite(art);
-    setCharacterSpriteUrl(spriteUrl);
-    setIsLivingCharacterActive(true);
-  };
-
-  const handleDownloadPng = () => {
-    if (!art) return;
+  const downloadArtwork = (picture: Artwork) => {
     try {
-      const canvas = renderArtwork(art);
       const link = document.createElement('a');
       link.download = `${childName}스케치북_${new Date().toISOString().slice(0, 10)}.png`;
-      link.href = canvas.toDataURL('image/png');
+      link.href = renderArtwork(picture).toDataURL('image/png');
       link.click();
       sound('sticker');
-      setNotice('그림을 사진으로 저장했어요! 📸');
-      setTimeout(() => setNotice(''), 2500);
+      setNotice('사진 파일 다운로드를 시작했어요.');
+    } catch { setNotice('사진을 만들지 못했어요. 다시 눌러주세요.'); }
+  };
+
+  // One tap puts the current artwork in the exhibition. Repeated saves update
+  // the same artwork ID, rather than adding duplicate frames.
+  const exhibitArtwork = async () => {
+    const picture = historyRef.current?.present;
+    if (!picture || savingRef.current) return;
+    savingRef.current = true;
+    setSaving(true);
+    setNotice('');
+    try {
+      const rendered = renderArtwork(picture);
+      const preview = document.createElement('canvas');
+      const ratio = Math.min(1, 600 / Math.max(rendered.width, rendered.height));
+      preview.width = Math.max(1, Math.round(rendered.width * ratio));
+      preview.height = Math.max(1, Math.round(rendered.height * ratio));
+      const ctx = preview.getContext('2d');
+      if (!ctx) throw new Error('Preview canvas unavailable');
+      ctx.drawImage(rendered, 0, 0, preview.width, preview.height);
+      await saveGallery(picture, preview.toDataURL('image/png'));
+      if (!active.current) return;
+      setSavedId(picture.id);
+      setGalleryRevision(value => value + 1);
+      setSelectedSticker(null);
+      setPanel('gallery');
+      sound('fanfare');
+      fireConfetti();
+      speakText('우와! 멋진 그림을 전시했어!', soundEnabled, { characterId: buddy });
     } catch {
-      setNotice('그림을 저장하지 못했어요.');
+      if (active.current) setNotice('그림을 저장하지 못했어요. 그림은 그대로 있으니 다시 눌러주세요.');
+    } finally {
+      savingRef.current = false;
+      if (active.current) setSaving(false);
     }
   };
 
-  // Load Initial Draft
   useEffect(() => {
-    let active = true;
-    loadDraft()
-      .then((a) => {
-        if (active) {
-          setTool(a?.template ? 'fill' : 'pen');
-          setH({ past: [], present: a || freshArtwork(), future: [] });
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setH({ past: [], present: freshArtwork(), future: [] });
-        }
-      });
-    return () => {
-      active = false;
-    };
+    active.current = true;
+    let current = true;
+    loadDraft().then(draft => {
+      if (current) {
+        setTool(draft?.template ? 'fill' : 'pen');
+        setH({ past: [], present: draft || freshArtwork(), future: [] });
+      }
+    }).catch(() => {
+      if (current) setH({ past: [], present: freshArtwork(), future: [] });
+    });
+    return () => { current = false; active.current = false; };
   }, []);
 
-  // Home navigation also uses the global header, so flush on every unmount.
   useEffect(() => {
     const hide = () => { if (document.hidden) autosave.flush(); };
     document.addEventListener('visibilitychange', hide);
@@ -192,605 +169,143 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({
     };
   }, [autosave]);
 
-  // Load Gallery list when gallery panel opens
-  useEffect(() => {
-    if (panel === 'gallery') {
-      listGallery().then(setGallery).catch(() => {});
-    }
-  }, [panel]);
+  const changePaper = (background: string, fresh = false) => {
+    if (!art) return;
+    commit({ ...(fresh ? freshArtwork() : art), background });
+    if (fresh) setTool('pen');
+    setSelectedSticker(null);
+    sound();
+    closePanel();
+  };
+  const editSticker = (action: 'grow' | 'shrink' | 'rotate' | 'remove') => {
+    if (!art) return;
+    commit({ ...art, stickers: action === 'remove' ? art.stickers.filter(item => item.id !== selectedSticker) : art.stickers.map(item => {
+      if (item.id !== selectedSticker) return item;
+      if (action === 'rotate') return { ...item, rotation: item.rotation + Math.PI / 6 };
+      return { ...item, scale: action === 'grow' ? Math.min(2.5, (item.scale ?? 1) * 1.25) : Math.max(.4, (item.scale ?? 1) * .8) };
+    }) });
+    sound('sticker');
+    if (action === 'remove') setSelectedSticker(null);
+  };
+  const panelTitle = panel === 'tools' ? '무엇으로 그릴까?' : panel === 'colors' ? '어떤 색이 좋을까?' : panel === 'templates' ? '도안과 도화지' : panel === 'stickers' ? '스티커를 골라봐!' : `${childName}의 작은 전시회`;
 
-  // Current template metadata
-  const currentTemplate = templates.find((t) => t.id === art?.template);
-  const characterTitle = currentTemplate ? currentTemplate.name : `${childName}의 그림`;
+  if (characterSpriteUrl) return <LivingCharacterStage buddy={buddy} spriteUrl={characterSpriteUrl}
+    characterTitle={characterTitle} childName={childName} soundEnabled={soundEnabled}
+    onBack={() => setCharacterSpriteUrl(null)} onSave={() => {
+      // Use the same simple exhibition save flow from the living-character view.
+      setCharacterSpriteUrl(null);
+      void exhibitArtwork();
+    }} />;
 
-  // Render Living Character Stage if active
-  if (isLivingCharacterActive && characterSpriteUrl) {
-    return (
-      <LivingCharacterStage
-        buddy={buddy}
-        spriteUrl={characterSpriteUrl}
-        characterTitle={characterTitle}
-        childName={childName}
-        soundEnabled={soundEnabled}
-        onBack={() => setIsLivingCharacterActive(false)}
-        onDownload={handleDownloadPng}
-      />
-    );
-  }
-
-  return (
-    <div className="relative flex h-[calc(100dvh-8rem)] min-h-[540px] w-full select-none flex-col overflow-hidden rounded-[28px] border border-[#e8e7e3] bg-white shadow-sm">
-      {/* Top Header Bar */}
-      <div className="z-30 flex w-full items-center justify-between gap-2 border-b border-[#e8e7e3] bg-white px-3 py-3 sm:px-5">
-        {/* Left: Home & Back */}
-        <div className="flex min-w-0 items-center gap-2">
-          <button
-            onClick={onGoHome}
-            className="grid size-11 shrink-0 place-items-center rounded-xl bg-[#f4f4f2] text-[#4d5562] hover:bg-[#eaeae6]"
-            title="홈으로 가기"
-          >
-            <Home className="w-4 h-4" />
-          </button>
-          <div className="shrink-0" aria-label={`${CHARACTERS[buddy].name}와 함께 색칠하기`}><CharacterAvatar id={buddy} size="sm" mood="waving" /></div>
-
-          <div className="min-w-0">
-            <h1 className="truncate text-base font-extrabold text-[#30343c] sm:text-xl">{childName}의 스케치북</h1>
-            <p className="truncate text-xs text-[#777980]">{currentTemplate ? `${currentTemplate.name} 색칠하기` : '도안을 고르거나 자유롭게 그려요'}</p>
-          </div>
-        </div>
-
-        {/* Right: Living Character & Action Buttons */}
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          {/* 🪄 LIVING CHARACTER BUTTON */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            onClick={handleLaunchLivingCharacter}
-            aria-label="색칠한 캐릭터 움직이기"
-            className="flex min-h-11 items-center gap-1.5 rounded-xl bg-[#eaf0e7] px-3 text-sm font-bold text-[#48634d] hover:bg-[#dfe9db]"
-            title="색칠한 캐릭터를 살아 움직이게 만들기!"
-          >
-            <Sparkles className="size-4" />
-            <span className="hidden sm:inline">살아 움직이기</span>
-          </motion.button>
-
-          {/* Download Photo */}
-          <button
-            onClick={handleDownloadPng}
-            className="grid size-11 place-items-center rounded-xl bg-[#f4f4f2] text-[#4d5562] hover:bg-[#eaeae6]"
-            title="사진으로 저장"
-          >
-            <Download className="w-4 h-4" />
-          </button>
-        </div>
+  return <section className="sketchbook" aria-label={`${childName}의 스케치북`}>
+    <header className="sketch-header">
+      <div className="sketch-buddy" aria-label={`${CHARACTERS[buddy].name}와 함께 색칠하기`}>
+        <CharacterAvatar id={buddy} size="sm" mood="waving" />
+        <div><h1>{childName}의 스케치북</h1><span>쓱쓱, 나만의 그림!</span></div>
       </div>
-
-      {/* Main Drawing Canvas Area */}
-      <div className="relative min-h-0 w-full flex-1 overflow-hidden bg-white">
-        {art && (
-          <DrawingCanvas
-            artwork={art}
-            tool={tool}
-            color={color}
-            size={brushWidths[tool === 'fill' || tool === 'magic' || tool === 'sticker' ? 'pen' : tool][size]}
-            glitter={glitter}
-            stickerKind={stickerKind}
-            selected={selectedSticker}
-            onSelect={setSelectedSticker}
-            onChange={commit}
-            onStamp={() => sound('sticker')}
-            onDrawSound={(t, s) => playDrawingSound(t, !soundEnabled, s)}
-            disabled={!!panel}
-          />
-        )}
-
-        {/* Floating Sticker Edit Toolbar when a sticker is selected */}
-        {selectedSticker && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-white/95 backdrop-blur-xs px-3 py-1.5 rounded-full border-2 border-amber-300 shadow-lg flex items-center gap-2"
-          >
-            <button
-              onClick={() => {
-                if (art) {
-                  commit({
-                    ...art,
-                    stickers: art.stickers.map((s) =>
-                      s.id === selectedSticker ? { ...s, scale: Math.min(2.5, (s.scale ?? 1) * 1.25) } : s
-                    ),
-                  });
-                  sound('sticker');
-                }
-              }}
-              className="p-1.5 hover:bg-amber-100 rounded-full text-xs font-black flex items-center gap-1 cursor-pointer"
-            >
-              <ZoomIn className="w-4 h-4" /> 크게
-            </button>
-            <button
-              onClick={() => {
-                if (art) {
-                  commit({
-                    ...art,
-                    stickers: art.stickers.map((s) =>
-                      s.id === selectedSticker ? { ...s, scale: Math.max(0.4, (s.scale ?? 1) * 0.8) } : s
-                    ),
-                  });
-                  sound('sticker');
-                }
-              }}
-              className="p-1.5 hover:bg-amber-100 rounded-full text-xs font-black flex items-center gap-1 cursor-pointer"
-            >
-              <ZoomOut className="w-4 h-4" /> 작게
-            </button>
-            <button
-              onClick={() => {
-                if (art) {
-                  commit({
-                    ...art,
-                    stickers: art.stickers.map((s) =>
-                      s.id === selectedSticker ? { ...s, rotation: s.rotation + Math.PI / 6 } : s
-                    ),
-                  });
-                  sound('sticker');
-                }
-              }}
-              className="p-1.5 hover:bg-amber-100 rounded-full text-xs font-black flex items-center gap-1 cursor-pointer"
-            >
-              <RotateCw className="w-4 h-4" /> 회전
-            </button>
-            <button
-              onClick={() => {
-                if (art) {
-                  commit({
-                    ...art,
-                    stickers: art.stickers.filter((s) => s.id !== selectedSticker),
-                  });
-                  sound('pop');
-                }
-                setSelectedSticker(null);
-              }}
-              className="p-1.5 hover:bg-rose-100 text-rose-600 rounded-full text-xs font-black flex items-center gap-1 cursor-pointer"
-            >
-              <Trash2 className="w-4 h-4" /> 떼기
-            </button>
-          </motion.div>
-        )}
+      <div className="sketch-header-actions">
+        <button className="sketch-top-button sketch-living" disabled={!art} aria-label="색칠한 캐릭터 살아나기"
+          onClick={() => { if (art) { setCharacterSpriteUrl(renderCharacterSprite(art)); sound('magic'); } }}>
+          <Wand2 aria-hidden="true" /><span>살아나!</span><Sparkles className="sketch-button-sparkle" aria-hidden="true" />
+        </button>
+        <button className="sketch-top-button sketch-save" disabled={!art || saving} aria-busy={saving}
+          aria-label="전시회에 저장하기" onClick={() => void exhibitArtwork()}>
+          <ImagePlus aria-hidden="true" /><span>{saving ? '저장 중…' : '저장하기'}</span>
+        </button>
+        <button className="sketch-top-button sketch-gallery-button" onClick={() => openPanel('gallery')} aria-label={`${childName}의 작은 전시회 열기`}>
+          <Images aria-hidden="true" /><span>전시회</span>
+        </button>
       </div>
+    </header>
 
-      {/* Toast Notice */}
-      <AnimatePresence>
-        {notice && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="absolute bottom-20 left-1/2 -translate-x-1/2 z-50 bg-[#4A3E3D] text-white font-bold text-xs sm:text-sm px-4 py-2 rounded-full shadow-lg"
-          >
-            {notice}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Bottom Floating Control Bar */}
-      <div className="z-30 flex w-full flex-wrap items-center gap-2 border-t border-[#e8e7e3] bg-white p-2.5 sm:flex-nowrap sm:justify-between sm:px-4">
-        {/* Left Undo / Redo */}
-        <div className="order-2 flex items-center gap-1 sm:order-1">
-          <button
-            onClick={() => {
-              if (history && history.past.length > 0) {
-                setH(undo(history));
-                sound();
-              }
-            }}
-            disabled={!history || history.past.length === 0}
-            className="p-2 sm:p-2.5 rounded-full hover:bg-gray-100 text-[#4A3E3D] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer active:scale-95 border border-gray-200"
-            title="실행 취소"
-          >
-            <Undo2 className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
-          <button
-            onClick={() => {
-              if (history && history.future.length > 0) {
-                setH(redo(history));
-                sound();
-              }
-            }}
-            disabled={!history || history.future.length === 0}
-            className="p-2 sm:p-2.5 rounded-full hover:bg-gray-100 text-[#4A3E3D] disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer active:scale-95 border border-gray-200"
-            title="다시 실행"
-          >
-            <Redo2 className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
-        </div>
-
-        {/* Center Main Tools */}
-        <div className="order-1 grid w-full grid-cols-5 gap-1.5 sm:order-2 sm:flex sm:w-auto sm:items-center sm:gap-2">
-          {/* Tool Picker Button */}
-          <button
-            onClick={() => setPanel('tools')}
-            className={`min-h-11 justify-center px-1 py-1.5 sm:px-4 sm:py-2 rounded-xl font-bold text-[11px] sm:text-sm flex items-center gap-1 border transition-all ${
-              panel === 'tools'
-                ? 'bg-[#eaf0e7] text-[#48634d] border-[#b9cdb6]'
-                : 'bg-[#f7f7f5] hover:bg-[#eeeee9] text-[#4d5562] border-[#e8e7e3]'
-            }`}
-          >
-            <Paintbrush className="w-4 h-4" />
-            <span>도구</span>
-          </button>
-
-          {/* Color Picker Button */}
-          <button
-            onClick={() => setPanel('colors')}
-            className={`min-h-11 justify-center px-1 py-1.5 sm:px-4 sm:py-2 rounded-xl font-bold text-[11px] sm:text-sm flex items-center gap-1 border transition-all ${
-              panel === 'colors'
-                ? 'bg-[#eaf0e7] text-[#48634d] border-[#b9cdb6]'
-                : 'bg-[#f7f7f5] hover:bg-[#eeeee9] text-[#4d5562] border-[#e8e7e3]'
-            }`}
-          >
-            <div className="w-4 h-4 rounded-full border border-gray-400" style={{ backgroundColor: color }} />
-            <span>색상</span>
-          </button>
-
-          {/* Template Coloring Book Button */}
-          <button
-            onClick={() => setPanel('templates')}
-            className={`min-h-11 justify-center px-1 py-1.5 sm:px-4 sm:py-2 rounded-xl font-bold text-[11px] sm:text-sm flex items-center gap-1 border transition-all ${
-              panel === 'templates'
-                ? 'bg-[#eaf0e7] text-[#48634d] border-[#b9cdb6]'
-                : 'bg-[#f7f7f5] hover:bg-[#eeeee9] text-[#4d5562] border-[#e8e7e3]'
-            }`}
-          >
-            <span>📖</span>
-            <span>도안</span>
-          </button>
-
-          {/* Sticker Button */}
-          <button
-            onClick={() => setPanel('stickers')}
-            className={`min-h-11 justify-center px-1 py-1.5 sm:px-4 sm:py-2 rounded-xl font-bold text-[11px] sm:text-sm flex items-center gap-1 border transition-all ${
-              panel === 'stickers'
-                ? 'bg-[#eaf0e7] text-[#48634d] border-[#b9cdb6]'
-                : 'bg-[#f7f7f5] hover:bg-[#eeeee9] text-[#4d5562] border-[#e8e7e3]'
-            }`}
-          >
-            <StickerIcon className="w-4 h-4" />
-            <span>스티커</span>
-          </button>
-
-          {/* Paper Background Button */}
-          <button
-            onClick={() => setPanel('background')}
-            className={`min-h-11 justify-center px-1 py-1.5 sm:px-3 sm:py-2 rounded-xl font-bold text-[11px] sm:text-sm flex items-center gap-1 border transition-all ${
-              panel === 'background'
-                ? 'bg-[#eaf0e7] text-[#48634d] border-[#b9cdb6]'
-                : 'bg-[#f7f7f5] hover:bg-[#eeeee9] text-[#4d5562] border-[#e8e7e3]'
-            }`}
-            title="도화지 변경"
-          >
-            <span>📄</span>
-            <span>도화지</span>
-          </button>
-        </div>
-
-        {/* Right Reset / Gallery */}
-        <div className="order-3 ml-auto flex items-center gap-1">
-          <button
-            onClick={() => setPanel('gallery')}
-            className="p-2 sm:p-2.5 rounded-full hover:bg-indigo-50 text-indigo-700 cursor-pointer active:scale-95 border border-indigo-200"
-            title="내 작품 갤러리"
-          >
-            <FolderHeart className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
-
-          <button
-            onClick={() => {
-              if (window.confirm('도화지를 깨끗하게 비울까요?')) {
-                commit({ ...freshArtwork(), background: art?.background || 'white' });
-                sound('clear');
-              }
-            }}
-            className="p-2 sm:p-2.5 rounded-full hover:bg-rose-50 text-rose-600 cursor-pointer active:scale-95 border border-rose-200"
-            title="새 도화지"
-          >
-            <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
-          </button>
-        </div>
-      </div>
-
-      {/* ========================================================= */}
-      {/* MODAL PANELS (Tools, Colors, Templates, Stickers, Gallery) */}
-      {/* ========================================================= */}
-      <AnimatePresence>
-        {panel && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#252b31]/40 p-4 backdrop-blur-2xs">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="relative flex max-h-[85vh] w-full max-w-lg flex-col justify-between overflow-hidden rounded-[26px] border border-[#e8e7e3] bg-white p-4 shadow-2xl sm:p-6"
-            >
-              {/* Close Button */}
-              <button
-                onClick={() => setPanel(null)}
-                className="absolute top-4 right-4 p-2 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-600 cursor-pointer active:scale-95"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              {/* PANEL 1: TOOLS PICKER */}
-              {panel === 'tools' && (
-                <div className="flex flex-col gap-3">
-                  <h3 className="text-lg font-black text-[#4A3E3D] mb-1">🖌️ 무엇으로 그려볼까요?</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {brushes.map((b) => (
-                      <button
-                        key={b.id}
-                        onClick={() => chooseTool(b.id)}
-                        className={`p-3 rounded-2xl border-2 flex flex-col items-center gap-1 cursor-pointer transition-all ${
-                          tool === b.id ? 'bg-amber-100 border-amber-500 scale-105 shadow-xs' : 'border-gray-200 hover:bg-gray-50'
-                        }`}
-                      >
-                        <span style={{ color: b.color }}>{b.icon}</span>
-                        <span className="text-xs font-black text-[#4A3E3D]">{b.name}</span>
-                      </button>
-                    ))}
-                    {art?.template && (
-                      <>
-                        <button
-                          onClick={() => chooseTool('fill')}
-                          className={`p-3 rounded-2xl border-2 flex flex-col items-center gap-1 cursor-pointer transition-all ${
-                            tool === 'fill' ? 'bg-amber-100 border-amber-500 scale-105 shadow-xs' : 'border-gray-200 hover:bg-gray-50'
-                          }`}
-                        >
-                          <PaintBucket className="w-5 h-5 text-indigo-500" />
-                          <span className="text-xs font-black text-[#4A3E3D]">채우기</span>
-                        </button>
-                        <button
-                          onClick={() => chooseTool('magic')}
-                          className={`p-3 rounded-2xl border-2 flex flex-col items-center gap-1 cursor-pointer transition-all ${
-                            tool === 'magic' ? 'bg-amber-100 border-amber-500 scale-105 shadow-xs' : 'border-gray-200 hover:bg-gray-50'
-                          }`}
-                        >
-                          <Wand2 className="w-5 h-5 text-rose-500" />
-                          <span className="text-xs font-black text-[#4A3E3D]">요술봉</span>
-                        </button>
-                      </>
-                    )}
-                    <button
-                      onClick={() => chooseTool('eraser')}
-                      className={`p-3 rounded-2xl border-2 flex flex-col items-center gap-1 cursor-pointer transition-all ${
-                        tool === 'eraser' ? 'bg-amber-100 border-amber-500 scale-105 shadow-xs' : 'border-gray-200 hover:bg-gray-50'
-                      }`}
-                    >
-                      <Eraser className="w-5 h-5 text-rose-400" />
-                      <span className="text-xs font-black text-[#4A3E3D]">지우개</span>
-                    </button>
-                  </div>
-
-                  {/* Brush Sizes */}
-                  <div className="mt-3 pt-3 border-t border-gray-100">
-                    <span className="text-xs font-black text-gray-500 mb-2 block">붓 굵기</span>
-                    <div className="grid grid-cols-3 gap-2">
-                      {['작게', '중간', '크게'].map((label, idx) => (
-                        <button
-                          key={label}
-                          onClick={() => {
-                            setSize(idx);
-                            sound();
-                          }}
-                          className={`py-2 rounded-xl text-xs font-black border-2 cursor-pointer ${
-                            size === idx ? 'bg-amber-400 text-amber-950 border-amber-500' : 'border-gray-200 hover:bg-gray-50'
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Glitter Toggle */}
-                  <div className="mt-2 flex items-center justify-between p-2 rounded-xl bg-amber-50 border border-amber-200">
-                    <span className="text-xs font-black text-amber-900 flex items-center gap-1">
-                      <Sparkles className="w-4 h-4 text-amber-500" /> 반짝이 효과
-                    </span>
-                    <button
-                      onClick={() => {
-                        setGlitter(!glitter);
-                        sound();
-                      }}
-                      className={`px-3 py-1 rounded-full text-xs font-black border cursor-pointer ${
-                        glitter ? 'bg-amber-500 text-white border-amber-600' : 'bg-white text-gray-500 border-gray-300'
-                      }`}
-                    >
-                      {glitter ? '켜짐' : '꺼짐'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* PANEL 2: COLOR PALETTE */}
-              {panel === 'colors' && (
-                <div className="flex flex-col gap-3">
-                  <h3 className="text-lg font-black text-[#4A3E3D] mb-1">🎨 어떤 색으로 그릴까요?</h3>
-                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 py-2">
-                    {colors.map(([name, hex]) => (
-                      <button
-                        key={hex}
-                        onClick={() => {
-                          setColor(hex);
-                          sound();
-                          setPanel(null);
-                        }}
-                        className={`p-2 rounded-2xl flex flex-col items-center gap-1 cursor-pointer transition-transform ${
-                          color === hex ? 'scale-110 ring-4 ring-amber-400' : 'hover:scale-105'
-                        }`}
-                      >
-                        <div
-                          className="w-10 h-10 rounded-full border-2 border-white shadow-md"
-                          style={{ backgroundColor: hex }}
-                        />
-                        <span className="text-[11px] font-black text-[#4A3E3D]">{name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* PANEL 3: TEMPLATES (COLORING BOOK) */}
-              {panel === 'templates' && (
-                <div className="flex flex-col gap-3">
-                  <h3 className="text-lg font-black text-[#4A3E3D] mb-1">📖 색칠할 도안을 골라보세요!</h3>
-                  {/* Category Filter */}
-                  <div className="flex gap-1.5 overflow-x-auto pb-1">
-                    {['친구들', '동물', '과일', '탈것'].map((cat) => (
-                      <button
-                        key={cat}
-                        onClick={() => setCategory(cat)}
-                        className={`px-3 py-1 rounded-full text-xs font-black cursor-pointer border ${
-                          category === cat
-                            ? 'bg-[#4e6953] text-white border-[#4e6953]'
-                            : 'bg-[#f5f5f2] text-[#626973] border-[#e8e7e3]'
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Template Grid */}
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 max-h-[50vh] overflow-y-auto p-1">
-                    {templates
-                      .filter((t) => t.category === category)
-                      .map((t) => (
-                        <button
-                          key={t.id}
-                          onClick={() => {
-                            if (art) {
-                              commit({ ...freshArtwork(), background: art.background, template: t.id });
-                              setTool('fill');
-                              sound('magic');
-                              setPanel(null);
-                              speakText(`${t.name} 도안이에요! 예쁘게 색칠해보자!`, soundEnabled, { characterId: buddy });
-                            }
-                          }}
-                          className={`p-3 rounded-2xl border-2 flex flex-col items-center gap-1 cursor-pointer transition-all ${
-                            art?.template === t.id ? 'bg-[#f4f8f2] border-[#7c9b7c] ring-2 ring-[#dbe8d7]' : 'border-[#e8e7e3] hover:bg-[#f7f7f5]'
-                          }`}
-                        >
-                          <img src={templateUrl(t)} alt="" className="h-16 w-full object-contain" />
-                          <span className="text-xs font-black text-[#4A3E3D] truncate w-full text-center">{t.name}</span>
-                        </button>
-                      ))}
-                  </div>
-                </div>
-              )}
-
-              {/* PANEL 4: STICKERS */}
-              {panel === 'stickers' && (
-                <div className="flex flex-col gap-3">
-                  <h3 className="text-lg font-black text-[#4A3E3D] mb-1">⭐ 스티커를 골라 도화지에 붙여요!</h3>
-                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5 max-h-[50vh] overflow-y-auto p-1">
-                    {stickerKinds.map((s) => (
-                      <button
-                        key={s.id}
-                        onClick={() => {
-                          setStickerKind(s.id);
-                          setTool('sticker');
-                          sound('sticker');
-                          setPanel(null);
-                        }}
-                        className={`p-3 rounded-2xl border-2 flex flex-col items-center gap-1 cursor-pointer transition-all ${
-                          stickerKind === s.id && tool === 'sticker'
-                            ? 'bg-purple-100 border-purple-500 ring-2 ring-purple-300'
-                            : 'border-gray-200 hover:bg-gray-50'
-                        }`}
-                      >
-                        <span className="text-4xl">{s.emoji}</span>
-                        <span className="text-[10px] font-black text-[#4A3E3D]">{s.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* PANEL 5: BACKGROUNDS */}
-              {panel === 'background' && (
-                <div className="flex flex-col gap-3">
-                  <h3 className="text-lg font-black text-[#4A3E3D] mb-1">📄 어떤 도화지에 그릴까요?</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                    {backgrounds.map((b) => (
-                      <button
-                        key={b.id}
-                        onClick={() => {
-                          if (art) {
-                            commit({ ...art, background: b.id });
-                            sound();
-                            setPanel(null);
-                          }
-                        }}
-                        className={`p-3 rounded-2xl border-2 flex flex-col items-center gap-1.5 cursor-pointer ${
-                          art?.background === b.id ? 'bg-sky-50 border-sky-500 ring-2 ring-sky-300' : 'border-gray-200 hover:bg-gray-50'
-                        }`}
-                      >
-                        <div
-                          className="w-12 h-8 rounded-lg border border-gray-300 shadow-2xs"
-                          style={{ backgroundColor: b.color }}
-                        />
-                        <span className="text-xs font-black text-[#4A3E3D]">{b.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* PANEL 6: GALLERY */}
-              {panel === 'gallery' && (
-                <div className="flex flex-col gap-3">
-                  <h3 className="text-lg font-black text-[#4A3E3D] mb-1">🖼️ {childName}의 작은 전시회</h3>
-                  {gallery.length === 0 ? (
-                    <div className="text-center py-12 text-gray-400 font-bold text-sm">
-                      아직 저장된 그림이 없어요. 멋진 그림을 그려보아요!
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[50vh] overflow-y-auto p-1">
-                      {gallery.map((g) => (
-                        <div
-                          key={g.id}
-                          className="relative p-2 rounded-2xl border-2 border-gray-200 bg-gray-50 flex flex-col items-center gap-1 group"
-                        >
-                          <img
-                            src={g.thumbnail}
-                            alt="저장된 그림"
-                            onClick={() => {
-                              setH({ past: [], present: g.artwork, future: [] });
-                              sound('magic');
-                              setPanel(null);
-                            }}
-                            className="w-full h-24 object-contain rounded-xl cursor-pointer hover:opacity-90 transition-opacity bg-white border border-gray-100"
-                          />
-                          <button
-                            onClick={() => {
-                              if (window.confirm('이 작품을 삭제할까요?')) {
-                                deleteGallery(g.id).then(() => {
-                                  setGallery((prev) => prev.filter((item) => item.id !== g.id));
-                                  sound('pop');
-                                });
-                              }
-                            }}
-                            className="absolute top-3 right-3 p-1 bg-white/80 hover:bg-rose-100 text-rose-500 rounded-full shadow-xs cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+    <div className="sketch-canvas-area">
+      {art && <DrawingCanvas artwork={art} tool={tool} color={color}
+        size={brushWidths[tool === 'fill' || tool === 'magic' || tool === 'sticker' ? 'pen' : tool][size]}
+        glitter={glitter} stickerKind={stickerKind} selected={selectedSticker} onSelect={setSelectedSticker}
+        onChange={commit} onStamp={() => sound('sticker')} onDrawSound={(brush, strength) => playDrawingSound(brush, !soundEnabled, strength)} disabled={!!panel} />}
+      {selectedSticker && <div className="sketch-sticker-edit" aria-label="붙인 스티커 바꾸기">
+        <button onClick={() => editSticker('grow')} aria-label="스티커 크게"><ZoomIn /><span>크게</span></button>
+        <button onClick={() => editSticker('shrink')} aria-label="스티커 작게"><ZoomOut /><span>작게</span></button>
+        <button onClick={() => editSticker('rotate')} aria-label="스티커 돌리기"><RotateCw /><span>돌리기</span></button>
+        <button onClick={() => editSticker('remove')} aria-label="스티커 떼기"><Trash2 /><span>떼기</span></button>
+      </div>}
+      {!panel && notice && <p role="status" className="sketch-notice">{notice}</p>}
     </div>
-  );
+
+    <nav className="sketch-bottom-tools" aria-label="색칠 도구 메뉴">
+      {([
+        { id: 'tools', label: '도구', Icon: Paintbrush }, { id: 'colors', label: '색상', Icon: Palette },
+        { id: 'templates', label: '도안', Icon: BookOpen }, { id: 'stickers', label: '스티커', Icon: StickerIcon },
+      ] as const).map(({ id, label, Icon }) => <button key={id} className={`sketch-menu-button sketch-menu-${id}`}
+        aria-haspopup="dialog" aria-expanded={panel === id} onClick={() => openPanel(id)}>
+        <span className="sketch-menu-icon"><Icon aria-hidden="true" />{id === 'colors' && <i style={{ backgroundColor: color }} />}</span><span>{label}</span>
+      </button>)}
+    </nav>
+
+    {panel && <SketchbookDialog title={panelTitle} onClose={closePanel}>
+      {notice && <p role="status" className="sketch-notice">{notice}</p>}
+      {panel === 'tools' && <>
+        <div className="sketch-choice-grid sketch-brushes">
+          {brushes.map(brush => <button key={brush.id} className="sketch-choice" aria-pressed={tool === brush.id} onClick={() => chooseTool(brush.id)}>
+            <span style={{ color: brush.color }}>{brush.icon}</span><span>{brush.name}</span>
+          </button>)}
+          {art?.template && <>
+            <button className="sketch-choice" aria-pressed={tool === 'fill'} onClick={() => chooseTool('fill')}><PaintBucket /><span>채우기</span></button>
+            <button className="sketch-choice" aria-pressed={tool === 'magic'} onClick={() => chooseTool('magic')}><Wand2 /><span>요술봉</span></button>
+          </>}
+          <button className="sketch-choice" aria-pressed={tool === 'eraser'} onClick={() => chooseTool('eraser')}><Eraser /><span>지우개</span></button>
+        </div>
+        <h3 className="sketch-section-title">붓 굵기</h3>
+        <div className="sketch-size-options">
+          {['가늘게', '보통', '굵게'].map((label, index) => <button key={label} className="sketch-choice" aria-pressed={size === index} onClick={() => { setSize(index); sound(); }}>
+            <i className="sketch-brush-dot" style={{ width: 8 + index * 14, height: 8 + index * 14 }} /><span>{label}</span>
+          </button>)}
+        </div>
+        <button className="sketch-action sketch-glitter" aria-pressed={glitter} onClick={() => { setGlitter(!glitter); sound(); }}><Sparkles /> 반짝이 {glitter ? '켜짐' : '꺼짐'}</button>
+        <div className="sketch-gallery-actions">
+          <button className="sketch-action" disabled={!history?.past.length} onClick={() => { if (historyRef.current) setH(undo(historyRef.current)); sound(); }}><Undo2 /> 되돌리기</button>
+          <button className="sketch-action" disabled={!history?.future.length} onClick={() => { if (historyRef.current) setH(redo(historyRef.current)); sound(); }}><Redo2 /> 다시 하기</button>
+        </div>
+      </>}
+      {panel === 'colors' && <div className="sketch-choice-grid sketch-colors">
+        {colors.map(([name, hex]) => <button key={hex} className="sketch-choice" aria-label={name} aria-pressed={color === hex}
+          onClick={() => { setColor(hex); sound(); closePanel(); }}>
+          <span className="sketch-color-swatch" style={{ backgroundColor: hex }} /><span>{name}</span>
+        </button>)}
+      </div>}
+      {panel === 'templates' && <>
+        <div className="sketch-paper-heading"><h3>도화지</h3><button className="sketch-action" onClick={() => changePaper(art?.background || 'white', true)}><FilePlus2 /> 새 도화지</button></div>
+        <div className="sketch-paper-options" data-scroll-region>
+          {backgrounds.map(background => <button key={background.id} className="sketch-choice" aria-label={background.label} aria-pressed={art?.background === background.id}
+            onClick={() => changePaper(background.id)}>
+            <span className={`sketch-paper-swatch paper-${background.id}`} style={{ backgroundColor: background.color }} /><span>{background.label}</span>
+          </button>)}
+        </div>
+        <h3 className="sketch-section-title">색칠 도안</h3>
+        <div className="sketch-categories" data-scroll-region aria-label="도안 종류">
+          {categories.map(({ name, Icon }) => <button key={name} className="sketch-choice" aria-pressed={category === name} onClick={() => { setCategory(name); sound(); }}><Icon /><span>{name}</span></button>)}
+        </div>
+        <div className="sketch-choice-grid sketch-templates">
+          {templates.filter(item => item.category === category).map(template => <button key={template.id} className="sketch-choice" aria-pressed={art?.template === template.id}
+            onClick={() => {
+              if (!art) return;
+              commit({ ...freshArtwork(), background: art.background, template: template.id });
+              setTool('fill'); sound('magic'); closePanel();
+              speakText(`${template.name} 도안이에요! 예쁘게 색칠해보자!`, soundEnabled, { characterId: buddy });
+            }}>
+            <img src={templateUrl(template)} alt="" /><span>{template.name}</span>
+          </button>)}
+        </div>
+      </>}
+      {panel === 'stickers' && <div className="sketch-choice-grid sketch-stickers">
+        {stickerKinds.map(sticker => <button key={sticker.id} className="sketch-choice" aria-pressed={stickerKind === sticker.id && tool === 'sticker'} onClick={() => {
+          setStickerKind(sticker.id); setTool('sticker'); sound('sticker'); closePanel();
+        }}><span className="sketch-sticker-picture" aria-hidden="true">{sticker.emoji}</span><span>{sticker.label}</span></button>)}
+      </div>}
+      {panel === 'gallery' && <SketchbookGallery savedId={savedId} revision={galleryRevision} saving={saving}
+        onSave={() => void exhibitArtwork()} onDownload={downloadArtwork} onClose={closePanel} onContinue={picture => {
+          commit(picture); setTool(picture.template ? 'fill' : 'pen'); setSelectedSticker(null); sound('magic'); closePanel();
+        }} />}
+    </SketchbookDialog>}
+  </section>;
 };

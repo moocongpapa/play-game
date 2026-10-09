@@ -3,6 +3,7 @@
  * Keep complete directions here so English works offline without a translation API.
  */
 export const SPEECH_ENGLISH: ReadonlyArray<readonly [string, string]> = [
+  ['우와! 멋진 그림을 전시했어!', 'Wow! We displayed a wonderful drawing!'],
   ['반짝이는 풍선을 톡 눌러볼까?', 'Shall we gently tap a sparkling balloon?'],
   ['쓰담쓰담, 포근해!', 'Gentle pats, so cozy!'],
   ['간질간질! 헤헤!', 'Tickly! Hee-hee!'],

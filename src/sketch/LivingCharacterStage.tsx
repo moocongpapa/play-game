@@ -11,7 +11,7 @@ import {
   playCelebrationFanfare,
 } from '../utils/soundEngine';
 import { fireConfetti, fireStarExplosion, fireCelebrationFireworks } from '../utils/confetti';
-import { Sparkles, Download, ArrowLeft, Heart, Music, Zap, Footprints } from 'lucide-react';
+import { Sparkles, ImagePlus, ArrowLeft, Music, Footprints } from 'lucide-react';
 
 interface LivingCharacterStageProps {
   buddy: CharacterId;
@@ -20,7 +20,7 @@ interface LivingCharacterStageProps {
   childName: string;
   soundEnabled: boolean;
   onBack: () => void;
-  onDownload: () => void;
+  onSave: () => void;
 }
 
 type MotionMode = 'idle' | 'jump' | 'dance' | 'magic' | 'walk';
@@ -40,7 +40,7 @@ export const LivingCharacterStage: React.FC<LivingCharacterStageProps> = ({
   childName,
   soundEnabled,
   onBack,
-  onDownload,
+  onSave,
 }) => {
   const [motionMode, setMotionMode] = useState<MotionMode>('idle');
   const [speechBubble, setSpeechBubble] = useState<string>('');
@@ -200,10 +200,11 @@ export const LivingCharacterStage: React.FC<LivingCharacterStageProps> = ({
         </div>
 
         <button
-          onClick={onDownload}
-          className="px-3.5 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full font-black text-xs sm:text-sm flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform shadow-xs"
+          onClick={onSave}
+          aria-label="전시회에 저장하기"
+          className="min-h-16 min-w-16 px-3 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-black text-xs sm:text-sm flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 transition-transform shadow-xs"
         >
-          <Download className="w-4 h-4" /> 사진 저장
+          <ImagePlus className="size-7" /> 저장하기
         </button>
       </div>
 

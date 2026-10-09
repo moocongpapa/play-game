@@ -4,7 +4,7 @@ import { CharacterId } from '../types';
 import { CHARACTER_LIST } from '../data/characters';
 import { CHARACTER_VIDEOS, CharacterVideoData, VideoScene } from '../data/characterVideoData';
 import { CharacterAvatar } from './CharacterAvatar';
-import { speakText, playCorrectFanfare, playBubblePop } from '../utils/soundEngine';
+import { speakText, playCorrectFanfare, playBubblePop, stopAllSpeech } from '../utils/soundEngine';
 import {
   initAuth,
   googleSignIn,
@@ -79,13 +79,11 @@ export const CharacterCharmVideoModal: React.FC<CharacterCharmVideoModalProps> =
     return () => unsubscribe();
   }, []);
 
-  // When modal opens or character changes, auto sign-in if needed & play matching Drive video
+  // When modal opens or character changes
   useEffect(() => {
     if (!isOpen) {
       if (timerRef.current) clearInterval(timerRef.current);
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
+      stopAllSpeech();
       return;
     }
 
@@ -94,23 +92,6 @@ export const CharacterCharmVideoModal: React.FC<CharacterCharmVideoModalProps> =
     setCheerCount(0);
     setRewardClaimed(false);
     lastSpokenSceneIdxRef.current = -1;
-
-    // Auto connect Drive if not connected yet
-    if (!accessToken) {
-      googleSignIn()
-        .then((res) => {
-          if (res) {
-            setUser(res.user);
-            setAccessToken(res.accessToken);
-            fetchDriveFolderVideos(GOOGLE_DRIVE_FOLDER_ID, res.accessToken)
-              .then((files) => setDriveFiles(files))
-              .catch((err) => console.warn('Fetch error after auto sign in:', err));
-          }
-        })
-        .catch((err) => {
-          console.warn('Auto Google Sign in on modal open skipped or cancelled:', err);
-        });
-    }
   }, [isOpen, initialCharacterId]);
 
   // Load matching Drive video file whenever selectedCharId or driveFiles change
@@ -166,7 +147,7 @@ export const CharacterCharmVideoModal: React.FC<CharacterCharmVideoModalProps> =
 
   // Loop timer driver for GIF animation stage (when drive video is not active)
   useEffect(() => {
-    if (isOpen && !driveVideoBlobUrl) {
+    if (isOpen && !driveVideoBlobUrl && !videoData.hasVideo) {
       timerRef.current = window.setInterval(() => {
         setCurrentTime((prev) => {
           const next = prev + 0.1;
@@ -183,7 +164,7 @@ export const CharacterCharmVideoModal: React.FC<CharacterCharmVideoModalProps> =
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isOpen, driveVideoBlobUrl]);
+  }, [isOpen, driveVideoBlobUrl, videoData.hasVideo]);
 
   // Trigger reward star when currentTime completes full loop
   useEffect(() => {
@@ -198,26 +179,30 @@ export const CharacterCharmVideoModal: React.FC<CharacterCharmVideoModalProps> =
 
   if (!isOpen) return null;
 
+  const handleClose = () => {
+    stopAllSpeech();
+    if (videoRef.current) {
+      videoRef.current.pause();
+    }
+    onClose();
+  };
+
   const handleSelectCharacter = (charId: CharacterId) => {
+    stopAllSpeech();
     setSelectedCharId(charId);
     setCurrentTime(0);
     setRewardClaimed(false);
     lastSpokenSceneIdxRef.current = -1;
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
   };
 
   const handleReplay = () => {
+    stopAllSpeech();
     if (videoRef.current) {
       videoRef.current.currentTime = 0;
       videoRef.current.play().catch(() => {});
     }
     setCurrentTime(0);
     lastSpokenSceneIdxRef.current = -1;
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
   };
 
   const handleCheerTap = () => {
@@ -236,7 +221,7 @@ export const CharacterCharmVideoModal: React.FC<CharacterCharmVideoModalProps> =
         <div className="bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 p-2.5 sm:p-3 flex items-center justify-between text-white">
           {/* Top-Left Back Button */}
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="py-1.5 px-3 sm:px-4 bg-white text-amber-700 hover:bg-amber-100 font-black text-sm sm:text-base rounded-full shadow-md flex items-center gap-1 cursor-pointer active:scale-95 transition-transform shrink-0"
             title="뒤로 가기"
           >
@@ -255,7 +240,7 @@ export const CharacterCharmVideoModal: React.FC<CharacterCharmVideoModalProps> =
 
           {/* Right Close Icon Button */}
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-1.5 bg-white/20 hover:bg-white/40 rounded-full transition-colors cursor-pointer shrink-0"
             title="닫기"
           >

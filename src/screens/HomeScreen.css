@@ -74,7 +74,9 @@
 .storybook-home .welcome-voice-surface { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; padding: 0; border: 0; border-radius: inherit; background: transparent; scale: 1; }
 .welcome-voice-surface:focus-visible { outline-offset: -7px; }
 .storybook-home .welcome-copy, .storybook-home .welcome-friends { pointer-events: none; }
-.storybook-home .selected-buddy-halo { pointer-events: auto; }
+.storybook-home .selected-buddy-stage,
+.storybook-home .selected-buddy-halo,
+.storybook-home .buddy-video-badge { pointer-events: auto; }
 .selected-buddy-halo > * { pointer-events: none; }
 .selected-buddy-halo:focus-visible { outline-offset: 3px; }
 
@@ -82,7 +84,65 @@
 .home-games .welcome-copy { max-width: 55%; }
 .home-games .welcome-copy h1 { font-size: clamp(27px, 3.5vw, 36px); }
 .home-games .welcome-subtitle { margin: 9px 0 0; }
-.home-games .selected-buddy-halo { width: 166px; height: 166px; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 7px; }
+.home-games .selected-buddy-stage {
+  position: absolute;
+  width: 166px;
+  height: 166px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.home-games .selected-buddy-stage > * {
+  pointer-events: auto;
+}
+.home-games .selected-buddy-stage .selected-buddy-halo {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  transform: none;
+  padding: 7px;
+}
+.home-games .buddy-video-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff5376, #ff8a48);
+  border: 3.5px solid #ffffff;
+  box-shadow: 0 4px 14px rgba(255, 83, 118, 0.45), 0 2px 4px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  animation: buddy-video-badge-pop 2.4s ease-in-out infinite;
+  touch-action: manipulation;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.home-games .buddy-video-badge:hover {
+  transform: scale(1.15);
+}
+.home-games .buddy-video-badge:active {
+  transform: scale(0.92);
+}
+.home-games .buddy-video-badge-icon {
+  font-size: 22px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+}
+@keyframes buddy-video-badge-pop {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.08);
+  }
+}
 .home-games .games-section { margin-top: 24px; }
 
 /* Roughly 80% of the previous card height, while keeping artwork undistorted
@@ -102,10 +162,12 @@
   .home-games .welcome-scene { min-height: 190px; padding: 18px 16px; }
   .home-games .welcome-copy h1 { font-size: 25px; }
   .home-games .welcome-copy .eyebrow { margin-bottom: 8px; font-size: 9px; }
-  .home-games .welcome-subtitle { max-width: 153px; font-size: 11px; }
-  .home-games .selected-buddy-halo { width: 124px; height: 124px; left: 45%; padding: 6px; }
-  .home-games .selected-buddy-halo > span { min-width: 88px; min-height: 30px; font-size: 13px; bottom: -7px; }
-  .home-games .selected-buddy-halo > span svg { width: 16px; height: 16px; }
+  .home-games .selected-buddy-stage { width: 124px; height: 124px; left: 45%; }
+  .home-games .selected-buddy-stage .selected-buddy-halo { width: 100%; height: 100%; padding: 6px; }
+  .home-games .selected-buddy-stage .selected-buddy-halo > span { min-width: 88px; min-height: 30px; font-size: 13px; bottom: -7px; }
+  .home-games .selected-buddy-stage .selected-buddy-halo > span svg { width: 16px; height: 16px; }
+  .home-games .buddy-video-badge { width: 38px; height: 38px; top: -3px; right: -3px; border-width: 2.5px; }
+  .home-games .buddy-video-badge-icon { font-size: 18px; }
   .home-games .hero-star { top: 15px; }
   .home-games .games-section { margin-top: 20px; }
   .storybook-home .picture-game-card { padding: 4px; }

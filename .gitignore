@@ -8,4 +8,5 @@ coverage/
 !.env.example
 .agents/
 .antigravity/
+.audio-generation/
 
