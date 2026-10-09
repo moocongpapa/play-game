@@ -138,10 +138,27 @@ export default function App() {
   const [activeGameId, setActiveGameId] = useState<GameId | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isParentGateOpen, setIsParentGateOpen] = useState(false);
+  const homeScrollTopRef = useRef(0);
+  const previousHomeStepRef = useRef(homeStep);
 
-  useEffect(() => {
-    mainRef.current?.scrollTo(0, 0);
-  }, [currentScreen, activeGameId, homeStep]);
+  const openScreen = (screen: typeof currentScreen) => {
+    // Capture before the shorter game replaces the menu and clamps its scroll.
+    if (currentScreen === 'home') {
+      homeScrollTopRef.current = homeStep === 'games' ? mainRef.current?.scrollTop ?? 0 : 0;
+    }
+    setCurrentScreen(screen);
+  };
+
+  useLayoutEffect(() => {
+    if (previousHomeStepRef.current !== homeStep) {
+      homeScrollTopRef.current = 0;
+      previousHomeStepRef.current = homeStep;
+    }
+    // The home module is already loaded after a menu launch. Restore after its
+    // cards mount, before painting, rather than scrolling the outgoing game.
+    const top = currentScreen === 'home' && homeStep === 'games' ? homeScrollTopRef.current : 0;
+    mainRef.current?.scrollTo({ top, left: 0, behavior: 'instant' });
+  }, [currentScreen, activeGameId, homeStep, showSplash]);
 
   const handleGoHome = () => {
     if (['talk', 'day', 'stickers', 'aquarium', 'park'].includes(currentScreen)) setHomeStep('games');
@@ -152,7 +169,10 @@ export default function App() {
     setShowConfetti(false);
     setActiveGameId(null);
     setCurrentScreen('home');
-    mainRef.current?.scrollTo(0, 0);
+    if (currentScreen === 'home') {
+      homeScrollTopRef.current = 0;
+      mainRef.current?.scrollTo(0, 0);
+    }
   };
 
   useEffect(() => {
@@ -256,7 +276,7 @@ export default function App() {
     setHomeStep('games');
     setAppState((prev) => ({ ...prev, selectedCharacter: characterId }));
     setActiveGameId(gameId);
-    setCurrentScreen('game');
+    openScreen('game');
   };
 
   const handleToggleSound = () => {
@@ -314,12 +334,12 @@ export default function App() {
             selectedCharacter={appState.selectedCharacter}
             onSelectCharacter={(id) => setAppState((prev) => ({ ...prev, selectedCharacter: id }))}
             onStartGame={handleStartGame}
-            onStartDay={() => { setHomeStep('games'); setCurrentScreen('day'); }}
-            onOpenDrawing={() => setCurrentScreen('drawing')}
-            onOpenStickerRoom={() => setCurrentScreen('stickers')}
-            onOpenAquarium={() => setCurrentScreen('aquarium')}
-            onOpenCharacterPark={() => setCurrentScreen('park')}
-            onOpenCharacterTalk={() => setCurrentScreen('talk')}
+            onStartDay={() => { setHomeStep('games'); openScreen('day'); }}
+            onOpenDrawing={() => openScreen('drawing')}
+            onOpenStickerRoom={() => openScreen('stickers')}
+            onOpenAquarium={() => openScreen('aquarium')}
+            onOpenCharacterPark={() => openScreen('park')}
+            onOpenCharacterTalk={() => openScreen('talk')}
             soundEnabled={soundEnabled}
             childProfile={appState.childProfile}
           />
@@ -625,12 +645,12 @@ export default function App() {
                       selectedCharacter={appState.selectedCharacter}
                       onSelectCharacter={(id) => setAppState((prev) => ({ ...prev, selectedCharacter: id }))}
                       onStartGame={handleStartGame}
-                      onStartDay={() => { setHomeStep('games'); setCurrentScreen('day'); }}
-                      onOpenDrawing={() => setCurrentScreen('drawing')}
-                      onOpenStickerRoom={() => setCurrentScreen('stickers')}
-                      onOpenAquarium={() => setCurrentScreen('aquarium')}
-                      onOpenCharacterPark={() => setCurrentScreen('park')}
-                      onOpenCharacterTalk={() => setCurrentScreen('talk')}
+                      onStartDay={() => { setHomeStep('games'); openScreen('day'); }}
+                      onOpenDrawing={() => openScreen('drawing')}
+                      onOpenStickerRoom={() => openScreen('stickers')}
+                      onOpenAquarium={() => openScreen('aquarium')}
+                      onOpenCharacterPark={() => openScreen('park')}
+                      onOpenCharacterTalk={() => openScreen('talk')}
                       soundEnabled={soundEnabled}
                       childProfile={appState.childProfile}
                     />
@@ -680,7 +700,7 @@ export default function App() {
         onClose={() => setIsParentGateOpen(false)}
         onSuccess={() => {
           setIsParentGateOpen(false);
-          setCurrentScreen('parent');
+          openScreen('parent');
         }}
       />
 
