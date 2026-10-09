@@ -6,7 +6,9 @@ import { CareRoutine, CareObjectArt } from '../../components/development/CareRou
 import { usePlayJourney, type JourneyStep } from '../../hooks/usePlayJourney';
 import { type ToddlerGameProps } from '../../hooks/useToddlerPlay';
 import { brushRow, CLEAN_STROKES, TEETH, type BrushPoint } from '../../utils/brushing';
-import { playCareSound, speakText } from '../../utils/soundEngine';
+import { playCareReaction, speakText } from '../../utils/soundEngine';
+import { useCareReactions } from '../../hooks/useCareReactions';
+import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import { useGentleHelp } from '../../hooks/useGentleHelp';
 import { PlayHintsPausedContext } from '../../components/PlayFlowContext';
 import { GentleHint } from '../../components/GentleHint';
@@ -18,6 +20,7 @@ const STEPS: JourneyStep[] = [
   { id: 'rinse', label: '우르르, 퉤!', picture: 'rinse', guide: '물컵으로 입을 헹구고, 물방울을 눌러 우르르 퉤! 뱉어 보자.' },
 ];
 export function ToothBrushGame(props: ToddlerGameProps) {
+  useCareReactions(props.buddy, props.soundEnabled);
   const journey = usePlayJourney(props, STEPS);
   const [clean, setClean] = useState<number[]>(() => TEETH.map(() => 0));
   return <JourneyFrame props={props} journey={journey} className="brush-play">
@@ -43,6 +46,9 @@ function BrushingRow({ props, row, round, completed, initialClean, onClean, fini
   const gesture = useRef<{ id: number; point: BrushPoint; element: HTMLButtonElement; cleaned: boolean } | null>(null);
   const [brush, setBrush] = useState<BrushPoint | null>(null);
   const soundAt = useRef(0);
+  const finishing = useRef(false);
+  const { scheduleGameTimeout } = useGameTimeouts();
+  const voiceUntil = useRef(0);
   const cancel = () => {
     const current = gesture.current;
     gesture.current = null;
@@ -71,9 +77,10 @@ function BrushingRow({ props, row, round, completed, initialClean, onClean, fini
     progress.current = values;
     help.progress();
     setClean(values); onClean(values);
-    if (values.slice(row * 4, row * 4 + 4).every(value => value >= CLEAN_STROKES)) {
+    if (!finishing.current && values.slice(row * 4, row * 4 + 4).every(value => value >= CLEAN_STROKES)) {
+      finishing.current = true;
       cancel();
-      finish(row === 0 ? '윗니가 반짝반짝! 아랫니도 닦아 볼까?' : '모든 이가 하얘졌어! 이제 입을 헹구자.');
+      scheduleGameTimeout(() => finish(row === 0 ? '윗니가 반짝반짝! 아랫니도 닦아 볼까?' : '모든 이가 하얘졌어! 이제 입을 헹구자.'), Math.max(0, voiceUntil.current - performance.now()));
     }
   };
   const locate = (event: PointerEvent<HTMLButtonElement>): BrushPoint => {
@@ -81,7 +88,7 @@ function BrushingRow({ props, row, round, completed, initialClean, onClean, fini
     return { x: (event.clientX - rect.left) / rect.width * 300, y: (event.clientY - rect.top) / rect.height * 258 };
   };
   const start = (event: PointerEvent<HTMLButtonElement>) => {
-    if (completed || gesture.current || !event.isPrimary || event.button !== 0) return;
+    if (completed || finishing.current || gesture.current || !event.isPrimary || event.button !== 0) return;
     const point = locate(event);
     help.hold();
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -98,16 +105,19 @@ function BrushingRow({ props, row, round, completed, initialClean, onClean, fini
     setBrush(point);
     if (changed) {
       current.cleaned = true;
-      if (performance.now() - soundAt.current > 150) { playCareSound('brush', props.soundEnabled); soundAt.current = performance.now(); }
+      if (performance.now() - soundAt.current > 150) {
+        voiceUntil.current = performance.now() + playCareReaction('brush', props.soundEnabled, props.buddy);
+        soundAt.current = performance.now();
+      }
       update(values);
     }
   };
   const keyboardBrush = () => {
-    if (completed) return;
+    if (completed || finishing.current) return;
     const index = progress.current.findIndex((value, i) => Math.floor(i / 4) === row && value < CLEAN_STROKES);
     if (index < 0) return;
     const tooth = TEETH[index];
-    playCareSound('brush', props.soundEnabled);
+    voiceUntil.current = performance.now() + playCareReaction('brush', props.soundEnabled, props.buddy);
     update(brushRow(progress.current, { x: tooth.x - 14, y: tooth.y }, { x: tooth.x + 14, y: tooth.y }, row));
   };
   const pointerProps = {

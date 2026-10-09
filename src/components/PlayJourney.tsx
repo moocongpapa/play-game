@@ -8,7 +8,8 @@ import { ToyArtwork } from './ToyArtwork';
 import { LandscapeArt, SeatArt, WingArt } from './development/DevelopmentArt';
 import { CareObjectArt, type CareObjectKind } from './development/CareRoutine';
 import { CHARACTERS } from '../data/characters';
-import { isSpeechBusy, playCareSound, speakText } from '../utils/soundEngine';
+import { isSpeechBusy, playCareReaction, playCareSound, speakText } from '../utils/soundEngine';
+import type { CareReaction } from '../data/careReactions';
 import { JUICE_SPRING } from '../utils/juice';
 import type { PlayJourney } from '../hooks/usePlayJourney';
 import type { ToddlerGameProps } from '../hooks/useToddlerPlay';
@@ -50,14 +51,18 @@ export function JourneyFrame({ props, journey, className = '', children }: {
 }
 
 /** Finale objects stay playable; taps extend the quiet interval before the next story. */
-export function JourneyToy({ props, label, voice, children, className = '' }: {
-  props: ToddlerGameProps; label: string; voice: string; children: ReactNode; className?: string;
+export function JourneyToy({ props, label, voice, reaction, children, className = '' }: {
+  props: ToddlerGameProps; label: string; voice: string; reaction?: CareReaction; children: ReactNode; className?: string;
 }) {
   const [tap, setTap] = useState(0);
   const reduced = useReducedMotion();
   return <motion.button type="button" className={`journey-toy ${className}`} aria-label={label}
     whileTap={reduced ? undefined : { scaleX: 1.08, scaleY: .91 }} transition={JUICE_SPRING}
-    onClick={() => { setTap(n => n + 1); playCareSound('bubble', props.soundEnabled); if (!isSpeechBusy()) speakText(voice, props.soundEnabled, { characterId: props.buddy, playIntroSFX: false }); }}>
+    onClick={() => {
+      setTap(n => n + 1);
+      if (reaction) playCareReaction(reaction, props.soundEnabled, props.buddy);
+      else { playCareSound('bubble', props.soundEnabled); if (!isSpeechBusy()) speakText(voice, props.soundEnabled, { characterId: props.buddy, playIntroSFX: false }); }
+    }}>
     <motion.span key={tap} className="journey-toy-art" animate={!reduced && tap ? { y: [0, -18, 0], rotate: [0, -7, 7, 0] } : undefined} transition={{ duration: .65 }}>
       {children}
     </motion.span>

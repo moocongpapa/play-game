@@ -22,7 +22,7 @@ export function FruitHarvestGame(props: ToddlerGameProps) {
   const journey = usePlayJourney(props, STEPS);
   return <JourneyFrame props={props} journey={journey} className="harvest-play">
     {journey.phase === 'finished' ? <JourneyFinale props={props} journey={journey} scene="picnic">
-      {FRUITS.map(fruit => <JourneyToy key={fruit.id} props={props} label={`${fruit.name} 나눠 먹기`} voice="냠냠! 우리가 함께 딴 과일이라 더 맛있어!"><ToyArtwork emoji={fruit.emoji}/></JourneyToy>)}
+      {FRUITS.map(fruit => <JourneyToy key={fruit.id} props={props} label={`${fruit.name} 나눠 먹기`} voice="냠냠! 우리가 함께 딴 과일이라 더 맛있어!" reaction="yum"><ToyArtwork emoji={fruit.emoji}/></JourneyToy>)}
     </JourneyFinale> : <>
       <div className="journey-keepsakes" aria-label="모은 과일 바구니">{FRUITS.slice(0, journey.step).map(fruit => <span key={fruit.id}><BasketArt color={fruit.color}/></span>)}</div>
       <HarvestScene key={journey.key} props={props} stage={journey.step} cycle={journey.cycle} locked={journey.locked} onComplete={journey.complete}/>

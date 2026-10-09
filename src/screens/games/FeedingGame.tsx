@@ -11,7 +11,8 @@ import { CareFriend, PlayProgress } from '../../components/ToddlerPlay';
 import { DragMatch, DragPiece, DropSlot } from '../../components/DragMatch';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { FOOD_PLATES } from '../../data/toddlerPlay';
-import { playCareSound, speakText } from '../../utils/soundEngine';
+import { playCareReaction } from '../../utils/soundEngine';
+import { useCareReactions } from '../../hooks/useCareReactions';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import { type ToddlerGameProps } from '../../hooks/useToddlerPlay';
 
@@ -22,12 +23,13 @@ const STEPS: JourneyStep[] = [
   { id: 'wipe', label: '입도 뽀송뽀송', picture: 'wipe', guide: '수건으로 입을 살살 닦아 주면 식사 끝!' },
 ];
 export function FeedingGame(props: ToddlerGameProps) {
+  useCareReactions(props.buddy, props.soundEnabled);
   const journey = usePlayJourney(props, STEPS);
   const [menu, setMenu] = useState(0);
   const plate = FOOD_PLATES[menu].items;
   return <JourneyFrame props={props} journey={journey} className="feeding-play">
     {journey.phase === 'finished' ? <JourneyFinale props={props} journey={journey} scene="picnic">
-      {plate.map(food => <JourneyToy key={food.id} props={props} label={`${food.name} 이야기 듣기`} voice={`${food.name}, 맛있다!`}><ToyArtwork emoji={food.emoji}/></JourneyToy>)}
+      {plate.map(food => <JourneyToy key={food.id} props={props} label={`${food.name} 이야기 듣기`} voice={`${food.name}, 맛있다!`} reaction={FOOD_REACTIONS[food.id]?.motion === 'crunch' ? 'chew' : 'yum'}><ToyArtwork emoji={food.emoji}/></JourneyToy>)}
     </JourneyFinale> : journey.step === 0 ? <ChooseMenu key={journey.key} props={props} locked={journey.locked} onChoose={index => { setMenu(index); journey.complete('맛있는 접시를 골랐네! 우리 함께 먹자!'); }}/>
       : journey.step === 1 ? <FeedMeal key={journey.key} props={props} plate={plate} completed={journey.locked} finish={journey.complete}/>
       : <CareRoutine key={journey.key} props={props} kind={journey.step === 2 ? 'drink' : 'wipe'} locked={journey.locked} onComplete={journey.complete}/>}
@@ -59,13 +61,12 @@ function FeedMeal({ props, plate, completed, finish }: { props: ToddlerGameProps
     setEaten([...eatenRef.current]);
     setChewing(true);
     setLastFood(id);
-    playCareSound('chew', props.soundEnabled);
-    speakText(`${FOOD_REACTIONS[id]?.word || '냠냠!'} ${food.name}, 맛있다!`, props.soundEnabled, { characterId: props.buddy, playIntroSFX: false });
+    const voiceDuration = playCareReaction(FOOD_REACTIONS[id]?.motion === 'crunch' ? 'chew' : 'yum', props.soundEnabled, props.buddy);
     scheduleGameTimeout(() => {
       setChewing(false);
       busy.current = false;
       if (eatenRef.current.size === plate.length) finish(`${props.childName}야, 골고루 먹으니 힘이 쑥쑥! 배가 든든해. 고마워!`);
-    }, 1600);
+    }, Math.max(1600, voiceDuration));
     return true;
   };
   return <DragMatch resetKey="meal" disabled={completed || chewing} onDrop={feed} hint={nextFood ? { pieceId: nextFood.id, targetId: 'mouth' } : undefined} onDragMove={point => {

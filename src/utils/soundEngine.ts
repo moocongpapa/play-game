@@ -9,10 +9,13 @@ import { isPageHidden } from './pageVisibility';
 import { resumeAudioContext } from './audioContextLifecycle';
 import { startGeneratedMusic, stopGeneratedMusic } from '../services/generatedMusic';
 import { tryGeneratedEffect, stopGeneratedEffects, setGeneratedEffectsEnabled } from '../services/generatedEffects';
+import { CARE_REACTIONS, type CareReaction } from '../data/careReactions';
+import { CARE_VOICE_DURATIONS } from '../data/generatedCareVoiceDurations';
+import { speechSynthesisKey } from '../data/speechSynthesis';
 // Web Audio API & Multi-Engine Speech Synthesis for Toddlers (Ages 3~4)
 // High-fidelity sound effects, nursery rhyme procedural BGM, and warm kindergarten teacher voices.
 
-import { playGeminiSpeech, stopGeminiAudio, isGeminiTTSEnabled } from '../services/geminiTTS';
+import { playGeminiSpeech, preloadBundledSpeech, stopGeminiAudio, isGeminiTTSEnabled } from '../services/geminiTTS';
 
 let masterSoundEnabled = true;
 let speechEnabled = true;
@@ -534,7 +537,7 @@ let browserSpeechStartTimer: number | null = null;
 let pendingBrowserSpeech: (() => void) | null = null;
 let currentVoiceToneMode: 'cheerful' | 'gentle' | 'energetic' = 'cheerful';
 let speechRequestId = 0;
-let activeSpeech: { key: string; provider?: 'ai' | 'browser'; onCancel?: () => void } | null = null;
+let activeSpeech: { key: string; provider?: 'ai' | 'browser'; startedAt?: number; onCancel?: () => void } | null = null;
 
 /** Read-only gate for story transitions; includes pending voice downloads. */
 export function isSpeechBusy() { return activeSpeech !== null || animalClueActive; }
@@ -734,6 +737,7 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
     onStart: provider => {
       if (requestId !== speechRequestId || !activeSpeech) return;
       activeSpeech.provider = provider;
+      activeSpeech.startedAt = performance.now();
       originalOptions.onStart?.(provider);
     },
     onEnd: () => finish(originalOptions.onEnd),
@@ -872,14 +876,29 @@ export function playXylophoneNote(frequency: number, enabled = true, animalIndex
   } catch { /* Visual play remains available without Web Audio. */ }
 }
 
-export function playCareSound(kind: 'brush' | 'chew' | 'bubble', enabled = true) {
+export function playCareSound(kind: 'brush' | 'chew' | 'drink' | 'bubble', enabled = true) {
   if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const pitch = randomEffectPitch();
-    if (kind === 'brush') playToyTone(900 * pitch, .12, .045, 1500 * pitch);
+    if (kind === 'brush') {
+      const ctx = getAudioContext();
+      const noise = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * .12), ctx.sampleRate);
+      const samples = noise.getChannelData(0);
+      for (let i = 0; i < samples.length; i++) samples[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * i / samples.length);
+      const source = ctx.createBufferSource(), filter = ctx.createBiquadFilter(), gain = ctx.createGain();
+      source.buffer = noise; filter.type = 'bandpass'; filter.frequency.value = 1100 * pitch; filter.Q.value = .7;
+      gain.gain.value = .035; source.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+      trackEffect(source, gain);
+      const ended = source.onended;
+      source.onended = event => { ended?.call(source, event); filter.disconnect(); };
+      source.start();
+    }
     else if (kind === 'chew') {
       playToyTone(210 * pitch, .16, .075, 130 * pitch);
       playToyTone(250 * pitch, .18, .055, 160 * pitch, .18);
+    } else if (kind === 'drink') {
+      playToyTone(420 * pitch, .14, .045, 220 * pitch);
+      playToyTone(520 * pitch, .18, .035, 260 * pitch, .18);
     } else {
       if (tryGeneratedEffect('bubble', getAudioContext())) { duckForEffect(550); return; }
       const frequency = 920 * pitch;
@@ -888,6 +907,26 @@ export function playCareSound(kind: 'brush' | 'chew' | 'bubble', enabled = true)
       playToyTone(frequency * 2, .1, .02);
     }
   } catch { /* Visual feedback still works when audio is unavailable. */ }
+}
+
+/** The same speech channel provides deduplication, mute, language, ducking and navigation cleanup. */
+export function playCareReaction(kind: CareReaction, enabled: boolean, characterId: string): number {
+  const reaction = CARE_REACTIONS[kind];
+  playCareSound(reaction.sound, enabled);
+  speakText(reaction.ko, enabled, { characterId, playIntroSFX: false });
+  if (!enabled || !masterSoundEnabled || !speechEnabled) return 0;
+  const text = reaction[speechLanguage];
+  const duration = (CARE_VOICE_DURATIONS[speechSynthesisKey(text, characterId, speechLanguage)] || 0) / getCharacterVoice(characterId).fallbackPlaybackRate * 1000;
+  const elapsed = activeSpeech?.startedAt === undefined ? 0 : performance.now() - activeSpeech.startedAt;
+  return Math.max(0, Math.ceil(duration - elapsed)) + 120;
+}
+
+export function warmCareReactions(characterId: string, enabled: boolean) {
+  if (!enabled || !masterSoundEnabled || !speechEnabled || isPageHidden()) return;
+  try {
+    const ctx = getAudioContext();
+    for (const reaction of Object.values(CARE_REACTIONS)) for (const language of ['ko', 'en'] as const) void preloadBundledSpeech(reaction[language], characterId, language, ctx);
+  } catch { /* Audio availability never blocks play. */ }
 }
 
 let sleepNoise: AudioBuffer | null = null;

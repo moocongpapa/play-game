@@ -41,7 +41,7 @@ export async function generateElevenAudio(apiKey: string, input: { text: string;
     stream = await client.textToSoundEffects.convert({ text: spec.prompt, durationSeconds: spec.seconds,
       modelId: 'eleven_text_to_sound_v2', promptInfluence: .65, outputFormat: 'mp3_44100_128' }, { abortSignal });
   } else {
-    const { voiceId, ...spec } = speechSynthesisSpec(input.characterId);
+    const { voiceId, ...spec } = speechSynthesisSpec(input.characterId, input.text);
     stream = await client.textToSpeech.convert(voiceId, {
       ...spec, text: normalizeSpokenText(input.text),
     }, { abortSignal });

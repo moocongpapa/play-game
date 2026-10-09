@@ -8,6 +8,29 @@ import { readSavedAudio, saveAudio, deleteSavedAudio } from './audioCache';
 import { resumeAudioContext } from '../utils/audioContextLifecycle';
 // Provider keys and the SDK stay on the server; the legacy public API is preserved.
 const audioBufferCache = new Map<string, { buffer: AudioBuffer; playbackRate: number }>();
+const preloads = new Map<string, Promise<void>>();
+const speechBufferKey = (text: string, characterId: string, language: SpeechLanguage) => `${CHARACTER_VOICE_REVISION}:${language}:${characterId}:${normalizeSpokenText(text)}`;
+
+/** Only warm shipped clips. Preloading never requests generation or interrupts speech. */
+export function preloadBundledSpeech(text: string, characterId: string, language: SpeechLanguage, ctx: AudioContext): Promise<void> {
+  const key = speechBufferKey(text, characterId, language);
+  const id = bundledSpeechId(text, characterId, language);
+  if (!id || audioBufferCache.has(key) || isPageHidden() || !isGeminiTTSEnabled()) return Promise.resolve();
+  const pending = preloads.get(key);
+  if (pending) return pending;
+  const load = (async () => {
+    try {
+      const bytes = await loadBundledSpeech(id, new AbortController().signal);
+      const buffer = await ctx.decodeAudioData(bytes);
+      if (isPageHidden() || !isGeminiTTSEnabled()) return;
+      if (audioBufferCache.size >= 60) audioBufferCache.delete(audioBufferCache.keys().next().value!);
+      audioBufferCache.set(key, { buffer, playbackRate: getCharacterVoice(characterId).fallbackPlaybackRate });
+    } catch { /* The normal saved-clip/device fallback remains available. */ }
+    finally { preloads.delete(key); }
+  })();
+  preloads.set(key, load);
+  return load;
+}
 let activeSourceNode: AudioBufferSourceNode | null = null;
 let activeRequest: AbortController | null = null;
 let generation = 0;
@@ -83,7 +106,7 @@ export async function playGeminiSpeech(
 
   const cleanText = normalizeSpokenText(text);
   const language = normalizeSpeechLanguage(options.language);
-  const cacheKey = `${CHARACTER_VOICE_REVISION}:${language}:${options.characterId || 'ggomi'}:${cleanText}`;
+  const cacheKey = speechBufferKey(cleanText, options.characterId || 'ggomi', language);
   try {
     const ctx = options.audioCtx;
     if (!await resumeAudioContext(ctx)) return false;

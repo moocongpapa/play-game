@@ -5,7 +5,7 @@ import { DragMatch, DragPiece, DropSlot } from '../DragMatch';
 import { ScaffoldingHint } from '../ScaffoldingHint';
 import { useIdleScaffolding } from '../../hooks/useIdleScaffolding';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
-import { playCareSound } from '../../utils/soundEngine';
+import { playCareReaction } from '../../utils/soundEngine';
 import type { ToddlerGameProps } from '../../hooks/useToddlerPlay';
 
 export type CareObjectKind = 'paste' | 'drink' | 'rinse' | 'wipe' | 'blanket' | 'teeth';
@@ -26,6 +26,8 @@ export function CareRoutine({ props, kind, locked, onComplete }: {
 }) {
   const [used, setUsed] = useState(false);
   const claimed = useRef(false);
+  const finishing = useRef(false);
+  const [spitting, setSpitting] = useState(false);
   const { scheduleGameTimeout } = useGameTimeouts();
   const rinseHint = useIdleScaffolding({ resetKey: used ? 'spit' : kind, disabled: locked || kind !== 'rinse' || !used,
     voice: { text: '우르르, 퉤! 물방울을 눌러 뱉어 볼까?', buddy: props.buddy, soundEnabled: props.soundEnabled } });
@@ -34,8 +36,9 @@ export function CareRoutine({ props, kind, locked, onComplete }: {
   const finish = () => onComplete({ paste: '치약을 조금 짰어! 이제 윗니를 닦아 볼까?', drink: '꿀꺽! 시원한 물도 마셨어. 입도 닦아 볼까?', rinse: '우르르, 퉤! 입안이 깨끗해졌어. 고마워!', wipe: '입도 뽀송뽀송! 골고루 먹고 깨끗하게 마무리했어!' }[kind]);
   const drop = () => {
     if (locked || claimed.current) return false;
-    claimed.current = true; setUsed(true); playCareSound(kind === 'wipe' ? 'brush' : 'bubble', props.soundEnabled);
-    if (kind !== 'rinse') scheduleGameTimeout(finish, 1100);
+    claimed.current = true; setUsed(true);
+    const voiceDuration = playCareReaction(kind, props.soundEnabled, props.buddy);
+    if (kind !== 'rinse') scheduleGameTimeout(finish, Math.max(1100, voiceDuration));
     return true;
   };
   return <DragMatch resetKey={kind} juicy disabled={locked || used} onDrop={drop} hint={{ pieceId: kind, targetId: 'care-target' }}>
@@ -46,7 +49,12 @@ export function CareRoutine({ props, kind, locked, onComplete }: {
         {used && kind !== 'paste' && <span className={`routine-action action-${kind}`} aria-hidden="true"><CareObjectArt kind={kind}/></span>}
       </div>
       {kind === 'paste' && <DropSlot id="care-target" label={target} className="paste-brush" filled={used}><ToothBrushArt paste={false}/>{used && <span className="fresh-paste" aria-hidden="true"/>}</DropSlot>}
-      {kind === 'rinse' && used && <button type="button" className="rinse-finish" disabled={locked} aria-label="물 뱉고 헹구기 마치기" onClick={finish}><Droplets aria-hidden="true"/>{rinseHint.isIdle && <ScaffoldingHint/>}</button>}
+      {kind === 'rinse' && used && <button type="button" className="rinse-finish" disabled={locked || spitting} aria-label="물 뱉고 헹구기 마치기" onClick={() => {
+        if (finishing.current) return;
+        finishing.current = true; setSpitting(true);
+        const voiceDuration = playCareReaction('spit', props.soundEnabled, props.buddy);
+        scheduleGameTimeout(finish, Math.max(550, voiceDuration));
+      }}><Droplets aria-hidden="true"/>{rinseHint.isIdle && !spitting && <ScaffoldingHint/>}</button>}
     </div>
     <div className="care-tools"><DragPiece id={kind} label={labels[kind]} disabled={used} className="care-tool"><CareObjectArt kind={kind}/></DragPiece></div>
   </DragMatch>;
