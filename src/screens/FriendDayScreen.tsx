@@ -13,12 +13,13 @@ import { stopCelebrations } from '../utils/confetti';
 import type { ToddlerGameProps } from '../hooks/useToddlerPlay';
 import type { GameId } from '../types';
 
-const GAMES = [
-  lazy(() => import('./games/FeedingGame').then(m => ({ default: m.FeedingGame }))),
-  lazy(() => import('./games/ToothBrushGame').then(m => ({ default: m.ToothBrushGame }))),
-  lazy(() => import('./games/PeekabooHideGame').then(m => ({ default: m.PeekabooHideGame }))),
-  lazy(() => import('./games/AnimalXylophoneGame').then(m => ({ default: m.AnimalXylophoneGame }))),
+const GAME_LOADERS = [
+  () => import('./games/FeedingGame').then(m => ({ default: m.FeedingGame })),
+  () => import('./games/ToothBrushGame').then(m => ({ default: m.ToothBrushGame })),
+  () => import('./games/PeekabooHideGame').then(m => ({ default: m.PeekabooHideGame })),
+  () => import('./games/AnimalXylophoneGame').then(m => ({ default: m.AnimalXylophoneGame })),
 ];
+const GAMES = GAME_LOADERS.map(load => lazy(load));
 
 export function FriendDayScreen({ onCompleteGame, onGoHome, ...props }: Omit<ToddlerGameProps, 'onCompleteQuiz'> & {
   onCompleteGame: (gameId: GameId) => void; onGoHome: () => void;
@@ -32,6 +33,11 @@ export function FriendDayScreen({ onCompleteGame, onGoHome, ...props }: Omit<Tod
   latest.current = props;
   const finished = step === FRIEND_DAY.length;
   const scene = FRIEND_DAY[step];
+  useEffect(() => {
+    // Prepare just the next activity while the child plays the current one.
+    // Navigation still uses Suspense if loading fails or has not finished yet.
+    if (started && step + 1 < GAME_LOADERS.length) void GAME_LOADERS[step + 1]().catch(() => {});
+  }, [started, step]);
   useEffect(() => {
     const { buddy, soundEnabled } = latest.current;
     if (!started) speakText(`${CHARACTERS[buddy].name}랑 하루를 함께 보내자! 먼저 맛있는 아침을 먹자!`, soundEnabled, { characterId: buddy });

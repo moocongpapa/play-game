@@ -64,7 +64,12 @@ export function usePlayJourney(props: ToddlerGameProps, steps: readonly JourneyS
       } else setStep(value => value + 1);
       claimed.current = false;
       setPhase('playing');
-    }, phase === 'finished' ? 1800 : 1000, () => praised && !document.hidden && !latest.current.paused && !isSpeechBusy(), window);
+    }, (phase === 'finished' ? 1800 : 1000) / (day ? 4 : 1), () => {
+      if (document.hidden || latest.current.paused) return false;
+      // Friend Day keeps a brief celebration, then the next screen owns speech.
+      // Long praise or a pending voice download must not extend its 250/450 ms gap.
+      return !!latest.current.day || (praised && !isSpeechBusy());
+    }, window);
     transitionRef.current = transition;
     const pointers = new Set<number>();
     let focused = true;
