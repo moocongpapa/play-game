@@ -330,6 +330,26 @@ test('speech playback respects preferences, navigation and uninterrupted repeate
       assert.equal(spoken.length, before + 1);
       engine.stopAllSpeech();
     });
+    await t.test('character speech recovers Safari interruption and avoids requests while the device stays interrupted', async () => {
+      engine.stopAllSpeech();
+      ai.setGeminiTTSEnabled(true);
+      const context = new Context();
+      context.state = 'interrupted';
+      let resumes = 0;
+      context.resume = async () => { resumes++; context.state = 'running'; };
+      const before = starts;
+      assert.equal(await ai.playGeminiSpeech('다시 함께 놀자!', { characterId: 'jelly', audioCtx: context as unknown as AudioContext }), true);
+      assert.equal(resumes, 1);
+      assert.equal(starts, before + 1, 'the recovered context actually starts a voice');
+      ai.stopGeminiAudio();
+      context.state = 'interrupted';
+      context.resume = async () => { resumes++; };
+      const requestCount = requests.length;
+      assert.equal(await ai.playGeminiSpeech('소리가 돌아왔어!', { audioCtx: context as unknown as AudioContext }), false);
+      assert.equal(requests.length, requestCount, 'a still-interrupted context cannot trigger synthesis');
+      assert.equal(starts, before + 1);
+    });
+
     await t.test('an audio device that never resumes cannot hold a guide or start a late paid request', async sub => {
       sub.mock.timers.enable({ apis: ['setTimeout'] });
       ai.setGeminiTTSEnabled(true);

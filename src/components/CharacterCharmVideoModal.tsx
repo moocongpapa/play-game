@@ -5,7 +5,8 @@ import type { CharacterId } from '../types';
 import { CHARACTERS } from '../data/characters';
 import { getCharacterVideoPresentation } from './characterVideoPresentation';
 import { CharacterAvatar } from './CharacterAvatar';
-import { playBubblePop, stopAllSpeech, stopPlaySounds, setBGMDucked, speakText } from '../utils/soundEngine';
+import { useLandscapeViewport } from '../hooks/useLandscapeViewport';
+import { playBubblePop, stopAllSpeech, stopPlaySounds, setBGMDucked, speakText, resumeAfterVideoPlayback } from '../utils/soundEngine';
 import './CharacterCharmVideoModal.css';
 
 interface CharacterCharmVideoModalProps {
@@ -20,7 +21,8 @@ export function CharacterCharmVideoModal({ isOpen, ...props }: CharacterCharmVid
 }
 
 function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<CharacterCharmVideoModalProps, 'isOpen'>) {
-  const presentation = getCharacterVideoPresentation(id);
+  const landscape = useLandscapeViewport();
+  const presentation = getCharacterVideoPresentation(id, landscape);
   const dialog = useRef<HTMLDialogElement>(null);
   const [opener] = useState(() => document.activeElement instanceof HTMLElement ? document.activeElement : null);
   const video = useRef<HTMLVideoElement>(null);
@@ -28,6 +30,10 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
   const mounted = useRef(false);
   const heartId = useRef(0);
   const reduced = useReducedMotion();
+  const playback = useRef({ time: 0, shouldPlay: !reduced });
+  const restoringPosition = useRef(true);
+  const activeVideo = useRef<HTMLVideoElement | null>(null);
+  const audioRestored = useRef(false);
   const [playing, setPlaying] = useState(false);
   const [busy, setBusy] = useState(!reduced);
   const [slow, setSlow] = useState(false);
@@ -39,6 +45,26 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
   const [filmAspect, setFilmAspect] = useState(presentation.aspectRatio);
   const buddy = CHARACTERS[id];
 
+  const releaseMedia = (element: HTMLVideoElement | null) => {
+    if (!element) return;
+    element.pause();
+    if (element.hasAttribute('src')) {
+      element.removeAttribute('src');
+      element.load();
+    }
+  };
+
+  const restoreGameAudio = () => {
+    if (audioRestored.current) return;
+    audioRestored.current = true;
+    playRequest.current += 1;
+    // Release iOS's video audio session before resuming Web Audio in this tap.
+    releaseMedia(activeVideo.current);
+    resumeAfterVideoPlayback();
+  };
+
+  const closeTheater = () => { restoreGameAudio(); onClose(); };
+
   async function requestPlay(restart = false) {
     const element = video.current;
     if (!element) return;
@@ -46,8 +72,12 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
     setSlow(false);
     setBusy(true);
     setVideoEnded(false);
+    playback.current.shouldPlay = true;
     if (failed || slow) { element.load(); setFailed(false); }
-    if (restart) element.currentTime = 0;
+    if (restart) {
+      playback.current.time = 0;
+      if (element.readyState > 0) element.currentTime = 0;
+    }
     try {
       await element.play();
     } catch {
@@ -59,37 +89,62 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
     }
   }
 
-  const pause = () => { playRequest.current += 1; video.current?.pause(); setBusy(false); };
+  const pause = () => {
+    playback.current.shouldPlay = false;
+    playRequest.current += 1;
+    video.current?.pause();
+    setBusy(false);
+  };
 
   const handleEnded = () => {
+    if (!mounted.current || audioRestored.current) return;
+    playback.current.shouldPlay = false;
     setPlaying(false);
     setVideoEnded(true);
-    speakText('이제 나랑 신나게 놀자!', soundEnabled, { characterId: id });
+    speakText('이제 나랑 신나게 놀자!', soundEnabled && !localMute, { characterId: id });
   };
 
   useEffect(() => {
-    const element = video.current!;
     const modal = dialog.current!;
     mounted.current = true;
+    audioRestored.current = false;
     modal.showModal();
     stopAllSpeech();
     stopPlaySounds();
     // Silence the playground music without changing the parent's music preference.
     setBGMDucked('video', true);
-    if (!reduced) void requestPlay();
     const hide = () => { if (document.hidden) pause(); };
     document.addEventListener('visibilitychange', hide);
     return () => {
       mounted.current = false;
       playRequest.current += 1;
-      element.pause();
+      restoreGameAudio();
       modal.close();
       queueMicrotask(() => { if (opener?.isConnected) opener.focus({ preventScroll: true }); });
-      setBGMDucked('video', false);
       document.removeEventListener('visibilitychange', hide);
     };
-    // This component is remounted for each film; opening is the only autoplay attempt.
+    // The dialog lives through rotation; each source has its own media cleanup below.
   }, []);
+
+  useEffect(() => {
+    const element = video.current!;
+    activeVideo.current = element;
+    // StrictMode replays effects after cleanup without replacing the DOM node.
+    if (!element.hasAttribute('src')) element.setAttribute('src', presentation.videoUrl);
+    restoringPosition.current = true;
+    setFilmAspect(presentation.aspectRatio);
+    setFailed(false);
+    setSlow(false);
+    setPlaying(false);
+    setBusy(playback.current.shouldPlay);
+    if (playback.current.shouldPlay) void requestPlay();
+    return () => {
+      playRequest.current += 1;
+      restoringPosition.current = true;
+      releaseMedia(element);
+    };
+    // Keep the last playback time, pause state and local mute across rotation.
+  }, [presentation.videoUrl]);
 
   useEffect(() => {
     if (!busy) { setSlow(false); return; }
@@ -104,7 +159,7 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
   }, [hearts]);
 
   const cheer = () => {
-    playBubblePop(soundEnabled);
+    playBubblePop(soundEnabled && !localMute);
     setHearts(current => [...current.slice(-4), ++heartId.current]);
   };
 
@@ -120,39 +175,48 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
   return <dialog ref={dialog} className="character-theater" aria-label={`${buddy.name}의 작은 영화관`}
     data-film-format={filmAspect < 1 ? 'portrait' : 'landscape'}
     style={{ '--film-aspect': filmAspect } as CSSProperties}
-    onCancel={event => { event.preventDefault(); onClose(); }}>
+    onCancel={event => { event.preventDefault(); closeTheater(); }}>
     <div className="theater-landscape" aria-hidden="true" />
     <header className="theater-header">
       <button
         type="button"
         className={`theater-back-play-button ${videoEnded ? 'pulse-attention' : ''}`}
-        onClick={onClose}
+        onClick={closeTheater}
         aria-label={`${buddy.name}랑 놀러가기`}
       >
         👈 {buddy.name}랑 놀자!
       </button>
-      <button className="theater-button theater-close" onClick={onClose} aria-label="영상 닫고 돌아가기" autoFocus><X /></button>
+      <button className="theater-button theater-close" onClick={closeTheater} aria-label="영상 닫고 돌아가기" autoFocus><X /></button>
     </header>
     <div className="theater-body">
       <div className="theater-film-column">
         <div className="theater-screen" aria-busy={busy} onClick={handleScreenClick}>
-          <video ref={video} src={presentation.videoUrl}
+          <video key={presentation.videoUrl} ref={video} src={presentation.videoUrl}
             poster={presentation.posterUrl} preload="metadata" playsInline muted={!soundEnabled || localMute}
             onLoadedMetadata={event => {
               const element = event.currentTarget;
               if (element.videoWidth > 0 && element.videoHeight > 0) setFilmAspect(element.videoWidth / element.videoHeight);
+              if (Number.isFinite(element.duration) && playback.current.time > 0) {
+                element.currentTime = Math.min(playback.current.time, element.duration);
+              }
+              restoringPosition.current = false;
             }}
             onPlaying={() => { setPlaying(true); setBusy(false); setFailed(false); setVideoEnded(false); }}
             onPause={() => setPlaying(false)} onWaiting={() => setBusy(true)}
             onEnded={handleEnded}
             onError={() => { setFailed(true); setPlaying(false); setBusy(false); }}
-            onTimeUpdate={event => { const v = event.currentTarget; setProgress(v.duration > 0 ? v.currentTime / v.duration : 0); }} />
+            onTimeUpdate={event => {
+              if (restoringPosition.current) return;
+              const v = event.currentTarget;
+              playback.current.time = v.currentTime;
+              setProgress(v.duration > 0 ? v.currentTime / v.duration : 0);
+            }} />
           {videoEnded ? (
             <div className="theater-ended-overlay">
               <button
                 type="button"
                 className="theater-ended-play-btn"
-                onClick={(e) => { e.stopPropagation(); onClose(); }}
+                onClick={(e) => { e.stopPropagation(); closeTheater(); }}
                 aria-label={`${buddy.name}랑 놀러가기`}
                 autoFocus
               >

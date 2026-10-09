@@ -3,11 +3,13 @@ import { useReducedMotion } from 'motion/react';
 import { CharacterAvatar } from './CharacterAvatar';
 import { getCharacterVideoPresentation } from './characterVideoPresentation';
 import type { CharacterId } from '../types';
+import { useLandscapeViewport } from '../hooks/useLandscapeViewport';
 
 /** Optional, muted scenery: neither playback nor download blocks navigation. */
 export function BuddyVideo({ id, className = '' }: { id: CharacterId; className?: string }) {
   const reduceMotion = useReducedMotion();
-  const { videoUrl } = getCharacterVideoPresentation(id);
+  const landscape = useLandscapeViewport();
+  const { videoUrl } = getCharacterVideoPresentation(id, landscape);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playing, setPlaying] = useState(false);
   const [failed, setFailed] = useState(false);

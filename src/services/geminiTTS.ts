@@ -5,6 +5,7 @@ import type { CharacterAudioStatus } from '../data/audioExperience';
 import { normalizeSpokenText, speechAssetId } from '../data/speechSynthesis';
 import { bundledSpeechId, hasBundledSpeech, loadBundledSpeech } from './bundledSpeech';
 import { readSavedAudio, saveAudio, deleteSavedAudio } from './audioCache';
+import { resumeAudioContext } from '../utils/audioContextLifecycle';
 // Provider keys and the SDK stay on the server; the legacy public API is preserved.
 const audioBufferCache = new Map<string, { buffer: AudioBuffer; playbackRate: number }>();
 let activeSourceNode: AudioBufferSourceNode | null = null;
@@ -85,17 +86,7 @@ export async function playGeminiSpeech(
   const cacheKey = `${CHARACTER_VOICE_REVISION}:${language}:${options.characterId || 'ggomi'}:${cleanText}`;
   try {
     const ctx = options.audioCtx;
-    if (ctx.state === 'suspended') {
-      // Autoplay/device restrictions can leave resume() pending indefinitely.
-      let resumeTimer: ReturnType<typeof setTimeout> | undefined;
-      try {
-        const resumed = await Promise.race([
-          ctx.resume().then(() => true),
-          new Promise<boolean>(resolve => { resumeTimer = setTimeout(() => resolve(false), 3000); }),
-        ]);
-        if (!resumed) return false;
-      } finally { clearTimeout(resumeTimer); }
-    }
+    if (!await resumeAudioContext(ctx)) return false;
     if (currentGeneration !== generation || isPageHidden() || !isGeminiTTSEnabled()) return false;
     let clip = audioBufferCache.get(cacheKey);
     if (!clip) {

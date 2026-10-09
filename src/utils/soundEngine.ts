@@ -6,6 +6,7 @@ import { ANIMAL_RECORDINGS, resolveAnimalSound } from '../data/animalSounds';
 import { createRoundDeck } from './roundDeck';
 import { createRecordedAudioPlayer, type PlaybackResult } from './recordedAudio';
 import { isPageHidden } from './pageVisibility';
+import { resumeAudioContext } from './audioContextLifecycle';
 import { startGeneratedMusic, stopGeneratedMusic } from '../services/generatedMusic';
 import { tryGeneratedEffect, stopGeneratedEffects, setGeneratedEffectsEnabled } from '../services/generatedEffects';
 // Web Audio API & Multi-Engine Speech Synthesis for Toddlers (Ages 3~4)
@@ -31,7 +32,10 @@ export function setAudioPreferences(sound: boolean, speech = true) {
   setGeneratedEffectsEnabled(sound);
   speechEnabled = speech;
   if (!sound || !speech) stopAllSpeech();
-  if (!sound) { stopPlaySounds(); stopBGM(); void audioCtx?.suspend(); }
+  if (!sound) {
+    stopPlaySounds(); stopBGM();
+    if (audioCtx && audioCtx.state !== 'closed') void audioCtx.suspend().catch(() => {});
+  }
 }
 
 let audioCtx: AudioContext | null = null;
@@ -40,14 +44,36 @@ let isBgmPlaying = false;
 let bgmVolumeNode: GainNode | null = null;
 
 export function getAudioContext(): AudioContext {
+  let restartMusic = false;
+  if (audioCtx?.state === 'closed') {
+    restartMusic = isBgmPlaying;
+    stopBGM();
+    stopPlaySounds();
+    audioCtx = null;
+  }
   if (!audioCtx) {
     const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     audioCtx = new AudioContextClass();
   }
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume();
-  }
+  if (masterSoundEnabled && !isPageHidden()) void resumeAudioContext(audioCtx);
+  if (restartMusic) startBGM();
   return audioCtx;
+}
+
+/** Call after pausing/releasing the video, while its close tap is still active. */
+export function resumeAfterVideoPlayback() {
+  stopAllSpeech();
+  stopPlaySounds();
+  setBGMDucked('video', false);
+  if (!masterSoundEnabled || isPageHidden()) return;
+  // Recorded music can lose its source/end callback during an iOS media-session
+  // interruption. Rebuild only the music session that was already enabled.
+  const restartMusic = isBgmPlaying;
+  if (restartMusic) stopBGM();
+  try {
+    getAudioContext();
+    if (restartMusic) startBGM();
+  } catch { /* Retry on the next play gesture if the device is still unavailable. */ }
 }
 
 const nextMusic = createRoundDeck();
@@ -114,9 +140,10 @@ function musicNote(ctx: AudioContext, midi: number, duration: number, bass = fal
 
 export function startBGM(volume = requestedBgmVolume) {
   requestedBgmVolume = Math.max(0, Math.min(.3, volume));
-  if (isBgmPlaying || !masterSoundEnabled || isPageHidden()) { applyBgmVolume(); return; }
+  if (!masterSoundEnabled || isPageHidden()) { applyBgmVolume(); return; }
   try {
     const ctx = getAudioContext();
+    if (isBgmPlaying) { applyBgmVolume(); return; }
     isBgmPlaying = true;
     currentTrack = nextBgmTrack();
     noteIndex = 0;

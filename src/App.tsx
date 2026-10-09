@@ -180,7 +180,12 @@ export default function App() {
       if (enabled && !document.hidden) startBGM(); else stopBGM();
     };
     const unlockMusic = () => {
-      if (enabled && !document.hidden) { getAudioContext(); startBGM(); }
+      // Effects and character voices also need the gesture after iOS video
+      // playback, including when the parent has switched background music off.
+      if (appState.soundEnabled && !showSplash && !appState.isTimeUp && !document.hidden) {
+        getAudioContext();
+        if (enabled) startBGM();
+      }
     };
     const onVisibility = () => {
       if (document.hidden) { stopAllSpeech(); stopPlaySounds(); }
