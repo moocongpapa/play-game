@@ -470,7 +470,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
           {(!soundEnabled || clueStatus === 'fallback') && <div className="visual-prompt"><ToyArtwork emoji={l1Target.emoji} label="찾을 동물" /><span aria-hidden="true">→ ?</span></div>}
 
           {/* Large Animal Cards (Jumbo touch targets for 3~4 year olds) */}
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full max-w-xl my-2">
+          <div className="choice-options grid grid-cols-3 gap-2 sm:gap-4 w-full max-w-xl my-2">
             {l1Options.map((opt) => (
               <motion.button
                 key={opt.id}
@@ -638,7 +638,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
           <DragHint>그림자 위에 쏙!</DragHint>
 
           {/* Object Choice Cards */}
-          <div className="grid grid-cols-3 gap-3 w-full max-w-md">
+          <div className="choice-options grid grid-cols-3 gap-3 w-full max-w-md">
             {l4Options.map((opt) => (
               <DragPiece
                 key={opt.id}

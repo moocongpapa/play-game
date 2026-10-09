@@ -144,7 +144,7 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
       <div className="visual-prompt" aria-label="이 그림을 찾아요"><ToyArtwork emoji={targetCloud.emoji} label="찾을 그림" /><span aria-hidden="true">→</span><span className="text-3xl">?</span></div>
 
       {/* Fluffy Sky Playground */}
-      <div className={`relative w-full h-[280px] sm:h-[320px] my-3 sm:my-4 bg-gradient-to-b from-[#E3F2FD] to-[#E1F5FE] rounded-3xl border-3 sm:border-4 border-dashed border-[#90CAF9] overflow-hidden p-2.5 sm:p-4 gap-2 ${
+      <div className={`choice-options relative w-full h-[280px] sm:h-[320px] my-3 sm:my-4 bg-gradient-to-b from-[#E3F2FD] to-[#E1F5FE] rounded-3xl border-3 sm:border-4 border-dashed border-[#90CAF9] overflow-hidden p-2.5 sm:p-4 gap-2 ${
         clouds.length === 2 ? 'grid grid-cols-2 place-items-center' : 'grid grid-cols-2 place-items-center sm:flex sm:items-center sm:justify-around'
       }`}>
         {clouds.map((cloud, idx) => {

@@ -143,7 +143,7 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
       <div className="visual-prompt" aria-label="이 그림을 찾아요"><ToyArtwork emoji={targetItem.emoji} label="찾을 그림" /><span aria-hidden="true">→</span><span className="text-3xl">?</span></div>
 
       {/* Interactive Treasure Room Scene */}
-      <div className={`relative w-full min-h-[240px] sm:min-h-[280px] my-3 sm:my-4 bg-gradient-to-b from-[#FFF8E1] to-[#FFE082]/40 rounded-3xl border-3 sm:border-4 border-dashed border-[#FFA000] p-3 sm:p-6 gap-2 sm:gap-4 ${
+      <div className={`choice-options relative w-full min-h-[240px] sm:min-h-[280px] my-3 sm:my-4 bg-gradient-to-b from-[#FFF8E1] to-[#FFE082]/40 rounded-3xl border-3 sm:border-4 border-dashed border-[#FFA000] p-3 sm:p-6 gap-2 sm:gap-4 ${
         displayedItems.length === 2 ? 'grid grid-cols-2 place-items-center' : 'grid grid-cols-3 place-items-center sm:flex sm:items-center sm:justify-around'
       }`}>
         {displayedItems.map((item) => {

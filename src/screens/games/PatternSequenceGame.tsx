@@ -153,7 +153,7 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
 
       <DragHint>빈칸으로 쏙 옮겨요!</DragHint>
       {/* Options Buttons */}
-      <div className="flex items-center justify-center gap-3 sm:gap-6 my-2 sm:my-4 w-full">
+      <div className="choice-options flex items-center justify-center gap-3 sm:gap-6 my-2 sm:my-4 w-full">
         {options.map((ans) => {
           const isShaking = shakingCardId === ans;
           const isSolved = selectedCorrectId === ans;
