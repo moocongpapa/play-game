@@ -15,11 +15,11 @@
 }
 .home-play-nav-items {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   align-items: center;
   justify-items: center;
   gap: 4px;
-  max-width: 560px;
+  max-width: 640px;
   margin: 0 auto;
 }
 .home-play-nav .home-play-nav-button {
@@ -35,8 +35,7 @@
   touch-action: manipulation;
   transition: transform .15s ease;
 }
-/* The full button remains a large touch target; the inset tile leaves visual
-   space between all five icons even on a 320px screen. */
+/* Each touch target includes the space around its inset icon. */
 .home-play-nav-icon {
   display: grid;
   place-items: center;
@@ -52,16 +51,19 @@
 .home-play-nav-button svg { width: 34px; height: 34px; stroke-width: 2.4; pointer-events: none; }
 .home-play-nav-button.nav-drawing { --nav-color: #f2d9cd; --nav-ink: #a36157; --nav-shadow: #dfb7a7; }
 .home-play-nav-button.nav-bugs { --nav-color: #ede5b9; --nav-ink: #85772e; --nav-shadow: #d3c887; }
+.home-play-nav-button.nav-home { --nav-color: #efbf7e; --nav-ink: #61462b; --nav-shadow: #c6995f; }
+.home-play-nav-button.nav-home svg { fill: #fff4d6; }
 .home-play-nav-button.nav-aquarium { --nav-color: #cce9ea; --nav-ink: #397f86; --nav-shadow: #9ccace; }
 .home-play-nav-button.nav-park { --nav-color: #e5dbf3; --nav-ink: #8460a4; --nav-shadow: #c4afdd; }
 .home-play-nav-button.nav-greeting { --nav-color: #d9e9d9; --nav-ink: #5b8062; --nav-shadow: #b1ceaf; }
 .home-play-nav-button:focus-visible { outline-offset: 3px; }
 .home-play-nav-button:active { transform: translateY(3px); }
 .home-play-nav-button:active .home-play-nav-icon { box-shadow: inset 0 2px 0 #ffffff99, inset 0 -1px 0 #695d4310; }
-@media (max-width: 359px) {
+@media (max-width: 419px) {
   .home-play-nav { padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px); }
   .home-play-nav-items { gap: 0; }
   .home-play-nav-icon { border-radius: 19px; }
+  .home-play-nav-button svg { width: 30px; height: 30px; }
 }
 @media (hover: hover) {
   .home-play-nav-button:hover { transform: translateY(-2px); }

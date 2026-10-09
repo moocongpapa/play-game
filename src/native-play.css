@@ -4,6 +4,9 @@ body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none
 *, *::before, *::after { -webkit-tap-highlight-color: transparent; }
 .app-world { height: 100vh; height: 100dvh; min-height: 0; display: flex; flex-direction: column; overflow: clip; background: radial-gradient(ellipse at 0% 0%, #deead580, transparent 50%), radial-gradient(ellipse at 100% 80%, #eddbed66, transparent 55%), #faf7ef; }
 .app-header { flex: 0 0 auto; position: relative; z-index: 30; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 3px 18px #9d907514; }
+/* Home navigation lives in the dock; keep only a compact settings row above. */
+.app-header.app-header-home > div { min-height: 44px; justify-content: flex-end; }
+.app-header-home .header-page-label { margin-right: auto; }
 .app-main { flex: 1 1 0%; min-height: 0; max-width: none; margin: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: none; touch-action: pan-y; scrollbar-width: none; scroll-behavior: auto; padding-left: max(12px, env(safe-area-inset-left)); padding-right: max(12px, env(safe-area-inset-right)); padding-bottom: max(24px, env(safe-area-inset-bottom)); }
 .app-main::-webkit-scrollbar { display: none; }
 .app-world:is([data-screen='stickers'],[data-screen='aquarium'],[data-screen='park']) .app-main { padding: 8px max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left)); overflow: hidden; touch-action: none; }
