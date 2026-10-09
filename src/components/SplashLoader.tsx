@@ -190,34 +190,33 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onFinish, childName,
                 className="splash-friend-slot"
                 style={style}
                 initial={{ scale: 0, y: 50, opacity: 0 }}
-                animate={
-                  hasArrived
-                    ? isCelebrationPhase && !reducedMotion
-                      ? {
-                          scale: [1, 1.12, 1],
-                          y: [0, -16, 0],
-                          rotate: index % 2 === 0 ? [-3, 3, -3] : [3, -3, 3],
-                          opacity: 1,
-                        }
-                      : { scale: 1, y: 0, opacity: 1 }
-                    : { scale: 0, y: 50, opacity: 0 }
-                }
-                transition={
-                  isCelebrationPhase && !reducedMotion
-                    ? {
-                        duration: 1.1,
-                        repeat: Infinity,
-                        ease: 'easeInOut',
-                        delay: (index % 4) * 0.12,
-                      }
-                    : {
-                        type: 'spring',
-                        stiffness: 300,
-                        damping: 18,
-                      }
-                }
+                animate={hasArrived ? { scale: 1, y: 0, opacity: 1 } : { scale: 0, y: 50, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 18 }}
               >
-                <div className="splash-friend-bubble">
+                <motion.div
+                  className="splash-friend-bubble"
+                  animate={isCelebrationPhase && !reducedMotion
+                    ? {
+                        scale: [1, 1.12, 1],
+                        y: [0, -16, 0],
+                        rotate: index % 2 === 0 ? [-3, 3, -3] : [3, -3, 3],
+                      }
+                    : { scale: 1, y: 0, rotate: 0 }}
+                  transition={
+                    isCelebrationPhase && !reducedMotion
+                      ? {
+                          duration: 1.1,
+                          repeat: Infinity,
+                          ease: 'easeInOut',
+                          delay: (index % 4) * 0.12,
+                        }
+                      : {
+                          type: 'spring',
+                          stiffness: 300,
+                          damping: 18,
+                        }
+                  }
+                >
                   <div className="splash-friend-avatar-wrap">
                     <CharacterAvatar
                       id={friend.id}
@@ -228,7 +227,7 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onFinish, childName,
                   <span className="splash-friend-emoji-tag" aria-hidden="true">
                     {friend.badge}
                   </span>
-                </div>
+                </motion.div>
                 <span className="splash-friend-name-pill">{friend.name}</span>
               </motion.div>
             );
