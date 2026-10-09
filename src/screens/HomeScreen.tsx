@@ -106,7 +106,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
                 aria-label={`${buddy.name} 영상 보기`}
                 title={`${buddy.name} 영상 보기`}
               >
-                <span className="buddy-video-badge-icon" aria-hidden="true">📹</span>
+                <span className="buddy-video-badge-icon" aria-hidden="true">🎬</span>
                 <span className="sr-only">영상 보기</span>
               </button>
             </div>
