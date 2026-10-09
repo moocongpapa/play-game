@@ -12,6 +12,10 @@ export const GARDEN_FRIENDS: readonly HabitatFriend[] = [
   { id: 'beetle', name: '풍뎅이', color: '#90bca5', motion: 'crawl', speed: 10, greeting: '반짝이는 초록 날개! 씩씩하게 걸어 보자!', reaction: '영차, 영차!' },
   { id: 'ant', name: '개미', color: '#bd9589', motion: 'crawl', speed: 14, greeting: '작은 발로 총총총! 함께 산책하자!', reaction: '총총총!' },
   { id: 'cricket', name: '귀뚜라미', color: '#b7c991', motion: 'hop', speed: 13, greeting: '긴 뒷다리로 폴짝! 높이 뛰어볼까?', reaction: '폴짝, 폴짝!' },
+  { id: 'dragonfly', name: '잠자리', color: '#8ec9df', motion: 'flutter', speed: 21, greeting: '네 장의 날개로 슝슝! 연못 위를 날아가자!', reaction: '슝슝, 팔랑!' },
+  { id: 'firefly', name: '반딧불이', color: '#d5cf82', motion: 'flutter', speed: 11, greeting: '내 배에 작은 불빛이 반짝! 같이 빛나볼까?', reaction: '반짝반짝~' },
+  { id: 'mantis', name: '사마귀', color: '#91c6a1', motion: 'crawl', speed: 12, greeting: '초록 앞다리를 모아 꾸벅! 나뭇잎 친구야!', reaction: '꾸벅, 안녕!' },
+  { id: 'stagbeetle', name: '사슴벌레', color: '#bf9b8d', motion: 'crawl', speed: 10, greeting: '사슴처럼 멋진 턱! 둥근 발로 뚜벅뚜벅!', reaction: '뚜벅뚜벅!' },
 ];
 export const AQUARIUM_FRIENDS: readonly HabitatFriend[] = [
   { id: 'clownfish', name: '흰동가리', color: '#edb182', motion: 'swim', speed: 17, greeting: '주황 옷에 하얀 줄무늬! 뻐끔뻐끔, 안녕!', reaction: '뻐끔뻐끔!' },

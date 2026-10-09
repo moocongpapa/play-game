@@ -1,4 +1,11 @@
-import { memo } from 'react';
+import { memo, useId } from 'react';
+
+const GARDEN_PAINTS: Record<string, readonly [string, string, string]> = {
+  dragonfly: ['#d5f3fc', '#84c9df', '#4e91b1'],
+  firefly: ['#e9e6be', '#b7bf8d', '#71835b'],
+  mantis: ['#def2bd', '#91c69c', '#538c67'],
+  stagbeetle: ['#f1d7bc', '#be9380', '#795d57'],
+};
 
 function Face({
   x = 60,
@@ -57,6 +64,9 @@ function Face({
  * Soft silhouettes, rich gradients, joyful expressions, and responsive animation anchors.
  */
 export const CreatureArtwork = memo(function CreatureArtwork({ id, happy = false }: { id: string; happy?: boolean }) {
+  const paintId = useId();
+  const colors = GARDEN_PAINTS[id];
+  const bodyPaint = `url(#${paintId}-body)`;
   let drawing;
   switch (id) {
     // ==========================================
@@ -306,6 +316,83 @@ export const CreatureArtwork = memo(function CreatureArtwork({ id, happy = false
           <Face x={85} y={47} spread={8} happy={happy} />
         </>
       );
+      break;
+
+    case 'dragonfly':
+      drawing = <>
+        <g className="creature-wings" fill="#e5f7fb" fillOpacity=".9" stroke="#84bbce" strokeWidth="1.8">
+          <path d="M56 48 C30 15 5 19 10 36 C13 47 36 53 56 54Z" />
+          <path d="M64 48 C90 15 115 19 110 36 C107 47 84 53 64 54Z" />
+          <path d="M56 56 C28 45 5 55 13 70 C20 82 42 68 56 60Z" />
+          <path d="M64 56 C92 45 115 55 107 70 C100 82 78 68 64 60Z" />
+          <path d="M17 31 L51 49 M103 31 L69 49 M19 64 L50 59 M101 64 L70 59" fill="none" stroke="#fff" strokeWidth="2.5" />
+        </g>
+        <g className="creature-legs" fill="none" stroke="#52879d" strokeWidth="2.5" strokeLinecap="round">
+          <path d="M55 52 L43 59 M55 59 L44 68 M55 65 L47 77 M65 52 L77 59 M65 59 L76 68 M65 65 L73 77" />
+        </g>
+        <ellipse cx="60" cy="70" rx="9" ry="26" fill={bodyPaint} stroke="#52879d" strokeWidth="2" />
+        <path d="M53 69 H67 M54 78 H66 M56 87 H64" stroke="#e2f6f7" strokeWidth="2.5" strokeLinecap="round" />
+        <path d="M52 27 L47 17 M68 27 L73 17" stroke="#52879d" strokeWidth="2.5" strokeLinecap="round" />
+        <ellipse cx="60" cy="38" rx="23" ry="18" fill={bodyPaint} stroke="#52879d" strokeWidth="2" />
+        <path d="M44 31 Q50 24 57 26" stroke="#fff" strokeWidth="3" strokeLinecap="round" fill="none" opacity=".8" />
+        <Face x={60} y={37} spread={11} happy={happy} eyeSize={5.8} />
+      </>;
+      break;
+
+    case 'firefly':
+      drawing = <>
+        <ellipse className="creature-glow" cx="60" cy="76" rx="34" ry="26" fill={`url(#${paintId}-glow)`} />
+        <g className="creature-wings" fill="#edf4d9" stroke="#a5b79d" strokeWidth="1.7" fillOpacity=".9">
+          <path d="M52 48 Q17 23 17 47 Q22 69 50 66Z" />
+          <path d="M68 48 Q103 23 103 47 Q98 69 70 66Z" />
+        </g>
+        <g className="creature-legs" fill="none" stroke="#71835b" strokeWidth="2.5" strokeLinecap="round">
+          <path d="M42 58 L29 64 M42 69 L31 78 M46 80 L36 89 M78 58 L91 64 M78 69 L89 78 M74 80 L84 89" />
+        </g>
+        <ellipse cx="60" cy="65" rx="24" ry="29" fill={bodyPaint} stroke="#71835b" strokeWidth="2" />
+        <path d="M38 70 Q60 62 82 70 Q81 92 60 94 Q39 92 38 70Z" fill="#ffe591" stroke="#c8aa58" strokeWidth="1.7" />
+        <path d="M43 77 Q60 84 77 77 M48 86 Q60 90 72 86" stroke="#fff6c9" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+        <path d="M49 27 Q42 11 35 16 M71 27 Q78 11 85 16" fill="none" stroke="#71835b" strokeWidth="2.5" strokeLinecap="round" />
+        <circle cx="35" cy="16" r="3" fill="#ffe591" /><circle cx="85" cy="16" r="3" fill="#ffe591" />
+        <ellipse cx="60" cy="38" rx="22" ry="18" fill={bodyPaint} stroke="#71835b" strokeWidth="2" />
+        <Face x={60} y={37} spread={10} happy={happy} />
+      </>;
+      break;
+
+    case 'mantis':
+      drawing = <>
+        <g className="creature-legs" fill="none" stroke="#538c67" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M48 69 L28 80 L23 94 H36 M72 69 L92 80 L97 94 H84 M48 78 L39 94 M72 78 L81 94" />
+        </g>
+        <ellipse cx="60" cy="72" rx="19" ry="22" fill={bodyPaint} stroke="#538c67" strokeWidth="2" />
+        <path d="M60 53 Q40 63 46 85 Q60 77 60 53 Q80 63 74 85 Q60 77 60 53Z" fill="#b8dfaa" stroke="#74a883" strokeWidth="1.5" />
+        <rect x="52" y="40" width="16" height="28" rx="8" fill={bodyPaint} stroke="#538c67" strokeWidth="2" />
+        <g className="creature-legs" fill="none" stroke="#74a883" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M52 54 L38 64 L49 70 M68 54 L82 64 L71 70" />
+        </g>
+        <path d="M45 23 Q38 9 28 13 M75 23 Q82 9 92 13" stroke="#538c67" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+        <path d="M34 26 Q60 12 86 26 Q89 35 74 44 Q60 57 46 44 Q31 35 34 26Z" fill={bodyPaint} stroke="#538c67" strokeWidth="2" />
+        <path d="M41 28 Q51 23 58 25" stroke="#f7ffed" strokeWidth="3" strokeLinecap="round" fill="none" />
+        <Face x={60} y={34} spread={12} happy={happy} eyeSize={5.5} />
+      </>;
+      break;
+
+    case 'stagbeetle':
+      drawing = <>
+        <g className="creature-legs" stroke="#795d57" strokeWidth="3.5" strokeLinecap="round" fill="none">
+          <path d="M36 53 L22 45 M31 68 H15 M37 82 L24 93 M84 53 L98 45 M89 68 H105 M83 82 L96 93" />
+        </g>
+        <ellipse cx="60" cy="68" rx="32" ry="28" fill={bodyPaint} stroke="#795d57" strokeWidth="2.2" />
+        <path d="M60 47 V95" stroke="#795d57" strokeWidth="2" />
+        <path d="M38 61 Q34 74 42 82 M79 60 Q83 70 80 75" stroke="#ffe9d5" strokeWidth="3.5" strokeLinecap="round" fill="none" opacity=".75" />
+        <g stroke="#8e6e60" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" fill="none">
+          <path d="M46 29 Q31 16 39 8 M38 19 L48 13 M74 29 Q89 16 81 8 M82 19 L72 13" />
+        </g>
+        <path d="M41 30 L31 24 M79 30 L89 24" stroke="#795d57" strokeWidth="2.5" strokeLinecap="round" />
+        <ellipse cx="60" cy="39" rx="25" ry="19" fill={bodyPaint} stroke="#795d57" strokeWidth="2" />
+        <ellipse cx="60" cy="43" rx="19" ry="13" fill="#ffead6" />
+        <Face x={60} y={39} spread={10} happy={happy} />
+      </>;
       break;
 
     // ==========================================
@@ -606,6 +693,14 @@ export const CreatureArtwork = memo(function CreatureArtwork({ id, happy = false
 
   return (
     <svg viewBox="0 0 120 104" className={`creature-art art-${id}`} aria-hidden="true">
+      {colors && <defs>
+        <radialGradient id={`${paintId}-body`} cx="32%" cy="24%" r="85%">
+          <stop stopColor={colors[0]} /><stop offset=".6" stopColor={colors[1]} /><stop offset="1" stopColor={colors[2]} />
+        </radialGradient>
+        <radialGradient id={`${paintId}-glow`}>
+          <stop stopColor="#fff8bb" stopOpacity=".9" /><stop offset=".5" stopColor="#f9de78" stopOpacity=".5" /><stop offset="1" stopColor="#f9de78" stopOpacity="0" />
+        </radialGradient>
+      </defs>}
       {drawing}
     </svg>
   );

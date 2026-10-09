@@ -1,6 +1,6 @@
 # 게임 목록과 등록 방법
 
-기준일: 2026-10-09 · [목차](README.md)
+기준일: 2026-10-10 · [목차](README.md)
 
 실제 홈 메뉴는 [GAME_CATALOG](../src/data/gameCatalog.ts)와 `availableGameIds`를 기준으로 합니다. 이름·설명은 접근성·음성·부모 정보에도 사용하지만 홈 카드는 그림만 표시합니다. 아래 목록은 현재 소스의 30종을 전부 포함합니다.
 
@@ -55,7 +55,7 @@
 | 화면 | 하는 일 |
 |---|---|
 | [색칠 놀이](../src/screens/SketchbookScreen.tsx) | 도구·색상·도안/도화지·스티커 4개 메뉴, 한 단계 되돌리기, 캐릭터 살아나기, 저장·전시·이어 그리기·PNG 내보내기 |
-| [곤충 놀이터](../src/screens/BugGardenScreen.tsx) | 귀여운 곤충 관찰, 탭 반응, 드래그 위치 이동, 멈춤·다시 모으기 |
+| [곤충 놀이터](../src/screens/BugGardenScreen.tsx) | 무당벌레·나비·애벌레·꿀벌·달팽이·풍뎅이·개미·귀뚜라미·잠자리·반딧불이·사마귀·사슴벌레 12종 관찰, 탭 인사·드래그 이동·멈춤·다시 모으기. 모바일 선택 버튼은 4개씩 3줄 |
 | [수족관](../src/screens/AquariumScreen.tsx) | 물고기·상어·고래·문어·오징어·해파리 친구들 관찰·이동·인사 |
 | [친구 놀이터](../src/screens/CharacterParkScreen.tsx) | 여덟 캐릭터가 한 명씩 움직임. 탭으로 방향 바꾸기·점프·구르기 등, 드래그 이동 |
 | [친구와 인사](../src/screens/CharacterTalkScreen.tsx) | 친구 선택, 머리·배·손 터치와 캐릭터마다 다른 인사 동작·음성 |

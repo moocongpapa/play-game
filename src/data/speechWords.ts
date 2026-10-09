@@ -29,6 +29,7 @@ export const SPEECH_WORDS: Readonly<Record<string, string>> = {
   '기린': 'giraffe', '코알라': 'koala', '팬더': 'panda', '여우': 'fox', '늑대': 'wolf', '다람쥐': 'squirrel',
   '고슴도치': 'hedgehog', '펭귄': 'penguin', '거북이': 'turtle', '물고기': 'fish', '나비': 'butterfly',
   '무당벌레': 'ladybug', '애벌레': 'caterpillar', '꿀벌': 'bee', '달팽이': 'snail', '풍뎅이': 'beetle', '개미': 'ant', '귀뚜라미': 'cricket',
+  '잠자리': 'dragonfly', '반딧불이': 'firefly', '사마귀': 'praying mantis', '사슴벌레': 'stag beetle',
   '흰동가리': 'clownfish', '파랑물고기': 'blue fish', '줄무늬물고기': 'striped fish', '복어': 'pufferfish',
   '상어': 'shark', '고래': 'whale', '문어': 'octopus', '오징어': 'squid', '해파리': 'jellyfish', '바다거북': 'sea turtle', '해마': 'seahorse', '가오리': 'ray',
   '자동차': 'car', '버스': 'bus', '비행기': 'airplane', '소방차': 'fire engine', '경찰차': 'police car', '기차': 'train', '로켓': 'rocket', '우주선': 'spaceship',

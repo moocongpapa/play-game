@@ -291,10 +291,6 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06), 0 3px 0 #e4dfcc;
 }
 
-.habitat-garden .habitat-tray {
-  grid-template-columns: repeat(8, minmax(64px, 1fr));
-}
-
 .habitat-choice {
   position: relative;
   display: flex;
@@ -433,6 +429,15 @@
   50% { transform: scaleX(0.72) scaleY(1.05); }
 }
 
+.habitat-creature .creature-glow {
+  animation: firefly-glow 2.8s ease-in-out infinite;
+}
+
+@keyframes firefly-glow {
+  0%, 100% { opacity: .45; }
+  50% { opacity: .9; }
+}
+
 @keyframes creature-hop {
   0%, 65%, 100% { translate: 0 0; }
   78% { translate: 0 -12px; }
@@ -508,12 +513,9 @@
     grid-template-columns: repeat(3, minmax(64px, 1fr));
     gap: 6px;
     padding: 6px;
-    align-content: center;
+    align-content: safe center;
     overflow-y: auto;
     touch-action: pan-y;
-  }
-  .habitat-garden .habitat-tray {
-    grid-template-columns: repeat(2, minmax(64px, 1fr));
   }
   .habitat-choice {
     height: 66px;
