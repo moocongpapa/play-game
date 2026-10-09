@@ -61,10 +61,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
     speakText('다른 친구랑도 놀아볼까?', soundEnabled, { characterId: selectedCharacter });
   };
 
-  const renderCard = (id: GameId) => <button key={id} className={`picture-game-card theme-${GAME_CATALOG[id].theme}`} onClick={() => { stopAllSpeech(); playJellyTap(soundEnabled); onStartGame(id, selectedCharacter); }} aria-label={`${GAME_CATALOG[id].title} 시작`}>
+  const renderCard = (id: GameId) => <button key={id} className={`picture-game-card theme-${GAME_CATALOG[id].theme}${GAME_CATALOG[id].badge ? ' card-tall' : ''}`} onClick={() => { stopAllSpeech(); playJellyTap(soundEnabled); onStartGame(id, selectedCharacter); }} aria-label={`${GAME_CATALOG[id].title} 시작`}>
         <GameArtwork gameId={id} buddy={selectedCharacter} />
-        <span className="game-card-caption"><span>{GAME_CATALOG[id].title}</span><span className="play-medallion"><Play fill="currentColor" size={20} /></span></span>
-        {GAME_CATALOG[id].badge && <span className="picture-game-badge">{GAME_CATALOG[id].badge}</span>}
       </button>;
 
   return <div className={`storybook-home home-${step}`}>
@@ -126,7 +124,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
       </button>)}</div>
     </section> : <section aria-label="게임 선택" className="games-section">
       <button className="friend-day-card" onClick={() => { stopAllSpeech(); playJellyTap(soundEnabled); onStartDay(); }} aria-label={`${buddy.name}의 하루 함께 놀기`}>
-        <CharacterAvatar id={selectedCharacter} size="md" mood="waving" /><div className="friend-day-copy"><strong>{buddy.name}의 하루</strong><span>우리 같이 하루를 보내볼까?</span><span className="day-mini-pictures" aria-hidden="true">{FRIEND_DAY.map(item => <GameArtwork key={item.gameId} gameId={item.gameId} buddy={selectedCharacter} />)}</span></div><ArrowRight />
+        <CharacterAvatar id={selectedCharacter} size="md" mood="waving" /><div className="friend-day-copy"><span className="day-mini-pictures" aria-hidden="true">{FRIEND_DAY.map(item => <GameArtwork key={item.gameId} gameId={item.gameId} buddy={selectedCharacter} />)}</span></div><ArrowRight aria-hidden="true" />
       </button>
       {(['hands', 'care'] as const).map(category => <div className="discovery-menu-group" key={category}><div className="section-heading"><span className="step-badge">{category === 'hands' ? <Hand size={23} /> : <Heart size={23} />}</span><h2>{category === 'hands' ? '손끝으로 쏙쏙!' : '마음도 쑥쑥!'}</h2></div><div className="game-card-grid">{games.filter(id => GAME_CATALOG[id].category === category).map(renderCard)}</div></div>)}
       <div className="section-heading"><span className="step-badge"><Play size={23}/></span><h2>다른 놀이도 해볼까?</h2></div>
