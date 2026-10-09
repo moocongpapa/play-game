@@ -109,7 +109,11 @@ export function DragMatch({ children, onDrop, canDrop, disabled = false, resetKe
       const from = pieces.current.get(hint.pieceId)?.getBoundingClientRect();
       const to = slots.current.get(hint.targetId)?.getBoundingClientRect();
       if (!from || !to || from.top < 70 || to.top < 70 || from.bottom > innerHeight || to.bottom > innerHeight) { setDemo(null); return; }
-      setDemo({ x: from.left + from.width / 2, y: from.top + from.height / 2, dx: to.left + to.width / 2 - from.left - from.width / 2, dy: to.top + to.height / 2 - from.top - from.height / 2 });
+      // Demonstrate beside the artwork, leaving the shape and the slot visible.
+      const beside = (rect: DOMRect) => ({ x: Math.min(innerWidth - 40, rect.right - 10), y: rect.top + rect.height * .62 });
+      const start = beside(from);
+      const finish = beside(to);
+      setDemo({ ...start, dx: finish.x - start.x, dy: finish.y - start.y });
     };
     measure(); window.addEventListener('scroll', measure, true); window.addEventListener('resize', measure);
     return () => { window.removeEventListener('scroll', measure, true); window.removeEventListener('resize', measure); };

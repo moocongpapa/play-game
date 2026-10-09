@@ -5,6 +5,7 @@ import App from './App.tsx';
 import './index.css';
 import './native-play.css';
 import './components/PlayExperience.css';
+import './play-readability.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

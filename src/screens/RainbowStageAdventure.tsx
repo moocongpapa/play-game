@@ -374,9 +374,9 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
   return (
     <div className="adventure-board relative w-full max-w-3xl mx-auto flex flex-col items-center select-none overflow-hidden pb-8">
       {/* Top Header & Stage Badges */}
-      <div className="w-full bg-white/95 backdrop-blur-xs p-3.5 sm:p-4 rounded-[32px] border-3 border-amber-300 shadow-md mb-3 flex flex-col gap-2.5">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+      <div className="adventure-map w-full bg-white/95 backdrop-blur-xs p-3.5 sm:p-4 rounded-[32px] border-3 border-amber-300 shadow-md mb-3 flex flex-col gap-2.5">
+        <div className="adventure-map-heading">
+          <div className="sr-only">
 
             <h1 className="text-base sm:text-xl font-black text-[#4A3E3D] flex items-center gap-1.5">
               <span>🌈 {childName}의 무지개 스테이지 모험</span>
@@ -386,9 +386,10 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
 
           <button
             onClick={restartAdventure}
+            aria-label="무지개 모험 처음부터 다시 하기"
             className="px-3 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-700 text-xs font-black rounded-full flex items-center gap-1 border border-rose-300 active:scale-95 cursor-pointer"
           >
-            <RotateCcw className="w-3.5 h-3.5" /> 처음부터
+            <RotateCcw className="w-3.5 h-3.5" /><span className="sr-only">처음부터</span>
           </button>
         </div>
 
@@ -468,18 +469,18 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
           className="w-full bg-[#FFF3E0] rounded-[36px] border-4 border-[#FFA726] p-4 sm:p-6 shadow-lg flex flex-col items-center text-center gap-4"
         >
           {/* Character & Question Banner */}
-          <div className="flex items-center gap-3 bg-white/90 p-3 sm:p-4 rounded-3xl border-2 border-orange-200 shadow-xs w-full max-w-md">
+          <div className="adventure-round-guide flex items-center gap-3 bg-white/90 p-3 sm:p-4 rounded-3xl border-2 border-orange-200 shadow-xs w-full max-w-md">
             <CharacterAvatar id={buddy} size="md" mood="talking" className="!w-16 !h-16 shrink-0" />
             <div className="text-left flex-1 min-w-0">
               <span className="text-xs font-black text-orange-600 block">Level 1 &bull; 소리 듣고 동물 찾기</span>
               <p className="text-base sm:text-lg font-black text-[#4A3E3D] leading-snug">
-                "{l1Target.soundPrompt}" 소리의 주인은 누구일까요?
+                “{l1Target.soundPrompt}” 누구일까?
               </p>
             </div>
             <button
               onClick={() => playClue(l1Target.soundKey, l1Target.soundPrompt)}
               className="p-3 bg-orange-500 hover:bg-orange-600 text-white rounded-full active:scale-95 shadow-xs cursor-pointer"
-              title="다시 듣기"
+              title="다시 듣기" aria-label="동물 소리 다시 듣기"
             >
               <Volume2 className="w-6 h-6 animate-pulse" />
             </button>
@@ -509,7 +510,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
           </div>
 
           <p className="text-xs font-bold text-orange-800/80 bg-white/70 py-1.5 px-4 rounded-full">
-            💡 소리 버튼을 누르면 울음소리를 다시 들을 수 있어요!
+            <span className="sr-only">소리 버튼을 누르면 울음소리를 다시 들을 수 있어요!</span>
           </p>
         </motion.div>
       )}
@@ -531,12 +532,12 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
           className="w-full bg-[#E8F5E9] rounded-[36px] border-4 border-[#66BB6A] p-4 sm:p-6 shadow-lg flex flex-col items-center text-center gap-4"
         >
           {/* Guide Banner */}
-          <div className="flex items-center gap-3 bg-white/90 p-3 sm:p-4 rounded-3xl border-2 border-emerald-200 shadow-xs w-full max-w-md">
+          <div className="adventure-round-guide flex items-center gap-3 bg-white/90 p-3 sm:p-4 rounded-3xl border-2 border-emerald-200 shadow-xs w-full max-w-md">
             <CharacterAvatar id={buddy} size="md" mood="happy" className="!w-16 !h-16 shrink-0" />
             <div className="text-left flex-1 min-w-0">
               <span className="text-xs font-black text-emerald-600 block">Level 2 &bull; 색깔 바구니 분류</span>
               <p className="text-base sm:text-lg font-black text-[#4A3E3D] leading-snug">
-                과일을 같은 색깔 바구니에 쏙 넣어주세요! ({l2SortedCount}/3)
+                같은 색 바구니에 쏙! ({l2SortedCount}/3)
               </p>
             </div>
           </div>
@@ -662,7 +663,7 @@ export const RainbowStageAdventure: React.FC<RainbowStageAdventureProps> = ({
           className="w-full bg-[#EDE7F6] rounded-[36px] border-4 border-[#BA68C8] p-4 sm:p-6 shadow-lg flex flex-col items-center text-center gap-4"
         >
           {/* Guide Banner */}
-          <div className="flex items-center gap-3 bg-white/90 p-3 sm:p-4 rounded-3xl border-2 border-purple-200 shadow-xs w-full max-w-md">
+          <div className="adventure-round-guide flex items-center gap-3 bg-white/90 p-3 sm:p-4 rounded-3xl border-2 border-purple-200 shadow-xs w-full max-w-md">
             <CharacterAvatar id={buddy} size="md" mood="talking" className="!w-16 !h-16 shrink-0" />
             <div className="text-left flex-1 min-w-0">
               <span className="text-xs font-black text-purple-600 block">Level 4 &bull; 그림자 실루엣 퍼즐</span>

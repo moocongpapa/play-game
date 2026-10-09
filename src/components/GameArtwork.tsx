@@ -65,7 +65,7 @@ export function GameArtwork({ gameId, buddy = 'jelly' }: { gameId: GameId; buddy
       scene = <><span className="memory-tile first"><ToyArtwork emoji="🍎" /><Check /></span><span className="memory-tile second"><ToyArtwork emoji="🍎" /><Check /></span><span className="memory-tile back"><Sparkles /></span></>;
       break;
     case 'shadow_quiz':
-      scene = <><Toy emoji="🐰" x={8} y={8} size={38} shadow /><ArrowRight className="scene-arrow" /><Toy emoji="🐰" x={60} y={8} size={38} /></>;
+      scene = <><Toy emoji="🐰" x={8} y={8} size={38} shadow /><ArrowRight className="scene-arrow to-shadow" /><Toy emoji="🐰" x={60} y={8} size={38} /></>;
       break;
     case 'stage_adventure':
       scene = <><span className="adventure-rainbow" /><span className="adventure-path" /><Toy emoji="🐶" x={4} y={36} size={25} /><Toy emoji="🍎" x={39} y={26} size={23} /><Toy emoji="⭐" x={73} y={2} size={23} /><span className="adventure-flag" /></>;
@@ -74,7 +74,7 @@ export function GameArtwork({ gameId, buddy = 'jelly' }: { gameId: GameId; buddy
       scene = <><span className="mini-care-friend"><CareFriend buddy={buddy} /></span><span className="mini-care-teeth" /><span className="mini-toothbrush"><ToothBrushArt /></span><Sparkles className="scene-pop" /></>;
       break;
     case 'feeding':
-      scene = <><span className="mini-care-friend mini-food-friend"><CareFriend buddy={buddy} /></span><span className="mini-food-plate" /><Toy emoji="🥕" x={6} y={62} size={26} rotate={-18} /><Toy emoji="🍎" x={36} y={59} size={27} /><Toy emoji="🥦" x={66} y={55} size={29} /></>;
+      scene = <><span className="mini-care-friend mini-food-friend"><CareFriend buddy={buddy} /></span><span className="mini-food-plate" /><Toy emoji="🥕" x={12} y={38} size={30} rotate={-35} /><svg className="feeding-action-path" viewBox="0 0 300 180"><path d="M50 100Q57 72 94 72M84 65L95 72L85 80" /></svg><Toy emoji="🍎" x={36} y={59} size={27} /><Toy emoji="🥦" x={66} y={55} size={29} /></>;
       break;
     case 'bubble_pop':
       scene = <><span className="mini-soap soap-a"><ToyArtwork emoji="🍓" /></span><span className="mini-soap soap-b"><ToyArtwork emoji="🐧" /></span><span className="mini-soap soap-c"><Sparkles /></span><Hand className="scene-hand" /></>;

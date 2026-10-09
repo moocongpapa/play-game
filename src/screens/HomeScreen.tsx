@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeftRight, ArrowRight, Bug, Fish, Hand, Heart, Palette, PawPrint, Play } from 'lucide-react';
+import { ArrowLeftRight, ArrowRight, Hand, Heart, Play } from 'lucide-react';
 import { CHARACTER_LIST, CHARACTERS } from '../data/characters';
 import { CharacterAvatar } from '../components/CharacterAvatar';
 import { CharacterCharmVideoModal } from '../components/CharacterCharmVideoModal';
+import { PlayNavArtwork, type PlayNavKind } from '../components/PlayNavArtwork';
 import { GameArtwork } from '../components/GameArtwork';
 import { ToyArtwork } from '../components/ToyArtwork';
 import { FRIEND_DAY } from '../data/friendDay';
@@ -35,9 +36,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
   const headingRef = useRef<HTMLHeadingElement>(null);
   const [hasNavigated, setHasNavigated] = useState(false);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
-  const available = availableGameIds(age);
-  const preferred = ([buddy.gameId, buddy.subGameId, 'balloon_pop', 'stage_adventure'] as Array<GameId | undefined>).filter((id): id is GameId => Boolean(id) && available.includes(id!));
-  const games = [...new Set([...preferred, ...available])];
+  // Keep the same picture in the same place when the child changes friends.
+  const games = availableGameIds(age);
 
   useEffect(() => () => stopAllSpeech(), []);
   useEffect(() => {
@@ -69,7 +69,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
       <button type="button" className="welcome-voice-surface" aria-label="배경을 눌러 선택 안내 듣기" disabled={!soundEnabled}
         onClick={() => speakText(step === 'friends' ? `${childName}야, 같이 놀 친구를 골라줘!` : '어떤 게임 해볼까? 하고 싶은 그림을 눌러봐!', soundEnabled, { characterId: selectedCharacter })} />
       <div className="welcome-copy">
-        <p className="eyebrow"><span /> {childName}의 작은 놀이숲</p>
+        <p className="eyebrow"><span /> {childName}의 놀이숲</p>
         <h1 ref={headingRef} tabIndex={-1}>{step === 'friends' ? <>같이 놀 친구를<br />선택해줘~</> : <>어떤 게임<br />해볼까?</>}</h1>
         <p className="welcome-subtitle">{step === 'friends' ? '마음에 드는 친구를 콕!' : `${buddy.name}랑 함께, 하고 싶은 그림을 콕!`}</p>
       </div>
@@ -89,8 +89,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
                 onClick={changeFriend}
                 aria-label={`${buddy.name}, 다른 친구 선택`}
               >
-                <CharacterAvatar id={selectedCharacter} mood="happy" className="!w-full !h-full" />
-                <span aria-hidden="true"><ArrowLeftRight size={18} /> {buddy.name}</span>
+                <CharacterAvatar id={selectedCharacter} mood="still" className="!w-full !h-full" />
+                <span className="buddy-switch-cue" aria-hidden="true"><span className="buddy-switch-friend"><PlayNavArtwork kind="park" buddy={selectedCharacter} /></span><ArrowLeftRight size={18} /></span>
               </button>
               <button
                 type="button"
@@ -104,7 +104,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
                 aria-label={`${buddy.name} 영상 보기`}
                 title={`${buddy.name} 영상 보기`}
               >
-                <span className="buddy-video-badge-icon" aria-hidden="true">🎬</span>
+                <Play className="buddy-video-badge-icon" aria-hidden="true" fill="currentColor" />
                 <span className="sr-only">영상 보기</span>
               </button>
             </div>
@@ -118,35 +118,35 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
     {step === 'friends' ? <section aria-label="같이 놀 친구 선택" className="friend-section">
       <div className="section-heading"><span className="step-badge"><Hand size={22} /></span><h2>누구랑 놀까?</h2><span className="section-note">반가워, {childName}야!</span></div>
       <div className="friend-grid">{CHARACTER_LIST.map((friend, i) => <button key={friend.id} className={`friend-card friend-${friend.id}`} onClick={() => chooseFriend(friend.id)} aria-label={`${friend.name}, ${friend.animal} 친구 선택`} style={{ '--friend-color': friend.color, '--friend-delay': `${i * 90}ms` } as React.CSSProperties}>
-        <span className="friend-portrait"><CharacterAvatar id={friend.id} size="lg" mood="happy" /></span>
+        <span className="friend-portrait"><CharacterAvatar id={friend.id} size="lg" mood="still" /></span>
         <span className="friend-name">{friend.name}<span className="friend-arrow"><ArrowRight size={20} /></span></span>
       </button>)}</div>
     </section> : <section aria-label="게임 선택" className="games-section">
       <button className="friend-day-card" onClick={() => { stopAllSpeech(); playJellyTap(soundEnabled); onStartDay(); }} aria-label={`${buddy.name}의 하루 함께 놀기`}>
-        <CharacterAvatar id={selectedCharacter} size="md" mood="waving" /><div className="friend-day-copy"><span className="day-mini-pictures" aria-hidden="true">{FRIEND_DAY.map(item => <GameArtwork key={item.gameId} gameId={item.gameId} buddy={selectedCharacter} />)}</span></div><ArrowRight aria-hidden="true" />
+        <CharacterAvatar id={selectedCharacter} size="md" mood="still" /><div className="friend-day-copy"><span className="day-mini-pictures" aria-hidden="true">{FRIEND_DAY.map(item => <GameArtwork key={item.gameId} gameId={item.gameId} buddy={selectedCharacter} />)}</span></div><ArrowRight aria-hidden="true" />
       </button>
       {(['hands', 'care'] as const).map(category => <div className="discovery-menu-group" key={category}><div className="section-heading"><span className="step-badge">{category === 'hands' ? <Hand size={23} /> : <Heart size={23} />}</span><h2>{category === 'hands' ? '손끝으로 쏙쏙!' : '마음도 쑥쑥!'}</h2></div><div className="game-card-grid">{games.filter(id => GAME_CATALOG[id].category === category).map(renderCard)}</div></div>)}
       <div className="section-heading"><span className="step-badge"><Play size={23}/></span><h2>다른 놀이도 해볼까?</h2></div>
-      <div className="game-card-grid" key={selectedCharacter}>{games.filter(id => !GAME_CATALOG[id].category).map(renderCard)}</div>
+      <div className="game-card-grid">{games.filter(id => !GAME_CATALOG[id].category).map(renderCard)}</div>
     </section>}
 
     <p className="home-footnote">작은 손으로 만나는, 커다란 세상</p>
 
     <nav className="home-play-nav" aria-label="자유 놀이 바로가기">
       <div className="home-play-nav-items">
-        {[
-          { label: '색칠 놀이', theme: 'drawing', Icon: Palette, open: onOpenDrawing },
-          { label: '곤충 놀이', theme: 'bugs', Icon: Bug, open: onOpenStickerRoom },
-          { label: '수족관 놀이', theme: 'aquarium', Icon: Fish, open: onOpenAquarium },
-          { label: '친구 놀이터', theme: 'park', Icon: PawPrint, open: onOpenCharacterPark },
-          { label: '친구와 인사', theme: 'greeting', Icon: Hand, open: onOpenCharacterTalk },
-        ].map(({ label, theme, Icon, open }) => <button
+        {([
+          { label: '색칠 놀이', theme: 'drawing', open: onOpenDrawing },
+          { label: '곤충 놀이', theme: 'bugs', open: onOpenStickerRoom },
+          { label: '수족관 놀이', theme: 'aquarium', open: onOpenAquarium },
+          { label: '친구 놀이터', theme: 'park', open: onOpenCharacterPark },
+          { label: '친구와 인사', theme: 'greeting', open: onOpenCharacterTalk },
+        ] satisfies Array<{ label: string; theme: PlayNavKind; open: () => void }>).map(({ label, theme, open }) => <button
           key={theme}
           type="button"
           className={`home-play-nav-button nav-${theme}`}
           aria-label={label}
           onClick={() => { stopAllSpeech(); playJellyTap(soundEnabled); open(); }}
-        ><span className="home-play-nav-icon" aria-hidden="true"><Icon /></span></button>)}
+        ><span className="home-play-nav-icon" aria-hidden="true"><PlayNavArtwork kind={theme} buddy={selectedCharacter} /></span></button>)}
       </div>
     </nav>
 

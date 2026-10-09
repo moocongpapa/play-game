@@ -34,7 +34,7 @@ export function useDevelopmentRound(props: ToddlerGameProps, guide: string, quie
 
 export function DevelopmentShell({ children, title, guide, buddy, soundEnabled, className = '' }: ToddlerGameProps & { children: ReactNode; title: string; guide: string; className?: string }) {
   return <MotionConfig reducedMotion="user"><div className={`development-play ${className}`}>
-    <div className="discovery-guide"><CharacterAvatar id={buddy} size="sm" mood="waving" /><h2>{title}</h2><button aria-label="놀이 안내 다시 듣기" disabled={!soundEnabled} onClick={() => speakText(guide, soundEnabled, { characterId: buddy })}><Volume2 /></button></div>
+    <div className="discovery-guide"><CharacterAvatar id={buddy} size="sm" mood="still" /><h2>{title}</h2><button aria-label="놀이 안내 다시 듣기" disabled={!soundEnabled} onClick={() => speakText(guide, soundEnabled, { characterId: buddy })}><Volume2 /></button></div>
     {children}
   </div></MotionConfig>;
 }

@@ -11,8 +11,8 @@ import './ToddlerPlay.css';
 
 export function PlayGuide({ buddy, soundEnabled, title, guide, happy = false }: { buddy: CharacterId; soundEnabled: boolean; title: string; guide: string; happy?: boolean }) {
   return <div className="play-guide">
-    <CharacterAvatar id={buddy} size="md" mood={happy ? 'happy' : 'waving'} />
-    <div><span>{CHARACTERS[buddy].name}와 함께</span><h2>{title}</h2></div>
+    <CharacterAvatar id={buddy} size="md" mood={happy ? 'happy' : 'still'} />
+    <div><span className="sr-only">{CHARACTERS[buddy].name}와 함께</span><h2>{title}</h2></div>
     <button type="button" disabled={!soundEnabled} aria-label="놀이 안내 다시 듣기" onClick={() => speakText(guide, soundEnabled, { characterId: buddy })}><Volume2 /></button>
   </div>;
 }

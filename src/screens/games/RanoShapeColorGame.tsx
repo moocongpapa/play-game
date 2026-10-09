@@ -11,7 +11,7 @@ import { SHAPE_COLOR_ITEMS_BY_AGE } from '../../data/gameData';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
-import { getDifficultyConfig, getAgeGroupLabel, pickDistractors } from '../../utils/ageEngine';
+import { getDifficultyConfig, pickDistractors } from '../../utils/ageEngine';
 import { AgeGroup } from '../../types';
 import { Volume2, RefreshCw, Timer, Flame } from 'lucide-react';
 
@@ -242,13 +242,10 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
       <div className="game-prompt w-full bg-gradient-to-r from-[#DCEDC8] to-[#E8F5E9] p-3.5 sm:p-4 rounded-3xl border-3 border-[#66BB6A] shadow-sm flex items-center gap-3 sm:gap-4 relative">
-        <CharacterAvatar id={buddy} size="md" mood={selectedCorrectId ? 'excited' : 'waving'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
+        <CharacterAvatar id={buddy} size="md" mood={selectedCorrectId ? 'excited' : 'still'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
         <div className="flex-1 min-w-0 break-keep">
-          <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#2E7D32] mb-1">
-            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 모양 색상</span>
-          </div>
           <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
-            &ldquo;<span className="text-[#2E7D32] underline">{targetItem.colorName} {targetItem.shape}</span>&rdquo;를 찾아주세요!
+            <span className="text-[#2E7D32]">{targetItem.colorName} {targetItem.shape}</span>
           </h2>
         </div>
         <button
@@ -301,10 +298,10 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
       {/* Target Slot */}
       {selectedCorrectId ? <PlayResultScene kind="build" buddy={buddy} color={targetItem.color} keepsake={<ShapeFigure shape={targetItem.shape} color={targetItem.color} className="w-full h-full" />} /> : <>
       <DropSlot id="shape" label="같은 모양" filled={!!selectedCorrectId} className="my-3 sm:my-4 p-4 sm:p-5 bg-white rounded-3xl border-3 sm:border-4 border-dashed border-[#81C784] shadow-inner flex flex-col items-center justify-center">
-        <span className="text-xs font-bold text-[#8C7B79] mb-1">같은 모양을 여기로 옮겨요</span>
+        <span className="sr-only">같은 모양을 여기로 옮겨요</span>
         <div className="p-3 rounded-2xl bg-amber-50/60 border border-amber-200 shadow-sm flex flex-col items-center">
           <ShapeFigure shape={targetItem.shape} color={targetItem.color} className="w-20 h-20 sm:w-24 sm:h-24 drop-shadow-md" />
-          <span className="text-xs sm:text-sm font-black text-[#2E7D32] mt-1">
+          <span className="sr-only">
             {targetItem.colorName} {targetItem.shape}
           </span>
         </div>
@@ -335,8 +332,8 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
                   : 'bg-white border-green-200 hover:border-green-400 hover:bg-emerald-50/50'
               }`}
             >
-              <ShapeFigure shape={item.shape} color={item.color} className="w-14 h-14 sm:w-18 sm:h-18 mb-1 drop-shadow-sm" />
-              <span className="text-xs sm:text-sm font-black text-[#4A3E3D] text-center">
+              <ShapeFigure shape={item.shape} color={item.color} className="shape-play-piece drop-shadow-sm" />
+              <span className="sr-only">
                 {item.colorName} {item.shape}
               </span>
             </DragPiece>

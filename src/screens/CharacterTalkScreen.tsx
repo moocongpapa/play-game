@@ -56,24 +56,24 @@ export const CharacterTalkScreen: React.FC<CharacterTalkScreenProps> = ({
 
   return <div className="friend-greetings">
     <header className="greeting-heading">
-      <p className="eyebrow"><Hand size={17} /> 친구와 인사</p>
+
       <h1>반가워, {childName}야!</h1>
-      <p>머리를 쓰담쓰담, 배를 간질간질! 손바닥도 짝!</p>
+      <p className="sr-only">머리를 쓰담쓰담, 배를 간질간질! 손바닥도 짝!</p>
     </header>
 
     <div className="greeting-layout">
       <section className="greeting-card" aria-label={`${activeChar.name}의 인사 무대`}>
-        <h2><span>{activeChar.name}</span>의 {greeting.title}</h2>
+        <h2 className="sr-only"><span>{activeChar.name}</span>의 {greeting.title}</h2>
         <CompanionTouch key={selectedCharacter} id={selectedCharacter} playing={playing} replayKey={replayKey} onInteraction={() => setPlaying(false)} soundEnabled={soundEnabled} />
-        <p className="greeting-message" aria-live="polite">{greeting.message}</p>
+        <p className="greeting-message sr-only" aria-live="polite">{greeting.message}</p>
         <div className="greeting-actions">
-          <button className="greeting-replay" onClick={() => sayHello(selectedCharacter)} aria-label={`${activeChar.name} 인사 다시 보기`}><RotateCcw size={21} /><span>한 번 더!</span></button>
-          <button className="greeting-play" onClick={onGoHome}><Play size={19} fill="currentColor" /><span>같이 놀자</span><ArrowRight size={18} /></button>
+          <button className="greeting-replay" onClick={() => sayHello(selectedCharacter)} aria-label={`${activeChar.name} 인사 다시 보기`}><RotateCcw size={21} /><span className="sr-only">한 번 더!</span></button>
+          <button className="greeting-play" onClick={onGoHome} aria-label="같이 놀 게임 고르기"><Play size={19} fill="currentColor" /><span className="sr-only">같이 놀자</span><ArrowRight size={18} /></button>
         </div>
       </section>
 
       <section className="greeting-friends" aria-label="인사할 친구 고르기">
-        <h2>다른 친구는 어떻게 인사할까?</h2>
+        <h2 className="sr-only">다른 친구는 어떻게 인사할까?</h2>
         <div className="greeting-friend-grid">{CHARACTER_LIST.map(char => <button
           key={char.id}
           aria-label={`${char.name} ${CHARACTER_GREETINGS[char.id].title} 인사 보기`}
@@ -85,7 +85,7 @@ export const CharacterTalkScreen: React.FC<CharacterTalkScreenProps> = ({
           <span>{char.name}</span>
           {char.id === selectedCharacter && <Check className="greeting-selected" size={18} aria-hidden="true" />}
         </button>)}</div>
-        <p className="greeting-friends-note"><Hand size={18} /> 작은 친구도, 큰 친구도 콕!</p>
+        <p className="greeting-friends-note sr-only"><Hand size={18} /> 작은 친구도, 큰 친구도 콕!</p>
       </section>
     </div>
   </div>;

@@ -58,6 +58,18 @@ test('BGM changes through all six tracks, ducks/restores volume and cancels on m
     assert.equal(gains[0].value, .1 * .3, 'finishing one sound cannot unduck an ongoing voice');
     engine.setBGMDucked('speech', false);
     assert.equal(gains[0].value, .1);
+    engine.setBGMDucked('video', true);
+    assert.equal(gains[0].value, 0, 'the film owns the soundtrack while its modal is open');
+    engine.setBGMDucked('effect', true);
+    engine.setBGMDucked('effect', false);
+    engine.setBGMVolume(.15);
+    assert.equal(gains[0].value, 0, 'cheers and preference updates cannot restart music over the film');
+    engine.setBGMDucked('speech', true);
+    engine.setBGMDucked('video', false);
+    assert.equal(gains[0].value, .15 * .3, 'closing a film still respects another active duck');
+    engine.setBGMDucked('speech', false);
+    assert.equal(gains[0].value, .15, 'closing the film restores the latest configured volume');
+    engine.setBGMVolume(.1);
     engine.setBGMScene('sleep');
     assert.ok(notes.every(note => note.stopped), 'entering bedtime releases the previous song');
     const sleepGain = gains.length, sleepNote = notes.length;

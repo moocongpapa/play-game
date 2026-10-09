@@ -1,0 +1,37 @@
+.character-theater { position: fixed; inset: 0; width: 100%; max-width: none; height: 100dvh; max-height: none; margin: 0; padding: max(10px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left)); border: 0; background: #f7eddb; color: #5a624f; overflow: auto; overscroll-behavior: contain; touch-action: pan-y; }
+.character-theater[open] { display: flex; flex-direction: column; }
+.character-theater::backdrop { background: #676b57aa; }
+.theater-landscape { position: absolute; inset: 0; background: linear-gradient(#fff8e8ed,#fff8e85c),url('/art/playground-meadow.jpg') center bottom / cover; pointer-events: none; }
+.theater-header { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; width: min(100%,1160px); margin: 0 auto; }
+.theater-header h2 { font-size: clamp(16px,3vw,22px); font-weight: 850; }
+.theater-button { flex-shrink: 0; display: grid; place-items: center; width: 64px; height: 64px; border: 2px solid #fffcf0; border-radius: 23px; background: linear-gradient(#fff9e7,#ebd8b2); color: #766444; box-shadow: 0 3px 0 #cbb696,inset 0 2px #fff; }
+.theater-button svg { width: 28px; height: 28px; stroke-width: 2.5; }
+.theater-button:active { transform: translateY(2px); box-shadow: 0 1px 0 #cbb696; }
+.theater-button:disabled { opacity: .5; }
+.theater-close { background: #fffaf0; }
+.theater-body { position: relative; display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: clamp(18px,4dvh,42px); width: 100%; margin: 18px auto 0; }
+.theater-film-column { width: min(100%,960px); }
+.theater-screen { position: relative; aspect-ratio: 16/9; border: 4px solid #fffdf3; border-radius: 24px; overflow: hidden; background: #e5dfc8; box-shadow: 0 5px 0 #d9c6a3,0 12px 32px #62553b18; }
+.theater-screen video { display: block; width: 100%; height: 100%; object-fit: contain; }
+.theater-big-play { position: absolute; inset: 50% auto auto 50%; translate: -50% -50%; display: grid; place-items: center; width: 76px; height: 76px; border: 3px solid #fff8e8; border-radius: 50%; background: #fff5dcf2; box-shadow: 0 4px 0 #ac9066; color: #8b6950; }
+.theater-big-play svg { width: 36px; height: 36px; }
+.theater-loading { position: absolute; bottom: 12px; right: 12px; width: 28px; height: 28px; color: #fff9e8; filter: drop-shadow(0 1px 2px #56493b); animation: theater-loading 2s linear infinite; pointer-events: none; }
+.theater-progress { height: 5px; border-radius: 10px; overflow: hidden; margin: 14px 10px 12px; background: #bca88838; }
+.theater-progress span { display: block; height: 100%; background: #91b3a0; border-radius: inherit; }
+.theater-controls { display: flex; gap: 20px; align-items: center; justify-content: center; }
+.theater-primary { width: 76px; height: 72px; background: linear-gradient(#e7efcd,#c5dbb1); color: #567454; }
+.theater-friend { position: relative; width: clamp(136px,25dvh,220px); height: clamp(136px,25dvh,220px); border: 0; border-radius: 50%; background: radial-gradient(ellipse at 50% 80%,#fff8e0bb,transparent 68%); }
+.theater-friend > div { width: 100% !important; height: 100% !important; pointer-events: none; }
+.theater-heart-badge { position: absolute; right: 0; top: 25%; display: grid; place-items: center; width: 44px; height: 44px; background: #fff8e6; border: 2px solid #fff; border-radius: 50%; color: #d497a9; box-shadow: 0 3px 0 #d6bfaf; }
+.theater-hearts { position: absolute; inset: 0; pointer-events: none; }
+.theater-hearts > span { position: absolute; top: 35%; color: #d491a8; }
+@keyframes theater-loading { to { rotate: 360deg; } }
+@media (orientation: landscape) and (max-height: 700px) {
+  .theater-body { flex-direction: row; gap: 20px; margin-top: 10px; }
+  .theater-film-column { width: min(70%, calc((100dvh - 190px) * 16 / 9)); min-width: 210px; }
+  .theater-friend { width: 140px; height: 140px; }
+  .theater-screen { border-radius: 18px; }
+  .theater-progress { margin: 8px 10px; height: 4px; }
+  .theater-controls { gap: 14px; }.theater-primary { width: 72px; height: 64px; }
+}
+@media (prefers-reduced-motion: reduce) { .theater-loading { animation: none; } }

@@ -48,7 +48,7 @@
   box-shadow: inset 0 2px 0 #ffffffb3, inset 0 -3px 0 #695d4310, 0 3px 0 var(--nav-shadow);
   pointer-events: none;
 }
-.home-play-nav-button svg { width: 34px; height: 34px; stroke-width: 2.4; pointer-events: none; }
+
 .home-play-nav-button.nav-drawing { --nav-color: #f2d9cd; --nav-ink: #a36157; --nav-shadow: #dfb7a7; }
 .home-play-nav-button.nav-bugs { --nav-color: #ede5b9; --nav-ink: #85772e; --nav-shadow: #d3c887; }
 .home-play-nav-button.nav-aquarium { --nav-color: #cce9ea; --nav-ink: #397f86; --nav-shadow: #9ccace; }
@@ -61,7 +61,7 @@
   .home-play-nav { padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px); }
   .home-play-nav-items { gap: 0; }
   .home-play-nav-icon { border-radius: 19px; }
-  .home-play-nav-button svg { width: 30px; height: 30px; }
+
 }
 @media (hover: hover) {
   .home-play-nav-button:hover { transform: translateY(-2px); }
@@ -79,72 +79,6 @@
 .storybook-home .buddy-video-badge { pointer-events: auto; }
 .selected-buddy-halo > * { pointer-events: none; }
 .selected-buddy-halo:focus-visible { outline-offset: 3px; }
-
-.home-games .welcome-scene { min-height: 220px; padding: 22px 30px; }
-.home-games .welcome-copy { max-width: 55%; }
-.home-games .welcome-copy h1 { font-size: clamp(27px, 3.5vw, 36px); }
-.home-games .welcome-subtitle { margin: 9px 0 0; }
-.home-games .selected-buddy-stage {
-  position: absolute;
-  width: 166px;
-  height: 166px;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-.home-games .selected-buddy-stage > * {
-  pointer-events: auto;
-}
-.home-games .selected-buddy-stage .selected-buddy-halo {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  left: 0;
-  transform: none;
-  padding: 7px;
-}
-.home-games .buddy-video-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: #fffdf5;
-  border: 3px solid #ffcf71;
-  box-shadow: 0 3.5px 0 #e4a74e, 0 5px 14px rgba(180, 130, 45, 0.18);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 10;
-  animation: buddy-video-badge-pop 2.6s ease-in-out infinite;
-  touch-action: manipulation;
-  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease;
-}
-.home-games .buddy-video-badge:hover {
-  transform: scale(1.12);
-}
-.home-games .buddy-video-badge:active {
-  transform: translateY(3px) scale(0.96);
-  box-shadow: 0 1px 0 #e4a74e;
-}
-.home-games .buddy-video-badge-icon {
-  font-size: 26px;
-  line-height: 1;
-  filter: drop-shadow(0 1px 1px rgba(100, 70, 20, 0.15));
-}
-@keyframes buddy-video-badge-pop {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-4px) rotate(5deg);
-  }
-}
-.home-games .games-section { margin-top: 24px; }
 
 /* Keep 90% of the former artwork + footer + frame height. The artwork now
    fills that entire space; the sizing pseudo-element contains no hidden copy. */
@@ -170,36 +104,59 @@
 }
 .storybook-home .picture-game-card .thumb-bears,
 .storybook-home .picture-game-card .mini-hide-friend { scale: .8; transform-origin: center bottom; }
-.storybook-home .friend-day-card {
-  --day-art-ratio: 2.4;
-  --day-frame: 24px;
-  padding: 10px 18px;
-}
-.storybook-home .friend-day-card > div:first-child { width: 68px; height: 68px; }
 .storybook-home .friend-day-copy { position: relative; }
-/* Preserve 90% of the story card too, replacing its two text lines with art. */
-.storybook-home .friend-day-copy::before {
-  content: '';
-  display: block;
-  padding-top: calc(((100% - 21px) / 4 / var(--day-art-ratio) + clamp(18px, 3vw, 25px) * 1.5 + 26px + var(--day-frame)) * .9 - var(--day-frame));
-}
 .storybook-home .friend-day-copy > .day-mini-pictures { position: absolute; inset: 0; margin: 0; }
 .storybook-home .day-mini-pictures > .game-artwork { min-width: 0; height: 100%; aspect-ratio: auto; }
-
+/* Familiar toys, lit from the top left, on the same cream frames as the house. */
+.home-play-nav-icon { background: linear-gradient(145deg,#fffdf3c9,var(--nav-color)); border-width: 1px; border-color: #e8dcc8; box-shadow: inset 0 2px 0 #fff,0 3px 0 var(--nav-shadow); }
+.nav-toy { display: block; position: relative; width: 58px; height: 58px; pointer-events: none; }
+.nav-toy > svg { width: 100%; height: 100%; }
+.nav-toy-park > span { position: absolute; width: 74%; height: 74%; bottom: 8%; z-index: 1; }
+.nav-toy-park > span:first-child { left: -8%; rotate: -9deg; }.nav-toy-park > span:nth-child(2) { right: -8%; rotate: 9deg; }
+.nav-toy-park > i { position: absolute; bottom: 5%; left: 5%; width: 90%; height: 12%; border-radius: 50%; background: #b9c8a578; }
+.nav-toy-greeting .friend-arm-right { transform-box: view-box; transform-origin: 68px 62px; transform: rotate(-105deg); }
+.nav-wave-pingu .friend-arm-right { transform-origin: 76px 49px; transform: rotate(-65deg); }
+.nav-toy-greeting .nav-wave-lines { position: absolute; inset: 0; }
+.storybook-home .welcome-scene { min-height: 190px; padding-block: 20px; }
+.home-games .welcome-scene { min-height: 166px; padding: 16px 24px; }
+.home-games .welcome-copy .eyebrow, .home-games .welcome-subtitle { display: none; }
+.home-games .welcome-copy { max-width: 55%; }
+.home-games .welcome-copy h1 { font-size: clamp(23px,3vw,32px); }
+.home-games .welcome-friends { left: 43%; }
+.home-games .selected-buddy-stage { position: absolute; top: 50%; transform: translate(-50%,-50%); width: 224px; height: 132px; left: 50%; display: flex; gap: 12px; align-items: center; }
+.home-games .selected-buddy-stage .selected-buddy-halo { position: relative; top: 0; left: 0; transform: none; padding: 7px; width: 136px; height: 132px; flex-shrink: 0; }
+.home-games .selected-buddy-stage .buddy-video-badge { display: grid; place-items: center; border: 2px solid #e5c993; border-radius: 50%; background: linear-gradient(#fffdf4,#fff0cf); box-shadow: 0 3px 0 #c9ac7c; position: static; flex-shrink: 0; width: 64px; height: 64px; border-width: 2px; color: #a5764b; animation: none; }
+.home-games .buddy-video-badge:active { transform: translateY(2px); box-shadow: 0 1px 0 #c9ac7c; }
+.home-games .buddy-video-badge-icon { width: 27px; height: 27px; }
+.home-games .selected-buddy-halo > .buddy-switch-cue { min-height: 33px; display: flex; justify-content: center; gap: 4px; min-width: 67px; height: 33px; bottom: -4px; padding: 2px 7px; background: #fff9e9; border: 1px solid #e3d4bd; box-shadow: 0 2px 0 #d9c7aa; }
+.buddy-switch-friend .nav-toy { width: 35px; height: 31px; }
+.home-games .hero-star { display: none; }
+.home-games .games-section { margin-top: 16px; }
+.storybook-home .section-heading { margin: 16px 0 10px; gap: 8px; }
+.storybook-home .section-heading h2 { font-size: 16px; }
+.storybook-home .step-badge { width: 30px; height: 30px; border-radius: 11px; }
+.storybook-home .step-badge svg { width: 19px; }
+.storybook-home .section-note, .home-footnote { display: none; }
+.storybook-home .friend-day-card { min-height: 76px; padding: 6px 14px; gap: 10px; }
+.storybook-home .friend-day-card > div:first-child { width: 56px; height: 56px; flex-shrink: 0; }
+.storybook-home .friend-day-copy { height: 56px; }
+.storybook-home .friend-day-copy::before { display: none; }
+.home-games .picture-game-card { box-shadow: 0 4px 0 #e2d7c6; }
 @media (max-width: 639px) {
-  .home-games .welcome-scene { min-height: 190px; padding: 18px 16px; }
-  .home-games .welcome-copy h1 { font-size: 25px; }
-  .home-games .welcome-copy .eyebrow { margin-bottom: 8px; font-size: 9px; }
-  .home-games .selected-buddy-stage { width: 124px; height: 124px; left: 45%; }
-  .home-games .selected-buddy-stage .selected-buddy-halo { width: 100%; height: 100%; padding: 6px; }
-  .home-games .selected-buddy-stage .selected-buddy-halo > span { min-width: 88px; min-height: 30px; font-size: 13px; bottom: -7px; }
-  .home-games .selected-buddy-stage .selected-buddy-halo > span svg { width: 16px; height: 16px; }
-  .home-games .buddy-video-badge { width: 44px; height: 44px; top: -4px; right: -4px; border-width: 2.5px; }
-  .home-games .buddy-video-badge-icon { font-size: 22px; }
-  .home-games .hero-star { top: 15px; }
-  .home-games .games-section { margin-top: 20px; }
+  .storybook-home .welcome-scene { min-height: 208px; padding: 16px; border-radius: 28px; }
+  .storybook-home .welcome-copy h1 { font-size: 24px; }.storybook-home .welcome-subtitle { font-size: 12px; margin-bottom: 0; }
+  .home-friends .hero-bunny { bottom: 94px; }.home-friends .hero-dino { bottom: 78px; right: 3%; width: 48%; }
+  .home-games .welcome-scene { min-height: 154px; padding: 12px; }
+  .home-games .welcome-copy { max-width: 40%; }.home-games .welcome-copy h1 { font-size: 22px; }
+  .home-games .welcome-friends { left: 42%; }
+  .home-games .selected-buddy-stage { width: 184px; height: 116px; gap: 6px; }
+  .home-games .selected-buddy-stage .selected-buddy-halo { width: 112px; height: 112px; padding: 4px; }
+  .home-games .selected-buddy-stage .selected-buddy-halo > .buddy-switch-cue svg { width: auto; height: auto; }
+  .home-games .selected-buddy-stage .selected-buddy-halo > .buddy-switch-cue > svg { width: 17px; height: 17px; }
   .storybook-home .picture-game-card { --card-art-ratio: 1.6; --card-chrome-height: 54px; --card-frame: 12px; --card-padding: 4px; }
   .storybook-home .picture-game-card.card-tall { --card-chrome-height: 83.5px; }
-  .storybook-home .friend-day-card { --day-art-ratio: 1.9; --day-frame: 20px; padding: 8px 10px; }
-  .storybook-home .friend-day-card > div:first-child { width: 56px; height: 56px; }
+  .storybook-home .friend-day-card { min-height: 68px; padding: 4px 8px; gap: 6px; }.storybook-home .friend-day-copy { height: 52px; }
+  .storybook-home .friend-day-card > div:first-child { width: 48px; height: 48px; }
 }
+@media (max-width: 359px) { .home-games .welcome-copy h1 { font-size: 19px; }.home-games .welcome-friends { left: 38%; }.nav-toy { width: 50px; height: 54px; } }
+@media (prefers-reduced-motion: reduce) { .home-games .buddy-video-badge, .home-games .buddy-video-badge:hover { transform: none; transition: none; } }

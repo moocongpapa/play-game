@@ -66,12 +66,12 @@ const bgmNotes = new Set<OscillatorNode>();
 
 function applyBgmVolume() {
   if (!bgmVolumeNode || !audioCtx) return;
-  const gain = requestedBgmVolume * (bgmScene === 'sleep' ? .55 : 1) * (bgmDucks.size ? .3 : 1);
+  const gain = requestedBgmVolume * (bgmScene === 'sleep' ? .55 : 1) * (bgmDucks.has('video') ? 0 : bgmDucks.size ? .3 : 1);
   bgmVolumeNode.gain.cancelScheduledValues(audioCtx.currentTime);
   bgmVolumeNode.gain.setTargetAtTime(gain, audioCtx.currentTime, bgmDucks.size ? .09 : .32);
 }
 
-export function setBGMDucked(reason: 'speech' | 'animal' | 'rhythm' | 'instrument' | 'effect', ducked: boolean) {
+export function setBGMDucked(reason: 'speech' | 'animal' | 'rhythm' | 'instrument' | 'effect' | 'video', ducked: boolean) {
   if (ducked) bgmDucks.add(reason); else bgmDucks.delete(reason);
   applyBgmVolume();
 }
