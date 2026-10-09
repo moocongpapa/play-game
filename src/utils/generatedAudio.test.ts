@@ -56,12 +56,6 @@ test('generated effects stay instant, never play late, bound polyphony and stop 
     assert.equal(ready, 1);
     stopGeneratedMusic(); assert.equal(starts, stops);
     assert.equal(failures, 0);
-
-    const beforeMissing = fetches;
-    tryGeneratedEffect('success', ctx); await flush();
-    release!(new Response(null, { status: 404 })); await flush();
-    assert.equal(fetches, beforeMissing + 1, 'a missing effect never falls through to paid generation');
-    assert.equal(starts, stops, 'procedural fallback stays responsible for immediate feedback');
   } finally {
     stopGeneratedEffects(); stopGeneratedMusic();
     for (const [key, descriptor] of originals) { if (descriptor) Object.defineProperty(globalThis, key, descriptor); else Reflect.deleteProperty(globalThis, key); }

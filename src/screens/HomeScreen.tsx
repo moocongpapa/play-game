@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeftRight, ArrowRight, Bug, Fish, Hand, Heart, Palette, Play } from 'lucide-react';
+import { ArrowLeftRight, ArrowRight, Bug, Fish, Hand, Heart, MessageCircle, Palette, Play } from 'lucide-react';
 import { CHARACTER_LIST, CHARACTERS } from '../data/characters';
 import { CharacterAvatar } from '../components/CharacterAvatar';
 import { GameArtwork } from '../components/GameArtwork';
@@ -100,25 +100,14 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
       <div className="game-card-grid" key={selectedCharacter}>{games.filter(id => !GAME_CATALOG[id].category).map(renderCard)}</div>
     </section>}
 
-    {step === 'friends' && <section className="extra-play" aria-label="친구 놀이터">{parkCard}</section>}
+    <section className="extra-play" aria-label="자유 놀이">
+      {step === 'friends' && parkCard}
+      <button onClick={onOpenDrawing} className="extra-drawing"><span className="extra-icon"><Palette /></span><span>색칠 놀이</span><ArrowRight size={18} /></button>
+      <button onClick={onOpenStickerRoom} className="extra-stickers"><span className="extra-icon"><Bug /></span><span>곤충 놀이</span><ArrowRight size={18} /></button>
+      <button onClick={onOpenAquarium} className="extra-aquarium"><span className="extra-icon"><Fish /></span><span>수족관 놀이</span><ArrowRight size={18} /></button>
+      <button onClick={onOpenCharacterTalk} className="extra-talk"><span className="extra-icon"><MessageCircle /></span><span>친구와 인사</span><ArrowRight size={18} /></button>
+    </section>
 
     <p className="home-footnote">작은 손으로 만나는, 커다란 세상</p>
-
-    <nav className="home-play-nav" aria-label="자유 놀이 바로가기">
-      <div className="home-play-nav-items">
-        {[
-          { label: '색칠 놀이', theme: 'drawing', Icon: Palette, open: onOpenDrawing },
-          { label: '곤충 놀이', theme: 'bugs', Icon: Bug, open: onOpenStickerRoom },
-          { label: '수족관 놀이', theme: 'aquarium', Icon: Fish, open: onOpenAquarium },
-          { label: '친구와 인사', theme: 'greeting', Icon: Hand, open: onOpenCharacterTalk },
-        ].map(({ label, theme, Icon, open }) => <button
-          key={theme}
-          type="button"
-          className={`home-play-nav-button nav-${theme}`}
-          aria-label={label}
-          onClick={() => { stopAllSpeech(); playJellyTap(soundEnabled); open(); }}
-        ><Icon aria-hidden="true" /></button>)}
-      </div>
-    </nav>
   </div>;
 };

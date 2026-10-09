@@ -16,7 +16,7 @@ import {
   getCachedDriveFiles,
 } from '../services/googleDrive';
 import { User } from 'firebase/auth';
-import { RotateCcw, X, Heart, Sparkles, Award, Repeat, RefreshCw, ArrowLeft } from 'lucide-react';
+import { RotateCcw, X, Heart, Sparkles, Award, Repeat, RefreshCw, ArrowLeft, Copy, Check, ChevronDown, ChevronUp, FileText } from 'lucide-react';
 
 interface CharacterCharmVideoModalProps {
   isOpen: boolean;
@@ -40,6 +40,8 @@ export const CharacterCharmVideoModal: React.FC<CharacterCharmVideoModalProps> =
   const [cheerCount, setCheerCount] = useState<number>(0);
   const [floatingHearts, setFloatingHearts] = useState<{ id: number; x: number }[]>([]);
   const [rewardClaimed, setRewardClaimed] = useState<boolean>(false);
+  const [showPromptDetails, setShowPromptDetails] = useState<boolean>(false);
+  const [copiedPrompt, setCopiedPrompt] = useState<boolean>(false);
 
   // Google Drive integration states
   const [user, setUser] = useState<User | null>(null);
@@ -321,6 +323,26 @@ export const CharacterCharmVideoModal: React.FC<CharacterCharmVideoModalProps> =
                 title="Google Drive Video Player"
               />
             </div>
+          ) : videoData.hasVideo && videoData.videoUrl ? (
+            /* Local / Generated Veo Video Player */
+            <div className="relative w-full h-full flex flex-col items-center justify-center bg-black rounded-2xl overflow-hidden">
+              <video
+                ref={videoRef}
+                src={videoData.videoUrl}
+                controls
+                autoPlay
+                loop
+                playsInline
+                className="w-full h-full object-contain"
+                onTimeUpdate={(e) => {
+                  const v = e.currentTarget;
+                  if (v.duration) {
+                    setDuration(v.duration);
+                    setCurrentTime(v.currentTime);
+                  }
+                }}
+              />
+            </div>
           ) : (
             /* Animated Motion Stage Frame */
             <>
@@ -447,6 +469,81 @@ export const CharacterCharmVideoModal: React.FC<CharacterCharmVideoModalProps> =
             />
           </div>
         </div>
+
+        {/* Story Theme & AI Video Prompt Details */}
+        {videoData.storyTheme && (
+          <div className="bg-amber-50/90 border-t border-amber-200 p-2 sm:p-3 text-xs">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-sm">❄️</span>
+                <span className="font-extrabold text-amber-800 shrink-0">스토리 테마:</span>
+                <span className="font-bold text-amber-950 truncate">{videoData.storyTheme}</span>
+              </div>
+              {videoData.videoPrompt && (
+                <button
+                  onClick={() => setShowPromptDetails(!showPromptDetails)}
+                  className="px-2.5 py-1 bg-amber-200 hover:bg-amber-300 text-amber-900 rounded-lg font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-colors shrink-0 shadow-xs active:scale-95"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>{showPromptDetails ? '기획 접기' : 'AI 프롬프트'}</span>
+                  {showPromptDetails ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                </button>
+              )}
+            </div>
+
+            {showPromptDetails && videoData.videoPrompt && (
+              <div className="mt-2.5 pt-2.5 border-t border-amber-200/80 space-y-2 text-[11px]">
+                {videoData.dubbingScript && (
+                  <div className="bg-white/80 p-2 rounded-xl border border-amber-200">
+                    <div className="font-black text-amber-800 mb-0.5 flex items-center gap-1">
+                      <span>🎙️</span>
+                      <span>11labs 더빙 음성 스크립트:</span>
+                    </div>
+                    <p className="text-stone-700 font-medium leading-relaxed">
+                      &ldquo;{videoData.dubbingScript}&rdquo;
+                    </p>
+                  </div>
+                )}
+
+                <div className="bg-stone-900 text-amber-100 p-2.5 rounded-xl border border-stone-700 relative">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-bold text-amber-300 flex items-center gap-1">
+                      <span>🎬</span>
+                      <span>Veo / AI Video Prompt (30s)</span>
+                    </span>
+                    <button
+                      onClick={() => {
+                        if (videoData.videoPrompt) {
+                          navigator.clipboard.writeText(videoData.videoPrompt).then(() => {
+                            setCopiedPrompt(true);
+                            setTimeout(() => setCopiedPrompt(false), 2000);
+                          }).catch(() => {});
+                        }
+                      }}
+                      className="px-2 py-0.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-black rounded text-[10px] flex items-center gap-1 cursor-pointer transition-colors active:scale-95"
+                      title="프롬프트 복사"
+                    >
+                      {copiedPrompt ? (
+                        <>
+                          <Check className="w-3 h-3 text-green-950" />
+                          <span>복사 완료!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span>프롬프트 복사</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <pre className="text-[10px] text-stone-300 font-mono whitespace-pre-wrap leading-relaxed max-h-36 overflow-y-auto selection:bg-amber-500 selection:text-black">
+                    {videoData.videoPrompt}
+                  </pre>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

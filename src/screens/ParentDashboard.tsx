@@ -8,7 +8,6 @@ import { isGeminiTTSEnabled, getCharacterAudioStatus, setGeminiTTSEnabled } from
 import type { CharacterAudioStatus } from '../data/audioExperience';
 import { stopGeneratedEffects } from '../services/generatedEffects';
 import { CHARACTER_VOICES, type CharacterVoiceId } from '../data/characterVoices';
-import { GENERATED_SPEECH_COUNT } from '../data/generatedSpeechManifest';
 
 interface ParentDashboardProps {
   appState: AppState;
@@ -266,13 +265,13 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
           </button>
         </div>
         <p className="text-xs sm:text-sm text-[#625d67] mb-3">
-          {Object.keys(CHARACTER_VOICES).length}명의 친구를 위한 안내·인사·칭찬 음성 {GENERATED_SPEECH_COUNT}개를 미리 저장했어요. 저장된 음성은 다른 기기에서도 크레딧 없이 들을 수 있어요.
+          {Object.keys(CHARACTER_VOICES).length}명의 친구에게 어울리는 가볍고 다정한 목소리와 톡톡 튀는 효과음을 ElevenLabs로 준비해요. 한 번 만든 소리는 이 기기에 저장해 다시 사용해요.
         </p>
         <div className={`rounded-2xl px-3 py-2.5 text-xs font-bold mb-3 ${aiAvailable ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-amber-50 text-amber-900 border border-amber-200'}`} role="status">
           {!audioStatus ? 'AI 소리 연결을 확인하고 있어요.'
             : budget?.reason === 'exhausted' ? '이번 달 포함 크레딧을 모두 사용했어요. 저장된 소리와 기기 목소리로 계속 놀 수 있어요.'
             : budget?.reason === 'plan_not_supported' || budget?.reason === 'overage_enabled' ? '추가 과금이 꺼진 Free·Starter 플랜에서만 새 소리를 만들어요. 지금은 저장된 소리와 기기 목소리를 사용해요.'
-            : aiAvailable ? '저장된 음성을 먼저 듣고, 아직 없는 안내와 칭찬만 포함 한도 안에서 준비해요.'
+            : aiAvailable ? '새로운 안내와 칭찬, 효과음을 플랜에 포함된 한도 안에서 준비할 수 있어요.'
             : '새 소리를 준비할 수 없어요. 저장된 소리와 기기 목소리로 계속 놀 수 있어요.'}
           {budget && budget.limit > 0 && <div className="mt-2 space-y-1">
             <p>포함 크레딧 잔여 {budget.remaining.toLocaleString()} / {budget.limit.toLocaleString()}</p>
@@ -281,7 +280,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
         </div>
         <p className="text-[11px] sm:text-xs text-[#625d67] mb-4 break-keep">
           플랜에 포함된 한도가 돌아오면 놀이 중 필요한 새 소리를 다시 준비해요. 추가 결제는 하지 않아요.
-          배경음악 4곡과 효과음 6종도 저장된 파일을 사용해요. 다시 들어도 크레딧을 쓰지 않아요. 새로 만든 개인화 음성은 이 기기에 저장해 다시 사용해요. AI 소리를 꺼도 기본 소리는 유지돼요.
+          배경음악은 한 번 제작해 저장해 둔 음악과 오리지널 연주를 사용해요. 다시 들어도 크레딧을 쓰지 않아요. AI 소리를 꺼도 기본 소리는 유지돼요.
           {' '}음성·음악·효과음 제작: <a href="https://elevenlabs.io" target="_blank" rel="noreferrer" className="underline text-purple-700">ElevenLabs</a>
         </p>
         <h3 className="text-xs font-black text-[#4A3E3D] mb-2">캐릭터 목소리 미리 듣기</h3>

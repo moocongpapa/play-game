@@ -1,7 +1,7 @@
 import { PLAY_EFFECTS, PLAY_EFFECT_REVISION, type PlayEffectId } from '../data/audioExperience';
 import { isPageHidden } from '../utils/pageVisibility';
 import { readSavedAudio, saveAudio, deleteSavedAudio } from './audioCache';
-import { isGeminiTTSEnabled } from './geminiTTS';
+import { getCharacterAudioStatus, isGeminiTTSEnabled, isGeminiVoiceAvailable, rememberAudioResponse } from './geminiTTS';
 
 const buffers = new Map<PlayEffectId, AudioBuffer>();
 const sources = new Set<AudioBufferSourceNode>();
@@ -44,9 +44,18 @@ async function warmEffect(id: PlayEffectId, ctx: AudioContext) {
         }
         return;
       }
-    } catch { /* Offline installs keep the immediate procedural sound. */ }
-    // All six originals ship with the app. A network/storage miss keeps the
-    // procedural effect; it must never generate another copy using credits.
+    } catch { /* Older/offline installs may still use their server's catalog. */ }
+    if (!current() || !(await isGeminiVoiceAvailable()) || (await getCharacterAudioStatus()).engine !== 'elevenlabs' || !current()) return;
+    const response = await fetch('/api/speech', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ effectId: id }), signal: controller.signal });
+    rememberAudioResponse(response);
+    if (!response.ok || response.headers.get('X-Speech-Provider') !== 'elevenlabs') return;
+    const bytes = await response.arrayBuffer();
+    const buffer = await ctx.decodeAudioData(bytes.slice(0));
+    if (!current()) return;
+    buffers.set(id, buffer);
+    void saveAudio({ key, bytes, playbackRate: 1, savedAt: Date.now() });
+    // Never play a late network response. The next real gesture uses this buffer.
   } catch { /* The immediate procedural effect has already played. */ }
   finally { clearTimeout(timeout); if (warming === controller) warming = null; }
 }
