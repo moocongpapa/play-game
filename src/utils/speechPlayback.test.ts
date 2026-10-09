@@ -388,6 +388,18 @@ test('speech playback respects preferences, navigation and uninterrupted repeate
         engine.stopAllSpeech();
       }
     });
+    await t.test('number words use their authored English without changing Korean letter speech', async () => {
+      voices = [{ name: 'Yuna', lang: 'ko-KR' }, { name: 'Samantha', lang: 'en-US' }];
+      ai.setGeminiTTSEnabled(false);
+      engine.setAudioPreferences(true, true);
+      engine.setSpeechLanguage('en');
+      engine.speakText('이', true, { characterId: 'jelly', englishText: 'two', playIntroSFX: false });
+      assert.equal(spoken.at(-1)?.text, 'two');
+      engine.setSpeechLanguage('ko');
+      engine.speakText('이', true, { characterId: 'jelly', englishText: 'two', playIntroSFX: false });
+      assert.equal(spoken.at(-1)?.text, '이');
+      engine.stopAllSpeech();
+    });
   } finally {
     engine.stopAllSpeech(); ai.clearGeminiAudioCache();
     for (const [key, descriptor] of original) {

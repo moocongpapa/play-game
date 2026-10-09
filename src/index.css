@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+.number-card-digits { position: absolute; inset: 3% 14% 38%; display: flex; align-items: center; justify-content: center; gap: 4%; font-family: 'Arial Rounded MT Bold', 'Trebuchet MS', sans-serif; font-size: clamp(48px, 12vw, 98px); font-weight: 900; line-height: 1; }
+.number-card-digits b { color: #dba0b5; text-shadow: 0 3px 0 #fff9ea, 0 5px 0 #b598ab55; transform: rotate(-9deg); }.number-card-digits b:nth-child(2) { color: #dfb46c; transform: translateY(-8px) rotate(6deg); }.number-card-digits b:nth-child(3) { color: #87b9ad; transform: rotate(10deg); }
+.number-card-friends { position: absolute; left: 18%; right: 18%; bottom: 7%; height: 35%; display: flex; gap: 14%; }.number-card-friends > span { display: grid; place-items: center; width: 43%; height: 100%; padding: 3px; border: 2px solid #fff9ec; border-radius: 25%; background: #ecd2dc; box-shadow: 0 3px 0 #b9a29455; }.number-card-friends > span:last-child { background: #cee0cf; }.number-card-friends .toy-art { width: 100%; height: 100%; }
+
 :root { color: #49443d; background: #faf7ef; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; font-synthesis: none; }
 body { margin: 0; }
 button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }

@@ -611,6 +611,8 @@ export function formatKindergartenTeacherText(text: string): string {
 }
 
 export interface SpeakOptions {
+  /** Authored English for context-sensitive learning words, e.g. 이 (two / a letter). */
+  englishText?: string;
   characterId?: string;
   pitch?: number;
   rate?: number;
@@ -709,7 +711,9 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
   if (isPageHidden()) { options.onCancel?.(); return; }
   if (!enabled || !masterSoundEnabled || !speechEnabled) { options.onError?.(); return; }
 
-  const clean = localizeSpeech(text.trim(), speechLanguage, spokenChildName);
+  const clean = speechLanguage === 'en' && options.englishText
+    ? options.englishText.trim()
+    : localizeSpeech(text.trim(), speechLanguage, spokenChildName);
   if (!clean) { options.onError?.(); return; }
   const key = JSON.stringify([
     clean.replace(/\s+/g, ' '), options.characterId || 'ggomi', speechLanguage,

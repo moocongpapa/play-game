@@ -40,6 +40,9 @@ export function GameArtwork({ gameId, buddy = 'jelly' }: { gameId: GameId; buddy
     case 'counting_food':
       scene = <><span className="picnic-cloth" /><Toy emoji="🍓" x={8} y={35} size={27} /><Toy emoji="🍓" x={36} y={35} size={27} /><Toy emoji="🍓" x={64} y={35} size={27} /><span className="counting-dots"><i /><i /><i /></span></>;
       break;
+    case 'number_parade':
+      scene = <><span className="number-card-digits"><b>1</b><b>2</b><b>3</b></span><span className="number-card-friends"><span><ToyArtwork emoji="🐰" /></span><span><ToyArtwork emoji="🐻" /></span></span><Sparkles className="scene-pop" /></>;
+      break;
     case 'cloud_shapes':
       scene = <><Toy emoji="☁️" x={4} y={9} size={49} /><Toy emoji="☁️" x={54} y={31} size={43} /><Toy emoji="⭐" x={18} y={28} size={21} /><Toy emoji="⭐" x={65} y={47} size={19} /></>;
       break;

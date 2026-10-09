@@ -1,0 +1,31 @@
+.number-play { position: relative; display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 14px; width: 100%; height: clamp(440px, calc(100dvh - 116px), 780px); min-height: 0; }
+.number-theater { position: relative; display: grid; place-items: center; min-height: 0; overflow: hidden; border-radius: 28px; background: radial-gradient(ellipse at 50% 45%, #fffcf0 0 18%, #fff7edaa 50%, transparent 75%), linear-gradient(155deg, #f7e9f1, #e8f2ef); box-shadow: inset 0 3px 0 #ffffffb0; }
+.number-display { position: relative; z-index: 2; display: grid; place-items: center; width: min(90%, 510px); height: min(85%, 440px); margin: 0; }
+.number-performer { width: 100%; height: 100%; transform-origin: 50% 85%; }
+.number-art { width: 100%; height: 100%; overflow: visible; font-family: 'Arial Rounded MT Bold', 'Trebuchet MS', sans-serif; font-weight: 900; filter: drop-shadow(0 7px 0 #b6a38a45) drop-shadow(0 12px 12px #bc94a933); }
+.number-rainbow { position: absolute; bottom: -76px; width: min(90%, 620px); height: 240px; border: 22px solid #edbbca65; border-bottom: 0; border-radius: 50% 50% 0 0; box-shadow: inset 0 0 0 16px #eed5a263, inset 0 0 0 32px #b6d8c965, inset 0 0 0 48px #c9c1dd60; }
+.number-cloud { position: absolute; width: 100px; height: 30px; border-radius: 40px; background: #fffdf7a6; animation: number-drift 7s ease-in-out infinite alternate; }
+.number-cloud::before { content: ''; position: absolute; left: 22px; bottom: 8px; width: 50px; height: 43px; background: inherit; border-radius: 50%; }
+.number-cloud-left { left: -18px; top: 22%; }.number-cloud-right { right: -24px; top: 12%; animation-delay: -3s; }
+.number-orbit { position: absolute; inset: 80px 14px 66px; pointer-events: none; }
+.number-orbit > span { position: absolute; left: calc(8% + var(--orbit-index) * 16%); top: var(--orbit-top); opacity: .55; animation: number-float 3.8s ease-in-out infinite; animation-delay: calc(var(--orbit-index) * -.55s); }
+.number-orbit svg { width: clamp(19px, 5vw, 36px); height: auto; }
+.number-burst { position: absolute; z-index: 3; left: 50%; top: 48%; width: 0; height: 0; pointer-events: none; }
+.number-burst > span { position: absolute; width: 26px; height: 26px; margin: -13px; }.number-burst svg { width: 100%; height: 100%; }
+.number-beads { position: absolute; z-index: 3; bottom: 18px; left: 50%; transform: translateX(-50%); display: flex; gap: clamp(4px, 1.2vw, 10px); padding: 8px 12px; border: 2px solid #fffdf3; border-radius: 25px; background: #fff8e6aa; }
+.number-beads > i { width: clamp(12px, 3vw, 20px); height: clamp(12px, 3vw, 20px); border-radius: 50%; border: 2px solid #d1c6b580; background: #fffdfa; transition: background .15s, transform .2s; }
+.number-beads > i[data-lit='true'] { background: var(--bead-color); border-color: #fff7e6; transform: scale(1.12); box-shadow: 0 2px 0 #aa988943; }
+.number-party { position: absolute; top: 26px; display: flex; gap: 14px; color: #d9ad4f; }.number-party > svg { width: 32px; height: 32px; }
+.number-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(16px, 4vw, 30px); width: min(100%, 660px); margin-inline: auto; padding: 0 8px 8px; }
+.number-button { position: relative; display: grid; grid-template-rows: minmax(0, 1fr); place-items: center; height: clamp(104px, 18dvh, 150px); min-width: 64px; min-height: 64px; padding: 8px 28px; border: 3px solid #fffcf1; border-radius: 32px; touch-action: none; cursor: pointer; box-shadow: inset 0 7px 0 #fff9, inset 0 -6px 0 #9d789723, 0 6px 0 #bf9c9e65, 0 8px 15px #9b8a7620; }
+.number-button-native { background: linear-gradient(#fff6ef, #efc6d7); }.number-button-sino { background: linear-gradient(#fffce3, #bfdacb); }
+.number-button > .toy-art { width: min(100%, 108px); height: 100%; max-height: 100%; min-height: 0; }
+.number-button-badge { position: absolute; right: 5px; bottom: 8px; display: grid; place-items: center; width: 44px; height: 36px; border: 2px solid #fffcf3; border-radius: 16px; background: #fff9e9; color: #8a7162; font-size: 20px; font-weight: 900; box-shadow: 0 2px 0 #b09f8033; }
+.number-button:focus-visible { outline: 4px solid #839bcc; outline-offset: 3px; }
+.number-button:disabled { opacity: .7; cursor: default; }
+@keyframes number-float { 0%,100% { transform: translateY(0) rotate(-8deg); } 50% { transform: translateY(-12px) rotate(8deg); } }
+@keyframes number-drift { from { transform: translateX(0); } to { transform: translateX(18px); } }
+@media (max-width: 1024px) { .number-play { flex: 1; height: 100%; gap: 12px; }.number-theater { border-radius: 24px; } }
+@media (max-height: 640px) { .number-play { gap: 8px; }.number-button { height: 96px; }.number-beads { bottom: 8px; padding: 5px 10px; }.number-party { top: 12px; } }
+@media (max-height: 550px) and (orientation: landscape) { .number-play { grid-template-columns: minmax(0, 1fr) minmax(180px, 28%); grid-template-rows: minmax(0, 1fr); }.number-controls { align-self: center; grid-template-columns: 1fr; gap: 12px; padding: 8px; }.number-button { height: 90px; }.number-display { width: min(75%, 380px); }.number-beads { bottom: 6px; } }
+@media (prefers-reduced-motion: reduce) { .number-cloud, .number-orbit > span { animation: none; }.number-beads > i { transition: none; } }

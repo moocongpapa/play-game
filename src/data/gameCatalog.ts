@@ -8,6 +8,7 @@ export const GAME_CATALOG: Record<GameId, { title: string; prompt: string; theme
   korean_letters: { developmentArea: 'language', title: '글자 방울', prompt: '같은 글자 방울을 톡!', theme: 'sky' },
   sound_quiz: { developmentArea: 'language', title: '누구 소리?', prompt: '듣고, 소리의 주인을 찾아봐!', theme: 'music' },
   counting_food: { developmentArea: 'logic', title: '냠냠 숫자', prompt: '하나씩 톡톡, 함께 세어봐!', theme: 'picnic' },
+  number_parade: { developmentArea: 'logic', title: '통통 숫자 놀이터', prompt: '토끼는 하나 둘, 곰은 일 이 삼! 톡톡 숫자를 만나 봐!', theme: 'magic', badge: '통통 · 0부터 100' },
   cloud_shapes: { developmentArea: 'logic', title: '구름 모으기', prompt: '같은 모양 구름을 모아봐!', theme: 'sky' },
   treasure_hunt: { developmentArea: 'logic', title: '보물 찾기', prompt: '숨어 있는 보물을 찾아봐!', theme: 'garden' },
   emotion_quiz: { developmentArea: 'care', title: '마음 얼굴', prompt: '친구의 표정을 살펴봐!', theme: 'picnic' },

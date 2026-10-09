@@ -6,6 +6,7 @@ export type GameId =
   | 'korean_letters'     // 젤리
   | 'sound_quiz'         // 도치
   | 'counting_food'      // 꿀꿀이
+  | 'number_parade'      // 두 가지 읽기로 배우는 0~100 숫자 놀이
   | 'cloud_shapes'       // 음메
   | 'treasure_hunt'      // 누룽지
   // --- 신규 게임 ---

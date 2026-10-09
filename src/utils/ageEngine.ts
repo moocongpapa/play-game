@@ -127,6 +127,7 @@ export function getAvailableGames(ageGroup: AgeGroup): GameId[] {
     'korean_letters',
     'sound_quiz',
     'counting_food',
+    'number_parade',
     'cloud_shapes',
     'treasure_hunt',
     'tooth_brush', 'feeding', 'bubble_pop', 'peekaboo_hide', 'animal_xylophone',

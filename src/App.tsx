@@ -32,6 +32,7 @@ const RanoShapeColorGame = lazy(() => import('./screens/games/RanoShapeColorGame
 const JellyKoreanGame = lazy(() => import('./screens/games/JellyKoreanGame').then(module => ({ default: module.JellyKoreanGame })));
 const DochiSoundGame = lazy(() => import('./screens/games/DochiSoundGame').then(module => ({ default: module.DochiSoundGame })));
 const GgulgguliCountingGame = lazy(() => import('./screens/games/GgulgguliCountingGame').then(module => ({ default: module.GgulgguliCountingGame })));
+const NumberParadeGame = lazy(() => import('./screens/games/NumberParadeGame').then(module => ({ default: module.NumberParadeGame })));
 const EummeCloudShapeGame = lazy(() => import('./screens/games/EummeCloudShapeGame').then(module => ({ default: module.EummeCloudShapeGame })));
 const NurungjiTreasureGame = lazy(() => import('./screens/games/NurungjiTreasureGame').then(module => ({ default: module.NurungjiTreasureGame })));
 const EmotionQuizGame = lazy(() => import('./screens/games/EmotionQuizGame').then(module => ({ default: module.EmotionQuizGame })));
@@ -568,6 +569,8 @@ export default function App() {
                   );
                 case 'path_tracing':
                   return <PathTracingGame buddy={appState.selectedCharacter} onCompleteQuiz={handleCompleteQuiz} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} />;
+                case 'number_parade':
+                  return <NumberParadeGame buddy={appState.selectedCharacter} onCompleteQuiz={handleCompleteQuiz} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} />;
                 case 'fruit_harvest':
                   return <FruitHarvestGame buddy={appState.selectedCharacter} onCompleteQuiz={handleCompleteQuiz} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} />;
                 case 'symmetry_puzzle':
