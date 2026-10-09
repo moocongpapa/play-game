@@ -1,3 +1,4 @@
+import { PLAY_EFFECTS } from '../data/audioExperience';
 import { CHARACTER_VOICES } from '../data/characterVoices';
 import { handleSpeechRequest, type SpeechApiKeys } from './speech';
 import type { SpeechQuota } from './speechQuota';
@@ -7,6 +8,9 @@ const error = (status: number, message: string, headers: Record<string, string> 
   Response.json({ error: message }, { status, headers: { 'Cache-Control': 'no-store', ...headers } });
 
 export function createSpeechEndpoint(keys: SpeechApiKeys, quota: SpeechQuota) {
+  // Verified Free/Starter accounts with overages off have a provider-enforced cap. Without
+  // Redis, restrict the endpoint to that verified path; never expose Gemini.
+  const allowedKeys = quota.configured ? keys : { elevenLabsApiKey: keys.elevenLabsApiKey };
   return async (request: Request, client: string): Promise<Response> => {
     const origin = request.headers.get('origin');
     const site = request.headers.get('sec-fetch-site');
@@ -16,13 +20,13 @@ export function createSpeechEndpoint(keys: SpeechApiKeys, quota: SpeechQuota) {
       return error(403, 'This speech endpoint is only available from the app');
     }
     if (request.method === 'GET') {
-      if (!quota.configured) return Response.json({ available: false, engine: 'none' }, { headers: { 'Cache-Control': 'no-store' } });
-      return handleSpeechRequest('GET', undefined, keys);
+      if (!quota.configured && !allowedKeys.elevenLabsApiKey?.trim()) return Response.json({ available: false, engine: 'none' }, { headers: { 'Cache-Control': 'no-store' } });
+      return handleSpeechRequest('GET', undefined, allowedKeys);
     }
     if (request.method !== 'POST') return error(405, 'Method not allowed', { Allow: 'GET, POST' });
     if (!origin) return error(403, 'Missing app origin');
     if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) return error(415, 'Expected JSON');
-    if (!quota.configured) return error(503, 'AI speech is unavailable; use the device voice');
+    if (!quota.configured && !allowedKeys.elevenLabsApiKey?.trim()) return error(503, 'AI speech is unavailable; use the device voice');
     if (!keys.geminiApiKey?.trim() && !keys.elevenLabsApiKey?.trim()) return error(503, 'AI voice is not configured');
     if (Number(request.headers.get('content-length')) > MAX_BODY_BYTES) return error(413, 'Speech request is too large');
 
@@ -47,18 +51,19 @@ export function createSpeechEndpoint(keys: SpeechApiKeys, quota: SpeechQuota) {
       body = JSON.parse(new TextDecoder().decode(bytes));
     } catch { return error(400, 'Invalid JSON'); }
 
-    if (!body || typeof body.text !== 'string' || !body.text.trim() || body.text.length > 300 ||
+    const validEffect = body && typeof body.effectId === 'string' && Object.hasOwn(PLAY_EFFECTS, body.effectId);
+    if (!body || (!validEffect && (body.effectId !== undefined || typeof body.text !== 'string' || !body.text.trim() || body.text.length > 300 ||
       (body.language !== undefined && !['en', 'ko'].includes(body.language as string)) ||
-      (body.characterId !== undefined && (typeof body.characterId !== 'string' || !Object.hasOwn(CHARACTER_VOICES, body.characterId)))) {
+      (body.characterId !== undefined && (typeof body.characterId !== 'string' || !Object.hasOwn(CHARACTER_VOICES, body.characterId)))))) {
       return error(400, 'Invalid speech request');
     }
     try {
-      const allowance = await quota.consume(client);
+      const allowance = quota.configured ? await quota.consume(client) : { allowed: true, retryAfter: 0 };
       if (!allowance.allowed) return error(429, 'Speech request limit reached', { 'Retry-After': String(Math.max(1, allowance.retryAfter)) });
     } catch {
       // Never spend provider quota when the shared limiter cannot reserve a slot.
       return error(503, 'AI speech is temporarily unavailable', { 'Retry-After': '60' });
     }
-    return handleSpeechRequest('POST', body, keys);
+    return handleSpeechRequest('POST', body, allowedKeys);
   };
 }

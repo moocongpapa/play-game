@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSpeechEndpoint } from './speechEndpoint';
 import { createLocalSpeechQuota, createRedisSpeechQuota, SPEECH_QUOTA_SCRIPT } from './speechQuota';
+import { freePlan } from './audioTestFixtures';
 
 const request = (body: unknown = { text: 'Hello, friend!', characterId: 'jelly', language: 'en' }, headers: Record<string, string> = {}) =>
   new Request('https://game.example/api/speech', { method: 'POST', headers: { Origin: 'https://game.example', 'Content-Type': 'application/json', ...headers }, body: typeof body === 'string' ? body : JSON.stringify(body) });
@@ -34,6 +35,28 @@ test('chunked oversized bodies are bounded, not only Content-Length declarations
     duplex: 'half',
   } as RequestInit);
   assert.equal((await endpoint(input, 'client')).status, 413);
+});
+
+test('without Redis only verified included credits are reachable, including the authorized Starter plan', async () => {
+  const original = globalThis.fetch;
+  let overage = 0, generated = 0;
+  globalThis.fetch = async (url) => {
+    assert.ok(String(url).includes('elevenlabs.io'), 'Gemini must never be reachable without the shared limiter');
+    if (String(url).includes('/user/subscription')) return Response.json({ ...freePlan, tier: 'starter', character_limit: 30000, max_credit_limit_extension: overage });
+    generated++;
+    return new Response(new Uint8Array(150));
+  };
+  try {
+    const endpoint = createSpeechEndpoint({ geminiApiKey: 'blocked', elevenLabsApiKey: 'test' }, createRedisSpeechQuota());
+    const status = await (await endpoint(new Request('https://game.example/api/speech'), 'client')).json();
+    assert.equal(status.elevenLabs.limit, 30000);
+    assert.equal(status.elevenLabs.eligible, true);
+    assert.equal((await endpoint(request(), 'client')).status, 200);
+    overage = 1000;
+    assert.equal((await endpoint(request(), 'client')).status, 503);
+    assert.equal((await endpoint(request({ effectId: '__proto__' }), 'client')).status, 400);
+    assert.equal(generated, 1, 'enabling account overages disables further app generation');
+  } finally { globalThis.fetch = original; }
 });
 
 test('rate limits and storage outages block generation; an expired minute admits play again', async () => {

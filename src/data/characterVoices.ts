@@ -2,8 +2,9 @@ import type { CharacterId } from '../types';
 
 // Keep provider choices, character direction and offline playback in one place.
 // ElevenLabs' catalogue describes Jessica and Laura as young adult female voices;
-// they are gentle fallbacks, not recordings of children. Gemini supports age/style direction.
-export const CHARACTER_VOICE_REVISION = 'youthful-2026-10-08';
+// they are light character bases, not recordings of children. Gentle pitch lift
+// and individual pacing keep the cast small and friendly without adult bass.
+export const CHARACTER_VOICE_REVISION = 'eleven-first-2026-10-09';
 const JESSICA = 'cgSgspJ2msm6clMCkdW9';
 const LAURA = 'FGY2WhTYpPnrIDTdsKH5';
 const childStyle = (delivery: string) => `Speak natural Korean as a young child character in an animated picture book. Use a light, youthful, high-register voice with small, soft resonance and clear words. ${delivery} Speak gently to a preschool playmate, at a relaxed pace and steady comfortable volume. Avoid adult-sounding bass, gravel, growls, shouting, breathy adult narration, shrill squeaks and exaggerated baby talk.`;

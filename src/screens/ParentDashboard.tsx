@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { AppState, ChildProfile, SpeechLanguage } from '../types';
 import { JellyButton } from '../components/JellyButton';
 import { Shield, Clock, Volume2, Music, Sparkles, Home, RotateCcw, Mic, Calendar, User, CheckCircle2 } from 'lucide-react';
-import { speakText } from '../utils/soundEngine';
+import { speakText, stopAllSpeech } from '../utils/soundEngine';
 import { calculateAgeMonths, determineAgeGroup, getAgeGroupLabel, getAgeGroupEmoji, getAgeGroupDescription } from '../utils/ageEngine';
-import { isGeminiTTSEnabled, isGeminiVoiceAvailable, setGeminiTTSEnabled } from '../services/geminiTTS';
+import { isGeminiTTSEnabled, getCharacterAudioStatus, setGeminiTTSEnabled } from '../services/geminiTTS';
+import type { CharacterAudioStatus } from '../data/audioExperience';
+import { stopGeneratedEffects } from '../services/generatedEffects';
 import { CHARACTER_VOICES, type CharacterVoiceId } from '../data/characterVoices';
 
 interface ParentDashboardProps {
@@ -43,12 +45,14 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   const [editBirthDate, setEditBirthDate] = useState(appState.childProfile?.birthDate || '2023-01-03');
 
   const [geminiEnabled, setGeminiEnabled] = useState(isGeminiTTSEnabled());
-  const [aiAvailable, setAiAvailable] = useState<boolean | null>(null);
+  const [audioStatus, setAudioStatus] = useState<CharacterAudioStatus | null>(null);
+  const aiAvailable = audioStatus?.available;
+  const budget = audioStatus?.elevenLabs;
   const [previewStatus, setPreviewStatus] = useState('');
 
   useEffect(() => {
     let mounted = true;
-    void isGeminiVoiceAvailable().then(ready => { if (mounted) setAiAvailable(ready); });
+    void getCharacterAudioStatus().then(status => { if (mounted) setAudioStatus(status); });
     return () => { mounted = false; };
   }, []);
 
@@ -243,32 +247,42 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
       <section className="w-full bg-white p-4 sm:p-5 rounded-3xl border-2 border-purple-200 shadow-sm mb-3 text-left" aria-labelledby="character-voice-title">
         <div className="flex items-center justify-between gap-3 mb-2">
           <h2 id="character-voice-title" className="text-base sm:text-lg font-black text-[#4A3E3D] flex items-center gap-2">
-            <Mic className="w-5 h-5 text-purple-600" /> 캐릭터 AI 목소리
+            <Mic className="w-5 h-5 text-purple-600" /> 친구 목소리와 놀이 소리
           </h2>
           <button
             type="button"
             onClick={() => {
               const next = !geminiEnabled;
               setGeminiEnabled(next);
+              stopAllSpeech();
+              stopGeneratedEffects();
               setGeminiTTSEnabled(next);
             }}
             aria-pressed={geminiEnabled}
             className={`px-3 py-1.5 rounded-full font-bold text-xs border cursor-pointer ${geminiEnabled ? 'bg-purple-600 text-white border-purple-700' : 'bg-gray-100 text-gray-600 border-gray-300'}`}
           >
-            {geminiEnabled ? 'AI 음성 켜짐' : 'AI 음성 꺼짐'}
+            {geminiEnabled ? 'AI 소리 켜짐' : 'AI 소리 꺼짐'}
           </button>
         </div>
         <p className="text-xs sm:text-sm text-[#625d67] mb-3">
-          {Object.keys(CHARACTER_VOICES).length}명의 친구가 서로 다른 목소리와 말투로 이야기해요.
+          {Object.keys(CHARACTER_VOICES).length}명의 친구에게 어울리는 가볍고 다정한 목소리와 톡톡 튀는 효과음을 ElevenLabs로 준비해요. 한 번 만든 소리는 이 기기에 저장해 다시 사용해요.
         </p>
         <div className={`rounded-2xl px-3 py-2.5 text-xs font-bold mb-3 ${aiAvailable ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-amber-50 text-amber-900 border border-amber-200'}`} role="status">
-          {aiAvailable === null ? 'AI 음성 연결을 확인하고 있어요.' : aiAvailable ? 'AI 음성 키가 연결됐어요. 아래에서 목소리를 확인해 보세요.' : 'AI 음성이 아직 설정되지 않았어요. 지금은 기기 기본 목소리가 재생돼요.'}
+          {!audioStatus ? 'AI 소리 연결을 확인하고 있어요.'
+            : budget?.reason === 'exhausted' ? '이번 달 포함 크레딧을 모두 사용했어요. 저장된 소리와 기기 목소리로 계속 놀 수 있어요.'
+            : budget?.reason === 'plan_not_supported' || budget?.reason === 'overage_enabled' ? '추가 과금이 꺼진 Free·Starter 플랜에서만 새 소리를 만들어요. 지금은 저장된 소리와 기기 목소리를 사용해요.'
+            : aiAvailable ? '새로운 안내와 칭찬, 효과음을 플랜에 포함된 한도 안에서 준비할 수 있어요.'
+            : '새 소리를 준비할 수 없어요. 저장된 소리와 기기 목소리로 계속 놀 수 있어요.'}
+          {budget && budget.limit > 0 && <div className="mt-2 space-y-1">
+            <p>포함 크레딧 잔여 {budget.remaining.toLocaleString()} / {budget.limit.toLocaleString()}</p>
+            {budget.resetsAt && <p>다음 초기화: {new Date(budget.resetsAt * 1000).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>}
+          </div>}
         </div>
-        {!aiAvailable && (
-          <p className="text-[11px] sm:text-xs text-[#625d67] mb-4 break-keep">
-            설정 방법: 로컬은 <code className="font-mono">.env.local</code>, 배포 서버는 환경 변수에 <code className="font-mono">GEMINI_API_KEY</code>를 넣고 다시 실행해 주세요. API 키는 이 화면에 입력하지 않습니다.
-          </p>
-        )}
+        <p className="text-[11px] sm:text-xs text-[#625d67] mb-4 break-keep">
+          플랜에 포함된 한도가 돌아오면 놀이 중 필요한 새 소리를 다시 준비해요. 추가 결제는 하지 않아요.
+          배경음악은 한 번 제작해 저장해 둔 음악과 오리지널 연주를 사용해요. 다시 들어도 크레딧을 쓰지 않아요. AI 소리를 꺼도 기본 소리는 유지돼요.
+          {' '}음성·음악·효과음 제작: <a href="https://elevenlabs.io" target="_blank" rel="noreferrer" className="underline text-purple-700">ElevenLabs</a>
+        </p>
         <h3 className="text-xs font-black text-[#4A3E3D] mb-2">캐릭터 목소리 미리 듣기</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {(Object.entries(CHARACTER_VOICES) as [CharacterVoiceId, typeof CHARACTER_VOICES[CharacterVoiceId]][]).map(([id, character]) => (
@@ -362,7 +376,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
 
       {/* Quick Actions */}
       <p className="text-xs text-center text-stone-500 mb-4">
-        배경음악 6곡이 골고루 바뀌어요.{' '}
+        놀이 음악은 골고루 바뀌고, 잠자리에서는 포근한 자장가가 나와요.{' '}
         <a href="/audio/CREDITS.html" target="_blank" rel="noreferrer" className="underline">동물 녹음 출처</a>
       </p>
       <div className="w-full flex gap-2.5 sm:gap-3 mb-4">

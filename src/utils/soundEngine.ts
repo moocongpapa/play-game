@@ -6,10 +6,12 @@ import { ANIMAL_RECORDINGS, resolveAnimalSound } from '../data/animalSounds';
 import { createRoundDeck } from './roundDeck';
 import { createRecordedAudioPlayer, type PlaybackResult } from './recordedAudio';
 import { isPageHidden } from './pageVisibility';
+import { startGeneratedMusic, stopGeneratedMusic } from '../services/generatedMusic';
+import { tryGeneratedEffect, stopGeneratedEffects, setGeneratedEffectsEnabled } from '../services/generatedEffects';
 // Web Audio API & Multi-Engine Speech Synthesis for Toddlers (Ages 3~4)
 // High-fidelity sound effects, nursery rhyme procedural BGM, and warm kindergarten teacher voices.
 
-import { playGeminiSpeech, stopGeminiAudio, isGeminiTTSEnabled, getCachedGeminiVoiceAvailability } from '../services/geminiTTS';
+import { playGeminiSpeech, stopGeminiAudio, isGeminiTTSEnabled } from '../services/geminiTTS';
 
 let masterSoundEnabled = true;
 let speechEnabled = true;
@@ -26,6 +28,7 @@ export function setSpeechLanguage(language: SpeechLanguage, childName = spokenCh
 
 export function setAudioPreferences(sound: boolean, speech = true) {
   masterSoundEnabled = sound;
+  setGeneratedEffectsEnabled(sound);
   speechEnabled = speech;
   if (!sound || !speech) stopAllSpeech();
   if (!sound) { stopPlaySounds(); stopBGM(); void audioCtx?.suspend(); }
@@ -73,27 +76,40 @@ export function setBGMDucked(reason: 'speech' | 'animal' | 'rhythm' | 'instrumen
   applyBgmVolume();
 }
 
-function musicNote(ctx: AudioContext, midi: number, duration: number, bass = false) {
+function musicNote(ctx: AudioContext, midi: number, duration: number, bass = false, level = 1, pan = 0) {
   if (!bgmVolumeNode || !currentTrack || !midi) return;
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  const now = ctx.currentTime;
-  osc.type = currentTrack.instrument === 'marimba' && !bass ? 'triangle' : 'sine';
-  osc.frequency.value = 440 * 2 ** ((midi - 69) / 12);
-  const peak = bass ? .09 : .16;
-  const attack = currentTrack.instrument === 'flute' ? .09 : .02;
-  gain.gain.setValueAtTime(.0001, now);
-  gain.gain.linearRampToValueAtTime(peak, now + attack);
-  gain.gain.exponentialRampToValueAtTime(.0001, now + Math.max(.15, duration * .94));
-  osc.connect(gain);
-  gain.connect(bgmVolumeNode);
-  bgmNotes.add(osc);
-  osc.onended = () => { bgmNotes.delete(osc); osc.disconnect(); gain.disconnect(); };
-  osc.start(now);
-  osc.stop(now + duration);
-  if (!bass && currentTrack.instrument === 'musicbox') {
-    musicNote(ctx, midi + 12, duration * .7, true);
-  }
+  const instrument = currentTrack.instrument;
+  // Additive voices: wooden resonances, soft flute harmonics, and little metal
+  // tines. Higher partials decay sooner so the melody stays warm, never piercing.
+  const partials = bass ? [[1, 1, 1], [2, .12, .65]]
+    : instrument === 'marimba' ? [[1, 1, 1], [4, .16, .35], [10, .022, .12]]
+    : instrument === 'flute' ? [[1, 1, 1], [2, .17, .85], [3, .055, .65]]
+    : [[1, 1, 1], [2.76, .14, .5], [5.4, .025, .2]];
+  const fundamental = 440 * 2 ** ((midi - 69) / 12);
+  partials.forEach(([ratio, strength, decay], index) => {
+    while (bgmNotes.size >= 64) {
+      const oldest = bgmNotes.values().next().value!;
+      bgmNotes.delete(oldest);
+      try { oldest.stop(); } catch { /* Already ended. */ }
+    }
+    const osc = ctx.createOscillator(), gain = ctx.createGain();
+    const panner = typeof ctx.createStereoPanner === 'function' ? ctx.createStereoPanner() : null;
+    const now = ctx.currentTime;
+    const length = Math.max(.12, duration * decay);
+    const attack = !bass && instrument === 'flute' ? Math.min(.07, length * .25) : .009;
+    const peak = (bass ? .075 : .13) * strength * level;
+    osc.type = 'sine';
+    osc.frequency.value = fundamental * ratio;
+    gain.gain.setValueAtTime(.0001, now);
+    gain.gain.linearRampToValueAtTime(peak, now + attack);
+    gain.gain.exponentialRampToValueAtTime(.0001, now + length);
+    osc.connect(gain);
+    if (panner) { panner.pan.value = bass ? 0 : pan + (index - 1) * .06; gain.connect(panner); panner.connect(bgmVolumeNode!); }
+    else gain.connect(bgmVolumeNode!);
+    bgmNotes.add(osc);
+    osc.onended = () => { bgmNotes.delete(osc); osc.disconnect(); gain.disconnect(); panner?.disconnect(); };
+    osc.start(now); osc.stop(now + length + .025);
+  });
 }
 
 export function startBGM(volume = requestedBgmVolume) {
@@ -109,6 +125,8 @@ export function startBGM(volume = requestedBgmVolume) {
     bgmVolumeNode.gain.setValueAtTime(0, ctx.currentTime);
     bgmVolumeNode.connect(ctx.destination);
     applyBgmVolume();
+    let checkedRecordings = false;
+    let recordedPlaying = false;
     const step = () => {
       if (!isBgmPlaying || !currentTrack) return;
       // Do not queue notes at time zero while autoplay is awaiting the first tap.
@@ -116,9 +134,28 @@ export function startBGM(volume = requestedBgmVolume) {
         bgmOscillatorInterval = window.setTimeout(step, 250);
         return;
       }
+      if (!checkedRecordings) {
+        checkedRecordings = true;
+        startGeneratedMusic(ctx, bgmVolumeNode!, bgmScene, () => {
+          if (!isBgmPlaying) return;
+          recordedPlaying = true;
+          if (bgmOscillatorInterval !== null) window.clearTimeout(bgmOscillatorInterval);
+          bgmOscillatorInterval = null;
+          for (const note of bgmNotes) { try { note.stop(); } catch { /* Finished. */ } }
+          bgmNotes.clear();
+        }, () => {
+          if (recordedPlaying && isBgmPlaying) { recordedPlaying = false; step(); }
+        });
+      }
       const duration = currentTrack.beats[noteIndex] * 60 / currentTrack.bpm;
       musicNote(ctx, currentTrack.notes[noteIndex], duration);
-      if (noteIndex % 4 === 0) musicNote(ctx, currentTrack.bass[Math.floor(noteIndex / 4) % currentTrack.bass.length], duration * 1.6, true);
+      const root = currentTrack.bass[Math.floor(noteIndex / 4) % currentTrack.bass.length];
+      if (noteIndex % 4 === 0) {
+        musicNote(ctx, root, duration * 1.6, true);
+        if (bgmScene !== 'sleep') musicNote(ctx, root + 19, duration * 1.3, false, .18, -.2);
+      } else if (noteIndex % 4 === 2 && bgmScene !== 'sleep') {
+        musicNote(ctx, root + 24, duration, false, .22, .2);
+      }
       noteIndex += 1;
       let pause = 0;
       if (noteIndex === currentTrack.notes.length) {
@@ -139,6 +176,7 @@ export function startBGM(volume = requestedBgmVolume) {
 }
 
 export function stopBGM() {
+  stopGeneratedMusic();
   isBgmPlaying = false;
   if (bgmOscillatorInterval !== null) window.clearTimeout(bgmOscillatorInterval);
   bgmOscillatorInterval = null;
@@ -164,6 +202,7 @@ export function playJellyTap(enabled = true) {
   if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const ctx = getAudioContext();
+    if (tryGeneratedEffect('tap', ctx)) { return; }
     const pitch = randomEffectPitch();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -195,6 +234,7 @@ export function playBouncyBoing(enabled = true) {
   if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const ctx = getAudioContext();
+    if (tryGeneratedEffect('bounce', ctx)) { return; }
     const pitch = randomEffectPitch();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -227,6 +267,7 @@ export function playBalloonPop(enabled = true) {
   if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const ctx = getAudioContext();
+    if (tryGeneratedEffect('pop', ctx)) { duckForEffect(550); return; }
     const pitch = randomEffectPitch();
     const now = ctx.currentTime;
     duckForEffect(220);
@@ -317,6 +358,7 @@ export function playSparkleChime(enabled = true) {
   if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const ctx = getAudioContext();
+    if (tryGeneratedEffect('sparkle', ctx)) { duckForEffect(1050); return; }
     duckForEffect(500);
     const pitches = [1046.50, 1318.51, 1567.98, 2093.00, 2637.02]; // C6, E6, G6, C7, E7
     pitches.forEach((freq, idx) => {
@@ -348,6 +390,7 @@ export function playCelebrationFanfare(enabled = true) {
   if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const ctx = getAudioContext();
+    if (tryGeneratedEffect('success', ctx)) { duckForEffect(1600); return; }
     duckForEffect(1000);
     const melody = [
       { f: 523.25, t: 0.00, d: 0.12 }, // C5
@@ -627,7 +670,7 @@ function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions
 
 /**
  * Master voice speaker:
- * Gemini character audio when configured, with browser speech as the fallback.
+ * ElevenLabs character audio and saved clips when configured, with browser speech as the fallback.
  */
 export function speakText(text: string, enabled = true, options: SpeakOptions = {}) {
   if (isPageHidden()) { options.onCancel?.(); return; }
@@ -669,7 +712,7 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
 
   setBGMDucked('speech', true);
 
-  if (isGeminiTTSEnabled() && getCachedGeminiVoiceAvailability() !== false) {
+  if (isGeminiTTSEnabled()) {
     try {
       const ctx = getAudioContext();
       playGeminiSpeech(clean, {
@@ -684,7 +727,7 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
         if (requestId === speechRequestId) speakWithBrowserTTS(clean, enabled, options);
       });
     } catch (error) {
-      console.warn('Gemini audio unavailable:', error);
+      console.warn('Character audio unavailable:', error);
       if (requestId === speechRequestId) speakWithBrowserTTS(clean, enabled, options);
     }
     return;
@@ -745,6 +788,7 @@ function trackEffect(voice: AudioScheduledSourceNode, gain: GainNode) {
   voice.onended = () => { effectVoices.delete(voice); voice.disconnect(); gain.disconnect(); };
 }
 export function stopPlaySounds() {
+  stopGeneratedEffects();
   if (effectDuckTimer !== null) window.clearTimeout(effectDuckTimer);
   effectDuckTimer = null;
   effectDuckUntil = 0;
@@ -807,6 +851,7 @@ export function playCareSound(kind: 'brush' | 'chew' | 'bubble', enabled = true)
       playToyTone(210 * pitch, .16, .075, 130 * pitch);
       playToyTone(250 * pitch, .18, .055, 160 * pitch, .18);
     } else {
+      if (tryGeneratedEffect('bubble', getAudioContext())) { duckForEffect(550); return; }
       const frequency = 920 * pitch;
       duckForEffect(200);
       playToyTone(frequency, .2, .085, frequency * 1.65);
