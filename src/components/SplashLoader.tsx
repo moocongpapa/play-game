@@ -32,18 +32,18 @@ const SPLASH_CHARACTERS: ReadonlyArray<{
   delay: number;
   phrase: string;
 }> = [
-  { id: 'ggomi', name: '꼬미', badge: '🎀', color: '#FF80AB', bg: '#ffeaf2', delay: 0.5, phrase: '안녕!' },
-  { id: 'rano', name: '라노', badge: '🦖', color: '#66BB6A', bg: '#e8f5e9', delay: 0.8, phrase: '크앙!' },
-  { id: 'jelly', name: '젤리', badge: '🐰', color: '#AB47BC', bg: '#f3e5f5', delay: 1.1, phrase: '깡총!' },
-  { id: 'dochi', name: '도치', badge: '🦔', color: '#FFA726', bg: '#fff3e0', delay: 1.4, phrase: '데굴!' },
-  { id: 'ggulgguli', name: '꿀꿀이', badge: '🐷', color: '#FF8A80', bg: '#ffebee', delay: 1.8, phrase: '짝짝!' },
-  { id: 'eumme', name: '음메', badge: '🐑', color: '#78909C', bg: '#eceff1', delay: 2.1, phrase: '폴짝!' },
-  { id: 'nurungji', name: '누룽지', badge: '🐶', color: '#FFB74D', bg: '#fff8e1', delay: 2.4, phrase: '살랑!' },
-  { id: 'pingu', name: '핑구', badge: '🐧', color: '#66B9C8', bg: '#e0f7fa', delay: 2.7, phrase: '씽씽!' },
+  { id: 'ggomi', name: '꼬미', badge: '🎀', color: '#FF80AB', bg: '#ffeaf2', delay: 0.25, phrase: '안녕!' },
+  { id: 'rano', name: '라노', badge: '🦖', color: '#66BB6A', bg: '#e8f5e9', delay: 0.5, phrase: '크앙!' },
+  { id: 'jelly', name: '젤리', badge: '🐰', color: '#AB47BC', bg: '#f3e5f5', delay: 0.75, phrase: '깡총!' },
+  { id: 'dochi', name: '도치', badge: '🦔', color: '#FFA726', bg: '#fff3e0', delay: 1.0, phrase: '데굴!' },
+  { id: 'ggulgguli', name: '꿀꿀이', badge: '🐷', color: '#FF8A80', bg: '#ffebee', delay: 1.25, phrase: '짝짝!' },
+  { id: 'eumme', name: '음메', badge: '🐑', color: '#78909C', bg: '#eceff1', delay: 1.5, phrase: '폴짝!' },
+  { id: 'nurungji', name: '누룽지', badge: '🐶', color: '#FFB74D', bg: '#fff8e1', delay: 1.75, phrase: '살랑!' },
+  { id: 'pingu', name: '핑구', badge: '🐧', color: '#66B9C8', bg: '#e0f7fa', delay: 2.0, phrase: '씽씽!' },
 ];
 
 const TAP_EMOJIS = ['⭐', '💖', '✨', '🎈', '🎉', '🌟', '🌈'];
-const TOTAL_DURATION_MS = 5000;
+const TOTAL_DURATION_MS = 5200;
 
 export const SplashLoader: React.FC<SplashLoaderProps> = ({ onFinish, childName, soundEnabled = true }) => {
   const [progress, setProgress] = useState(0);
@@ -63,13 +63,13 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onFinish, childName,
       playWelcomeFanfare(true);
     }
 
-    // Choreographed sound cues for entrances and celebration
+    // Choreographed sound cues: rapid wave arrivals then grand celebration
     const waveTimers = [
-      setTimeout(() => soundEnabled && playBubblePop(true), 600),
-      setTimeout(() => soundEnabled && playBubblePop(true), 1200),
-      setTimeout(() => soundEnabled && playBubblePop(true), 1900),
-      setTimeout(() => soundEnabled && playBubblePop(true), 2500),
-      setTimeout(() => soundEnabled && playCelebrationFanfare(true), 3300),
+      setTimeout(() => soundEnabled && playBubblePop(true), 250),
+      setTimeout(() => soundEnabled && playBubblePop(true), 750),
+      setTimeout(() => soundEnabled && playBubblePop(true), 1250),
+      setTimeout(() => soundEnabled && playBubblePop(true), 1750),
+      setTimeout(() => soundEnabled && playCelebrationFanfare(true), 2200),
     ];
 
     const start = performance.now();
@@ -84,7 +84,7 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onFinish, childName,
         window.clearInterval(interval);
         handleFinish();
       }
-    }, 35);
+    }, 30);
 
     return () => {
       window.clearInterval(interval);
@@ -109,7 +109,8 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onFinish, childName,
     return () => clearTimeout(timer);
   }, [taps]);
 
-  const isCelebrationPhase = elapsed >= 3300;
+  const isCelebrationPhase = elapsed >= 2200;
+  const arrivedCount = SPLASH_CHARACTERS.filter(f => elapsed >= f.delay * 1000).length;
 
   return (
     <div
@@ -211,9 +212,8 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onFinish, childName,
                       }
                     : {
                         type: 'spring',
-                        stiffness: 280,
+                        stiffness: 300,
                         damping: 18,
-                        delay: reducedMotion ? 0 : friend.delay,
                       }
                 }
               >
@@ -251,7 +251,11 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onFinish, childName,
           </div>
         </div>
         <p className="splash-progress-hint">
-          {isCelebrationPhase ? '놀이숲 문이 활짝 열려요! 🎈' : '신나는 친구들을 깨우는 중이에요...'}
+          {arrivedCount < 8
+            ? `친구들이 모이고 있어요! (${arrivedCount}/8) 🎶`
+            : elapsed >= 4500
+              ? '놀이숲 문이 활짝 열려요! 🎈'
+              : '다 모였어요! 우리 함께 신나게 놀자! 🌈✨'}
         </p>
       </footer>
 
