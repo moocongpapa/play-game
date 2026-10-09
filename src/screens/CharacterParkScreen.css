@@ -13,16 +13,16 @@
 .park-pause[aria-pressed='true'] { background: #f7dfa9; color: #897145; }
 .park-pause > svg { width: 25px; height: 25px; }
 .park-field { position: absolute; inset: 87px 12px 32px; }
-.park-friend { --step-duration: .78s; --step-lift: -2px; --step-roll: 2deg; --leg-swing: 12deg; position: absolute; top: 0; left: 0; width: var(--park-size); height: var(--park-size); margin-left: calc(var(--park-size) / -2); margin-top: calc(var(--park-size) / -2); border: 0; border-radius: 42%; background: transparent; padding: 0; cursor: pointer; will-change: transform; }
+.park-friend { --step-duration: .56s; --step-lift: -2px; --step-roll: 2deg; --leg-swing: 12deg; position: absolute; top: 0; left: 0; width: var(--park-size); height: var(--park-size); margin-left: calc(var(--park-size) / -2); margin-top: calc(var(--park-size) / -2); border: 0; border-radius: 42%; background: transparent; padding: 0; cursor: pointer; will-change: transform; }
 /* Each friend has a recognisable weight and gait, with one shared position loop. */
-.park-friend[data-park-friend='ggomi'] { --step-duration: .9s; --step-roll: 3deg; --leg-swing: 10deg; }
-.park-friend[data-park-friend='rano'] { --step-duration: .7s; --step-lift: -3px; --leg-swing: 15deg; }
-.park-friend[data-park-friend='jelly'] { --step-duration: .74s; --step-lift: -5px; --step-roll: 1deg; --leg-swing: 15deg; }
-.park-friend[data-park-friend='dochi'] { --step-duration: .82s; --step-lift: -1px; --step-roll: 2deg; --leg-swing: 8deg; }
-.park-friend[data-park-friend='ggulgguli'] { --step-duration: .76s; --step-lift: -3px; --step-roll: 3deg; }
-.park-friend[data-park-friend='eumme'] { --step-duration: .88s; --step-lift: -4px; --step-roll: 1deg; --leg-swing: 11deg; }
-.park-friend[data-park-friend='nurungji'] { --step-duration: .58s; --step-lift: -3px; --leg-swing: 17deg; }
-.park-friend[data-park-friend='pingu'] { --step-duration: .96s; --step-lift: -1px; --step-roll: 6deg; --leg-swing: 7deg; }
+.park-friend[data-park-friend='ggomi'] { --step-duration: .65s; --step-roll: 3deg; --leg-swing: 10deg; }
+.park-friend[data-park-friend='rano'] { --step-duration: .5s; --step-lift: -3px; --leg-swing: 15deg; }
+.park-friend[data-park-friend='jelly'] { --step-duration: .53s; --step-lift: -5px; --step-roll: 1deg; --leg-swing: 15deg; }
+.park-friend[data-park-friend='dochi'] { --step-duration: .59s; --step-lift: -1px; --step-roll: 2deg; --leg-swing: 8deg; }
+.park-friend[data-park-friend='ggulgguli'] { --step-duration: .55s; --step-lift: -3px; --step-roll: 3deg; }
+.park-friend[data-park-friend='eumme'] { --step-duration: .63s; --step-lift: -4px; --step-roll: 1deg; --leg-swing: 11deg; }
+.park-friend[data-park-friend='nurungji'] { --step-duration: .42s; --step-lift: -3px; --leg-swing: 17deg; }
+.park-friend[data-park-friend='pingu'] { --step-duration: .69s; --step-lift: -1px; --step-roll: 6deg; --leg-swing: 7deg; }
 .park-friend:is([data-park-friend='ggomi'], [data-park-friend='dochi'], [data-park-friend='ggulgguli']) { --park-wave-lift: -70deg; }
 .app-main .character-park button { touch-action: none; }
 .park-friend:focus-visible { outline: 3px dashed #7d9871; outline-offset: 1px; background: #fffbd84d; }
@@ -59,6 +59,12 @@
 .park-friend[data-action='jump'] .friend-leg { animation: none; }
 .park-friend[data-action='jump'] .friend-arm-left { animation: park-jump-arm 1.35s ease-in-out both; }
 .park-friend[data-reacting='true'] .park-avatar { filter: drop-shadow(0 0 7px #fff9cd) drop-shadow(0 3px 0 #fffbe6); }
+.park-friend[data-grabbed='true'] { z-index: 3000 !important; cursor: grabbing; }
+.park-friend[data-grabbed='true'] .park-facing { scale: 1.1; }
+.park-friend[data-grabbed='true'] .park-performer,
+.park-friend[data-grabbed='true'] .park-avatar * { animation-play-state: paused !important; }
+.park-friend[data-dropped='true'] .park-facing { animation: roaming-drop .28s ease-out; }
+@keyframes roaming-drop { 0% { scale: 1.1 .98; } 50% { scale: .97 1.04; } 100% { scale: 1; } }
 .park-reaction { position: absolute; top: -6px; left: 3px; right: 3px; display: flex; align-items: center; justify-content: center; pointer-events: none; color: #8c697c; animation: park-love 2.1s ease-out both; }
 .park-reaction > svg:first-child { position: absolute; top: -8px; left: 0; width: 25px; height: 25px; padding: 3px; border-radius: 50%; color: #9b8a53; background: #fff5ce; }
 .park-love { position: absolute; right: 1px; top: -4px; color: #dc8da5; width: 23px; }

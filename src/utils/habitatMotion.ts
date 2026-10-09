@@ -1,5 +1,5 @@
 export interface HabitatBounds { width: number; height: number }
-export interface HabitatPosition { x: number; y: number; vx: number; vy: number; phase: number }
+export interface HabitatPosition { x: number; y: number; vx: number; vy: number; phase: number; wander?: number }
 export interface HabitatPlacement { x: number; y: number }
 const clampCenter = (value: number, extent: number, radius: number) => extent <= radius * 2 ? extent / 2 : Math.max(radius, Math.min(extent - radius, value));
 
@@ -15,12 +15,33 @@ export function placeHabitatFriend(index: number, count: number, bounds: Habitat
 export function stepHabitatFriend(friend: HabitatPosition, elapsed: number, bounds: HabitatBounds, radius: number): HabitatPosition {
   const dt = Math.max(0, Math.min(.05, elapsed));
   const phase = friend.phase + dt * 1.8;
-  const x = clampCenter(friend.x + friend.vx * dt, bounds.width, radius);
-  const y = clampCenter(friend.y + (friend.vy + Math.sin(phase) * 4) * dt, bounds.height, radius);
-  return { x, y, phase,
-    vx: x <= radius ? Math.abs(friend.vx) : x >= bounds.width - radius ? -Math.abs(friend.vx) : friend.vx,
-    vy: y <= radius ? Math.abs(friend.vy) : y >= bounds.height - radius ? -Math.abs(friend.vy) : friend.vy,
+  const turn = Math.sin(phase * .7) * (friend.wander || 0) * dt;
+  const vx = friend.vx * Math.cos(turn) - friend.vy * Math.sin(turn);
+  const vy = friend.vx * Math.sin(turn) + friend.vy * Math.cos(turn);
+  const x = clampCenter(friend.x + vx * dt, bounds.width, radius);
+  const y = clampCenter(friend.y + (vy + Math.sin(phase) * 4) * dt, bounds.height, radius);
+  return { ...friend, x, y, phase,
+    vx: x <= radius ? Math.abs(vx) : x >= bounds.width - radius ? -Math.abs(vx) : vx,
+    vy: y <= radius ? Math.abs(vy) : y >= bounds.height - radius ? -Math.abs(vy) : vy,
   };
+}
+
+/** Relocation preserves the friend and its gait; there is no reset to the spawn point. */
+export function moveHabitatFriend<T extends HabitatPosition>(friend: T, point: HabitatPlacement, bounds: HabitatBounds, radius: number): T {
+  return { ...friend, x: clampCenter(point.x, bounds.width, radius), y: clampCenter(point.y, bounds.height, radius) };
+}
+
+export function resizeHabitatFriend<T extends HabitatPosition>(friend: T, previous: HabitatBounds, next: HabitatBounds, radius: number): T {
+  return moveHabitatFriend(friend, { x: previous.width ? friend.x / previous.width * next.width : next.width / 2,
+    y: previous.height ? friend.y / previous.height * next.height : next.height / 2 }, next, radius);
+}
+
+/** Continue at cruising speed in the direction of the child's drag, without a fast fling. */
+export function aimHabitatFriend<T extends HabitatPosition>(friend: T, direction: HabitatPlacement): T {
+  const length = Math.hypot(direction.x, direction.y);
+  if (length < 1) return friend;
+  const speed = Math.hypot(friend.vx, friend.vy);
+  return { ...friend, vx: direction.x / length * speed, vy: direction.y / length * speed };
 }
 
 /** A gentle nudge keeps drifting friends from covering each other's faces. Held targets stay still. */

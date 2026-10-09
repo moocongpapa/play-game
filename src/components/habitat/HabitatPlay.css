@@ -166,6 +166,13 @@
   z-index: 3;
 }
 
+.habitat-creature[data-grabbed='true'] { z-index: 6; cursor: grabbing; }
+.habitat-creature[data-grabbed='true'] .creature-facing { scale: 1.1; }
+.habitat-creature[data-grabbed='true'] .creature-art,
+.habitat-creature[data-grabbed='true'] .creature-art * { animation-play-state: paused !important; }
+.habitat-creature[data-dropped='true'] .creature-facing { animation: roaming-drop .28s ease-out; }
+@keyframes roaming-drop { 0% { scale: 1.1 .98; } 50% { scale: .97 1.04; } 100% { scale: 1; } }
+
 .is-delighted .creature-art {
   animation: creature-delight 0.75s ease-in-out 2;
   filter: drop-shadow(0 0 16px rgba(255, 235, 59, 0.85)) drop-shadow(0 8px 12px rgba(0, 0, 0, 0.16));
@@ -215,25 +222,25 @@
 }
 
 .habitat-creature .creature-tail {
-  animation: tail-sway 1.2s ease-in-out infinite;
+  animation: tail-sway .85s ease-in-out infinite;
   transform-origin: right center;
 }
 
 .habitat-creature .creature-fin {
-  animation: fin-wave 1.6s ease-in-out infinite;
+  animation: fin-wave 1.1s ease-in-out infinite;
 }
 
 .habitat-creature .creature-tentacles {
-  animation: tentacle-sway 2.2s ease-in-out infinite;
+  animation: tentacle-sway 1.6s ease-in-out infinite;
   transform-origin: top center;
 }
 
 .movement-flutter .creature-wings {
-  animation: wing-flutter 0.75s ease-in-out infinite;
+  animation: wing-flutter .52s ease-in-out infinite;
 }
 
 .movement-hop .creature-facing {
-  animation: creature-hop 2s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
+  animation: creature-hop 1.4s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
 }
 
 .movement-crawl .creature-legs {

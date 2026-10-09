@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'motion/react';
 import { Heart, Pause, Play, RotateCcw, Check } from 'lucide-react';
 import type { CharacterId } from '../../types';
@@ -10,6 +10,9 @@ import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import { usePageVisible } from '../../hooks/useToddlerPlay';
 import { playBubblePop, playJellyTap, playSparkleChime, speakText, stopAllSpeech, stopPlaySounds } from '../../utils/soundEngine';
 import type { HabitatPlacement } from '../../utils/habitatMotion';
+import { useRoamingDrag } from '../../hooks/useRoamingDrag';
+import { PlayHintsPausedContext } from '../PlayFlowContext';
+import { emitJuice } from '../../utils/juice';
 import './HabitatPlay.css';
 
 interface HabitatTap {
@@ -50,12 +53,13 @@ export function HabitatPlay({ kind, buddy, childName, soundEnabled }: HabitatPla
   const sceneRef = useRef<HTMLDivElement>(null);
   const visible = usePageVisible();
   const reduced = useReducedMotion();
+  const blocked = useContext(PlayHintsPausedContext);
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
   const latest = useRef({ buddy, soundEnabled, childName });
   latest.current = { buddy, soundEnabled, childName };
   const lastTap = useRef(-Infinity);
 
-  const { nodes, held } = useHabitatMotion(field, friends, visible && !paused && !reduced, happyUid);
+  const { nodes, held, getPosition, move, release } = useHabitatMotion(field, friends, visible && !paused && !reduced && !blocked);
   const happyFriend = friends.find(friend => friend.uid === happyUid);
   const selectedFriend = catalogue.find(friend => friend.id === selected) || catalogue[0];
 
@@ -73,7 +77,7 @@ export function HabitatPlay({ kind, buddy, childName, soundEnabled }: HabitatPla
   }, [kind, buddy]);
 
   useEffect(() => {
-    if (!visible) {
+    if (!visible || blocked) {
       clearGameTimeouts();
       setHappyUid(null);
       held.current.clear();
@@ -81,7 +85,7 @@ export function HabitatPlay({ kind, buddy, childName, soundEnabled }: HabitatPla
       stopAllSpeech();
       stopPlaySounds();
     }
-  }, [visible, clearGameTimeouts, held]);
+  }, [visible, blocked, clearGameTimeouts, held]);
 
   const addTapEffect = (clientX: number, clientY: number) => {
     const rect = sceneRef.current?.getBoundingClientRect();
@@ -118,6 +122,7 @@ export function HabitatPlay({ kind, buddy, childName, soundEnabled }: HabitatPla
   };
 
   const addFriend = (species: HabitatFriend, position?: HabitatPlacement, clientPos?: { x: number; y: number }) => {
+    if (!visible || blocked) return;
     if (performance.now() - lastTap.current < 180) return;
     lastTap.current = performance.now();
     if (clientPos) addTapEffect(clientPos.x, clientPos.y);
@@ -137,6 +142,7 @@ export function HabitatPlay({ kind, buddy, childName, soundEnabled }: HabitatPla
   };
 
   const touchFriend = (friend: LivingFriend, clientPos?: { x: number; y: number }) => {
+    if (!visible || blocked) return;
     if (performance.now() - lastTap.current < 180) return;
     lastTap.current = performance.now();
     if (clientPos) addTapEffect(clientPos.x, clientPos.y);
@@ -144,6 +150,7 @@ export function HabitatPlay({ kind, buddy, childName, soundEnabled }: HabitatPla
   };
 
   const reset = () => {
+    drag.cancelAll();
     clearGameTimeouts();
     setHappyUid(null);
     held.current.clear();
@@ -153,11 +160,19 @@ export function HabitatPlay({ kind, buddy, childName, soundEnabled }: HabitatPla
     playJellyTap(soundEnabled);
     speakText('친구들이 다시 모였네! 반가워!', soundEnabled, { characterId: buddy, playIntroSFX: false });
   };
+  const drag = useRoamingDrag({ field, held, getPosition, move, release, blocked: !visible || blocked,
+    onTap: (id, point) => { const friend = friendsRef.current.find(friend => friend.uid === id); if (friend) touchFriend(friend, point); },
+    onDrop: (_id, point) => {
+      clearGameTimeouts(); setHappyUid(null); addTapEffect(point.x, point.y);
+      playJellyTap(soundEnabled); emitJuice({ kind: 'snap', x: point.x, y: point.y });
+    },
+  });
 
   return (
     <section
       className={`habitat-screen habitat-${kind}`}
-      data-still={paused || reduced || !visible}
+      data-still={paused || reduced || !visible || blocked}
+      aria-description="친구를 잡아 원하는 곳에 놓아 보세요. 짧게 누르면 인사하고, 방향키로도 옮길 수 있어요."
       aria-label={kind === 'aquarium' ? '바다 친구 수족관' : '곤충 놀이터'}
     >
       <h1 className="sr-only">{kind === 'aquarium' ? '바다 친구 수족관' : '곤충 놀이터'}</h1>
@@ -212,16 +227,8 @@ export function HabitatPlay({ kind, buddy, childName, soundEnabled }: HabitatPla
               } ${happyUid === friend.uid ? 'is-delighted' : ''}`}
               aria-label={`${friend.species.name}에게 인사하기`}
               style={{ '--friend-color': friend.species.color } as React.CSSProperties}
-              onPointerDown={event => {
-                if (event.button !== 0 || !event.isPrimary) return;
-                held.current.add(friend.uid);
-                event.currentTarget.setPointerCapture(event.pointerId);
-                touchFriend(friend, { x: event.clientX, y: event.clientY });
-              }}
-              onPointerUp={() => held.current.delete(friend.uid)}
-              onPointerCancel={() => held.current.delete(friend.uid)}
-              onLostPointerCapture={() => held.current.delete(friend.uid)}
-              onFocus={() => held.current.add(friend.uid)}
+              {...drag.handlers(friend.uid)}
+              onFocus={event => { if (event.currentTarget.matches(':focus-visible')) held.current.add(friend.uid); }}
               onBlur={() => held.current.delete(friend.uid)}
               onClick={event => {
                 if (event.detail === 0) touchFriend(friend);

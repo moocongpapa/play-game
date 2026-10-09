@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, type RefObject } from 'react';
 import { createParkFriends, reactParkFriend, stepParkFriends, type ParkFriend } from '../utils/characterParkMotion';
 import type { CharacterId } from '../types';
+import { aimHabitatFriend, moveHabitatFriend, resizeHabitatFriend, type HabitatPlacement } from '../utils/habitatMotion';
 
 /** One 30 fps transform loop. React only rerenders for a child's reaction, never for walking. */
 export function useCharacterParkMotion(field: RefObject<HTMLDivElement>, active: boolean) {
@@ -8,6 +9,7 @@ export function useCharacterParkMotion(field: RefObject<HTMLDivElement>, active:
   const held = useRef(new Set<CharacterId>());
   const friends = useRef<ParkFriend[]>([]);
   const measured = useRef({ width: 0, height: 0 });
+  const radiusRef = useRef(45);
   const draw = useCallback(() => {
     for (const friend of friends.current) {
       const node = nodes.current.get(friend.id);
@@ -25,6 +27,13 @@ export function useCharacterParkMotion(field: RefObject<HTMLDivElement>, active:
     draw();
     return action;
   }, [draw]);
+  const getPosition = useCallback((id: CharacterId) => friends.current.find(friend => friend.id === id), []);
+  const move = useCallback((id: CharacterId, point: HabitatPlacement) => {
+    friends.current = friends.current.map(friend => friend.id === id ? moveHabitatFriend(friend, point, measured.current, radiusRef.current) : friend); draw();
+  }, [draw]);
+  const release = useCallback((id: CharacterId, direction: HabitatPlacement) => {
+    friends.current = friends.current.map(friend => friend.id === id ? { ...aimHabitatFriend(friend, direction), action: 'walk', remaining: 0, nextPlay: 2 } : friend); draw();
+  }, [draw]);
 
   useEffect(() => {
     const element = field.current;
@@ -33,16 +42,16 @@ export function useCharacterParkMotion(field: RefObject<HTMLDivElement>, active:
     let bounds = { width: 0, height: 0 }, radius = 45;
     const resize = () => {
       const nextBounds = { width: element.clientWidth, height: element.clientHeight };
-      // Re-space all eight on orientation changes; resuming does not reset their positions.
+      // Preserve the child's placements on rotation as well as pause/resume.
       const resized = nextBounds.width !== measured.current.width || nextBounds.height !== measured.current.height;
+      const previousBounds = measured.current;
       bounds = nextBounds;
       measured.current = nextBounds;
       const firstNode = nodes.current.values().next().value;
       radius = (firstNode?.offsetWidth || 84) / 2 + 5;
-      if (!friends.current.length || resized) {
-        const previous = new Map(friends.current.map(friend => [friend.id, friend]));
-        friends.current = createParkFriends(bounds, radius).map(friend => ({ ...friend, taps: previous.get(friend.id)?.taps || 0 }));
-      }
+      radiusRef.current = radius;
+      if (!friends.current.length) friends.current = createParkFriends(bounds, radius);
+      else if (resized) friends.current = friends.current.map(friend => resizeHabitatFriend(friend, previousBounds, bounds, radius));
       draw();
     };
     const tick = (now: number) => {
@@ -57,8 +66,8 @@ export function useCharacterParkMotion(field: RefObject<HTMLDivElement>, active:
     const observer = new ResizeObserver(resize);
     observer.observe(element);
     if (active) frame = requestAnimationFrame(tick);
-    return () => { cancelAnimationFrame(frame); observer.disconnect(); held.current.clear(); };
+    return () => { cancelAnimationFrame(frame); observer.disconnect(); };
   }, [field, active, draw]);
 
-  return { nodes, held, react };
+  return { nodes, held, react, getPosition, move, release };
 }

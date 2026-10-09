@@ -10,6 +10,8 @@ import { useGameTimeouts } from '../hooks/useGameTimeouts';
 import { usePageVisible } from '../hooks/useToddlerPlay';
 import { playBouncyBoing, playJellyTap, playSparkleChime, speakText, stopAllSpeech, stopPlaySounds } from '../utils/soundEngine';
 import type { CharacterId } from '../types';
+import { useRoamingDrag } from '../hooks/useRoamingDrag';
+import { emitJuice } from '../utils/juice';
 import './CharacterParkScreen.css';
 
 const ACTION_ICONS = { jump: Sparkles, roll: RotateCw, turn: ArrowLeftRight, dance: Music2, wave: Hand, run: Footprints };
@@ -21,7 +23,7 @@ export function CharacterParkScreen({ buddy, soundEnabled }: { buddy: CharacterI
   const visible = usePageVisible();
   const reduced = useReducedMotion();
   const blocked = useContext(PlayHintsPausedContext);
-  const { nodes, held, react } = useCharacterParkMotion(field, visible && !paused && !reduced && !blocked);
+  const { nodes, held, react, getPosition, move, release } = useCharacterParkMotion(field, visible && !paused && !reduced && !blocked);
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
   const lastTap = useRef(-Infinity);
   const serial = useRef(0);
@@ -49,8 +51,15 @@ export function CharacterParkScreen({ buddy, soundEnabled }: { buddy: CharacterI
     speakText(PARK_ACTIONS[action].speech, soundEnabled, { characterId: id, playIntroSFX: false });
     scheduleGameTimeout(() => setReaction(null), 2100);
   };
+  const drag = useRoamingDrag({ field, held, getPosition, move, release, blocked: !visible || blocked,
+    onTap: touchFriend,
+    onDrop: (_id, point) => {
+      clearGameTimeouts(); setReaction(null); playJellyTap(soundEnabled);
+      emitJuice({ kind: 'snap', x: point.x, y: point.y });
+    },
+  });
 
-  return <section className="character-park" data-still={paused || reduced || !visible || blocked} data-reduced={Boolean(reduced)} aria-label="친구 놀이터" data-juice-surface>
+  return <section className="character-park" data-still={paused || reduced || !visible || blocked} data-reduced={Boolean(reduced)} aria-label="친구 놀이터" aria-description="친구를 잡아 원하는 곳에 놓아 보세요. 짧게 누르면 함께 놀고, 방향키로도 옮길 수 있어요." data-juice-surface>
     <h1 className="sr-only">친구 놀이터</h1>
     <div className="park-scenery" aria-hidden="true" />
     <div className="park-cloud park-cloud-one" aria-hidden="true" /><div className="park-cloud park-cloud-two" aria-hidden="true" />
@@ -67,11 +76,7 @@ export function CharacterParkScreen({ buddy, soundEnabled }: { buddy: CharacterI
           className="park-friend" data-park-friend={friend.id} data-reacting={selected}
           style={{ '--friend-color': friend.color } as CSSProperties}
           aria-label={`${friend.name}와 놀기`}
-          onPointerDown={event => {
-            if (event.button !== 0 || !event.isPrimary) return;
-            event.currentTarget.setPointerCapture(event.pointerId); held.current.add(friend.id); touchFriend(friend.id);
-          }}
-          onPointerUp={() => held.current.delete(friend.id)} onPointerCancel={() => held.current.delete(friend.id)} onLostPointerCapture={() => held.current.delete(friend.id)}
+          {...drag.handlers(friend.id)}
           onFocus={event => { if (event.currentTarget.matches(':focus-visible')) held.current.add(friend.id); }} onBlur={() => held.current.delete(friend.id)}
           onClick={event => { if (event.detail === 0) touchFriend(friend.id); }}>
           <span className="park-shadow" aria-hidden="true" />

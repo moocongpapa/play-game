@@ -16,9 +16,9 @@ export function createParkFriends(bounds: HabitatBounds, radius: number): ParkFr
   const columns = bounds.width >= bounds.height ? 4 : 2;
   const rows = Math.ceil(CHARACTER_LIST.length / columns);
   return CHARACTER_LIST.map((friend, index) => ({
-    ...placeHabitatFriend(index, CHARACTER_LIST.length, bounds, radius, PARK_PERSONALITIES[friend.id].speed, () => index % 2 ? .75 : .25,
+    ...placeHabitatFriend(index, CHARACTER_LIST.length, bounds, radius, PARK_PERSONALITIES[friend.id].speed * 1.8, () => index % 2 ? .75 : .25,
       { x: (index % columns + .5) / columns, y: (Math.floor(index / columns) + .5) / rows }),
-    id: friend.id, action: 'walk', remaining: 0, nextPlay: 3 + index * 1.1, taps: 0,
+    id: friend.id, action: 'walk', remaining: 0, nextPlay: .8 + index * .45, taps: 0, wander: .5,
   }));
 }
 
@@ -44,7 +44,7 @@ export function stepParkFriends(friends: readonly ParkFriend[], elapsed: number,
       const moves = PARK_PERSONALITIES[friend.id].actions;
       nextFriend.action = moves[Math.min(moves.length - 1, Math.floor(random() * moves.length))];
       nextFriend.remaining = PARK_ACTIONS[nextFriend.action].duration;
-      nextFriend.nextPlay = 8 + random() * 6;
+      nextFriend.nextPlay = 3 + random() * 4;
       if (nextFriend.action === 'turn') { nextFriend.vx *= -1; nextFriend.vy *= -1; }
     }
     if (held.has(friend.id) || !['walk', 'run', 'turn'].includes(nextFriend.action)) return nextFriend;
