@@ -1,20 +1,21 @@
+import { GameCue } from '../../components/GameCue';
 import { useRoundTimer } from '../../hooks/useRoundTimer';
 import { RoundContinuation } from '../../components/RoundContinuation';
 import { EMOTION_SCENES } from '../../data/playThemes';
 import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
-import { CHARACTERS } from '../../data/characters';
+
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { CharacterAvatar } from '../../components/CharacterAvatar';
+
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
-import { getDifficultyConfig, getAgeGroupLabel, pickDistractors } from '../../utils/ageEngine';
+import { getDifficultyConfig, pickDistractors } from '../../utils/ageEngine';
 import { EMOTION_ITEMS_BY_AGE } from '../../data/gameData';
 import { AgeGroup, EmotionItem } from '../../types';
-import { Volume2, RefreshCw, Timer } from 'lucide-react';
+import { RefreshCw, Timer } from 'lucide-react';
 
 interface EmotionQuizGameProps {
   buddy: CharacterId;
@@ -31,7 +32,6 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
   ageGroup,
   childName,
 }) => {
-  const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const diffConfig = getDifficultyConfig(ageGroup);
@@ -118,29 +118,12 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
   return (
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
-      <div className="game-prompt w-full bg-gradient-to-r from-[#FFB7D5] to-[#FFE4EC] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FF80AB] shadow-sm flex items-center gap-3 sm:gap-4">
-        <CharacterAvatar id={buddy} size="md" mood={selectedCorrectId ? 'dancing' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
-        <div className="flex-1 min-w-0 break-keep">
-          <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#FF4081] mb-1">
-            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 감정 퀴즈</span>
-          </div>
-          <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
-            어떤 표정이 &ldquo;<span className="text-[#FF4081] underline">{targetItem.name}</span>&rdquo; 인가요?
-          </h2>
-        </div>
-        <button
-          aria-label="놀이 안내 다시 듣기"
-          onClick={() => speakText(`${scene.text} ${targetItem.name} 표정을 골라보세요!`, soundEnabled, { characterId: buddy })}
-          className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#FF80AB] shadow-xs text-[#FF4081] cursor-pointer shrink-0"
-        >
-          <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
-        </button>
-      </div>
+      <GameCue buddy={buddy} disabled={!soundEnabled} onReplay={() => speakText(`${scene.text} ${targetItem.name} 표정을 골라보세요!`, soundEnabled, { characterId: buddy })} />
 
       {/* Timer display */}
       {diffConfig.timeLimit > 0 && !selectedCorrectId && (
         <div className="w-full mt-3 px-2">
-          <div className="flex items-center gap-1.5 text-xs font-black text-rose-500 mb-1">
+          <div className="sr-only">
             <Timer className="w-4 h-4 animate-pulse" />
             <span>시간제한: {timeLeft}초</span>
           </div>
@@ -154,7 +137,7 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
       )}
 
       {/* Target emoji preview (큰 표정 보기) */}
-      <div className="my-3 sm:my-4 p-4 sm:p-6 bg-white rounded-3xl border-3 border-dashed border-[#FFB7D5] shadow-inner flex flex-col items-center justify-center">
+      <div className="visual-prompt">
         <motion.span
           animate={selectedCorrectId ? { scale: [1, 1.2, 1] } : {}}
           transition={{ duration: 1.0, repeat: selectedCorrectId ? Infinity : 0 }}
@@ -162,7 +145,7 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
         >
           <span className="flex items-center gap-4"><ToyArtwork emoji={scene.emoji} /><ToyArtwork emoji={targetItem.emoji} /></span>
         </motion.span>
-        <span className="text-xs font-bold text-[#8C7B79] mt-2 block">{scene.text}</span>
+        <span className="sr-only">{scene.text}</span>
       </div>
 
       {/* Options Grid */}
@@ -196,7 +179,7 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
               }`}
             >
               <span className="text-5xl sm:text-6xl mb-1 sm:mb-2"><ToyArtwork emoji={item.emoji} /></span>
-              <span className="text-lg sm:text-xl font-black text-[#4A3E3D]">{item.name}</span>
+              <span className="sr-only">{item.name}</span>
             </motion.button>
           );
         })}
@@ -208,7 +191,7 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
           <RoundContinuation onNext={generateRound} />
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">
-            <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 다른 문제
+            <RefreshCw className="w-6 h-6" aria-hidden="true" /><span className="sr-only">다른 문제</span>
           </JellyButton>
         )}
       </div>

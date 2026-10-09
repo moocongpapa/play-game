@@ -1,8 +1,7 @@
 import { MotionConfig } from 'motion/react';
-import { Hand, Volume2 } from 'lucide-react';
 import { useId, type ReactNode } from 'react';
 import type { CharacterId } from '../types';
-import { CharacterAvatar } from './CharacterAvatar';
+import { GameCue } from './GameCue';
 import { CharacterHead, CharacterPaint } from './CharacterArtwork';
 import { CHARACTER_ART } from '../data/characterArt';
 import { CHARACTERS } from '../data/characters';
@@ -10,17 +9,13 @@ import { speakText } from '../utils/soundEngine';
 import './ToddlerPlay.css';
 
 export function PlayGuide({ buddy, soundEnabled, title, guide, happy = false }: { buddy: CharacterId; soundEnabled: boolean; title: string; guide: string; happy?: boolean }) {
-  return <div className="play-guide">
-    <CharacterAvatar id={buddy} size="md" mood={happy ? 'happy' : 'still'} />
-    <div><span className="sr-only">{CHARACTERS[buddy].name}와 함께</span><h2>{title}</h2></div>
-    <button type="button" disabled={!soundEnabled} aria-label="놀이 안내 다시 듣기" onClick={() => speakText(guide, soundEnabled, { characterId: buddy })}><Volume2 /></button>
-  </div>;
+  return <><h2 className="sr-only">{title}</h2><GameCue buddy={buddy} happy={happy} disabled={!soundEnabled} onReplay={() => speakText(guide, soundEnabled, { characterId: buddy })} /></>;
 }
 export function PlayShell({ children, className = '' }: { children: ReactNode; className?: string }) {
   return <MotionConfig reducedMotion="user"><div className={`toddler-play ${className}`}>{children}</div></MotionConfig>;
 }
 export function PlayHint({ children }: { children: ReactNode }) {
-  return <div className="play-hint"><Hand aria-hidden="true" /><span>{children}</span></div>;
+  return <span className="sr-only">{children}</span>;
 }
 export function PlayProgress({ total, done, label }: { total: number; done: number; label: string }) {
   return <div className="play-progress" role="progressbar" aria-label={label} aria-valuemin={0} aria-valuemax={total} aria-valuenow={done}>

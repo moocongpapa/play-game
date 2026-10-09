@@ -1,17 +1,16 @@
 import { PLAY_THEMES } from '../../data/playThemes';
 import { pickNextRound } from '../../utils/roundDeck';
 import type { CharacterId } from '../../types';
-import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
-import { JellyButton } from '../../components/JellyButton';
 import { speakText, playBalloonPop, playDingDongDang, playSparkleChime } from '../../utils/soundEngine';
 import { fireBalloonPopParticle, fireConfetti } from '../../utils/confetti';
 import { AgeGroup } from '../../types';
-import { Sparkles, RefreshCw } from 'lucide-react';
+import { Star } from 'lucide-react';
+import './BalloonPopGame.css';
 
 interface BalloonItem {
   id: string;
@@ -21,6 +20,8 @@ interface BalloonItem {
   emoji: string;
   speed: number; // seconds to reach top
   size: number; // px diameter
+  startY: number;
+  restingY: number;
 }
 
 interface BalloonPopGameProps {
@@ -54,13 +55,12 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
   onStageClear,
   isStageMode = false,
 }) => {
-  const friend = CHARACTERS[buddy];
-  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+  const { scheduleGameTimeout } = useGameTimeouts();
 
   const reducedMotion = useReducedMotion();
+  const fieldRef = useRef<HTMLDivElement>(null);
   const poppedIds = useRef(new Set<string>());
   const popCount = useRef(0);
-  const [poppedCount, setPoppedCount] = useState(0);
   const [balloons, setBalloons] = useState<BalloonItem[]>([]);
   const [popPopups, setPopPopups] = useState<Array<{ id: string; x: number; y: number; text: string; color: string }>>([]);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -69,19 +69,26 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
   const [theme, setTheme] = useState(PLAY_THEMES[0]);
 
   // Generate balloon
-  const spawnBalloon = () => {
+  const spawnBalloon = (initialSlot?: number) => {
+    const fieldHeight = fieldRef.current?.clientHeight || 480;
     const palette = BALLOON_PALETTES[Math.floor(Math.random() * BALLOON_PALETTES.length)];
+    const size = 88 + Math.floor(Math.random() * 20);
+    const visibleY = fieldHeight * (initialSlot === undefined ? 0.08 + Math.random() * 0.6 : [0.52, 0.3, 0.64][initialSlot]);
+    const restingY = Math.max(0, Math.min(visibleY, fieldHeight - size * 1.45));
     const newBalloon: BalloonItem = {
       id: `b-${nextIdRef.current++}`,
-      x: 20 + Math.random() * 60,
+      x: initialSlot === undefined ? 18 + Math.random() * 64 : 22 + initialSlot * 28,
       color: palette.color,
       bgGradient: palette.bg,
       emoji: pickNextRound(themeRef.current.items, `balloons:${themeRef.current.id}`).emoji,
       speed: 7 + Math.random() * 4,
-      size: 88 + Math.floor(Math.random() * 20),
+      size,
+      // The opening group is already within reach. New balloons rise gently from below.
+      startY: initialSlot === undefined ? fieldHeight : restingY,
+      restingY,
     };
 
-    setBalloons((prev) => [...prev.slice(-8), newBalloon]);
+    setBalloons((prev) => prev.length >= 9 ? prev : [...prev, newBalloon]);
   };
 
   useEffect(() => {
@@ -91,15 +98,15 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
 
     themeRef.current = pickNextRound(PLAY_THEMES, 'balloons:themes');
     setTheme(themeRef.current);
-    // Initial 4 balloons
+    // No empty field or offscreen travel to wait through on entry.
     setBalloons([]);
-    for (let i = 0; i < 4; i++) {
-      scheduleGameTimeout(() => spawnBalloon(), i * 400);
+    for (let i = 0; i < 3; i++) {
+      spawnBalloon(i);
     }
 
     const interval = setInterval(() => {
-      spawnBalloon();
-    }, 1200);
+      if (!document.hidden && !(isStageMode && popCount.current >= targetCount)) spawnBalloon();
+    }, 700);
 
     return () => clearInterval(interval);
   }, []);
@@ -130,7 +137,6 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
 
     // Next count
     const nextCount = ++popCount.current;
-    setPoppedCount(nextCount);
 
     // Number popup
     const popupId = `p-${Date.now()}-${Math.random()}`;
@@ -138,6 +144,7 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
     setPopPopups((prev) => [...prev, { id: popupId, x: clientX, y: clientY, text: `${nextCount}`, color: balloon.color }]);
     scheduleGameTimeout(() => {
       setPopPopups((prev) => prev.filter((p) => p.id !== popupId));
+      poppedIds.current.delete(balloon.id);
     }, 900);
 
     // Voice count out loud
@@ -166,68 +173,41 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
         });
         onCompleteQuiz(1);
         if (onStageClear) {
-          scheduleGameTimeout(onStageClear, 1800);
+          scheduleGameTimeout(onStageClear, 850);
         }
-      }, 500);
+      }, 150);
     }
-  };
-
-  const resetGame = () => {
-    clearGameTimeouts();
-    poppedIds.current.clear();
-    themeRef.current = pickNextRound(PLAY_THEMES, 'balloons:themes');
-    setTheme(themeRef.current);
-    popCount.current = 0;
-    setPoppedCount(0);
-    setIsCompleted(false);
-    setBalloons([]);
-    for (let i = 0; i < 4; i++) {
-      scheduleGameTimeout(() => spawnBalloon(), i * 400);
-    }
-    speakText(`다시 신나게 터뜨려보자!`, soundEnabled, { characterId: buddy });
   };
 
   return (
-    <div style={{ background: `linear-gradient(${theme.sky}, #FFF9E9)` }} className="balloon-board relative w-full max-w-2xl mx-auto h-[68svh] min-h-[460px] bg-gradient-to-b from-[#E0F2FE] via-[#F0F9FF] to-[#FEF3C7] rounded-[36px] border-4 border-amber-300 shadow-xl overflow-hidden select-none flex flex-col justify-between p-4">
-      {/* Top Status Banner - 개수 카운트 없이 즐거운 타이틀만 표시 */}
-      <div className="balloon-status z-20 w-full bg-white/90 backdrop-blur-xs p-3.5 rounded-3xl border-3 border-sky-300 shadow-md flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <CharacterAvatar id={buddy} size="sm" mood="happy" className="!w-12 !h-12 shadow-xs" />
-          <div>
-            <span className="text-xs font-black text-sky-600 block">{friend.name}와 풍선 팡팡! 🎈</span>
-            <span className="text-sm sm:text-base font-black text-[#4A3E3D]">
-              {theme.name} · 무제한 팡팡 놀이!
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-1.5 bg-sky-50 px-3.5 py-1.5 rounded-full border-2 border-sky-200 shadow-2xs">
-          <span className="text-xs font-black text-sky-700">마음껏 팡팡!</span>
-          <span className="text-base animate-pulse">🎈</span>
-        </div>
+    <div style={{ background: `linear-gradient(${theme.sky}, #FFF9E9)` }} className="balloon-board" aria-label="풍선 팡팡 놀이">
+      <div className="balloon-cloud balloon-cloud-left" aria-hidden="true" />
+      <div className="balloon-cloud balloon-cloud-right" aria-hidden="true" />
+      <div className="balloon-companion" aria-hidden="true">
+        <CharacterAvatar id={buddy} size="md" mood={isCompleted ? 'excited' : 'happy'} />
       </div>
 
       {/* Floating Balloons Field */}
-      <div className="absolute inset-x-0 top-24 bottom-0 z-10 overflow-hidden">
+      <div ref={fieldRef} className="balloon-field">
         {balloons.map((b) => (
           <motion.button
             key={b.id}
             aria-label="풍선 터뜨리기"
-            initial={reducedMotion ? false : { y: 480, opacity: 0.9 }}
-            animate={reducedMotion ? { y: 45 + (Number(b.id.slice(2)) % 3) * 95, opacity: 1 } : { y: -170, opacity: 1 }}
+            initial={reducedMotion ? false : { y: b.startY, opacity: 1 }}
+            animate={reducedMotion ? { y: b.restingY, opacity: 1 } : { y: -170, opacity: 1 }}
             transition={reducedMotion ? { duration: 0 } : { y: { duration: b.speed, ease: 'linear' } }}
             onAnimationComplete={() => {
               if (!reducedMotion) setBalloons((prev) => prev.filter((item) => item.id !== b.id));
             }}
             onClick={(e) => handlePop(b, e)}
             style={{
-              left: `calc(${b.x}% - ${b.size / 2}px)`,
+              left: `clamp(6px, calc(${b.x}% - ${b.size / 2}px), calc(100% - ${b.size + 6}px))`,
               width: b.size,
               height: b.size * 1.2,
               background: b.bgGradient,
             }}
-            whileHover={{ scale: 1.08 }}
-            className="absolute rounded-full cursor-pointer shadow-lg flex items-center justify-center border-2 border-white/50 active:scale-90 touch-manipulation"
+            whileHover={reducedMotion ? undefined : { scale: 1.08 }}
+            className="balloon-toy absolute top-0 rounded-full cursor-pointer shadow-lg flex items-center justify-center border-2 border-white/50 active:scale-90 touch-manipulation"
           >
             {/* Balloon Highlight Shine */}
             <div className="absolute top-2 left-4 w-4 h-7 bg-white/60 rounded-full blur-[1px] rotate-[-25deg]" />
@@ -246,8 +226,8 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
           {popPopups.map((popup) => (
             <motion.div
               key={popup.id}
-              initial={{ opacity: 1, scale: 0.5, y: 0 }}
-              animate={{ opacity: 0, scale: 2.2, y: -80 }}
+              initial={{ opacity: 1, scale: reducedMotion ? 1 : 0.5, y: 0 }}
+              animate={{ opacity: 0, scale: reducedMotion ? 1 : 2.2, y: reducedMotion ? 0 : -80 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.75, ease: 'easeOut' }}
               style={{ color: popup.color, left: popup.x - 20, top: popup.y - 20 }}
@@ -262,25 +242,16 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
       {/* Stage mode only clearance overlay */}
       {isCompleted && isStageMode && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
+          initial={reducedMotion ? false : { opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="relative z-30 m-auto bg-white/95 p-6 sm:p-8 rounded-[36px] border-4 border-amber-400 shadow-2xl flex flex-col items-center text-center max-w-sm"
+          className="balloon-celebration"
+          role="status"
+          aria-label="풍선을 모두 터뜨렸어요!"
         >
-          <div className="text-6xl mb-2 animate-bounce">🎉</div>
-          <h3 className="text-2xl font-black text-[#4A3E3D] mb-1">참 잘했어요!</h3>
-          <p className="text-sm font-bold text-[#8C7B79] mb-4">
-            풍선을 모두 신나게 터뜨렸어요!
-          </p>
+          <CharacterAvatar id={buddy} size="xl" mood="excited" />
+          <Star className="balloon-prize-star" aria-hidden="true" />
         </motion.div>
       )}
-
-      {/* Bottom Hint */}
-      <div className="relative z-20 w-full text-center py-1">
-        <p className="text-xs font-bold text-sky-700/80 bg-white/60 py-1.5 px-4 rounded-full inline-flex items-center gap-1 shadow-2xs">
-          <Sparkles className="w-3.5 h-3.5 text-amber-500" /> 화면에 떠다니는 풍선을 손가락으로 계속 콕콕 찔러보세요!
-        </p>
-      </div>
     </div>
   );
 };
-

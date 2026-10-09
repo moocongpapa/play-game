@@ -32,6 +32,5 @@ export function PlayResultScene({ kind, buddy, toys = [], friends, color = '#a9c
       {kind === 'picnic' && <><CharacterAvatar id={buddy} size="xl" mood="excited" /><div className="result-picnic-cloth">{toys.map((toy, i) => <span key={i} style={{ '--car-order': i } as React.CSSProperties}><ToyArtwork emoji={toy} /></span>)}</div><Heart className="picnic-heart" fill="currentColor" /></>}
       {kind === 'dance' && <><div className="result-dancers">{(friends || [buddy]).map((friend, i) => <div key={`${friend}:${i}`} style={{ '--car-order': i } as React.CSSProperties}><CharacterAvatar id={friend} size="xl" mood="dancing" /></div>)}</div><Music2 className="dance-note note-one" /><Music2 className="dance-note note-two" /></>}
     </div>
-    <h3>{(caption || CAPTIONS[kind])}</h3>
   </section>;
 }

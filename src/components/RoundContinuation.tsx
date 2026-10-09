@@ -1,6 +1,7 @@
 import { useContext, useLayoutEffect, useRef } from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
-import { createRoundContinuation } from '../utils/roundContinuation';
+import { createRoundContinuation, ROUND_CONTINUATION_DELAY_MS } from '../utils/roundContinuation';
+import { isSpeechBusy } from '../utils/soundEngine';
 import { DayContinuationContext, PlayHintsPausedContext } from './PlayFlowContext';
 
 interface RoundContinuationProps {
@@ -10,7 +11,7 @@ interface RoundContinuationProps {
 }
 
 /** Mount only after a round ends. Leaving the game cancels its next round. */
-export function RoundContinuation({ onNext, delayMs = 3000, label = '곧 다음 놀이가 나와요!' }: RoundContinuationProps) {
+export function RoundContinuation({ onNext, delayMs = ROUND_CONTINUATION_DELAY_MS, label = '곧 다음 놀이가 나와요!' }: RoundContinuationProps) {
   const day = useContext(DayContinuationContext);
   const paused = useContext(PlayHintsPausedContext);
   const nextRef = useRef(onNext);
@@ -21,7 +22,7 @@ export function RoundContinuation({ onNext, delayMs = 3000, label = '곧 다음 
 
   useLayoutEffect(() => {
     if (day || paused) return;
-    const transition = createRoundContinuation(() => nextRef.current(), delayMs, window);
+    const transition = createRoundContinuation(() => nextRef.current(), delayMs, window, () => !isSpeechBusy());
     transitionRef.current = transition;
     const syncVisibility = () => {
       if (document.hidden) transition.pause();
@@ -36,13 +37,14 @@ export function RoundContinuation({ onNext, delayMs = 3000, label = '곧 다음 
     };
   }, [delayMs, !!day, paused]);
 
-  if (day) return <div className="day-next"><p>{day.label}</p><button type="button" disabled={paused} onClick={day.onNext} aria-label={day.label}>{day.picture}<span><ArrowRight /> 같이 가자!</span></button></div>;
+  if (day) return <div className="day-next"><button type="button" disabled={paused} onClick={day.onNext} aria-label={day.label}>{day.picture}<span><ArrowRight aria-hidden="true" /></span></button></div>;
 
   return <div className="round-continuation" role="status">
-    <div className="round-continuation-message"><Sparkles aria-hidden="true" size={22} /><span>{label}</span></div>
-    <div className="round-continuation-dots" aria-hidden="true"><i /><i /><i /><ArrowRight size={22} /></div>
-    <button disabled={paused} onClick={() => transitionRef.current?.advance()} aria-label="다음 놀이 바로 시작">
-      바로 이어하기 <ArrowRight aria-hidden="true" size={17} />
+    <span className="sr-only">{label}</span>
+    <Sparkles aria-hidden="true" size={25} />
+    <div className="round-continuation-dots" aria-hidden="true"><i /><i /><i /></div>
+    <button type="button" disabled={paused} onClick={() => transitionRef.current?.advance()} aria-label="다음 놀이 바로 시작">
+      <ArrowRight aria-hidden="true" size={30} />
     </button>
   </div>;
 }

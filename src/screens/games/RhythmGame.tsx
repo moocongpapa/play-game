@@ -1,3 +1,4 @@
+import { GameCue } from '../../components/GameCue';
 import { useRoundTimer } from '../../hooks/useRoundTimer';
 import { RoundContinuation } from '../../components/RoundContinuation';
 import { pickNextRound } from '../../utils/roundDeck';
@@ -7,13 +8,13 @@ import { ToyArtwork } from '../../components/ToyArtwork';
 import { createRhythmPlayback } from '../../utils/rhythmPlayback';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { CharacterAvatar } from '../../components/CharacterAvatar';
+
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, stopAllSpeech, setBGMDucked, playRhythmTone, stopPlaySounds, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
-import { getDifficultyConfig, getAgeGroupLabel } from '../../utils/ageEngine';
+import { getDifficultyConfig } from '../../utils/ageEngine';
 import { RHYTHM_ITEMS_BY_AGE } from '../../data/gameData';
 import { AgeGroup, RhythmItem } from '../../types';
-import { Volume2, RefreshCw, Timer, Sparkles } from 'lucide-react';
+import { Volume2, RefreshCw, Timer, Sparkles, Hand } from 'lucide-react';
 
 interface RhythmGameProps {
   buddy: CharacterId;
@@ -148,30 +149,12 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
   return (
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
-      <div className="game-prompt w-full bg-gradient-to-r from-[#FFE0B2] to-[#FFF3E0] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FFA726] shadow-sm flex items-center gap-3 sm:gap-4">
-        <CharacterAvatar id={buddy} size="md" mood={isCompleted ? 'excited' : 'happy'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
-        <div className="flex-1 min-w-0 break-keep">
-          <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#E65100] mb-1">
-            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 리듬 놀이</span>
-          </div>
-          <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
-            {friend.name}의 리듬: &ldquo;<span className="text-[#E65100] underline">{targetItem.name}</span>&rdquo;
-          </h2>
-        </div>
-        <button
-          aria-label="놀이 안내 다시 듣기"
-          onClick={() => playSequence(targetItem)}
-          className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#FFA726] shadow-xs text-[#E65100] cursor-pointer shrink-0"
-          title="소리 리듬 다시 듣기"
-        >
-          <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
-        </button>
-      </div>
+      <GameCue buddy={buddy} onReplay={() => playSequence(targetItem)} />
 
       {/* Timer display */}
       {diffConfig.timeLimit > 0 && !isCompleted && (
         <div className="w-full mt-3 px-2">
-          <div className="flex items-center gap-1.5 text-xs font-black text-rose-500 mb-1">
+          <div className="sr-only">
             <Timer className="w-4 h-4 animate-pulse" />
             <span>시간제한: {timeLeft}초</span>
           </div>
@@ -184,20 +167,14 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
         </div>
       )}
 
-      {/* Play Mode Status Info */}
-      <div className="my-3 flex flex-col items-center justify-center p-3.5 bg-white rounded-3xl border-3 border-dashed border-[#FFA726] text-center w-full">
+      {/* Picture cue follows the lit instruments: listen, tap, then celebrate. */}
+      <div className="visual-prompt" role="status">
         {isPlayingSequence ? (
-          <div className="flex items-center gap-2 text-base font-black text-[#E65100] animate-pulse">
-            <Volume2 className="w-5 h-5" /> 👂 {friend.name}의 악기 연주를 귀기울여 듣고 있어요!
-          </div>
+          <><Volume2 className="w-9 h-9" aria-hidden="true" /><span className="sr-only">친구의 악기 연주를 듣고 있어요</span></>
         ) : isCompleted ? (
-          <div className="flex items-center gap-2 text-base font-black text-emerald-600 animate-bounce">
-            <Sparkles className="w-5 h-5" /> 🏆 축하해요! 리듬 연주가 완벽하게 끝났어요!
-          </div>
+          <><Sparkles className="w-9 h-9" aria-hidden="true" /><span className="sr-only">축하해요! 리듬 연주를 마쳤어요</span></>
         ) : (
-          <div className="text-base font-black text-[#6D4C41]">
-            👇 {childName} 차례예요! 순서대로 톡톡 터치하세요! ({userSequence.length} / {targetItem.notes.length})
-          </div>
+          <><Hand className="w-9 h-9" aria-hidden="true" /><span className="sr-only">{childName} 차례예요! 순서대로 톡톡 터치하세요. {userSequence.length} / {targetItem.notes.length}</span></>
         )}
       </div>
 
@@ -235,7 +212,7 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
           <RoundContinuation onNext={generateRound} />
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={() => playSequence(targetItem)} className="!px-4">
-            <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 리듬 다시 듣기
+            <RefreshCw className="w-6 h-6" aria-hidden="true" /><span className="sr-only">리듬 다시 듣기</span>
           </JellyButton>
         )}
       </div>

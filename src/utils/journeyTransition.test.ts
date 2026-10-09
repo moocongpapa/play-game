@@ -15,18 +15,18 @@ test('scene changes wait for speech, including a manual next tap during praise',
   assert.equal(scenes, 0, 'an eager tap must not cut off the voice');
   spoken = true; t.mock.timers.tick(150);
   assert.equal(scenes, 1);
-  transition.resume(); transition.advance(); t.mock.timers.tick(14000);
+  transition.resume(); transition.advance(); t.mock.timers.tick(1800);
   assert.equal(scenes, 1, 'a scene transition can only be consumed once');
 });
 
 test('playing with collected toys restarts the full finale interval, and leaving cancels it', t => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   let episodes = 0;
-  const transition = createJourneyTransition(() => episodes++, 14000, () => true, clock);
-  transition.resume(); t.mock.timers.tick(13000);
+  const transition = createJourneyTransition(() => episodes++, 1800, () => true, clock);
+  transition.resume(); t.mock.timers.tick(1700);
   transition.pause(); t.mock.timers.tick(60000);
   assert.equal(episodes, 0, 'a held finger or a hidden tab never advances');
-  transition.resume(); t.mock.timers.tick(13999);
+  transition.resume(); t.mock.timers.tick(1799);
   assert.equal(episodes, 0);
   t.mock.timers.tick(1); assert.equal(episodes, 1);
   const abandoned = createJourneyTransition(() => episodes++, 1000, () => true, clock);

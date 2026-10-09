@@ -1,0 +1,30 @@
+.game-stage .balloon-board,
+.balloon-board {
+  position: relative;
+  width: 100%;
+  height: var(--game-play-height, calc(100dvh - 88px));
+  min-height: 240px;
+  margin: 0 auto;
+  overflow: hidden;
+  isolation: isolate;
+  border: 2px solid #ffffffdc;
+  border-radius: 28px;
+  box-shadow: inset 0 2px 0 #fff, 0 3px 0 #ded5b8;
+  user-select: none;
+  touch-action: none;
+}
+.balloon-field { position: absolute; inset: 0; z-index: 2; overflow: hidden; }
+.balloon-companion { position: absolute; bottom: 8px; left: 12px; z-index: 1; pointer-events: none; }
+.balloon-cloud { position: absolute; width: 100px; height: 28px; border-radius: 50%; background: #ffffff65; pointer-events: none; }
+.balloon-cloud::before, .balloon-cloud::after { content: ''; position: absolute; bottom: 4px; border-radius: 50%; background: #ffffff65; }
+.balloon-cloud::before { left: 16px; width: 43px; height: 43px; }
+.balloon-cloud::after { right: 16px; width: 32px; height: 32px; }
+.balloon-cloud-left { top: 12%; left: -10px; }
+.balloon-cloud-right { top: 28%; right: -8px; scale: .8; }
+.balloon-board .balloon-toy { touch-action: none; }
+.balloon-celebration { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; z-index: 3; pointer-events: none; background: #fff9e938; }
+.balloon-prize-star { width: 64px; height: 64px; margin-top: -28px; z-index: 1; fill: #ffe473; stroke: #d4a73c; filter: drop-shadow(0 3px 0 #fff9e9); }
+@media (orientation: landscape) and (max-height: 540px) {
+  .balloon-companion { left: 8px; bottom: 4px; }
+  .balloon-companion > div { width: 64px; height: 64px; }
+}

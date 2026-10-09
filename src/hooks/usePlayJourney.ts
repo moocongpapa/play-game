@@ -64,7 +64,7 @@ export function usePlayJourney(props: ToddlerGameProps, steps: readonly JourneyS
       } else setStep(value => value + 1);
       claimed.current = false;
       setPhase('playing');
-    }, phase === 'finished' ? 14000 : 1000, () => praised && !document.hidden && !latest.current.paused && !isSpeechBusy(), window);
+    }, phase === 'finished' ? 1800 : 1000, () => praised && !document.hidden && !latest.current.paused && !isSpeechBusy(), window);
     transitionRef.current = transition;
     const pointers = new Set<number>();
     let focused = true;

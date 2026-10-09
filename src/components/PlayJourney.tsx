@@ -1,7 +1,8 @@
 import { useContext, useState, type ReactNode } from 'react';
 import { motion, MotionConfig, useReducedMotion } from 'motion/react';
-import { ArrowRight, Check, Flag, Flower2, Sparkles, Volume2, TreeDeciduous, Cloud, Utensils, Rainbow } from 'lucide-react';
+import { ArrowRight, Check, Flag, Flower2, Sparkles, TreeDeciduous, Cloud, Utensils, Rainbow } from 'lucide-react';
 import { CharacterAvatar } from './CharacterAvatar';
+import { GameCue } from './GameCue';
 import { DayContinuationContext, PlayHintsPausedContext } from './PlayFlowContext';
 import { ToyArtwork } from './ToyArtwork';
 import { LandscapeArt, SeatArt, WingArt } from './development/DevelopmentArt';
@@ -34,10 +35,8 @@ export function JourneyFrame({ props, journey, className = '', children }: {
   const paused = useContext(PlayHintsPausedContext);
   return <MotionConfig reducedMotion="user"><PlayHintsPausedContext.Provider value={paused || journey.locked}>
     <div className={`development-play play-journey ${className}`} data-journey-phase={journey.phase}>
-      <div className="discovery-guide"><CharacterAvatar id={props.buddy} size="sm" mood={journey.locked ? 'happy' : 'still'} />
-        <h2>{journey.phase === 'finished' ? '우리 함께 해냈어!' : journey.current.label}</h2>
-        <button type="button" aria-label="놀이 안내 다시 듣기" disabled={!props.soundEnabled || paused || journey.locked} onClick={() => speakText(journey.current.guide, props.soundEnabled, { characterId: props.buddy })}><Volume2 /></button>
-      </div>
+      <h2 className="sr-only">{journey.phase === 'finished' ? '우리 함께 해냈어!' : journey.current.label}</h2>
+      <GameCue buddy={props.buddy} happy={journey.locked} disabled={!props.soundEnabled || paused || journey.locked} onReplay={() => speakText(journey.current.guide, props.soundEnabled, { characterId: props.buddy })} />
       <ol className="journey-path" aria-label="이야기 진행">
         {journey.steps.map((step, i) => <li key={step.id} aria-label={step.label} aria-current={i === journey.step ? 'step' : undefined}
           data-done={i < journey.step || (i === journey.step && journey.locked)}>

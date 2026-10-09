@@ -1,3 +1,4 @@
+import { GameCue } from '../../components/GameCue';
 import { useRoundTimer } from '../../hooks/useRoundTimer';
 import { DragMatch, DragPiece, DropSlot, DragHint } from '../../components/DragMatch';
 import { RoundContinuation } from '../../components/RoundContinuation';
@@ -7,14 +8,14 @@ import type { CharacterId } from '../../types';
 import { CHARACTERS } from '../../data/characters';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+
 import { SHAPE_COLOR_ITEMS_BY_AGE } from '../../data/gameData';
-import { CharacterAvatar } from '../../components/CharacterAvatar';
+
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
 import { getDifficultyConfig, pickDistractors } from '../../utils/ageEngine';
 import { AgeGroup } from '../../types';
-import { Volume2, RefreshCw, Timer, Flame } from 'lucide-react';
+import { RefreshCw, Timer } from 'lucide-react';
 
 interface ShapeColorItem {
   id: string;
@@ -152,7 +153,6 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
   const [shakingCardId, setShakingCardId] = useState<string | null>(null);
   const [selectedCorrectId, setSelectedCorrectId] = useState<string | null>(null);
   const [streak, setStreak] = useState(0);
-  const [showComboBanner, setShowComboBanner] = useState(false);
 
   // 타이머 상태 (꽃잎반/별님반)
   const { timeLeft, timeOut, startRoundTimer, stopRoundTimer } = useRoundTimer(diffConfig.timeLimit, () => {
@@ -201,8 +201,6 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
       setStreak(nextStreak);
 
       if (nextStreak >= 2) {
-        setShowComboBanner(true);
-        scheduleGameTimeout(() => setShowComboBanner(false), 1500);
         speakText(`우와! ${nextStreak}연속 정답! ${item.colorName} ${item.shape}를 완벽하게 맞췄어요!`, soundEnabled, { characterId: buddy });
       } else {
         speakText(`우와! 정답이에요! ${item.colorName} ${item.shape}!`, soundEnabled, { characterId: buddy });
@@ -227,41 +225,12 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
     }}>
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
-      <div className="game-prompt w-full bg-gradient-to-r from-[#DCEDC8] to-[#E8F5E9] p-3.5 sm:p-4 rounded-3xl border-3 border-[#66BB6A] shadow-sm flex items-center gap-3 sm:gap-4 relative">
-        <CharacterAvatar id={buddy} size="md" mood={selectedCorrectId ? 'excited' : 'still'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
-        <div className="flex-1 min-w-0 break-keep">
-          <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
-            <span className="text-[#2E7D32]">{targetItem.colorName} {targetItem.shape}</span>
-          </h2>
-        </div>
-        <button
-          aria-label="놀이 안내 다시 듣기"
-          onClick={() => speakText(`${targetItem.colorName} ${targetItem.shape}를 찾아보아요!`, soundEnabled, { characterId: buddy })}
-          className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#66BB6A] shadow-xs text-[#2E7D32] cursor-pointer shrink-0"
-        >
-          <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
-        </button>
-
-        {/* Combo Banner */}
-        <AnimatePresence>
-          {showComboBanner && (
-            <motion.div
-              initial={{ scale: 0, y: 20 }}
-              animate={{ scale: 1.1, y: 0 }}
-              exit={{ scale: 0, opacity: 0 }}
-              className="absolute -top-3 right-4 bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-3 py-1 rounded-full font-black text-xs sm:text-sm shadow-lg flex items-center gap-1 border-2 border-white"
-            >
-              <Flame className="w-4 h-4 text-yellow-200 fill-yellow-200 animate-bounce" />
-              <span>{streak}연속 정답 콤보!</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      <GameCue buddy={buddy} disabled={!soundEnabled} onReplay={() => speakText(`${targetItem.colorName} ${targetItem.shape}를 찾아보아요!`, soundEnabled, { characterId: buddy })} />
 
       {/* Timer display */}
       {diffConfig.timeLimit > 0 && !selectedCorrectId && (
         <div className="w-full mt-3 px-2">
-          <div className="flex items-center gap-1.5 text-xs font-black text-rose-500 mb-1">
+          <div className="sr-only">
             <Timer className="w-4 h-4 animate-pulse" />
             <span>시간제한: {timeLeft}초</span>
           </div>
@@ -276,7 +245,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
 
       {/* Time out warning */}
       {timeOut && (
-        <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-2xl w-full text-center font-black text-rose-600 animate-pulse my-4">
+        <div className="sr-only" role="status">
           ⏰ 째깍째깍! 시간이 지났어요! 다음 문제로 풀기를 진행해요!
         </div>
       )}
@@ -331,10 +300,10 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
       </>}
       <div className="flex items-center justify-center gap-3 w-full">
         {selectedCorrectId || timeOut ? (
-          <RoundContinuation onNext={generateRound} delayMs={selectedCorrectId ? 5500 : 3000} />
+          <RoundContinuation onNext={generateRound} />
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">
-            <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 다른 모양
+            <RefreshCw className="w-6 h-6" /><span className="sr-only">다른 모양</span>
           </JellyButton>
         )}
       </div>

@@ -1,3 +1,4 @@
+import { GameCue } from '../../components/GameCue';
 import { useRoundTimer } from '../../hooks/useRoundTimer';
 import { RoundContinuation } from '../../components/RoundContinuation';
 import { pickNextRound } from '../../utils/roundDeck';
@@ -8,12 +9,12 @@ import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { FOOD_COUNTING_ITEMS } from '../../data/gameData';
-import { CharacterAvatar } from '../../components/CharacterAvatar';
+
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
-import { getDifficultyConfig, getAgeGroupLabel, getKoreanCounts } from '../../utils/ageEngine';
+import { getDifficultyConfig, getKoreanCounts } from '../../utils/ageEngine';
 import { AgeGroup } from '../../types';
-import { Volume2, RefreshCw, Timer } from 'lucide-react';
+import { RefreshCw, Timer } from 'lucide-react';
 
 interface GgulgguliCountingGameProps {
   buddy: CharacterId;
@@ -141,29 +142,12 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
   return (
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
-      <div className="game-prompt w-full bg-gradient-to-r from-[#FFCCBC] to-[#FBE9E7] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FF7043] shadow-sm flex items-center gap-3 sm:gap-4">
-        <CharacterAvatar id={buddy} size="md" mood={selectedCorrectNumber ? 'happy' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
-        <div className="flex-1 min-w-0 break-keep">
-          <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#F4511E] mb-1">
-            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 맛있는 수 세기</span>
-          </div>
-          <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
-            접시 위의 <span className="text-[#F4511E] underline">{targetFood.name}</span>는 몇 개일까요?
-          </h2>
-        </div>
-        <button
-          aria-label="놀이 안내 다시 듣기"
-          onClick={() => speakText(`${targetFood.name}가 몇 개 있는지 세어보아요!`, soundEnabled, { characterId: buddy })}
-          className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#FF7043] shadow-xs text-[#F4511E] cursor-pointer shrink-0"
-        >
-          <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
-        </button>
-      </div>
+      <GameCue buddy={buddy} disabled={!soundEnabled} onReplay={() => speakText(`${targetFood.name}가 몇 개 있는지 세어보아요!`, soundEnabled, { characterId: buddy })} />
 
       {/* Timer display */}
       {diffConfig.timeLimit > 0 && !selectedCorrectNumber && (
         <div className="w-full mt-3 px-2">
-          <div className="flex items-center gap-1.5 text-xs font-black text-rose-500 mb-1">
+          <div className="sr-only">
             <Timer className="w-4 h-4 animate-pulse" />
             <span>시간제한: {timeLeft}초</span>
           </div>
@@ -178,14 +162,14 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
 
       {/* Time out warning */}
       {timeOut && (
-        <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-2xl w-full text-center font-black text-rose-600 animate-pulse my-4">
+        <div className="sr-only" role="status">
           ⏰ 아쉽네요! 시간 초과! 다음 먹방 수 세기로 넘어가요!
         </div>
       )}
 
       {/* Food Plate Container */}
       <div className="my-3 sm:my-5 p-4 sm:p-6 w-full bg-white rounded-3xl sm:rounded-[40px] border-3 sm:border-4 border-[#FFCCBC] shadow-inner flex flex-col items-center justify-center">
-        <p className="text-xs sm:text-sm font-bold text-[#8C7B79] mb-2 sm:mb-3 break-keep text-center">
+        <p className="sr-only">
           👇 음식을 손가락으로 누르면 숫자를 세어줘요!
         </p>
 
@@ -251,7 +235,7 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
           <RoundContinuation onNext={generateRound} />
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">
-            <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 다른 음식
+            <RefreshCw className="w-6 h-6" aria-hidden="true" /><span className="sr-only">다른 음식</span>
           </JellyButton>
         )}
       </div>

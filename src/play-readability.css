@@ -1,24 +1,10 @@
-.game-stage-intro { padding-block: 7px; }.game-stage-intro h1 { font-size: 16px; }.game-stage-intro .eyebrow { display: none; }
-.game-stage-miniature { width: 64px; }
 /* These games already have a character and a single round-specific guide. */
-.game-stage:has(.game-prompt, .play-guide, .development-play, .adventure-board) > .game-stage-intro { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); }
-.game-stage .game-prompt { padding: 6px 10px; gap: 10px; min-height: 76px; }
-.game-stage .game-prompt > button, .play-guide > button, .discovery-guide > button { display: grid; place-items: center; min-width: 64px; min-height: 64px; flex-shrink: 0; padding: 10px; }
-.game-stage .game-prompt .inline-flex { display: none; }
-.game-stage .game-prompt > div:first-child { width: 64px !important; height: 64px !important; }
-.game-stage .game-board { min-height: 0; justify-content: flex-start; gap: 14px; }
 .game-stage .drag-hint { padding: 2px 0; min-height: 30px; }
 .game-stage .drag-hint > span:last-child { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .game-stage .drag-hint-demo svg:first-child { animation: none; }
 .game-stage [data-game='shape_color'] .drop-slot { margin: 0; padding: 10px; min-width: 154px; }
 .game-stage [data-game='shape_color'] .drag-options-grid { margin: 0; gap: 14px; }
 .game-stage .shape-play-piece { width: clamp(68px,18vw,104px); height: clamp(68px,18vw,104px); }
-.game-stage .play-guide { padding: 4px 8px; gap: 10px; }.game-stage .play-guide h2 { font-size: clamp(16px,3vw,21px); }
-.game-stage .game-surface { padding-top: 12px; }
-.adventure-board > .adventure-map { padding: 8px; margin-bottom: 10px; gap: 6px; }
-.adventure-map-heading { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
-.adventure-map-heading button { min-width: 64px; min-height: 64px; border-radius: 22px; justify-content: center; }
-.adventure-map-heading button svg { width: 27px; height: 27px; }
 .adventure-board button[title='다시 듣기'] { min-width: 64px; min-height: 64px; }
 .friend-greetings .greeting-heading { margin-bottom: 12px; }
 .friend-greetings .greeting-heading h1 { font-size: clamp(23px,3vw,30px); }
@@ -30,8 +16,6 @@
 .friend-greetings .greeting-stage .greeting-caption, .friend-greetings .greeting-tap-hint > span { display: none; }
 .friend-greetings .greeting-tap-hint { padding: 8px; }
 @media (max-width: 639px) {
-  .game-stage .game-surface { padding: 10px 10px 16px; }
-  .game-stage .game-prompt h2 { font-size: 16px; }
   .friend-greetings .greeting-stage { height: 285px; }
   .friend-greetings .greeting-friend-grid { gap: 8px; }
 }
@@ -39,15 +23,8 @@
 
 .scene-arrow.to-shadow { rotate: 180deg; }
 .feeding-action-path { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: #fef6d8; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 1px #997c64); }
-.adventure-board > .adventure-map { display: grid; grid-template-columns: minmax(0,1fr) 64px; align-items: center; gap: 8px; }
-.adventure-map > .stage-steps { grid-column: 1; grid-row: 1; }
-.adventure-map-heading { grid-column: 2; grid-row: 1; }
-.adventure-map .stage-steps > div { padding: 5px; min-width: 0; }
-.adventure-map .stage-steps > div > span { display: none; }
-.adventure-map .stage-steps > div > div:last-of-type { font-size: 10px; }
 .friend-portrait > [data-character], .game-choice:not([data-help='true']) > .toy-art { animation: none; }
 
-.adventure-round-guide { padding: 6px 10px; gap: 10px; }.adventure-round-guide > div > span { display: none; }
 @media (max-width: 359px) { .game-stage .drag-options-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }.game-stage .shape-play-piece { width: 72px; height: 72px; } }
 
 .game-stage .jelly-button { min-width: 64px; min-height: 64px; }

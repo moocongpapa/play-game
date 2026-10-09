@@ -1,3 +1,4 @@
+import { GameCue } from '../../components/GameCue';
 import { useRoundTimer } from '../../hooks/useRoundTimer';
 import { useIdleScaffolding } from '../../hooks/useIdleScaffolding';
 import { ScaffoldingHint } from '../../components/ScaffoldingHint';
@@ -8,14 +9,14 @@ import { CHARACTERS } from '../../data/characters';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { QuizItem, AgeGroup } from '../../types';
 import { OBJECT_ITEMS_BY_AGE } from '../../data/gameData';
-import { CharacterAvatar } from '../../components/CharacterAvatar';
+
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
-import { getDifficultyConfig, getAgeGroupLabel, pickDistractors } from '../../utils/ageEngine';
-import { Volume2, RefreshCw, Timer, Flame } from 'lucide-react';
+import { getDifficultyConfig, pickDistractors } from '../../utils/ageEngine';
+import { RefreshCw, Timer } from 'lucide-react';
 
 interface GgomiObjectGameProps {
   buddy: CharacterId;
@@ -45,8 +46,6 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
   
   // 콤보 스트릭 상태
   const [streak, setStreak] = useState(0);
-  const [showComboBanner, setShowComboBanner] = useState(false);
-  const [questionPrompt, setQuestionPrompt] = useState('');
 
   // 타이머 상태 (꽃잎반/별님반)
   const { timeLeft, timeOut, startRoundTimer, stopRoundTimer } = useRoundTimer(diffConfig.timeLimit, () => {
@@ -90,7 +89,6 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
     } else {
       promptText = `${friend.name}가 '${target.koreanName}'를 찾고 있어요! 어디에 있을까요?`;
     }
-    setQuestionPrompt(promptText);
 
     if (soundEnabled) {
       speakText(promptText, soundEnabled, { characterId: buddy });
@@ -119,8 +117,6 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
       setStreak(nextStreak);
 
       if (nextStreak >= 2) {
-        setShowComboBanner(true);
-        scheduleGameTimeout(() => setShowComboBanner(false), 1500);
         speakText(`와우! ${nextStreak}연속 정답! ${childName}야 정말 똑똑하구나!`, soundEnabled, { characterId: buddy });
       } else {
         speakText(`정답이에요! 참 잘했어요!`, soundEnabled, { characterId: buddy });
@@ -145,44 +141,12 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
   return (
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
-      <div className="game-prompt w-full bg-gradient-to-r from-[#FFB7D5] to-[#FFE4EC] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FF80AB] shadow-sm flex items-center gap-3 sm:gap-4 relative">
-        <CharacterAvatar id={buddy} size="md" mood={selectedCorrectId ? 'dancing' : 'talking'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
-        <div className="flex-1 min-w-0 break-keep">
-          <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#FF4081] mb-1">
-            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 사물 인지</span>
-          </div>
-          <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug">
-            {questionPrompt || <>&ldquo;<span className="text-[#FF4081] underline">{targetItem?.koreanName}</span>&rdquo;를 찾아주세요!</>}
-          </h2>
-        </div>
-        <button
-          aria-label="놀이 안내 다시 듣기"
-          onClick={handleReplayVoice}
-          className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#FF80AB] shadow-xs text-[#FF4081] active:scale-90 transition-transform cursor-pointer shrink-0"
-        >
-          <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
-        </button>
-
-        {/* Combo Streak Banner */}
-        <AnimatePresence>
-          {showComboBanner && (
-            <motion.div
-              initial={{ scale: 0, y: 20 }}
-              animate={{ scale: 1.1, y: 0 }}
-              exit={{ scale: 0, opacity: 0 }}
-              className="absolute -top-3 right-4 bg-gradient-to-r from-rose-500 to-amber-500 text-white px-3 py-1 rounded-full font-black text-xs sm:text-sm shadow-lg flex items-center gap-1 border-2 border-white"
-            >
-              <Flame className="w-4 h-4 text-yellow-200 fill-yellow-200 animate-bounce" />
-              <span>{streak}연속 정답! 콤보 보너스!</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      <GameCue buddy={buddy} disabled={!soundEnabled} onReplay={handleReplayVoice} />
 
       {/* Timer display for older kids */}
       {diffConfig.timeLimit > 0 && !selectedCorrectId && (
         <div className="w-full mt-3 px-2">
-          <div className="flex items-center gap-1.5 text-xs font-black text-rose-500 mb-1">
+          <div className="sr-only">
             <Timer className="w-4 h-4 animate-pulse" />
             <span>시간제한: {timeLeft}초</span>
           </div>
@@ -197,7 +161,7 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
 
       {/* Time out warning */}
       {timeOut && (
-        <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-2xl w-full text-center font-black text-rose-600 animate-pulse my-4">
+        <div className="sr-only" role="status">
           ⏰ 째깍째깍! 시간이 지났어요! 잠시 뒤 다음 문제로 넘어가요!
         </div>
       )}
@@ -236,7 +200,7 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
               }`}
             >
               <span className="text-5xl sm:text-7xl mb-1 sm:mb-2 drop-shadow-sm"><ToyArtwork emoji={item.emoji} /></span>
-              <span className="text-xl sm:text-2xl font-black text-[#4A3E3D]">{item.koreanName}</span>
+              <span className="sr-only">{item.koreanName}</span>
               {shouldPulse && <ScaffoldingHint />}
             </motion.button>
           );
@@ -249,7 +213,7 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
           <RoundContinuation onNext={generateRound} />
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">
-            <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 다른 문제
+            <RefreshCw className="w-6 h-6" /><span className="sr-only">다른 문제</span>
           </JellyButton>
         )}
       </div>

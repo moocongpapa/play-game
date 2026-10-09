@@ -1,0 +1,92 @@
+/* Picture-first play: the only guide control is a small, familiar talking friend. */
+.app-world[data-screen='game'] {
+  --game-play-height: calc(100dvh - 76px - env(safe-area-inset-top, 0px) - max(8px, env(safe-area-inset-bottom, 0px)));
+}
+.app-world[data-screen='game'] .app-main {
+  padding: 8px max(8px, env(safe-area-inset-right, 0px)) max(8px, env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
+}
+.app-world .game-stage { min-height: 0; border-width: 2px; border-radius: 26px; }
+.app-world .game-stage .game-surface { padding: 8px; }
+.game-stage :is(.game-board, .toddler-play, .development-play) {
+  position: relative;
+  min-height: 0;
+  gap: 8px;
+  padding-top: 68px;
+  justify-content: flex-start;
+}
+.game-stage .game-cue {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  min-height: 64px;
+  padding: 3px;
+  border: 1px solid #e2d6bf;
+  border-radius: 23px;
+  background: #fff9e9ed;
+  box-shadow: inset 0 2px 0 #fff, 0 2px 0 #d7c9af;
+  touch-action: manipulation;
+}
+.game-cue > div { width: 54px !important; height: 54px !important; pointer-events: none; }
+.game-cue .game-cue-speaker { position: absolute; right: 1px; bottom: 1px; width: 23px; height: 23px; padding: 3px; border-radius: 50%; color: #697e62; background: #fffdf3; pointer-events: none; }
+.game-cue:disabled .game-cue-speaker { opacity: .45; }
+.game-stage .game-board:not(.size-sort-board):has(> .visual-prompt), .game-stage .play-journey { padding-top: 0; }
+.game-stage .game-board > .visual-prompt {
+  align-self: stretch;
+  min-height: 64px;
+  margin: 0 0 0 72px;
+  padding: 4px 8px;
+  gap: 8px;
+  border: 0;
+  border-radius: 20px;
+  box-shadow: none;
+  background: #fffaf1b3;
+}
+.game-stage .game-board > .visual-prompt .toy-art { max-width: 64px; max-height: 64px; }
+.game-stage .game-choice-grid { margin-block: 4px; }
+.game-stage .game-surface:is([data-game='object_recognition'], [data-game='sound_quiz'], [data-game='cloud_shapes'], [data-game='treasure_hunt'], [data-game='emotion_quiz']) .game-choice-grid {
+  min-height: var(--choice-grid-height, clamp(280px, calc(var(--game-play-height, 70dvh) - 190px), 520px));
+  grid-auto-rows: minmax(140px, 1fr);
+}
+.game-stage .game-choice-grid .game-choice .toy-art { width: clamp(76px, 20vw, 112px); height: auto; aspect-ratio: 1; }
+.game-stage .journey-path { min-height: 64px; margin-left: 72px; align-items: center; gap: 4px; }
+.game-stage .journey-path li { flex: 1; min-width: 0; max-width: 52px; }
+.game-stage .discovery-scene { height: clamp(320px, 55dvh, 540px); }
+.game-stage .harvest-scene { height: clamp(290px, 46dvh, 430px); }
+.game-stage .drag-hint { min-height: 20px; padding: 0; }
+.game-stage .drag-hint > span:last-child { display: none; }
+.game-stage .round-continuation { width: auto; margin-inline: auto; padding: 3px 8px; gap: 8px; border-radius: 24px; }
+.game-stage .round-continuation button { width: 64px; height: 64px; min-height: 64px; padding: 0; }
+.game-stage .round-continuation button svg { width: 30px; height: 30px; }
+.game-stage .day-next { padding: 0; margin: 0; }
+.game-stage .day-next button { min-height: 64px; }
+.app-world .game-stage .game-surface[data-game='balloon_pop'] { padding: 0; }
+.app-world .game-stage .game-surface[data-game='bubble_pop'] { padding: 0; }
+.game-stage .bubble-play { padding-top: 0; gap: 4px; }
+.game-stage .bubble-play .game-cue { top: 8px; left: 8px; }
+.game-stage .bubble-sky { --arena-height: max(260px, calc(var(--game-play-height, 75dvh) - 40px)); border: 0; border-radius: 24px; }
+.game-stage .key-note, .game-stage .echo-caption, .game-stage .melody-echo > span, .game-stage .sensory-tools button > span { display: none; }
+.game-stage .xylophone-play .melody-echo { margin-top: 0; }
+.game-stage .adventure-board > .adventure-map { position: relative; display: grid; grid-template-columns: 64px minmax(0, 1fr) 64px; align-items: center; gap: 8px; padding: 0; margin-bottom: 8px; }
+.game-stage .adventure-map .game-cue { position: relative; grid-column: 1; grid-row: 1; }
+.game-stage .adventure-map .stage-steps { grid-column: 2; grid-row: 1; min-width: 0; gap: 3px; }
+.game-stage .stage-step { position: relative; min-width: 0; height: 48px; padding: 2px; overflow: hidden; }
+.game-stage .stage-step-picture { width: 100%; height: 100%; }
+.game-stage .stage-step-picture .game-artwork { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 10px; }
+.game-stage .stage-step-star { position: absolute; right: 0; bottom: 0; width: 17px; height: 17px; }
+.game-stage .adventure-restart { grid-column: 3; grid-row: 1; }
+.game-stage .adventure-scene { padding: 12px; gap: 10px; border-width: 2px; border-radius: 26px; }
+.game-stage .adventure-balloon-scene { height: max(280px, calc(var(--game-play-height, 75dvh) - 100px)); }
+.game-stage .adventure-round-progress { display: flex; gap: 5px; align-items: center; }
+.game-stage .adventure-round-progress svg { width: 22px; height: 22px; }
+.game-stage .adventure-home { width: 64px; height: 64px; padding: 8px; }
+@media (orientation: landscape) and (max-height: 550px) {
+  .game-stage { --choice-grid-height: 0px; }
+  .game-stage .discovery-scene { height: 270px; min-height: 270px; }
+  .game-stage .harvest-scene { height: 250px; min-height: 250px; }
+}

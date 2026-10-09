@@ -1,3 +1,4 @@
+import { GameCue } from '../../components/GameCue';
 import { useRoundTimer } from '../../hooks/useRoundTimer';
 import { RoundContinuation } from '../../components/RoundContinuation';
 import { pickNextRound } from '../../utils/roundDeck';
@@ -7,13 +8,13 @@ import { ToyArtwork } from '../../components/ToyArtwork';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { CharacterAvatar } from '../../components/CharacterAvatar';
+
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
-import { getDifficultyConfig, getAgeGroupLabel, pickDistractors } from '../../utils/ageEngine';
+import { getDifficultyConfig, pickDistractors } from '../../utils/ageEngine';
 import { TREASURE_ITEMS_BY_AGE, TreasureItem } from '../../data/gameData';
 import { AgeGroup } from '../../types';
-import { Volume2, RefreshCw, Sparkles, Timer } from 'lucide-react';
+import { RefreshCw, Sparkles, Timer } from 'lucide-react';
 
 interface NurungjiTreasureGameProps {
   buddy: CharacterId;
@@ -114,29 +115,12 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
   return (
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
-      <div className="game-prompt w-full bg-gradient-to-r from-[#FFECB3] to-[#FFF8E1] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FFA000] shadow-sm flex items-center gap-3 sm:gap-4">
-        <CharacterAvatar id={buddy} size="md" mood={selectedCorrectId ? 'excited' : 'waving'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
-        <div className="flex-1 min-w-0 break-keep">
-          <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#FF8F00] mb-1">
-            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 보물 찾기</span>
-          </div>
-          <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
-            숨어있는 &ldquo;<span className="text-[#FF8F00] underline">{targetItem.name}</span>&rdquo;을 찾아주세요!
-          </h2>
-        </div>
-        <button
-          aria-label="놀이 안내 다시 듣기"
-          onClick={() => speakText(`숨겨진 ${targetItem.name} 보물을 찾아서 터치해보아요!`, soundEnabled, { characterId: buddy })}
-          className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#FFA000] shadow-xs text-[#FF8F00] cursor-pointer shrink-0"
-        >
-          <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
-        </button>
-      </div>
+      <GameCue buddy={buddy} disabled={!soundEnabled} onReplay={() => speakText(`숨겨진 ${targetItem.name} 보물을 찾아서 터치해보아요!`, soundEnabled, { characterId: buddy })} />
 
       {/* Timer display */}
       {diffConfig.timeLimit > 0 && !selectedCorrectId && (
         <div className="w-full mt-3 px-2">
-          <div className="flex items-center gap-1.5 text-xs font-black text-rose-500 mb-1">
+          <div className="sr-only">
             <Timer className="w-4 h-4 animate-pulse" />
             <span>시간제한: {timeLeft}초</span>
           </div>
@@ -151,7 +135,7 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
 
       {/* Time out warning */}
       {timeOut && (
-        <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-2xl w-full text-center font-black text-rose-600 animate-pulse my-4">
+        <div className="sr-only" role="status">
           ⏰ 아쉬워라! 시간 제한 초과! 다음 보물찾기로 이동해요!
         </div>
       )}
@@ -192,7 +176,7 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
             >
               {isSolved && <Sparkles className="w-5 h-5 sm:w-8 sm:h-8 text-[#FFA000] animate-bounce mb-1" />}
               <span className="text-4xl sm:text-6xl mb-1 sm:mb-2"><ToyArtwork emoji={item.emoji} /></span>
-              <span className="text-xs sm:text-xl font-black text-[#4A3E3D] text-center">{item.name}</span>
+              <span className="sr-only">{item.name}</span>
             </motion.button>
           );
         })}
@@ -204,7 +188,7 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
           <RoundContinuation onNext={generateRound} />
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={generateRound} className="!px-4">
-            <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 다른 문제
+            <RefreshCw className="w-6 h-6" /><span className="sr-only">다른 문제</span>
           </JellyButton>
         )}
       </div>

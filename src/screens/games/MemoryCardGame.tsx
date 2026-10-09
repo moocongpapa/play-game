@@ -1,15 +1,16 @@
+import { GameCue } from '../../components/GameCue';
 import { useEffect, useState } from 'react';
-import { Volume2, RefreshCw } from 'lucide-react';
+import { RefreshCw } from 'lucide-react';
 import { RoundContinuation } from '../../components/RoundContinuation';
 import { PlayResultScene } from '../../components/PlayResultScene';
 import { DragMatch, DragPiece, DropSlot, DragHint } from '../../components/DragMatch';
-import { CharacterAvatar } from '../../components/CharacterAvatar';
+
 import { JellyButton } from '../../components/JellyButton';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { PLAY_THEMES } from '../../data/playThemes';
 import { CHARACTERS } from '../../data/characters';
 import { pickNextRound, shuffle } from '../../utils/roundDeck';
-import { getDifficultyConfig, getAgeGroupLabel } from '../../utils/ageEngine';
+import { getDifficultyConfig } from '../../utils/ageEngine';
 import { speakText, playCorrectFanfare, playWrongBoing, playStarGain } from '../../utils/soundEngine';
 import type { AgeGroup, CharacterId } from '../../types';
 
@@ -65,19 +66,12 @@ export function MemoryCardGame({ buddy, onCompleteQuiz, soundEnabled, ageGroup, 
   const nextCard = cards.find(card => !matched.includes(card.id));
   return <DragMatch canDrop={(id, target) => id === target} onDrop={matchPair} resetKey={round} disabled={isCompleted} hint={nextCard ? { pieceId: nextCard.id, targetId: nextCard.id } : undefined}>
     <div className="game-board flex flex-col items-center w-full max-w-2xl mx-auto">
-      <div className="game-prompt w-full bg-gradient-to-r from-[#FFE0B2] to-[#FFF3E0] p-3.5 sm:p-4 rounded-3xl border-3 border-[#FFA726] flex items-center gap-3">
-        <CharacterAvatar id={buddy} size="md" mood={isCompleted ? 'happy' : 'waving'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
-        <div className="flex-1 min-w-0">
-          <span className="text-xs sm:text-sm font-black text-[#E65100]">{friend.badge} {getAgeGroupLabel(ageGroup)} · {themeName}</span>
-          <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D]">같은 그림 위에 쏙!</h2>
-        </div>
-        <button aria-label="놀이 안내 다시 듣기" onClick={() => speakText(guide, soundEnabled, { characterId: buddy })} className="p-3 bg-white rounded-full text-orange-600"><Volume2 /></button>
-      </div>
+      <GameCue buddy={buddy} disabled={!soundEnabled} onReplay={() => speakText(guide, soundEnabled, { characterId: buddy })} />
       {isCompleted ? <PlayResultScene kind="train" buddy={buddy} toys={cards.map(card => card.emoji)} /> : <div className="matching-playmat">
         <div className="matching-row" style={{ '--match-columns': pairCount } as React.CSSProperties}>
           {cards.map(card => <DropSlot key={card.id} id={card.id} label={card.name} filled={matched.includes(card.id)} className="matching-pocket">
             <ToyArtwork emoji={card.emoji} />
-            <span className="matching-label">{card.name}</span>
+            <span className="sr-only">{card.name}</span>
           </DropSlot>)}
         </div>
         <DragHint />
@@ -89,8 +83,8 @@ export function MemoryCardGame({ buddy, onCompleteQuiz, soundEnabled, ageGroup, 
         </div>
         <div className="matching-progress" aria-label={`${matched.length}쌍 완성, 모두 ${pairCount}쌍`}>{cards.map(card => <span key={card.id} data-done={matched.includes(card.id)} />)}</div>
       </div>}
-      {isCompleted ? <RoundContinuation onNext={startNewGame} delayMs={5500} /> :
-        <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={startNewGame}><RefreshCw className="w-5 h-5 mr-2" /> 다른 그림</JellyButton>}
+      {isCompleted ? <RoundContinuation onNext={startNewGame} /> :
+        <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={startNewGame}><RefreshCw className="w-6 h-6" /><span className="sr-only">다른 그림</span></JellyButton>}
     </div>
   </DragMatch>;
 }

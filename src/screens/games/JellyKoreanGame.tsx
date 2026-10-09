@@ -1,3 +1,4 @@
+import { GameCue } from '../../components/GameCue';
 import { useRoundTimer } from '../../hooks/useRoundTimer';
 import { RoundContinuation } from '../../components/RoundContinuation';
 import { pickNextRound } from '../../utils/roundDeck';
@@ -8,12 +9,12 @@ import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { KOREAN_LETTER_ITEMS_BY_AGE } from '../../data/gameData';
-import { CharacterAvatar } from '../../components/CharacterAvatar';
+
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
-import { getDifficultyConfig, getAgeGroupLabel, pickDistractors } from '../../utils/ageEngine';
+import { getDifficultyConfig, pickDistractors } from '../../utils/ageEngine';
 import { AgeGroup } from '../../types';
-import { Volume2, Sparkles, RefreshCw, Timer, Flame } from 'lucide-react';
+import { Sparkles, RefreshCw, Timer } from 'lucide-react';
 
 interface KoreanLetterItem {
   id: string;
@@ -50,8 +51,6 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
   const [isCompleted, setIsCompleted] = useState(false);
 
   const [streak, setStreak] = useState(0);
-  const [showComboBanner, setShowComboBanner] = useState(false);
-  const [questionPrompt, setQuestionPrompt] = useState('');
 
   // 힌트 상태
   const [showHint, setShowHint] = useState(false);
@@ -88,7 +87,6 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
     } else {
       prompt = `${friend.name}와 함께 '${target.letter}' 글자 비누방울을 팡팡 터트려주세요!`;
     }
-    setQuestionPrompt(prompt);
 
     if (soundEnabled) {
       speakText(prompt, soundEnabled, { characterId: buddy });
@@ -129,8 +127,6 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
       setStreak(nextStreak);
 
       if (nextStreak >= 2) {
-        setShowComboBanner(true);
-        scheduleGameTimeout(() => setShowComboBanner(false), 1500);
         speakText(`와우! ${nextStreak}연속 정답! ${friend.name}가 너무 신나요!`, soundEnabled, { characterId: buddy });
       } else {
         speakText(`정답이에요! '${bubble.letter}' 방울을 팡팡 터트렸어요!`, soundEnabled, { characterId: buddy });
@@ -150,48 +146,12 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
   return (
     <div className="game-board flex flex-col items-center justify-between w-full max-w-2xl mx-auto">
       {/* Top Banner */}
-      <div className="game-prompt w-full bg-gradient-to-r from-[#E1BEE7] to-[#F3E5F5] p-3.5 sm:p-4 rounded-3xl border-3 border-[#AB47BC] shadow-sm flex items-center gap-3 sm:gap-4 relative">
-        <CharacterAvatar id={buddy} size="md" mood={isCompleted ? 'dancing' : 'happy'} className="!w-16 !h-16 sm:!w-24 sm:!h-24 shrink-0" />
-        <div className="flex-1 min-w-0 break-keep">
-          <div className="inline-flex items-center gap-1 bg-white/80 px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-black text-[#8E24AA] mb-1">
-            <span>{friend.badge} {getAgeGroupLabel(ageGroup)} &bull; 한글 비누방울</span>
-          </div>
-          <h2 className="text-base sm:text-2xl font-black text-[#4A3E3D] leading-snug break-keep">
-            {questionPrompt ? (
-              <span>{questionPrompt}</span>
-            ) : (
-              <>&ldquo;<span className="text-[#8E24AA] underline font-black text-2xl sm:text-3xl">{targetItem.letter}</span>&rdquo; ({targetItem.word})</>
-            )}
-          </h2>
-        </div>
-        <button
-          aria-label="놀이 안내 다시 듣기"
-          onClick={() => speakText(`'${targetItem.letter}' 글자 비누방울을 터트려보아요!`, soundEnabled, { characterId: buddy })}
-          className="p-2.5 sm:p-3 bg-white rounded-full border-2 border-[#AB47BC] shadow-xs text-[#8E24AA] cursor-pointer shrink-0"
-        >
-          <Volume2 className="w-5 h-5 sm:w-6 sm:h-6" />
-        </button>
-
-        {/* Combo Streak Banner */}
-        <AnimatePresence>
-          {showComboBanner && (
-            <motion.div
-              initial={{ scale: 0, y: 20 }}
-              animate={{ scale: 1.1, y: 0 }}
-              exit={{ scale: 0, opacity: 0 }}
-              className="absolute -top-3 right-4 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-3 py-1 rounded-full font-black text-xs sm:text-sm shadow-lg flex items-center gap-1 border-2 border-white"
-            >
-              <Flame className="w-4 h-4 text-yellow-200 fill-yellow-200 animate-bounce" />
-              <span>{streak}연속 정답! 콤보 보너스!</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      <GameCue buddy={buddy} disabled={!soundEnabled} onReplay={() => speakText(`'${targetItem.letter}' 글자 비누방울을 터트려보아요!`, soundEnabled, { characterId: buddy })} />
 
       {/* Timer display */}
       {diffConfig.timeLimit > 0 && !isCompleted && (
         <div className="w-full mt-3 px-2">
-          <div className="flex items-center gap-1.5 text-xs font-black text-rose-500 mb-1">
+          <div className="sr-only">
             <Timer className="w-4 h-4 animate-pulse" />
             <span>시간제한: {timeLeft}초</span>
           </div>
@@ -206,7 +166,7 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
 
       {/* Time out warning */}
       {timeOut && (
-        <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-2xl w-full text-center font-black text-rose-600 animate-pulse my-4">
+        <div className="sr-only" role="status">
           ⏰ 아쉬워라! 시간이 다 되었어요! 다음 비누방울 놀이로 넘어가요!
         </div>
       )}
@@ -274,7 +234,7 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
           <RoundContinuation onNext={startNewRound} />
         ) : (
           <JellyButton soundEnabled={soundEnabled} variant="white" size="md" onClick={startNewRound} className="!px-4">
-            <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5" /> 다른 글자
+            <RefreshCw className="w-6 h-6" /><span className="sr-only">다른 글자</span>
           </JellyButton>
         )}
       </div>

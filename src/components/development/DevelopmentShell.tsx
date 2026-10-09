@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { MotionConfig } from 'motion/react';
-import { Hand, Volume2 } from 'lucide-react';
-import { CharacterAvatar } from '../CharacterAvatar';
+import { GameCue } from '../GameCue';
 import { RoundContinuation } from '../RoundContinuation';
 import type { ToddlerGameProps } from '../../hooks/useToddlerPlay';
 import { playCorrectFanfare, speakText, stopAllSpeech, stopPlaySounds } from '../../utils/soundEngine';
@@ -34,11 +33,11 @@ export function useDevelopmentRound(props: ToddlerGameProps, guide: string, quie
 
 export function DevelopmentShell({ children, title, guide, buddy, soundEnabled, className = '' }: ToddlerGameProps & { children: ReactNode; title: string; guide: string; className?: string }) {
   return <MotionConfig reducedMotion="user"><div className={`development-play ${className}`}>
-    <div className="discovery-guide"><CharacterAvatar id={buddy} size="sm" mood="still" /><h2>{title}</h2><button aria-label="놀이 안내 다시 듣기" disabled={!soundEnabled} onClick={() => speakText(guide, soundEnabled, { characterId: buddy })}><Volume2 /></button></div>
+    <h2 className="sr-only">{title}</h2><GameCue buddy={buddy} disabled={!soundEnabled} onReplay={() => speakText(guide, soundEnabled, { characterId: buddy })} />
     {children}
   </div></MotionConfig>;
 }
-export function DiscoveryHint({ children }: { children: ReactNode }) { return <p className="discovery-hint"><Hand aria-hidden="true" />{children}</p>; }
+export function DiscoveryHint({ children }: { children: ReactNode }) { return <span className="sr-only">{children}</span>; }
 export function DiscoveryNext({ onNext, quiet = false }: { onNext: () => void; quiet?: boolean }) {
-  return <RoundContinuation onNext={onNext} delayMs={quiet ? 16000 : 4800} label={quiet ? '포근한 꿈을 꾸어요…' : '다음 놀잇감도 만나 볼까?'} />;
+  return <RoundContinuation onNext={onNext} delayMs={quiet ? 3200 : 1600} label={quiet ? '포근한 꿈을 꾸어요…' : '다음 놀잇감도 만나 볼까?'} />;
 }
