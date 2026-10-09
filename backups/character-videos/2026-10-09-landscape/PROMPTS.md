@@ -1,36 +1,22 @@
 # 캐릭터 숏폼 영상 제작 가이드 & AI 비디오 프롬프트
 
-## 세로 영상 제작 규격 (2026-10-09)
-
-- **납품 목표**: 캐릭터별 30초, 세로 9:16, 4K 원본(2160×3840), 24fps MP4. 실제 출력 해상도와 길이를 검증한 후 적용합니다.
-- **외형 기준**: `production/character-videos/references/<캐릭터ID>.png`는 게임의 `CharacterArtwork.tsx`를 그대로 렌더링한 1024×1024 참조 이미지입니다. 아래 스토리와 함께 참조 이미지를 전달하여 색·의상·장식·얼굴 비율을 유지합니다.
-- **장면 구성**: 기존 00–08 / 08–16 / 16–24 / 24–30초의 네 장면을 각각 생성합니다. Veo의 이미지 참조는 8초 생성을 요구하므로 네 클립을 각각 8초로 만들고 마지막 클립에서 완결된 6초를 사용합니다. 마지막 인사 동작은 6초 안에 끝나도록 지시합니다.
-- **연속성**: 각 장면에 같은 캐릭터 참조와 스타일을 사용하고, 팔·다리·의상 변화와 장면 연결을 눈으로 확인합니다. 이전 짧은 영상의 반복·줌·색 변경으로 30초를 채우는 기존 빌드 스크립트는 새 제작에 사용하지 않습니다.
-- **오디오**: 장면별 아래 한국어 대사를 ElevenLabs의 기존 캐릭터 음성 설정으로 더빙합니다. 영상 모델에는 사람 말·자막을 생성하지 않도록 지시합니다. 어린 목소리 톤, 음악 덕킹, 짧고 부드러운 효과음을 유지합니다.
-- **크레딧**: 포함 크레딧 안에서 사용하며, 생성 ID와 결과 파일을 저장하여 중복 생성하지 않습니다. 추가 과금이나 플랜 변경을 자동 실행하지 않습니다.
-- **교체 조건**: 8개 새 영상의 해상도·재생 길이·캐릭터 일관성·더빙·모바일 재생 확인 후 `public/videos/<캐릭터ID>.mp4`를 교체합니다. 원본 백업은 `backups/character-videos/2026-10-09-landscape/`입니다.
-- **현재 상태**: 제작 자료 준비 완료, 신규 생성 0개. 2026-10-09 현재 연결 계정이 Starter여서 영상 API가 HTTP 402 `paid_plan_required`로 거절되었습니다. Pro 이상 플랜과 Image & Video/Flows 권한이 필요합니다.
-
-공식 API: https://elevenlabs.io/docs/eleven-api/guides/cookbooks/image-and-video
-참조 이미지 규격: https://elevenlabs.io/docs/eleven-api/guides/how-to/image-and-video/references
-
 ## 1. 공통 스타일 키워드 (모든 영상 적용)
 ```text
-3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights.
+3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, 4k 24fps.
 ```
 
 ---
 
 ## 2. 핑구 (Pingu)
 
-- **캐릭터**: 핑구 (Pingu) - 민트 목도리와 크림색 배, 푸른 회색 몸의 아기 펭귄
+- **캐릭터**: 핑구 (Pingu) - 민트 목도리를 두른 아기 펭귄
 - **스토리 테마**: 반짝반짝 얼음 미끄럼틀과 눈사람 만들기
 - **ElevenLabs Voice ID**: `cgSgspJ2msm6clMCkdW9` (Jessica / Light preschool character pitch)
 - **속도 / 설정**: Speed 0.90, Model `eleven_multilingual_v2`, Speaker Boost Off
 
 ### [Veo / AI Video Prompt - 30s Storyboard]
 ```text
-3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second whimsical 3D claymation cartoon featuring Pingu, an adorable slate-blue baby penguin with a cream face and belly, golden beak and feet, and a mint-green scarf with pale stripes, matching the supplied in-game Pingu reference.
+3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, 4k 24fps. A 30-second whimsical 3D claymation cartoon featuring Pingu, an adorable baby penguin wearing a cozy mint-green knitted scarf.
 - 00s-08s (Scene 1 - Greeting): Pingu waddles excitedly out of an igloo onto sparkling soft snow, trips slightly, catches balance, and waves both wings happily toward the camera with a cheerful smile.
 - 08s-16s (Scene 2 - Fun Play): Pingu spots a gentle baby ice slide, belly-slides down smoothly with sparkles trailing behind, giggling as it splashes softly into a pile of fluffy snow.
 - 16s-24s (Scene 3 - Creative Moment): Pingu rolls a tiny snowball that grows into a cute mini snowman, placing a mint flower on its head and clapping wings with pride.
@@ -52,14 +38,14 @@
 
 ## 3. 꼬미 (Ggomi)
 
-- **캐릭터**: 꼬미 (Ggomi) - 분홍 리본과 하트 원피스를 입은 캐러멜색 아기 곰돌이
+- **캐릭터**: 꼬미 (Ggomi) - 분홍 리본을 단 포근한 아기 곰돌이
 - **스토리 테마**: 달콤한 딸기 컵케이크와 포근한 포옹
 - **ElevenLabs Voice ID**: `cgSgspJ2msm6clMCkdW9` (Jessica / Soft lilting preschool character pitch)
 - **속도 / 설정**: Speed 0.90, Model `eleven_multilingual_v2`, Speaker Boost Off
 
 ### [Veo / AI Video Prompt - 30s Storyboard]
 ```text
-3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second heartwarming 3D claymation featuring Ggomi, a chubby caramel-brown teddy bear with a cream muzzle, pink ear ribbon, and pink pinafore dress with a cream heart and pale trim, matching the supplied in-game Ggomi reference.
+3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, 4k 24fps. A 30-second heartwarming 3D claymation featuring Ggomi, a chubby, caramel-brown teddy bear with a pastel pink ribbon on its left ear.
 - 00s-08s (Scene 1 - Peekaboo): Ggomi peeks out from behind a giant fluffy pink pillow in a cozy nursery room, giggling softly and waving with both padded paws.
 - 08s-16s (Scene 2 - Making Treat): Ggomi sits at a small wooden table, carefully placing a bright red strawberry on top of a whipped cream cupcake, licking its lips cutely.
 - 16s-24s (Scene 3 - Happy Dance): Holding the cupcake, Ggomi does a gentle side-to-side wiggle dance, surrounded by floating pink sparkles and musical notes.
@@ -88,7 +74,7 @@
 
 ### [Veo / AI Video Prompt - 30s Storyboard]
 ```text
-3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second energetic and cute 3D claymation featuring Rano, a cheerful mint-green baby dinosaur with a cream-yellow belly, golden rounded dorsal plates, short limbs and a curved tail, matching the supplied in-game Rano reference.
+3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, 4k 24fps. A 30-second energetic and cute 3D claymation featuring Rano, a cheerful pastel-green baby dinosaur with soft yellow round dorsal plates.
 - 00s-08s (Scene 1 - Brave Roar): Rano pops out from behind a giant leafy fern, stomps its chubby feet playfully, and lets out a tiny, adorable "Roar!" before giggling.
 - 08s-16s (Scene 2 - Discovery): Rano hops through colorful prehistoric flower bushes and discovers a glowing rainbow-spotted dinosaur egg wobbling on a mossy stone.
 - 16s-24s (Scene 3 - Hatching Joy): The egg gently cracks open and pops out a bunch of flying soap bubbles! Rano jumps in the air, popping bubbles with its little snout and tail.
@@ -110,14 +96,14 @@
 
 ## 5. 젤리 (Jelly)
 
-- **캐릭터**: 젤리 (Jelly) - 분홍 꽃과 보라색 하트 원피스를 입은 연보라색 아기 토끼
+- **캐릭터**: 젤리 (Jelly) - 분홍 볼 발랄한 아기 토끼
 - **스토리 테마**: 깡충깡충 당근 정원과 나비 친구
 - **ElevenLabs Voice ID**: `cgSgspJ2msm6clMCkdW9` (Jessica / Sweet bell-like preschool character pitch)
 - **속도 / 설정**: Speed 0.93, Model `eleven_multilingual_v2`, Speaker Boost Off
 
 ### [Veo / AI Video Prompt - 30s Storyboard]
 ```text
-3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second bubbly 3D claymation featuring Jelly, a sweet pearl-lavender bunny with long upright pink-inner ears, a pink flower by one ear, a lavender pinafore dress with a cream heart and pale trim, and rosy cheeks, matching the supplied in-game Jelly reference.
+3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, 4k 24fps. A 30-second bubbly 3D claymation featuring Jelly, a sweet creamy-white bunny with pastel pink floppy ears and rosy blush cheeks.
 - 00s-08s (Scene 1 - Bouncing In): Jelly bounces rhythmically into a sunny vegetable garden, long ears flopping happily, stopping to twitch its pink nose at the camera.
 - 08s-16s (Scene 2 - Big Carrot): Jelly tries to pull a huge cartoon carrot from the ground; with a big tug, it plops backward softly onto a bed of clover leaves, laughing cheerfully.
 - 16s-24s (Scene 3 - Butterfly Waltz): A sparkling yellow butterfly lands gently on Jelly's nose. Jelly giggles, sneezes softly, and spins around playing tag with the butterfly.
@@ -139,14 +125,14 @@
 
 ## 6. 도치 (Dochi)
 
-- **캐릭터**: 도치 (Dochi) - 금빛 가시와 민트 스카프의 호기심 아기 고슴도치
+- **캐릭터**: 도치 (Dochi) - 밤송이 호기심 아기 고슴도치
 - **스토리 테마**: 또르르 구르기와 반짝이는 도토리 보물
 - **ElevenLabs Voice ID**: `cgSgspJ2msm6clMCkdW9` (Jessica / Curious gentle preschool character pitch)
 - **속도 / 설정**: Speed 0.89, Model `eleven_multilingual_v2`, Speaker Boost Off
 
 ### [Veo / AI Video Prompt - 30s Storyboard]
 ```text
-3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second curious and sweet 3D claymation featuring Dochi, a round little hedgehog with soft golden-honey rounded spines, a warm cream face, a tiny dark nose and a sage-mint triangular neckerchief, matching the supplied in-game Dochi reference.
+3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, 4k 24fps. A 30-second curious and sweet 3D claymation featuring Dochi, a round little hedgehog with soft, rounded chocolate-brown spines and a cute button nose.
 - 00s-08s (Scene 1 - Rolling Ball): A round prickly ball rolls in through autumn leaves, unfurls, and reveals Dochi’s adorable face blinking curiously at the viewer.
 - 08s-16s (Scene 2 - Treasure Hunt): Dochi sniffs the ground and finds a giant shiny golden acorn. It polishes the acorn with its little tummy until it gleams.
 - 16s-24s (Scene 3 - Leaf Crown): Leaves fall gently; Dochi sticks three colorful maple leaves onto its back spines like a festive crown and wiggles with joy.
@@ -168,14 +154,14 @@
 
 ## 7. 꿀꿀이 (Ggulgguli)
 
-- **캐릭터**: 꿀꿀이 (Ggulgguli) - 노란 스카프를 두른 분홍색 아기 돼지
+- **캐릭터**: 꿀꿀이 (Ggulgguli) - 딸기 좋아하는 귀여운 아기 돼지
 - **스토리 테마**: 첨벙첨벙 딸기 우유 웅덩이와 비눗방울 풍선
 - **ElevenLabs Voice ID**: `FGY2WhTYpPnrIDTdsKH5` (Laura / Cheerful laughing preschool character pitch)
 - **속도 / 설정**: Speed 0.92, Model `eleven_multilingual_v2`, Speaker Boost Off
 
 ### [Veo / AI Video Prompt - 30s Storyboard]
 ```text
-3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second playful 3D claymation featuring Ggulgguli, a chubby rosy-pink piglet with a curly spring tail, a friendly pink snout, small dark hooves and a butter-yellow triangular neckerchief, matching the supplied in-game Ggulgguli reference.
+3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, 4k 24fps. A 30-second playful 3D claymation featuring Ggulgguli, a chubby, rosy-pink piglet with a curly spring tail and a big friendly snout.
 - 00s-08s (Scene 1 - Snout Wiggle): Ggulgguli wiggles its round snout directly in front of the lens with funny sound effects, then steps back dancing on its hind hooves.
 - 08s-16s (Scene 2 - Strawberry Feast): Ggulgguli spots a bowl of giant juicy strawberries, juggles three of them cutely, and munches happily with puffed cheeks.
 - 16s-24s (Scene 3 - Bubble Bath): Ggulgguli jumps playfully into a shallow warm bubble pool, splashing pink bubbles everywhere and wearing a bubble hat.
@@ -197,14 +183,14 @@
 
 ## 8. 음메 (Eumme)
 
-- **캐릭터**: 음메 (Eumme) - 하늘색 스카프와 금빛 방울, 작은 금빛 뿔의 아기 양
+- **캐릭터**: 음메 (Eumme) - 구름 타고 둥실둥실 아기 양
 - **스토리 테마**: 몽실몽실 솜사탕 구름과 별빛 요람
 - **ElevenLabs Voice ID**: `cgSgspJ2msm6clMCkdW9` (Jessica / Soft gentle preschool character pitch)
 - **속도 / 설정**: Speed 0.87, Model `eleven_multilingual_v2`, Speaker Boost Off
 
 ### [Veo / AI Video Prompt - 30s Storyboard]
 ```text
-3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second dreamy and soothing 3D claymation featuring Eumme, an ultra-fluffy ivory-white lamb with short golden curled horns, a cream face, a sky-blue triangular neckerchief and a tiny golden bell, matching the supplied in-game Eumme reference.
+3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, 4k 24fps. A 30-second dreamy and soothing 3D claymation featuring Eumme, an ultra-fluffy white lamb with gentle lavender-blue horns and a sleepy sweet smile.
 - 00s-08s (Scene 1 - Cloud Drift): Eumme floats gently into the lavender pastel sky sitting atop a fluffy pink cotton-candy cloud, humming a soft tune.
 - 08s-16s (Scene 2 - Star Catching): Eumme reaches out a tiny hoof and catches a falling yellow star, which glows softly and chimes like a music box.
 - 16s-24s (Scene 3 - Cloud Pillow): Eumme fluffs up a mini cloud like a marshmallow pillow, rests its head, and yawns cutely as tiny crescent moons float by.
@@ -226,14 +212,14 @@
 
 ## 9. 누룽지 (Nurungji)
 
-- **캐릭터**: 누룽지 (Nurungji) - 초록 스카프와 캐러멜색 귀의 골든 강아지
+- **캐릭터**: 누룽지 (Nurungji) - 꼬리콥터 골든 강아지
 - **스토리 테마**: 뼈다귀 공놀이와 신나는 달리기
 - **ElevenLabs Voice ID**: `FGY2WhTYpPnrIDTdsKH5` (Laura / Cheerful bouncing preschool character pitch)
 - **속도 / 설정**: Speed 0.94, Model `eleven_multilingual_v2`, Speaker Boost Off
 
 ### [Veo / AI Video Prompt - 30s Storyboard]
 ```text
-3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, native 4K 24fps, vertical 9:16 composition, faithful to the supplied in-game character reference. Keep the face, ears, hands and feet in frame; no captions, letters, logos or spoken dialogue; gentle motion and no flashing lights. A 30-second lively 3D claymation featuring Nurungji, an adorable honey-golden puppy with caramel floppy ears, a cream muzzle and belly, a sage-green triangular neckerchief and a wagging curved tail, matching the supplied in-game Nurungji reference.
+3D clay animation style, soft tactile plasticine texture, cute chibi proportions, warm studio lighting, pastel colors, Aardman/Pixar aesthetic, wholesome and cozy toddler cartoon, 4k 24fps. A 30-second lively 3D claymation featuring Nurungji, an adorable honey-golden puppy with floppy ears and a tail that wags like a helicopter.
 - 00s-08s (Scene 1 - Bounding Run): Nurungji trots happily across a green meadow holding a red squeaky ball in its mouth, stopping to tilt its head with perked ears.
 - 08s-16s (Scene 2 - Catch & Roll): Nurungji tosses the ball with its nose, chases it in circles, and rolls over onto its back asking for tummy rubs.
 - 16s-24s (Scene 3 - Digging Fun): Nurungji digs energetically in a sandbox, pulling out a sparkling toy star and doing an excited tail-spin dance.
@@ -254,7 +240,7 @@
 ---
 
 ## 10. 제작 완료 후 적용 방법
-1. `production/character-videos/README.md`의 권한·비용 확인 후 ElevenLabs Image & Video API로 위 네 장면을 각각 생성합니다. 캐릭터 외형 참조 이미지를 반드시 함께 전달합니다.
-2. 기존 ElevenLabs 캐릭터 음성 설정으로 장면별 한국어 대사를 생성하고, 네 장면을 8+8+8+6초로 편집하여 더빙·음악·효과음과 합성합니다.
-3. 실제 해상도·길이·화질·캐릭터 외형·모바일 재생을 검증하고, 검증된 MP4만 `public/videos/<캐릭터ID>.mp4`에 저장합니다.
-4. 기존 `src/data/characterVideoData.ts`의 `hasVideo: true`, `videoUrl: '/videos/<캐릭터ID>.mp4'` 연결을 유지합니다. 생성이 완료되기 전에는 기존 영상을 유지합니다.
+1. Veo 등 영상 생성 도구에서 위 프롬프트를 사용하여 30초 영상을 생성합니다.
+2. ElevenLabs에서 위 음성 스크립트를 생성하여 영상과 합성합니다.
+3. 생성된 MP4 파일을 `public/videos/<캐릭터ID>.mp4`로 저장하거나 (예: `pingu.mp4`, `rano.mp4`), 구글 드라이브 지정 폴더에 업로드합니다.
+4. `src/data/characterVideoData.ts`의 `hasVideo: true`, `videoUrl: '/videos/<캐릭터ID>.mp4'`로 연결하면 앱의 영상 모달 및 캐릭터 쇼츠 화면에서 즉시 공식 영상으로 재생됩니다.

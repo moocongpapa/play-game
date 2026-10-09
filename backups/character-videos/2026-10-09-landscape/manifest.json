@@ -1,0 +1,47 @@
+{
+  "source": "public/videos",
+  "backupDate": "2026-10-09",
+  "sourceCommit": "23abcb6",
+  "files": [
+    {
+      "file": "dochi.mp4",
+      "bytes": 8864337,
+      "sha256": "f4660d01b8aea84f42c2393f0721f474cfc7d7b452d99818a794038b7473a1b6"
+    },
+    {
+      "file": "eumme.mp4",
+      "bytes": 7092660,
+      "sha256": "6e993d4a06c9611ffcfc4c88aea16d11f692b5a347d5e36547bd293a5b6f7fe2"
+    },
+    {
+      "file": "ggomi.mp4",
+      "bytes": 8528606,
+      "sha256": "8146db79403c31193289927c3234f9afc0d2d8b3656cf157d70a2081ca5bfd9a"
+    },
+    {
+      "file": "ggulgguli.mp4",
+      "bytes": 6973542,
+      "sha256": "ab301bd8e9a63b108ff41342dc54f699c3b1d701bb075f6711e4207eead6518d"
+    },
+    {
+      "file": "jelly.mp4",
+      "bytes": 8590346,
+      "sha256": "0b7cc1bf0925fe6f16a808763ea1bc6d64149739347fce396c945e9b7c57ac7a"
+    },
+    {
+      "file": "nurungji.mp4",
+      "bytes": 19043978,
+      "sha256": "e873a2392739171eda2eb72adf7b18eae79867e73a76860aa665273a53a1e8c7"
+    },
+    {
+      "file": "pingu.mp4",
+      "bytes": 10571383,
+      "sha256": "5743d926b740e108220be1e3c9510b54102d7809592a1d352e01e6613058f32e"
+    },
+    {
+      "file": "rano.mp4",
+      "bytes": 7882212,
+      "sha256": "925fe1806c224b7c46d564a5719e6ab8444f438dbceb45de29df1812bd1dc4e1"
+    }
+  ]
+}
