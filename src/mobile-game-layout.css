@@ -194,3 +194,81 @@
   .game-stage .adventure-balloon-scene { height: auto; }
   .game-stage .adventure-board > .adventure-finale { flex: 1; }
 }
+
+/* The world fills the viewport; picture cards keep their own proportions.
+   Drawing, tracing and moving-creature arenas still use all available space. */
+@media (max-width: 1024px) and (orientation: portrait) {
+  .game-stage .game-surface .game-board > :is(.game-choice-grid, .choice-options, .drag-options-grid) {
+    flex: 0 0 auto;
+    min-height: 0;
+    height: auto;
+    grid-auto-rows: auto;
+    margin-block: auto;
+  }
+  .game-stage .game-surface .game-board :is(.game-choice-grid, .choice-options, .drag-options-grid) > .game-choice {
+    height: clamp(104px, 36vw, 176px);
+    min-height: 96px;
+    max-height: 192px;
+  }
+  .game-stage .game-surface[data-game='pattern_sequence'] .choice-options > button {
+    height: clamp(104px, 34vw, 168px);
+    min-height: 96px;
+  }
+  .game-stage .game-surface[data-game='pattern_sequence'] .game-board > [data-play-area] { margin-top: auto; }
+  .game-stage .game-surface[data-game='pattern_sequence'] .game-board > .choice-options { margin-block: 4px 0; }
+  .game-stage .game-surface[data-game='pattern_sequence'] [data-play-area] .toy-art { width: 90%; height: 90%; }
+
+  .game-stage .game-board > .matching-playmat {
+    flex: 0 1 auto;
+    max-width: 600px;
+    margin-block: auto;
+    padding: 16px 10px 12px;
+  }
+  .game-stage .game-board > .matching-playmat .matching-row { flex: 0 0 auto; max-height: none; }
+  .game-stage .game-board > .matching-playmat :is(.matching-pocket, .matching-tile) { height: auto; aspect-ratio: 1; min-height: 64px; }
+
+  .game-stage .game-surface[data-game='counting_food'] [data-play-area] {
+    flex: 0 1 auto;
+    min-height: 140px;
+    margin-block: auto 0;
+    padding: 20px 12px;
+  }
+  .game-stage .game-surface[data-game='counting_food'] .game-board > div:has(> .count-answer) { margin-block: 8px 0; }
+  .game-stage .game-surface[data-game='counting_food'] [data-play-area] button > .toy-art { width: 88%; height: 88%; }
+  .game-stage .game-board > :is(div:has(> .jelly-button), .jelly-button) { margin-top: auto; flex-shrink: 0; }
+  .game-stage .game-surface[data-game='korean_letters'] [data-play-area] { flex: 0 1 auto; height: clamp(260px, 42dvh, 420px); margin-block: auto; }
+  .game-stage .game-surface[data-game='rhythm_game'] [data-play-area] { flex: 0 1 auto; min-height: 180px; margin-block: auto; }
+  .game-stage .game-surface[data-game='size_comparison'] .size-playground { flex: 0 1 auto; height: auto; min-height: 0; margin-block: auto; }
+  .game-stage .game-surface[data-game='size_comparison'] .size-playground > .game-choice { height: clamp(128px, 36vw, 176px); min-height: 128px; max-height: 192px; }
+  .game-stage .game-board > .drop-slot { flex: 0 1 auto; height: clamp(144px, 24dvh, 210px); min-height: 128px; margin-top: auto; }
+
+  .game-stage .face-play { justify-content: center; }
+  .game-stage .face-play > .emotion-mirror { flex: 0 1 auto; width: min(88%, 340px); height: auto; aspect-ratio: 1.12; max-height: min(38dvh, 304px); min-height: 0; margin-block: 8px; }
+  .game-stage .ordering-play > .bear-room,
+  .game-stage .symmetry-play > .symmetry-scene { flex: 0 1 auto; height: clamp(240px, 43dvh, 380px); min-height: 220px; margin-block: auto 0; }
+  .game-stage .ordering-play > .bear-family,
+  .game-stage .symmetry-play > .wing-choices { margin-bottom: auto; }
+
+  .game-stage .adventure-board > :is(.adventure-sound-scene, .adventure-sort-scene) { flex: 0 1 auto; min-height: 280px; height: auto; margin-block: auto; }
+  .game-stage .adventure-sound-scene > .choice-options,
+  .game-stage .adventure-sort-scene > :is(.fruit-tray, .grid) { flex: 0 1 auto; height: auto; }
+  .game-stage .adventure-sound-scene .stage-animal-option { height: clamp(112px, 32vw, 176px); min-height: 96px; }
+  .game-stage .adventure-board .adventure-shadow-scene { flex: 0 1 auto; margin-block: auto; }
+  .game-stage .adventure-shadow-scene > .adventure-shadow-target { flex: 0 0 auto; width: clamp(144px, 42vw, 200px); height: clamp(144px, 42vw, 200px); }
+}
+
+/* Four pieces need one compact reference row on short phones. */
+@media (max-width: 639px) and (max-height: 640px) and (orientation: portrait) {
+  .game-stage .game-surface:is([data-game='shadow_quiz'], [data-game='shape_color']) .game-board { padding-top: 0; }
+  .game-stage .game-surface:is([data-game='shadow_quiz'], [data-game='shape_color']) .game-board > .drop-slot {
+    width: calc(100% - 72px);
+    align-self: flex-end;
+    height: 104px;
+    min-height: 104px;
+    padding: 8px;
+    margin-block: 0;
+  }
+  .game-stage .game-surface[data-game='shadow_quiz'] .drop-slot .toy-art { width: 76px; height: 76px; }
+  .game-stage .game-surface[data-game='shape_color'] .game-board > .drop-slot { height: 128px; min-height: 128px; }
+  .game-stage .game-surface:is([data-game='shadow_quiz'], [data-game='shape_color']) .game-board > .drag-hint { display: none; }
+}
