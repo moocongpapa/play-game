@@ -1,7 +1,58 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { setImmediate } from 'node:timers/promises';
-import { resumeAudioContext } from './audioContextLifecycle';
+import { configureAudioPlaybackSession, listenForAudioGestures, resumeAudioContext } from './audioContextLifecycle';
+
+test('Safari routes running and suspended game audio through playback, including after media changes', async () => {
+  const savedNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  const session = { type: 'ambient' };
+  try {
+    Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { audioSession: session } });
+    const context = { state: 'running', async resume() { assert.equal(session.type, 'playback'); this.state = 'running'; } };
+    assert.equal(await resumeAudioContext(context as unknown as AudioContext), true);
+    assert.equal(session.type, 'playback', 'running does not imply audible when the iPad silent switch is on');
+    session.type = 'auto';
+    context.state = 'interrupted';
+    assert.equal(await resumeAudioContext(context as unknown as AudioContext), true);
+    assert.equal(session.type, 'playback', 'leaving media playback restores the game audio category');
+    Object.defineProperty(globalThis, 'navigator', { configurable: true, value: {} });
+    assert.equal(await resumeAudioContext(context as unknown as AudioContext), true, 'unsupported browsers still play normally');
+    Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { get audioSession() { throw new Error('Unsupported session'); } } });
+    assert.doesNotThrow(configureAudioPlaybackSession);
+  } finally {
+    if (savedNavigator) Object.defineProperty(globalThis, 'navigator', savedNavigator);
+    else Reflect.deleteProperty(globalThis, 'navigator');
+  }
+});
+
+test('audio unlock retries on touch release with capture listeners and removes every listener on cleanup', () => {
+  const listeners = new Map<string, () => void>();
+  const target = {
+    addEventListener(type: string, callback: () => void, options: { capture: boolean; passive: boolean }) {
+      assert.equal(options.capture, true, 'buttons and drag areas can stop bubbling events');
+      assert.equal(options.passive, true, 'unlock must not block touch gestures');
+      listeners.set(type, callback);
+    },
+    removeEventListener(type: string, callback: () => void, options: { capture: boolean }) {
+      assert.equal(listeners.get(type), callback);
+      assert.equal(options.capture, true);
+      listeners.delete(type);
+    },
+  };
+  let activated = false, running = false;
+  const cleanup = listenForAudioGestures(target as unknown as Window, () => { if (activated) running = true; });
+  listeners.get('pointerdown')!();
+  assert.equal(running, false, 'touch pointerdown is not Safari user activation');
+  activated = true;
+  listeners.get('pointerup')!();
+  assert.equal(running, true);
+  running = false;
+  listeners.get('touchend')!();
+  assert.equal(running, true, 'touchend supports devices that do not unlock on pointerup');
+  assert.ok(listeners.has('keydown'));
+  cleanup();
+  assert.equal(listeners.size, 0);
+});
 
 test('Safari interrupted contexts resume; closed or still-interrupted devices are not playable', async () => {
   let resumes = 0;

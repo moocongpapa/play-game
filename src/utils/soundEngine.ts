@@ -6,7 +6,7 @@ import { ANIMAL_RECORDINGS, resolveAnimalSound } from '../data/animalSounds';
 import { createRoundDeck } from './roundDeck';
 import { createRecordedAudioPlayer, type PlaybackResult } from './recordedAudio';
 import { isPageHidden } from './pageVisibility';
-import { resumeAudioContext } from './audioContextLifecycle';
+import { configureAudioPlaybackSession, resumeAudioContext } from './audioContextLifecycle';
 import { startGeneratedMusic, stopGeneratedMusic } from '../services/generatedMusic';
 import { tryGeneratedEffect, stopGeneratedEffects, setGeneratedEffectsEnabled } from '../services/generatedEffects';
 import { CARE_REACTIONS, type CareReaction } from '../data/careReactions';
@@ -47,6 +47,7 @@ let isBgmPlaying = false;
 let bgmVolumeNode: GainNode | null = null;
 
 export function getAudioContext(): AudioContext {
+  if (masterSoundEnabled && !isPageHidden()) configureAudioPlaybackSession();
   let restartMusic = false;
   if (audioCtx?.state === 'closed') {
     restartMusic = isBgmPlaying;

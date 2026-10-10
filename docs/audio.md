@@ -1,6 +1,6 @@
 # 음성·배경음악·효과음
 
-기준일: 2026-10-09 · [목차](README.md)
+기준일: 2026-10-10 · [목차](README.md)
 
 ## 음성 재생 순서
 
@@ -57,6 +57,12 @@ Redis 없는 배포는 검증된 ElevenLabs 경로만 허용합니다. Gemini-on
 | 실로폰·리듬 | Web Audio로 음 높이를 유지해 연주. 효과음 무작위 피치를 음악 음정에 적용하지 않음 |
 
 효과음 피치는 0.95~1.05배로 변화합니다. 안내·동물·리듬·악기·핵심 효과음 동안 배경음을 부드럽게 30%로 낮추며 영상 중에는 배경음을 꺼서 겹침을 피합니다. 부모의 BGM 끄기·전체 음소거를 존중합니다. 브라우저 자동 재생 정책 때문에 첫 터치 전에는 소리가 막힐 수 있습니다.
+
+### iPad·iPhone과 홈 화면에 설치한 앱
+
+`audioContextLifecycle.ts`는 지원 브라우저에서 `navigator.audioSession.type = 'playback'`을 적용합니다. iPadOS/iOS 17 이상 Safari에서는 기본 ambient 오디오가 시스템 무음 모드에 막혀 영상만 들릴 수 있기 때문입니다. 이미 running인 AudioContext에도 재생 경로를 적용하며, 영상 종료 후 복구 때 다시 확인합니다. [WebKit 설명](https://bugs.webkit.org/show_bug.cgi?id=237322)
+
+오디오 활성화는 capture 단계의 `pointerdown/pointerup/touchend/keydown`에서 시도합니다. 터치를 놓는 시점도 처리하고, 자식 버튼의 이벤트 전파 중단에 영향을 받지 않습니다. 환영 화면의 첫 터치도 활성화에 사용하며, 전체 음소거·숨긴 페이지·놀이 시간 종료 상태에서는 실행하지 않습니다. 구형 iPadOS처럼 Audio Session API가 없으면 기존 재생 경로를 유지하므로 시스템 무음 해제가 필요할 수 있습니다. 지원 API가 없거나 거절되어도 앱은 계속 동작합니다.
 
 ## 유지보수용 생성·검증
 

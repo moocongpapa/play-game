@@ -14,6 +14,7 @@ import { OnboardingScreen } from './screens/OnboardingScreen';
 import { useViewportLock } from './hooks/useViewportLock';
 
 import { getAudioContext, setSpeechLanguage, setBGMScene, startBGM, stopBGM, setBGMVolume, playStarGain, speakText, stopAllSpeech, stopPlaySounds, setAudioPreferences } from './utils/soundEngine';
+import { listenForAudioGestures } from './utils/audioContextLifecycle';
 import { Moon, Shield } from 'lucide-react';
 import { refreshChildProfile } from './utils/ageEngine';
 import { advancePlayTime, createForegroundClock, localPlayDate, refreshPlaySession, restartPlayTimer } from './utils/playSession';
@@ -203,7 +204,7 @@ export default function App() {
     const unlockMusic = () => {
       // Effects and character voices also need the gesture after iOS video
       // playback, including when the parent has switched background music off.
-      if (appState.soundEnabled && !showSplash && !appState.isTimeUp && !document.hidden) {
+      if (appState.soundEnabled && !appState.isTimeUp && !document.hidden) {
         getAudioContext();
         if (enabled) startBGM();
       }
@@ -213,13 +214,11 @@ export default function App() {
       syncMusic();
     };
     syncMusic();
-    window.addEventListener('pointerdown', unlockMusic);
-    window.addEventListener('keydown', unlockMusic);
+    const stopListeningForAudioGestures = listenForAudioGestures(window, unlockMusic);
     document.addEventListener('visibilitychange', onVisibility);
     return () => {
       stopBGM();
-      window.removeEventListener('pointerdown', unlockMusic);
-      window.removeEventListener('keydown', unlockMusic);
+      stopListeningForAudioGestures();
       document.removeEventListener('visibilitychange', onVisibility);
     };
   }, [appState.bgmEnabled, appState.soundEnabled, showSplash, appState.isTimeUp, quietPlay]);
