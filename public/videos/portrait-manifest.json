@@ -70,5 +70,29 @@
     "scenes": 4,
     "dubbedLanguage": "ko",
     "revision": "6d79eae3e2e8"
+  },
+  "eumme": {
+    "model": "veo-3.1-lite-generate-preview",
+    "width": 1080,
+    "height": 1920,
+    "duration": 30,
+    "fps": 24,
+    "bytes": 25613377,
+    "sha256": "269d1755b2bf5f3172666a1caf7101f04cb90bf9656ca401a6cd809b77eed245",
+    "scenes": 4,
+    "dubbedLanguage": "ko",
+    "revision": "269d1755b2bf"
+  },
+  "nurungji": {
+    "model": "veo-3.1-lite-generate-preview",
+    "width": 1080,
+    "height": 1920,
+    "duration": 30,
+    "fps": 24,
+    "bytes": 37139072,
+    "sha256": "1a70d593e41688dbdbe6fc44af84535c485e57bc4cb6371c5a7060441e7a20e3",
+    "scenes": 4,
+    "dubbedLanguage": "ko",
+    "revision": "1a70d593e416"
   }
 }
