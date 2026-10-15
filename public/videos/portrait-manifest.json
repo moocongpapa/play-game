@@ -15,37 +15,37 @@
     "model": "veo-3.1-lite-generate-preview",
     "width": 1080,
     "height": 1920,
-    "duration": 30,
+    "duration": 38,
     "fps": 24,
-    "bytes": 27352780,
-    "sha256": "3a51859a020f299bef73e0717038b05cd7697a2c806b33c5e1e6bc0bf943d552",
-    "scenes": 4,
+    "bytes": 37890380,
+    "sha256": "dfb0e76efec7f165d12787e6f2bcd6a90fd8326209bb3ca644c4cf02da57c2f0",
+    "scenes": 5,
     "dubbedLanguage": "ko",
-    "revision": "3a51859a020f"
+    "revision": "dfb0e76efec7"
   },
   "rano": {
     "model": "veo-3.1-lite-generate-preview",
     "width": 1080,
     "height": 1920,
-    "duration": 30,
+    "duration": 38,
     "fps": 24,
-    "bytes": 28046429,
-    "sha256": "5289872b17643b7c404fe057dbc768ef8b5d5e03fbc36aefbdbbbb4be02f9fa3",
-    "scenes": 4,
+    "bytes": 38845145,
+    "sha256": "a4d924942afe324f666d49797748e328056b93b355f234708bb1d44866af6cc9",
+    "scenes": 5,
     "dubbedLanguage": "ko",
-    "revision": "5289872b1764"
+    "revision": "a4d924942afe"
   },
   "jelly": {
     "model": "veo-3.1-lite-generate-preview",
     "width": 1080,
     "height": 1920,
-    "duration": 30,
+    "duration": 38,
     "fps": 24,
-    "bytes": 33161191,
-    "sha256": "9c16390d88d2e5a03764e2f813b425ca27ba435ca2650bddd7ad32d078ff5ea9",
-    "scenes": 4,
+    "bytes": 45013483,
+    "sha256": "568614092b184504d2a82280140161242f3053dc080f2cb374e18751621fba75",
+    "scenes": 5,
     "dubbedLanguage": "ko",
-    "revision": "9c16390d88d2"
+    "revision": "568614092b18"
   },
   "dochi": {
     "model": "veo-3.1-lite-generate-preview",

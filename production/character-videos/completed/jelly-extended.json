@@ -1,0 +1,10 @@
+{
+  "characterId": "jelly",
+  "model": "veo-3.1-lite-generate-preview",
+  "width": 1080,
+  "height": 1920,
+  "duration": 38,
+  "scenes": 5,
+  "publishedAt": "2026-10-15T05:06:07.376Z",
+  "sha256": "568614092b184504d2a82280140161242f3053dc080f2cb374e18751621fba75"
+}
