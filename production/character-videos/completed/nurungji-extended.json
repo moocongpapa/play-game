@@ -1,0 +1,19 @@
+{
+  "characterId": "nurungji",
+  "model": "veo-3.1-lite-generate-preview",
+  "width": 1080,
+  "height": 1920,
+  "duration": 38,
+  "scenes": 5,
+  "publishedAt": "2026-10-15T11:40:44.739Z",
+  "sha256": "262b4432dafa82fdc38bc2ddec0cf2672f9646dd2d497a1a972a349c85939b49",
+  "baseSha256": "1a70d593e41688dbdbe6fc44af84535c485e57bc4cb6371c5a7060441e7a20e3",
+  "bonusFingerprint": "6f2649d670726feafee8706b0a17830e6df679104c3d059309695f3dd4d2231d",
+  "generatedBonusResolution": "1080p",
+  "voice": {
+    "text": "냠냠냠!",
+    "asset": "f32357e437823752de7520d95159d942ae9453f500209fab7a4eae567b4e1d04",
+    "sha256": "ce2fe468e868ba11ea74deeeb22831ba3e6b548c9150753f838e6d57adc367e0",
+    "pitch": 1.1
+  }
+}

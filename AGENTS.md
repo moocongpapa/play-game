@@ -9,8 +9,8 @@
 - `src/utils/ageEngine.ts` sets age groups and difficulty; `src/utils/soundEngine.ts` handles music, effects, and speech fallbacks.
 - `src/services/` connects browser speech to the same-origin API and caches saved/generated audio. `src/server/` and `api/speech.ts` own provider calls, included-credit checks, and request quotas.
 - `src/sketch/` owns the drawing model, undo, rendering, and local IndexedDB draft/gallery storage. There is no active Firebase/Google Drive integration.
-- `public/` contains shipped art/audio/video/PWA assets. `production/character-videos/` owns the four-scene portrait plan and completion records; `backups/` preserves prior landscape originals.
-- `scripts/generate-portrait-videos.ts`, `generate-play-audio.ts`, and `generate-care-voices.ts` are manual maintainer tools. They must not run during app startup, build, or ordinary verification; generation can spend credits.
+- `public/` contains shipped art/audio/video/PWA assets. `production/character-videos/` owns the four-scene portrait plan, eight-second bonus inputs, and completion records; `backups/` preserves prior landscape and 30-second portrait originals.
+- `scripts/generate-portrait-videos.ts`, `generate-bonus-scenes.ts`, `generate-play-audio.ts`, and `generate-care-voices.ts` are manual maintainer tools. They must not run during app startup, build, or ordinary verification; generation can spend credits.
 - `docs/README.md` indexes current architecture, setup, games, audio, maintenance, and dated QA records. Update relevant docs when behavior changes.
 - `tests/review-regressions.html` is a manual browser harness; `npm test` runs the server/utility tests without paid generation.
 

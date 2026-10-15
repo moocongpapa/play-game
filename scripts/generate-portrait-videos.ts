@@ -46,13 +46,15 @@ async function inspect(path: string, seconds: number) {
   }
   return { width: +dimensions[1], height: +dimensions[2], duration: actual, fps: 24, bytes: await exists(path) };
 }
-if (command === 'generate' && await exists('public/videos/portrait-manifest.json')) {
+if (['generate', 'publish'].includes(command) && await exists('public/videos/portrait-manifest.json')) {
   const completed = JSON.parse(await readFile('public/videos/portrait-manifest.json', 'utf8'))[character.id];
-  if (completed?.sha256) {
+  // A completed extension must also survive use of the original four-scene tool.
+  if (completed?.sha256 && (command === 'generate' || completed.scenes === 5)) {
     const saved = `public/videos/${character.id}.mp4`;
     if (!await exists(saved) || hash(await readFile(saved)) !== completed.sha256) throw new Error('Published video differs from its saved checksum; restore it before generating again');
-    await inspect(saved, 30);
-    console.log(`[PUBLISHED CACHE] ${character.id}: complete portrait film already installed; no generation requested.`);
+    if (![30, 38].includes(completed.duration) || (completed.duration === 38 && completed.scenes !== 5)) throw new Error('Unexpected published episode length');
+    await inspect(saved, completed.duration);
+    console.log(`[PUBLISHED CACHE] ${character.id}: complete portrait film already installed; no generation or replacement requested.`);
     process.exit(0);
   }
 }

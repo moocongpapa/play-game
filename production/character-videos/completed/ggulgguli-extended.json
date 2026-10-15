@@ -1,0 +1,19 @@
+{
+  "characterId": "ggulgguli",
+  "model": "veo-3.1-lite-generate-preview",
+  "width": 1080,
+  "height": 1920,
+  "duration": 38,
+  "scenes": 5,
+  "publishedAt": "2026-10-15T11:35:26.269Z",
+  "sha256": "ece423953ca3745382882cd34810d99663f0e6d65370967fb7f850746d299b90",
+  "baseSha256": "6d79eae3e2e8c795e6b0e96bbda71b81e81c881f46ffc651954faf9d665df1f8",
+  "bonusFingerprint": "ce94bd2147cc728d16cbd5509ec1d7e8f6fc778ff0d37cdc1daacc5b76028549",
+  "generatedBonusResolution": "1080p",
+  "voice": {
+    "text": "냠냠냠!",
+    "asset": "f32357e437823752de7520d95159d942ae9453f500209fab7a4eae567b4e1d04",
+    "sha256": "ce2fe468e868ba11ea74deeeb22831ba3e6b548c9150753f838e6d57adc367e0",
+    "pitch": 1.12
+  }
+}

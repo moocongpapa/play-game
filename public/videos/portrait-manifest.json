@@ -3,13 +3,13 @@
     "model": "veo-3.1-fast-generate-preview",
     "width": 2160,
     "height": 3840,
-    "duration": 30,
+    "duration": 38,
     "fps": 24,
-    "bytes": 55793343,
-    "sha256": "331cb38e5c7154d4dc6c6f6bd272e67e676648188a3a1af3a188d9ac1f04e140",
-    "scenes": 4,
+    "bytes": 79968231,
+    "sha256": "6009f807f30024e265b9ffffb72d2ec7c9466a8a367107f238bfb0a51c6aeb06",
+    "scenes": 5,
     "dubbedLanguage": "ko",
-    "revision": "331cb38e5c71"
+    "revision": "6009f807f300"
   },
   "ggomi": {
     "model": "veo-3.1-lite-generate-preview",
@@ -51,48 +51,48 @@
     "model": "veo-3.1-lite-generate-preview",
     "width": 1080,
     "height": 1920,
-    "duration": 30,
+    "duration": 38,
     "fps": 24,
-    "bytes": 26287433,
-    "sha256": "fbeb487d820fac4314a85e3f7d2607a4625de376399c648e2b90f53e61a2a2e5",
-    "scenes": 4,
+    "bytes": 36733107,
+    "sha256": "09cf98eb9ce999bc1dadb57d7e893b2f34b2a89ae149378413f9763e58b73bcc",
+    "scenes": 5,
     "dubbedLanguage": "ko",
-    "revision": "fbeb487d820f"
+    "revision": "09cf98eb9ce9"
   },
   "ggulgguli": {
     "model": "veo-3.1-lite-generate-preview",
     "width": 1080,
     "height": 1920,
-    "duration": 30,
+    "duration": 38,
     "fps": 24,
-    "bytes": 29723867,
-    "sha256": "6d79eae3e2e8c795e6b0e96bbda71b81e81c881f46ffc651954faf9d665df1f8",
-    "scenes": 4,
+    "bytes": 39236175,
+    "sha256": "ece423953ca3745382882cd34810d99663f0e6d65370967fb7f850746d299b90",
+    "scenes": 5,
     "dubbedLanguage": "ko",
-    "revision": "6d79eae3e2e8"
+    "revision": "ece423953ca3"
   },
   "eumme": {
     "model": "veo-3.1-lite-generate-preview",
     "width": 1080,
     "height": 1920,
-    "duration": 30,
+    "duration": 38,
     "fps": 24,
-    "bytes": 25613377,
-    "sha256": "269d1755b2bf5f3172666a1caf7101f04cb90bf9656ca401a6cd809b77eed245",
-    "scenes": 4,
+    "bytes": 37487948,
+    "sha256": "28d4123160e8839fd7932f33176a3acb6a5e71379cbae1d023e856cc45c92fee",
+    "scenes": 5,
     "dubbedLanguage": "ko",
-    "revision": "269d1755b2bf"
+    "revision": "28d4123160e8"
   },
   "nurungji": {
     "model": "veo-3.1-lite-generate-preview",
     "width": 1080,
     "height": 1920,
-    "duration": 30,
+    "duration": 38,
     "fps": 24,
-    "bytes": 37139072,
-    "sha256": "1a70d593e41688dbdbe6fc44af84535c485e57bc4cb6371c5a7060441e7a20e3",
-    "scenes": 4,
+    "bytes": 47510846,
+    "sha256": "262b4432dafa82fdc38bc2ddec0cf2672f9646dd2d497a1a972a349c85939b49",
+    "scenes": 5,
     "dubbedLanguage": "ko",
-    "revision": "1a70d593e416"
+    "revision": "262b4432dafa"
   }
 }

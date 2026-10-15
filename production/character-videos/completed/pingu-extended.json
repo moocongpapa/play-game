@@ -1,0 +1,19 @@
+{
+  "characterId": "pingu",
+  "model": "veo-3.1-lite-generate-preview",
+  "width": 2160,
+  "height": 3840,
+  "duration": 38,
+  "scenes": 5,
+  "publishedAt": "2026-10-15T11:44:13.150Z",
+  "sha256": "6009f807f30024e265b9ffffb72d2ec7c9466a8a367107f238bfb0a51c6aeb06",
+  "baseSha256": "331cb38e5c7154d4dc6c6f6bd272e67e676648188a3a1af3a188d9ac1f04e140",
+  "bonusFingerprint": "0e61431597631025de8f9e8756c1636a9e47cef46c817c4c4ff2b0ecca20966c",
+  "generatedBonusResolution": "1080p",
+  "voice": {
+    "text": "냠냠냠!",
+    "asset": "e5a639d56241acc08e1a13cf270d8c413262f54c947da8d01395142fab179eff",
+    "sha256": "5c6e2603b0667937ab22ee8021077bbc79aaa6b41c9bd74cbd38c8b7a77d8c09",
+    "pitch": 1.12
+  }
+}

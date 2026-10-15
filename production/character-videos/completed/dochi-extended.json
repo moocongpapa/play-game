@@ -1,0 +1,19 @@
+{
+  "characterId": "dochi",
+  "model": "veo-3.1-lite-generate-preview",
+  "width": 1080,
+  "height": 1920,
+  "duration": 38,
+  "scenes": 5,
+  "publishedAt": "2026-10-15T11:32:20.403Z",
+  "sha256": "09cf98eb9ce999bc1dadb57d7e893b2f34b2a89ae149378413f9763e58b73bcc",
+  "baseSha256": "fbeb487d820fac4314a85e3f7d2607a4625de376399c648e2b90f53e61a2a2e5",
+  "bonusFingerprint": "72db7db2497aa9f2f20f41da64ee1d9c59530ecea82ccb24755fac75ebe57127",
+  "generatedBonusResolution": "1080p",
+  "voice": {
+    "text": "흔들흔들! 같이 춤추자!",
+    "asset": "607232c6f007e7f3de4db3a292a76e30f30360a5a37971fd798c1e969c89ffd7",
+    "sha256": "645a9c02cc6f57f6bdf8163395876a8dfbce6025edb55fa1eb8359db550cb27c",
+    "pitch": 1.1
+  }
+}
