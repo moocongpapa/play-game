@@ -35,7 +35,7 @@ export const Header: React.FC<HeaderProps> = ({
     ? `${CHARACTERS[selectedCharacter]?.name || '친구'}와 놀기`
     : currentScreen === 'drawing'
       ? '색칠하기'
-      : currentScreen === 'stickers'
+      : (currentScreen === 'bugs' || currentScreen === 'stickers')
         ? '곤충 놀이터'
         : currentScreen === 'aquarium'
           ? '바다 친구 수족관'
