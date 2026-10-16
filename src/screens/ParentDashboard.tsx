@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { AppState, ChildProfile, SpeechLanguage } from '../types';
+import React, { useEffect, useState, useMemo } from 'react';
+import { AppState, ChildProfile, SpeechLanguage, GameId, CharacterId } from '../types';
 import { JellyButton } from '../components/JellyButton';
-import { Shield, Clock, Volume2, Music, Sparkles, RotateCcw, Mic, Calendar, User, CheckCircle2 } from 'lucide-react';
+import { Shield, Clock, Volume2, Music, Sparkles, RotateCcw, Mic, Calendar, User, CheckCircle2, Sliders, AlertTriangle } from 'lucide-react';
 import { CookieHouseIcon } from '../components/CookieHouseIcon';
 import { speakText, stopAllSpeech } from '../utils/soundEngine';
 import { calculateAgeMonths, determineAgeGroup, getAgeGroupLabel, getAgeGroupEmoji, getAgeGroupDescription } from '../utils/ageEngine';
@@ -23,7 +23,7 @@ interface ParentDashboardProps {
   onToggleSound: () => void;
   onToggleHaptics: () => void;
   onToggleBGM: () => void;
-  onUnlockAllStickers: () => void;
+  onToggleGameDisabled?: (gameId: GameId) => void;
   onResetProgress: () => void;
   onGoHome: () => void;
   onUpdateProfile: (profile: ChildProfile) => void;
@@ -38,16 +38,18 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   onToggleSound,
   onToggleHaptics,
   onToggleBGM,
-  onUnlockAllStickers,
+  onToggleGameDisabled,
   onResetProgress,
   onGoHome,
   onUpdateProfile,
 }) => {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   
   // 편집용 프로필 상태
   const [editName, setEditName] = useState(appState.childProfile?.name || '유하');
   const [editBirthDate, setEditBirthDate] = useState(appState.childProfile?.birthDate || '2023-01-03');
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
 
   const [geminiEnabled, setGeminiEnabled] = useState(isGeminiTTSEnabled());
   const [audioStatus, setAudioStatus] = useState<CharacterAudioStatus | null>(null);
@@ -148,6 +150,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
               <label className="text-xs font-bold text-[#8C7B79] mb-1">아이 생년월일</label>
               <input
                 type="date"
+                max={todayStr}
                 value={editBirthDate}
                 onChange={(e) => setEditBirthDate(e.target.value)}
                 className="px-3 py-2 rounded-xl border border-amber-300 focus:outline-[#FF9E4A] font-black text-sm text-[#4A3E3D]"
@@ -191,15 +194,30 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
         </div>
 
         {/* 가장 좋아하는 단짝 친구 카드 */}
-        <div className="p-3 bg-orange-50/70 rounded-2xl border border-orange-200/70 mb-3 text-left flex items-center gap-3">
-          <CharacterAvatar id={appState.selectedCharacter} size="sm" mood="happy" />
-          <div className="break-keep">
-            <span className="text-[10px] sm:text-xs font-bold text-[#8C7B79] block">가장 좋아하는 단짝 친구</span>
-            <p className="text-sm sm:text-base font-black text-[#4A3E3D]">
-              {CHARACTERS[appState.selectedCharacter]?.name} {CHARACTERS[appState.selectedCharacter]?.animal} {CHARACTERS[appState.selectedCharacter]?.badge}
-            </p>
-          </div>
-        </div>
+        {(() => {
+          const counts = appState.buddyPlayCounts || {};
+          let topId = appState.selectedCharacter;
+          let maxCount = -1;
+          for (const [id, count] of Object.entries(counts)) {
+            if (typeof count === 'number' && count > maxCount) {
+              maxCount = count;
+              topId = id as CharacterId;
+            }
+          }
+          const favBuddy = CHARACTERS[topId] || CHARACTERS.ggomi;
+          return (
+            <div className="p-3 bg-orange-50/70 rounded-2xl border border-orange-200/70 mb-3 text-left flex items-center gap-3">
+              <CharacterAvatar id={favBuddy.id} size="sm" mood="happy" />
+              <div className="break-keep">
+                <span className="text-[10px] sm:text-xs font-bold text-[#8C7B79] block">가장 좋아하는 단짝 친구</span>
+                <p className="text-sm sm:text-base font-black text-[#4A3E3D]">
+                  {favBuddy.name} {favBuddy.animal} {favBuddy.badge}
+                  {maxCount > 0 && <span className="ml-2 text-xs font-bold text-amber-600">({maxCount}회 함께 놀았어요!)</span>}
+                </p>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* 영역별 놀이 활동 균형 리포트 */}
         <h3 className="text-xs font-black text-[#4A3E3D] text-left mb-2 flex items-center gap-1">
@@ -341,41 +359,131 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
       </div>
 
       {/* Sound & Music Controls */}
-      <div className="w-full bg-white p-4 sm:p-5 rounded-3xl border-2 sm:border-3 border-amber-200 shadow-sm mb-3">
+      <div className="w-full bg-white p-4 sm:p-5 rounded-3xl border-2 sm:border-3 border-amber-200 shadow-sm mb-3 text-left">
         <h2 className="text-base sm:text-lg font-black text-[#4A3E3D] flex items-center gap-2 mb-2.5 break-keep">
           <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#FF9E4A] shrink-0" /> 사운드 및 배경음악 조절
         </h2>
 
-        <div className="flex items-center justify-between py-2 border-b border-gray-100">
-          <div className="flex items-center gap-2 font-bold text-xs sm:text-sm text-[#4A3E3D]">
-            <Music className="w-4 h-4 text-[#42A5F5]" /> 배경음악 (BGM)
+        {/* BGM Control */}
+        <div className="py-2.5 border-b border-gray-100">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 font-bold text-xs sm:text-sm text-[#4A3E3D]">
+              <Music className="w-4 h-4 text-[#42A5F5]" /> 배경음악 (BGM)
+            </div>
+            <button
+              type="button"
+              onClick={onToggleBGM}
+              className={`px-3 sm:px-4 py-1 sm:py-1.5 rounded-full font-bold text-xs border cursor-pointer ${
+                appState.bgmEnabled
+                  ? 'bg-blue-100 text-blue-700 border-blue-300'
+                  : 'bg-gray-100 text-gray-500 border-gray-300'
+              }`}
+            >
+              {appState.bgmEnabled ? '켜짐' : '꺼짐'}
+            </button>
           </div>
-          <button
-            onClick={onToggleBGM}
-            className={`px-3 sm:px-4 py-1 sm:py-1.5 rounded-full font-bold text-xs border ${
-              appState.bgmEnabled
-                ? 'bg-blue-100 text-blue-700 border-blue-300'
-                : 'bg-gray-100 text-gray-500 border-gray-300'
-            }`}
-          >
-            {appState.bgmEnabled ? '켜짐' : '꺼짐'}
-          </button>
+          {appState.bgmEnabled && (
+            <div className="flex items-center gap-3 px-1">
+              <span className="text-[11px] font-bold text-[#8C7B79] w-10">음량</span>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={appState.bgmVolume}
+                onChange={(e) => onUpdateBgmVolume(parseFloat(e.target.value))}
+                className="w-full accent-blue-500 cursor-pointer h-2 bg-gray-200 rounded-lg"
+                aria-label="배경음악 음량"
+              />
+              <span className="text-xs font-black text-[#4A3E3D] w-10 text-right">{Math.round(appState.bgmVolume * 100)}%</span>
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center justify-between py-2">
-          <div className="flex items-center gap-2 font-bold text-xs sm:text-sm text-[#4A3E3D]">
-            <Volume2 className="w-4 h-4 text-[#FF9E4A]" /> 효과음 & 음성 (SFX)
+        {/* SFX Control */}
+        <div className="py-2.5">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 font-bold text-xs sm:text-sm text-[#4A3E3D]">
+              <Volume2 className="w-4 h-4 text-[#FF9E4A]" /> 효과음 & 음성 (SFX)
+            </div>
+            <button
+              type="button"
+              onClick={onToggleSound}
+              className={`px-3 sm:px-4 py-1 sm:py-1.5 rounded-full font-bold text-xs border cursor-pointer ${
+                appState.soundEnabled
+                  ? 'bg-amber-100 text-amber-700 border-amber-300'
+                  : 'bg-gray-100 text-gray-500 border-gray-300'
+              }`}
+            >
+              {appState.soundEnabled ? '켜짐' : '꺼짐'}
+            </button>
           </div>
-          <button
-            onClick={onToggleSound}
-            className={`px-3 sm:px-4 py-1 sm:py-1.5 rounded-full font-bold text-xs border ${
-              appState.soundEnabled
-                ? 'bg-amber-100 text-amber-700 border-amber-300'
-                : 'bg-gray-100 text-gray-500 border-gray-300'
-            }`}
-          >
-            {appState.soundEnabled ? '켜짐' : '꺼짐'}
-          </button>
+          {appState.soundEnabled && (
+            <div className="flex items-center gap-3 px-1">
+              <span className="text-[11px] font-bold text-[#8C7B79] w-10">음량</span>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={appState.sfxVolume ?? 1.0}
+                onChange={(e) => onUpdateSfxVolume(parseFloat(e.target.value))}
+                className="w-full accent-amber-500 cursor-pointer h-2 bg-gray-200 rounded-lg"
+                aria-label="효과음 및 음성 음량"
+              />
+              <span className="text-xs font-black text-[#4A3E3D] w-10 text-right">{Math.round((appState.sfxVolume ?? 1.0) * 100)}%</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Game ON/OFF Customization */}
+      <div className="w-full bg-white p-4 sm:p-5 rounded-3xl border-2 sm:border-3 border-amber-200 shadow-sm mb-3 text-left">
+        <h2 className="text-base sm:text-lg font-black text-[#4A3E3D] flex items-center gap-2 mb-1.5 break-keep">
+          <Sliders className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 shrink-0" /> 아이 맞춤 놀이 켜기 / 끄기
+        </h2>
+        <p className="text-[11px] sm:text-xs font-bold text-[#8C7B79] mb-3 break-keep">
+          아이의 발달 상태나 선호도에 맞춰 개별 놀이를 켜거나 끌 수 있어요. 꺼진 놀이는 홈 화면에 나타나지 않아요.
+        </p>
+        <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+          {Object.entries(GAME_CATALOG).map(([gameId, game]) => {
+            const isDisabled = appState.disabledGames?.includes(gameId as GameId);
+            const ageBadge = game.minAge === 'bloom' ? '만 4세' : game.minAge === 'sprout' ? '만 3세' : '만 2세';
+            const ageBadgeColor = game.minAge === 'bloom' ? 'bg-purple-100 text-purple-700' : game.minAge === 'sprout' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700';
+
+            return (
+              <div
+                key={gameId}
+                className={`flex items-center justify-between p-2.5 rounded-2xl border transition-all ${
+                  isDisabled
+                    ? 'bg-gray-50 border-gray-200 opacity-60'
+                    : 'bg-amber-50/40 border-amber-200/60'
+                }`}
+              >
+                <div className="flex items-center gap-2 overflow-hidden mr-2">
+                  <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 ${ageBadgeColor}`}>
+                    {ageBadge}
+                  </span>
+                  <div className="truncate">
+                    <span className="font-bold text-xs sm:text-sm text-[#4A3E3D] block truncate">{game.title}</span>
+                    <span className="text-[10px] text-[#8C7B79] block truncate">{game.prompt}</span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onToggleGameDisabled?.(gameId as GameId)}
+                  className={`px-3 py-1 rounded-xl text-xs font-black shrink-0 border cursor-pointer transition-all ${
+                    isDisabled
+                      ? 'bg-gray-200 text-gray-600 border-gray-300'
+                      : 'bg-emerald-500 text-white border-emerald-600 shadow-sm'
+                  }`}
+                  aria-label={`${game.title} ${isDisabled ? '켜기' : '끄기'}`}
+                >
+                  {isDisabled ? '꺼짐' : '켜짐'}
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -389,20 +497,47 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
         놀이 음악은 골고루 바뀌고, 잠자리에서는 포근한 자장가가 나와요.{' '}
         <a href="/audio/CREDITS.html" target="_blank" rel="noreferrer" className="underline">동물 녹음 출처</a>
       </p>
-      <div className="w-full flex gap-2.5 sm:gap-3 mb-4">
+      <div className="w-full mb-4">
         <button
-          onClick={onUnlockAllStickers}
-          className="flex-1 py-2.5 sm:py-3 px-2 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs rounded-2xl border border-purple-200 flex items-center justify-center gap-1 cursor-pointer"
+          onClick={() => setShowResetConfirm(true)}
+          className="w-full py-2.5 sm:py-3 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-2xl border border-rose-200 flex items-center justify-center gap-1.5 cursor-pointer"
         >
-          <Sparkles className="w-4 h-4 shrink-0" /> 스티커 전체 해제
-        </button>
-        <button
-          onClick={onResetProgress}
-          className="py-2.5 sm:py-3 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-2xl border border-rose-200 flex items-center justify-center gap-1 cursor-pointer"
-        >
-          <RotateCcw className="w-4 h-4 shrink-0" /> 초기화
+          <RotateCcw className="w-4 h-4 shrink-0" /> 모든 놀이 기록 및 설정 초기화
         </button>
       </div>
+
+      {showResetConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="bg-white rounded-3xl p-5 max-w-sm w-full text-center shadow-xl border-3 border-rose-300 animate-in fade-in zoom-in duration-200">
+            <div className="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+            <h3 className="text-lg font-black text-[#4A3E3D] mb-1.5">정말 초기화할까요?</h3>
+            <p className="text-xs text-[#8C7B79] font-bold mb-4 break-keep">
+              아이의 놀이 시간, 완료한 놀이 기록, 설정된 맞춤 정보가 모두 처음으로 되돌아가요.
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowResetConfirm(false)}
+                className="flex-1 py-2.5 rounded-xl border border-gray-300 font-bold text-xs text-gray-700 hover:bg-gray-100 cursor-pointer"
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowResetConfirm(false);
+                  onResetProgress();
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 font-bold text-xs text-white shadow-sm cursor-pointer"
+              >
+                네, 초기화할게요
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <JellyButton variant="primary" size="lg" onClick={onGoHome} className="w-full">
         <CookieHouseIcon className="size-9 mr-1.5" /> 아이 화면으로 돌아가기

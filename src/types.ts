@@ -93,8 +93,8 @@ export interface Sticker {
 
 export interface AppState {
   stars: number;
-  unlockedStickers: string[];
-  placedStickers: Array<{
+  unlockedStickers?: string[];
+  placedStickers?: Array<{
     id: string;
     stickerId: string;
     x: number;
@@ -115,7 +115,8 @@ export interface AppState {
   timerStartedAtSeconds: number; // A parent's restart preserves today's total.
   isTimeUp: boolean;
   completedGames: Record<string, number>; // gameId -> completion count
-  // --- 신규 프로필 필드 ---
+  buddyPlayCounts?: Partial<Record<CharacterId, number>>; // 캐릭터별 플레이 통계
+  disabledGames?: GameId[]; // 부모가 비활성화한 게임 목록
   childProfile: ChildProfile | null;
   onboardingCompleted: boolean;
 }

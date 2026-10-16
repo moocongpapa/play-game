@@ -222,6 +222,30 @@ export function setBGMVolume(vol: number) {
   applyBgmVolume();
 }
 
+let requestedSfxVolume = 1.0;
+let sfxGainNode: GainNode | null = null;
+
+export function getSfxDestination(ctx: AudioContext): AudioNode {
+  if (!sfxGainNode || sfxGainNode.context !== ctx) {
+    sfxGainNode = ctx.createGain();
+    sfxGainNode.gain.setValueAtTime(requestedSfxVolume, ctx.currentTime);
+    sfxGainNode.connect(ctx.destination);
+  }
+  return sfxGainNode;
+}
+
+export function setSFXVolume(vol: number) {
+  requestedSfxVolume = Math.max(0, Math.min(1.0, vol));
+  if (sfxGainNode && audioCtx && audioCtx.state !== 'closed') {
+    sfxGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+    sfxGainNode.gain.setTargetAtTime(requestedSfxVolume, audioCtx.currentTime, 0.05);
+  }
+}
+
+export function getSFXVolume(): number {
+  return requestedSfxVolume;
+}
+
 // ========================================================
 // High-Fidelity Synthesized Sound Effects (Zero Latency)
 // ========================================================
@@ -248,7 +272,7 @@ export function playJellyTap(enabled = true) {
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(getSfxDestination(ctx));
 
     trackEffect(osc, gain);
     osc.start(now);
@@ -281,7 +305,7 @@ export function playBouncyBoing(enabled = true) {
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(getSfxDestination(ctx));
 
     trackEffect(osc, gain);
     osc.start(now);
@@ -317,7 +341,7 @@ export function playBalloonPop(enabled = true) {
     noiseGain.gain.setValueAtTime(0.35, now);
     noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
     noise.connect(noiseGain);
-    noiseGain.connect(ctx.destination);
+    noiseGain.connect(getSfxDestination(ctx));
     trackEffect(noise, noiseGain);
     noise.start(now);
 
@@ -332,7 +356,7 @@ export function playBalloonPop(enabled = true) {
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(getSfxDestination(ctx));
 
     trackEffect(osc, gain);
     osc.start(now);
@@ -371,7 +395,7 @@ export function playDingDongDang(enabled = true) {
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
 
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(getSfxDestination(ctx));
 
       trackEffect(osc, gain);
       osc.start(now);
@@ -403,7 +427,7 @@ export function playSparkleChime(enabled = true) {
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
 
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(getSfxDestination(ctx));
 
       trackEffect(osc, gain);
       osc.start(now);
@@ -442,7 +466,7 @@ export function playCelebrationFanfare(enabled = true) {
       gain.gain.exponentialRampToValueAtTime(0.001, now + d);
 
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(getSfxDestination(ctx));
 
       trackEffect(osc, gain);
       osc.start(now);
@@ -486,7 +510,7 @@ export function playWrongBoing(enabled = true) {
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
 
     osc.connect(gain);
-    gain.connect(ctx.destination);
+    gain.connect(getSfxDestination(ctx));
 
     trackEffect(osc, gain);
     osc.start(now);
@@ -855,7 +879,7 @@ function playToyTone(frequency: number, duration: number, volume: number, endFre
   gain.gain.exponentialRampToValueAtTime(volume, now + .008);
   gain.gain.exponentialRampToValueAtTime(.0001, now + duration);
   voice.connect(gain);
-  gain.connect(ctx.destination);
+  gain.connect(getSfxDestination(ctx));
   playVoices.add(voice);
   voice.onended = () => { playVoices.delete(voice); voice.disconnect(); gain.disconnect(); };
   voice.start(now);
@@ -892,7 +916,7 @@ export function playCareSound(kind: 'brush' | 'chew' | 'drink' | 'bubble', enabl
       for (let i = 0; i < samples.length; i++) samples[i] = (Math.random() * 2 - 1) * Math.sin(Math.PI * i / samples.length);
       const source = ctx.createBufferSource(), filter = ctx.createBiquadFilter(), gain = ctx.createGain();
       source.buffer = noise; filter.type = 'bandpass'; filter.frequency.value = 1100 * pitch; filter.Q.value = .7;
-      gain.gain.value = .035; source.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+      gain.gain.value = .035; source.connect(filter); filter.connect(gain); gain.connect(getSfxDestination(ctx));
       trackEffect(source, gain);
       const ended = source.onended;
       source.onended = event => { ended?.call(source, event); filter.disconnect(); };

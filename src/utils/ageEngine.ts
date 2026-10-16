@@ -31,9 +31,12 @@ export const DEFAULT_CHILD_PROFILE: ChildProfile = {
  * 생년월일 문자열(YYYY-MM-DD)로부터 현재 월령(개월 수)을 계산합니다.
  */
 export function calculateAgeMonths(birthDate: string, now = new Date()): number {
-  // A birthday is a local calendar date, not a UTC timestamp.
-  const [year, month, day] = birthDate.split('-').map(Number);
+  if (!birthDate || typeof birthDate !== 'string') return 43;
+  const parts = birthDate.split('-').map(Number);
+  if (parts.length !== 3 || parts.some(n => Number.isNaN(n))) return 43;
+  const [year, month, day] = parts;
   const birth = new Date(year, month - 1, day);
+  if (Number.isNaN(birth.getTime())) return 43;
   
   let months = (now.getFullYear() - birth.getFullYear()) * 12;
   months += now.getMonth() - birth.getMonth();
@@ -117,37 +120,6 @@ export function getDifficultyConfig(ageGroup: AgeGroup): DifficultyConfig {
   }
 }
 
-/**
- * 연령 그룹별 사용 가능한 게임 목록을 반환합니다.
- */
-export function getAvailableGames(ageGroup: AgeGroup): GameId[] {
-  const baseGames: GameId[] = [
-    'object_recognition',
-    'shape_color',
-    'korean_letters',
-    'sound_quiz',
-    'counting_food',
-    'number_parade',
-    'cloud_shapes',
-    'treasure_hunt',
-    'tooth_brush', 'feeding', 'bubble_pop', 'peekaboo_hide', 'animal_xylophone',
-  ];
-
-  switch (ageGroup) {
-    case 'baby':
-      // 아기반: 기본 7개 + 감정 인지 + 크기 비교 (단순)
-      return [...baseGames, 'emotion_quiz', 'size_comparison'];
-    case 'sprout':
-      // 새싹반: 기본 7개 + 감정 인지 + 크기 비교 + 패턴 + 리듬
-      return [...baseGames, 'emotion_quiz', 'size_comparison', 'pattern_sequence', 'rhythm_game'];
-    case 'bloom':
-      // 꽃잎반: 전체
-      return [...baseGames, 'emotion_quiz', 'pattern_sequence', 'word_puzzle', 'rhythm_game', 'size_comparison'];
-    case 'star':
-      // 별님반: 전체
-      return [...baseGames, 'emotion_quiz', 'pattern_sequence', 'word_puzzle', 'rhythm_game', 'size_comparison'];
-  }
-}
 
 /**
  * 연령 그룹 이모지를 반환합니다.

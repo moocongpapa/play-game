@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { Gamepad2, Heart, LoaderCircle, Pause, Play, RotateCcw, Volume2, VolumeX, X } from 'lucide-react';
+import { Gamepad2, Heart, LoaderCircle, Pause, Play, RotateCcw, Smartphone, Sparkles, Tv, Volume2, VolumeX, X } from 'lucide-react';
 import type { CharacterId } from '../types';
-import { CHARACTERS } from '../data/characters';
+import { CHARACTER_LIST, CHARACTERS } from '../data/characters';
 import { getCharacterVideoPresentation } from './characterVideoPresentation';
 import { CharacterAvatar } from './CharacterAvatar';
-import { useLandscapeViewport } from '../hooks/useLandscapeViewport';
 import { playBubblePop, stopAllSpeech, stopPlaySounds, setBGMDucked, speakText, resumeAfterVideoPlayback } from '../utils/soundEngine';
 import './CharacterCharmVideoModal.css';
 
@@ -20,9 +19,10 @@ export function CharacterCharmVideoModal({ isOpen, ...props }: CharacterCharmVid
   return isOpen ? <VideoTheater key={props.initialCharacterId} {...props} /> : null;
 }
 
-function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<CharacterCharmVideoModalProps, 'isOpen'>) {
-  const landscape = useLandscapeViewport();
-  const presentation = getCharacterVideoPresentation(id, landscape);
+function VideoTheater({ onClose, initialCharacterId, soundEnabled }: Omit<CharacterCharmVideoModalProps, 'isOpen'>) {
+  const [activeCharacterId, setActiveCharacterId] = useState<CharacterId>(initialCharacterId);
+  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
+  const presentation = getCharacterVideoPresentation(activeCharacterId, orientation);
   const dialog = useRef<HTMLDialogElement>(null);
   const [opener] = useState(() => document.activeElement instanceof HTMLElement ? document.activeElement : null);
   const video = useRef<HTMLVideoElement>(null);
@@ -43,7 +43,7 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
   const [hearts, setHearts] = useState<number[]>([]);
   const [videoEnded, setVideoEnded] = useState(false);
   const [filmAspect, setFilmAspect] = useState(presentation.aspectRatio);
-  const buddy = CHARACTERS[id];
+  const buddy = CHARACTERS[activeCharacterId];
 
   const releaseMedia = (element: HTMLVideoElement | null) => {
     if (!element) return;
@@ -58,7 +58,6 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
     if (audioRestored.current) return;
     audioRestored.current = true;
     playRequest.current += 1;
-    // Release iOS's video audio session before resuming Web Audio in this tap.
     releaseMedia(activeVideo.current);
     resumeAfterVideoPlayback();
   };
@@ -81,7 +80,6 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
     try {
       await element.play();
     } catch {
-      // Autoplay can be blocked. Keep the sharp poster and a large play target.
       if (mounted.current && request === playRequest.current) {
         setPlaying(false);
         setBusy(false);
@@ -101,7 +99,7 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
     playback.current.shouldPlay = false;
     setPlaying(false);
     setVideoEnded(true);
-    speakText('이제 나랑 신나게 놀자!', soundEnabled && !localMute, { characterId: id });
+    speakText('이제 나랑 신나게 놀자!', soundEnabled && !localMute, { characterId: activeCharacterId });
   };
 
   useEffect(() => {
@@ -111,7 +109,6 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
     modal.showModal();
     stopAllSpeech();
     stopPlaySounds();
-    // Silence the playground music without changing the parent's music preference.
     setBGMDucked('video', true);
     const hide = () => { if (document.hidden) pause(); };
     document.addEventListener('visibilitychange', hide);
@@ -123,27 +120,25 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
       queueMicrotask(() => { if (opener?.isConnected) opener.focus({ preventScroll: true }); });
       document.removeEventListener('visibilitychange', hide);
     };
-    // The dialog lives through rotation; each source has its own media cleanup below.
   }, []);
 
   useEffect(() => {
     const element = video.current!;
     activeVideo.current = element;
-    // StrictMode replays effects after cleanup without replacing the DOM node.
-    if (!element.hasAttribute('src')) element.setAttribute('src', presentation.videoUrl);
-    restoringPosition.current = true;
+    element.setAttribute('src', presentation.videoUrl);
+    element.load();
+    restoringPosition.current = false;
     setFilmAspect(presentation.aspectRatio);
     setFailed(false);
     setSlow(false);
     setPlaying(false);
+    setProgress(0);
     setBusy(playback.current.shouldPlay);
     if (playback.current.shouldPlay) void requestPlay();
     return () => {
       playRequest.current += 1;
-      restoringPosition.current = true;
       releaseMedia(element);
     };
-    // Keep the last playback time, pause state and local mute across rotation.
   }, [presentation.videoUrl]);
 
   useEffect(() => {
@@ -170,6 +165,29 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
     else void requestPlay();
   };
 
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    if (!rect.width || !video.current || !video.current.duration) return;
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const targetTime = ratio * video.current.duration;
+    video.current.currentTime = targetTime;
+    setProgress(ratio);
+    if (!playing) void requestPlay();
+  };
+
+  const jumpToBonusScene = () => {
+    if (!video.current) return;
+    video.current.currentTime = 30;
+    setProgress(30 / (video.current.duration || 38));
+    playBubblePop(soundEnabled && !localMute);
+    void requestPlay();
+  };
+
+  const toggleOrientation = () => {
+    setOrientation(prev => (prev === 'portrait' ? 'landscape' : 'portrait'));
+    playBubblePop(soundEnabled && !localMute);
+  };
+
   const status = failed ? '영상을 다시 불러올 수 있어요.' : slow ? '준비하고 있어요. 친구와 먼저 인사해요!' : busy ? '영상을 준비하고 있어요.' : playing ? '영상 재생 중' : '재생 버튼을 눌러요.';
 
   return <dialog ref={dialog} className="character-theater" aria-label={`${buddy.name}의 작은 영화관`}
@@ -186,8 +204,33 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
       >
         👈 {buddy.name}랑 놀자!
       </button>
+
+      {/* In-Theater Character Switcher */}
+      <div className="theater-char-switcher" role="tablist" aria-label="다른 친구 영상 보기">
+        {CHARACTER_LIST.map((char) => (
+          <button
+            key={char.id}
+            type="button"
+            role="tab"
+            aria-selected={char.id === activeCharacterId}
+            className={`theater-char-pill ${char.id === activeCharacterId ? 'is-active' : ''}`}
+            onClick={() => {
+              if (char.id !== activeCharacterId) {
+                playBubblePop(soundEnabled && !localMute);
+                setActiveCharacterId(char.id);
+              }
+            }}
+            aria-label={`${char.name} 영상`}
+          >
+            <CharacterAvatar id={char.id} size="sm" mood="still" />
+            <span className="theater-char-pill-name">{char.name}</span>
+          </button>
+        ))}
+      </div>
+
       <button className="theater-button theater-close" onClick={closeTheater} aria-label="영상 닫고 돌아가기" autoFocus><X /></button>
     </header>
+
     <div className="theater-body">
       <div className="theater-film-column">
         <div className="theater-screen" aria-busy={busy} onClick={handleScreenClick}>
@@ -242,13 +285,55 @@ function VideoTheater({ onClose, initialCharacterId: id, soundEnabled }: Omit<Ch
           ) : null}
           {busy && !slow && !videoEnded && <LoaderCircle className="theater-loading" aria-hidden="true" />}
         </div>
-        <div className="theater-progress" aria-hidden="true"><span style={{ width: `${progress * 100}%` }} /></div>
+
+        {/* Interactive Scrub Progress Bar */}
+        <div
+          className="theater-progress cursor-pointer"
+          role="slider"
+          aria-label="재생 위치 탐색"
+          aria-valuenow={Math.round(progress * 100)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          onClick={handleProgressClick}
+        >
+          <span style={{ width: `${progress * 100}%` }} />
+        </div>
+
         <div className="theater-controls">
           <button className="theater-button" onClick={() => void requestPlay(true)} aria-label="처음부터 다시 보기"><RotateCcw /></button>
           <button className="theater-button theater-primary" onClick={() => playing ? pause() : void requestPlay()} aria-label={playing ? '영상 잠깐 멈추기' : '영상 재생하기'}>{playing ? <Pause fill="currentColor" /> : <Play fill="currentColor" />}</button>
+
+          {/* Orientation Toggle Button */}
+          {presentation.hasLandscape && (
+            <button
+              type="button"
+              className="theater-button theater-aspect-toggle"
+              onClick={toggleOrientation}
+              aria-label={orientation === 'portrait' ? '가로 화면으로 보기' : '세로 화면으로 보기'}
+              title={orientation === 'portrait' ? '가로 화면으로 보기' : '세로 화면으로 보기'}
+            >
+              {orientation === 'portrait' ? <Tv /> : <Smartphone />}
+            </button>
+          )}
+
+          {/* Bonus Scene Jump Button (when watching portrait 38s video) */}
+          {!presentation.isLandscape && (
+            <button
+              type="button"
+              className="theater-bonus-jump-btn"
+              onClick={jumpToBonusScene}
+              aria-label="30초 댄스 파티 바로보기"
+              title="30초 댄스 파티 바로보기"
+            >
+              <Sparkles size={16} />
+              <span>댄스타임!</span>
+            </button>
+          )}
+
           <button className="theater-button" disabled={!soundEnabled} onClick={() => setLocalMute(value => !value)} aria-label={!soundEnabled ? '앱 소리가 꺼져 있어요' : localMute ? '영상 소리 켜기' : '영상 소리 끄기'} aria-pressed={soundEnabled && !localMute}>{soundEnabled && !localMute ? <Volume2 /> : <VolumeX />}</button>
+
           <button className="theater-friend" onClick={cheer} aria-label={`${buddy.name}에게 하트 보내기`}>
-            <CharacterAvatar id={id} mood={hearts.length && !reduced ? 'happy' : 'still'} />
+            <CharacterAvatar id={activeCharacterId} mood={hearts.length && !reduced ? 'happy' : 'still'} />
             <span className="theater-heart-badge" aria-hidden="true"><Heart fill="currentColor" /></span>
             <span className="theater-hearts" aria-hidden="true">{hearts.map((key, i) => <motion.span key={key}
               initial={{ opacity: 1, y: 0, scale: .8 }} animate={reduced ? { opacity: 0 } : { y: -90, opacity: 0, scale: 1.3 }} transition={{ duration: 1.3 }} style={{ left: `${25 + i * 12}%` }}><Heart fill="currentColor" /></motion.span>)}</span>

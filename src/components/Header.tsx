@@ -5,7 +5,7 @@ import { CHARACTERS } from '../data/characters';
 import type { CharacterId } from '../types';
 import './Header.css';
 
-type Screen = 'home' | 'game' | 'day' | 'stickers' | 'aquarium' | 'park' | 'talk' | 'parent' | 'drawing';
+type Screen = 'home' | 'game' | 'day' | 'bugs' | 'stickers' | 'aquarium' | 'park' | 'talk' | 'parent' | 'drawing';
 
 interface HeaderProps {
   stars: number;

@@ -1,15 +1,15 @@
 {
   "pingu": {
     "model": "veo-3.1-fast-generate-preview",
-    "width": 2160,
-    "height": 3840,
+    "width": 1080,
+    "height": 1920,
     "duration": 38,
     "fps": 24,
-    "bytes": 79968231,
-    "sha256": "6009f807f30024e265b9ffffb72d2ec7c9466a8a367107f238bfb0a51c6aeb06",
+    "bytes": 14016816,
+    "sha256": "1528fe9306468dc8e8269ea271fa0e6b159e411a6b2d0a584e908c25a1736d85",
     "scenes": 5,
     "dubbedLanguage": "ko",
-    "revision": "6009f807f300"
+    "revision": "1528fe930646"
   },
   "ggomi": {
     "model": "veo-3.1-lite-generate-preview",

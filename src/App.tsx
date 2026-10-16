@@ -10,16 +10,16 @@ import { stopCelebrations } from './utils/confetti';
 import { GameStage } from './components/GameStage';
 import { useGameTimeouts } from './hooks/useGameTimeouts';
 import { SplashLoader } from './components/SplashLoader';
-import { OnboardingScreen } from './screens/OnboardingScreen';
 import { useViewportLock } from './hooks/useViewportLock';
 
-import { getAudioContext, setSpeechLanguage, setBGMScene, startBGM, stopBGM, setBGMVolume, playStarGain, speakText, stopAllSpeech, stopPlaySounds, setAudioPreferences } from './utils/soundEngine';
+import { getAudioContext, setSpeechLanguage, setBGMScene, startBGM, stopBGM, setBGMVolume, setSFXVolume, playStarGain, speakText, stopAllSpeech, stopPlaySounds, setAudioPreferences } from './utils/soundEngine';
 import { listenForAudioGestures } from './utils/audioContextLifecycle';
 import { Moon, Shield } from 'lucide-react';
 import { refreshChildProfile } from './utils/ageEngine';
 import { advancePlayTime, createForegroundClock, localPlayDate, refreshPlaySession, restartPlayTimer } from './utils/playSession';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
+const OnboardingScreen = lazy(() => import('./screens/OnboardingScreen').then(module => ({ default: module.OnboardingScreen })));
 const FriendDayScreen = lazy(() => import('./screens/FriendDayScreen').then(m => ({ default: m.FriendDayScreen })));
 const TouchEffects = lazy(() => import('./components/TouchEffects').then(module => ({ default: module.TouchEffects })));
 const CharacterTalkScreen = lazy(() => import('./screens/CharacterTalkScreen').then(module => ({ default: module.CharacterTalkScreen })));
@@ -97,8 +97,6 @@ export default function App() {
     const defaultProf = refreshChildProfile(savedProfile);
     return {
       stars: 0,
-      unlockedStickers: ['stk_ggomi', 'stk_rano', 'stk_jelly', 'stk_dochi', 'stk_star', 'stk_flower'],
-      placedStickers: [],
       selectedCharacter: 'ggomi',
       soundEnabled: true,
       bgmEnabled: true,
@@ -135,7 +133,7 @@ export default function App() {
   const finishSplash = useCallback(() => setShowSplash(false), []);
   const [homeStep, setHomeStep] = useState<'friends' | 'games'>('friends');
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
-  const [currentScreen, setCurrentScreen] = useState<'home' | 'game' | 'day' | 'stickers' | 'aquarium' | 'park' | 'talk' | 'parent' | 'drawing'>('home');
+  const [currentScreen, setCurrentScreen] = useState<'home' | 'game' | 'day' | 'bugs' | 'stickers' | 'aquarium' | 'park' | 'talk' | 'parent' | 'drawing'>('home');
   const [activeGameId, setActiveGameId] = useState<GameId | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isParentGateOpen, setIsParentGateOpen] = useState(false);
@@ -162,7 +160,7 @@ export default function App() {
   }, [currentScreen, activeGameId, homeStep, showSplash]);
 
   const handleGoHome = () => {
-    if (['talk', 'day', 'stickers', 'aquarium', 'park'].includes(currentScreen)) setHomeStep('games');
+    if (['talk', 'day', 'stickers', 'bugs', 'aquarium', 'park'].includes(currentScreen)) setHomeStep('games');
     stopAllSpeech();
     stopPlaySounds();
     stopCelebrations();
@@ -224,6 +222,7 @@ export default function App() {
   }, [appState.bgmEnabled, appState.soundEnabled, showSplash, appState.isTimeUp, quietPlay]);
 
   useEffect(() => { setBGMVolume(appState.bgmVolume); }, [appState.bgmVolume]);
+  useEffect(() => { setSFXVolume(appState.sfxVolume ?? 1.0); }, [appState.sfxVolume]);
 
   const soundEnabled = appState.soundEnabled;
 
@@ -254,19 +253,34 @@ export default function App() {
     if (!calm) playStarGain(appState.soundEnabled && !document.hidden);
 
     setAppState((prev) => {
-      // 완료한 게임 카운트만 부모 대시보드 놀이 통계용으로 기록
+      // 완료한 게임 카운트 및 캐릭터별 놀이 횟수 부모 대시보드 통계용 기록
       const updatedGames = { ...prev.completedGames };
       if (completedGameId) {
         updatedGames[completedGameId] = (updatedGames[completedGameId] || 0) + 1;
       }
 
+      const buddy = prev.selectedCharacter;
+      const updatedBuddyCounts = { ...(prev.buddyPlayCounts || {}) };
+      updatedBuddyCounts[buddy] = (updatedBuddyCounts[buddy] || 0) + 1;
+
       return {
         ...prev,
         completedGames: updatedGames,
+        buddyPlayCounts: updatedBuddyCounts,
       };
     });
 
     scheduleGameTimeout(() => setShowConfetti(false), 1800);
+  };
+
+  const handleToggleGameDisabled = (gameId: GameId) => {
+    setAppState((prev) => {
+      const current = prev.disabledGames || [];
+      const next = current.includes(gameId)
+        ? current.filter((id) => id !== gameId)
+        : [...current, gameId];
+      return { ...prev, disabledGames: next };
+    });
   };
 
 
@@ -335,12 +349,14 @@ export default function App() {
             onStartGame={handleStartGame}
             onStartDay={() => { setHomeStep('games'); openScreen('day'); }}
             onOpenDrawing={() => openScreen('drawing')}
-            onOpenStickerRoom={() => openScreen('stickers')}
+            onOpenBugGarden={() => openScreen('bugs')}
+            onOpenStickerRoom={() => openScreen('bugs')}
             onOpenAquarium={() => openScreen('aquarium')}
             onOpenCharacterPark={() => openScreen('park')}
             onOpenCharacterTalk={() => openScreen('talk')}
             soundEnabled={soundEnabled}
             childProfile={appState.childProfile}
+            disabledGames={appState.disabledGames}
           />
         );
 
@@ -368,6 +384,7 @@ export default function App() {
           />
         );
 
+      case 'bugs':
       case 'stickers':
         return (
           <BugGardenScreen
@@ -407,19 +424,19 @@ export default function App() {
             onToggleBGM={() =>
               setAppState((prev) => ({ ...prev, bgmEnabled: !prev.bgmEnabled }))
             }
-            onUnlockAllStickers={() => {
-              setAppState((prev) => ({
-                ...prev,
-                unlockedStickers: [
-                  'stk_ggomi', 'stk_rano', 'stk_jelly', 'stk_dochi',
-                  'stk_ggulgguli', 'stk_eumme', 'stk_nurungji', 'stk_star',
-                  'stk_crown', 'stk_rainbow', 'stk_flower', 'stk_candy',
-                ],
-              }));
-              speakText('모든 스티커 잠금이 해제되었습니다!', appState.soundEnabled);
-            }}
-            onResetProgress={() => {
-              localStorage.removeItem('ITSME_APP_STATE');
+            onToggleGameDisabled={handleToggleGameDisabled}
+            onResetProgress={async () => {
+              try {
+                localStorage.removeItem('ITSME_APP_STATE');
+                localStorage.removeItem('ITSME_CHILD_PROFILE');
+                localStorage.removeItem('ITSME_GEMINI_TTS_ENABLED');
+                if (window.indexedDB?.databases) {
+                  const dbs = await window.indexedDB.databases();
+                  dbs.forEach(db => { if (db.name) window.indexedDB.deleteDatabase(db.name); });
+                }
+              } catch (e) {
+                console.warn('Reset cleanup error', e);
+              }
               window.location.reload();
             }}
             onGoHome={handleGoHome}
@@ -646,12 +663,14 @@ export default function App() {
                       onStartGame={handleStartGame}
                       onStartDay={() => { setHomeStep('games'); openScreen('day'); }}
                       onOpenDrawing={() => openScreen('drawing')}
-                      onOpenStickerRoom={() => openScreen('stickers')}
+                      onOpenBugGarden={() => openScreen('bugs')}
+                      onOpenStickerRoom={() => openScreen('bugs')}
                       onOpenAquarium={() => openScreen('aquarium')}
                       onOpenCharacterPark={() => openScreen('park')}
                       onOpenCharacterTalk={() => openScreen('talk')}
                       soundEnabled={soundEnabled}
                       childProfile={appState.childProfile}
+                      disabledGames={appState.disabledGames}
                     />
                   );
               }
@@ -712,10 +731,12 @@ export default function App() {
       )}
 
       {!appState.onboardingCompleted && !showSplash && (
-        <OnboardingScreen
-          onCompleteOnboarding={handleCompleteOnboarding}
-          soundEnabled={soundEnabled}
-        />
+        <Suspense fallback={null}>
+          <OnboardingScreen
+            onCompleteOnboarding={handleCompleteOnboarding}
+            soundEnabled={soundEnabled}
+          />
+        </Suspense>
       )}
     </div>
   );

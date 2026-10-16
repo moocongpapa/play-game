@@ -1,5 +1,5 @@
 // Service Worker for 유하의 작은 놀이숲 (PWA Offline Support)
-const CACHE_NAME = 'yuha-play-v1';
+const CACHE_NAME = 'yuha-play-v2';
 
 const PRECACHE_URLS = [
   '/',
@@ -58,15 +58,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets (scripts, styles, images, icons, sounds): Cache-first with network background update
+  // Static assets (scripts, styles, images, icons, sounds, audio): Cache-first with network background update
   if (
     request.destination === 'script' ||
     request.destination === 'style' ||
     request.destination === 'image' ||
     request.destination === 'font' ||
+    request.destination === 'audio' ||
     url.pathname.startsWith('/icons/') ||
     url.pathname.startsWith('/art/') ||
     url.pathname.startsWith('/sounds/') ||
+    url.pathname.startsWith('/audio/') ||
     url.pathname.startsWith('/videos/posters/')
   ) {
     event.respondWith(

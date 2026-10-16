@@ -20,17 +20,19 @@ interface HomeScreenProps {
   onStartGame: (gameId: GameId, characterId: CharacterId) => void;
   onStartDay: () => void;
   onOpenDrawing: () => void;
-  onOpenStickerRoom: () => void;
+  onOpenBugGarden?: () => void;
+  onOpenStickerRoom?: () => void;
   onOpenAquarium: () => void;
   onOpenCharacterPark: () => void;
   onOpenCharacterTalk: () => void;
   soundEnabled: boolean;
   childProfile: ChildProfile | null;
+  disabledGames?: GameId[];
   step: HomeStep;
   onChangeStep: (step: HomeStep) => void;
 }
 
-export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSelectCharacter, onStartGame, onStartDay, onOpenDrawing, onOpenStickerRoom, onOpenAquarium, onOpenCharacterPark, onOpenCharacterTalk, soundEnabled, childProfile, step, onChangeStep }) => {
+export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSelectCharacter, onStartGame, onStartDay, onOpenDrawing, onOpenBugGarden, onOpenStickerRoom, onOpenAquarium, onOpenCharacterPark, onOpenCharacterTalk, soundEnabled, childProfile, disabledGames = [], step, onChangeStep }) => {
   const buddy = CHARACTERS[selectedCharacter] || CHARACTERS.ggomi;
   const childName = childProfile?.name || '유하';
   const age = childProfile?.ageGroup || 'sprout';
@@ -38,7 +40,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
   const [hasNavigated, setHasNavigated] = useState(false);
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   // Keep the same picture in the same place when the child changes friends.
-  const games = availableGameIds(age);
+  const games = availableGameIds(age, disabledGames);
   const timeGreeting = getTimeGreeting();
 
   useEffect(() => () => stopAllSpeech(), []);
@@ -62,9 +64,21 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
     speakText('다른 친구랑도 놀아볼까?', soundEnabled, { characterId: selectedCharacter });
   };
 
-  const renderCard = (id: GameId) => <button key={id} className={`picture-game-card theme-${GAME_CATALOG[id].theme}${GAME_CATALOG[id].badge ? ' card-tall' : ''}`} onClick={() => { stopAllSpeech(); playJellyTap(soundEnabled); onStartGame(id, selectedCharacter); }} aria-label={`${GAME_CATALOG[id].title} 시작`}>
-        <GameArtwork gameId={id} buddy={selectedCharacter} />
-      </button>;
+  const renderCard = (id: GameId) => (
+    <button
+      key={id}
+      className={`picture-game-card theme-${GAME_CATALOG[id].theme}${GAME_CATALOG[id].badge ? ' card-tall' : ''}`}
+      onClick={() => {
+        stopAllSpeech();
+        playJellyTap(soundEnabled);
+        onStartGame(id, selectedCharacter);
+      }}
+      aria-label={`${GAME_CATALOG[id].title} 시작`}
+    >
+      <GameArtwork gameId={id} buddy={selectedCharacter} />
+      <span className="game-card-title-pill">{GAME_CATALOG[id].title}</span>
+    </button>
+  );
 
   return <div className={`storybook-home home-${step}`}>
     <section className="welcome-scene">
@@ -138,7 +152,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
       <div className="home-play-nav-items">
         {([
           { label: '색칠 놀이', theme: 'drawing', open: onOpenDrawing },
-          { label: '곤충 놀이', theme: 'bugs', open: onOpenStickerRoom },
+          { label: '곤충 놀이', theme: 'bugs', open: () => (onOpenBugGarden || onOpenStickerRoom)?.() },
           { label: '수족관 놀이', theme: 'aquarium', open: onOpenAquarium },
           { label: '친구 놀이터', theme: 'park', open: onOpenCharacterPark },
           { label: '친구와 인사', theme: 'greeting', open: onOpenCharacterTalk },

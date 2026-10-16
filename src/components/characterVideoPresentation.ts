@@ -13,8 +13,8 @@ const portraitManifest = JSON.parse(manifestSource) as Partial<Record<CharacterI
 const landscapeManifest = JSON.parse(landscapeManifestSource) as Partial<Record<CharacterId, PortraitVideoMetadata>>;
 
 /** Completed films can replace their legacy counterparts independently. */
-export function getCharacterVideoPresentation(id: CharacterId, landscape = false) {
-  const useLandscape = landscape && !!landscapeManifest[id];
+export function getCharacterVideoPresentation(id: CharacterId, orientation: 'portrait' | 'landscape' = 'portrait') {
+  const useLandscape = orientation === 'landscape' && !!landscapeManifest[id];
   const metadata = useLandscape ? landscapeManifest[id] : portraitManifest[id];
   const versioned = (url: string) => metadata?.revision
     ? `${url}${url.includes('?') ? '&' : '?'}v=${encodeURIComponent(metadata.revision)}`
@@ -24,6 +24,8 @@ export function getCharacterVideoPresentation(id: CharacterId, landscape = false
     posterUrl: versioned(useLandscape ? `/videos/landscape/posters/${id}.jpg` : `/videos/posters/${id}.jpg`),
     aspectRatio: metadata && Number.isFinite(metadata.width) && Number.isFinite(metadata.height) && metadata.width > 0 && metadata.height > 0
       ? metadata.width / metadata.height
-      : 16 / 9,
+      : (useLandscape ? 16 / 9 : 9 / 16),
+    hasLandscape: !!landscapeManifest[id],
+    isLandscape: useLandscape,
   };
 }
