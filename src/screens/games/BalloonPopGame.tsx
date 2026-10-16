@@ -50,11 +50,13 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
   onCompleteQuiz,
   buddy,
   soundEnabled,
+  ageGroup,
   childName,
-  targetCount = 5,
+  targetCount: targetCountProp,
   onStageClear,
   isStageMode = false,
 }) => {
+  const targetCount = targetCountProp ?? (ageGroup === 'baby' ? 4 : ageGroup === 'sprout' ? 5 : 7);
   const { scheduleGameTimeout } = useGameTimeouts();
 
   const reducedMotion = useReducedMotion();
@@ -72,7 +74,9 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
   const spawnBalloon = (initialSlot?: number) => {
     const fieldHeight = fieldRef.current?.clientHeight || 480;
     const palette = BALLOON_PALETTES[Math.floor(Math.random() * BALLOON_PALETTES.length)];
-    const size = 88 + Math.floor(Math.random() * 20);
+    const baseSize = ageGroup === 'baby' ? 98 : ageGroup === 'sprout' ? 88 : 82;
+    const size = baseSize + Math.floor(Math.random() * 18);
+    const baseSpeed = ageGroup === 'baby' ? 9.5 : ageGroup === 'sprout' ? 7 : 5.8;
     const visibleY = fieldHeight * (initialSlot === undefined ? 0.08 + Math.random() * 0.6 : [0.52, 0.3, 0.64][initialSlot]);
     const restingY = Math.max(0, Math.min(visibleY, fieldHeight - size * 1.45));
     const newBalloon: BalloonItem = {
@@ -81,7 +85,7 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
       color: palette.color,
       bgGradient: palette.bg,
       emoji: pickNextRound(themeRef.current.items, `balloons:${themeRef.current.id}`).emoji,
-      speed: 7 + Math.random() * 4,
+      speed: baseSpeed + Math.random() * 3.5,
       size,
       // The opening group is already within reach. New balloons rise gently from below.
       startY: initialSlot === undefined ? fieldHeight : restingY,

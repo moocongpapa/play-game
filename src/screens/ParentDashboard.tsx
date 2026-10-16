@@ -45,6 +45,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
 }) => {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [gameFilter, setGameFilter] = useState<'all' | 'baby' | 'sprout' | 'bloom'>('all');
   
   // 편집용 프로필 상태
   const [editName, setEditName] = useState(appState.childProfile?.name || '유하');
@@ -439,14 +440,53 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
 
       {/* Game ON/OFF Customization */}
       <div className="w-full bg-white p-4 sm:p-5 rounded-3xl border-2 sm:border-3 border-amber-200 shadow-sm mb-3 text-left">
-        <h2 className="text-base sm:text-lg font-black text-[#4A3E3D] flex items-center gap-2 mb-1.5 break-keep">
-          <Sliders className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 shrink-0" /> 아이 맞춤 놀이 켜기 / 끄기
-        </h2>
-        <p className="text-[11px] sm:text-xs font-bold text-[#8C7B79] mb-3 break-keep">
+        <div className="flex items-center justify-between gap-2 mb-1.5">
+          <h2 className="text-base sm:text-lg font-black text-[#4A3E3D] flex items-center gap-2 break-keep">
+            <Sliders className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 shrink-0" /> 아이 맞춤 놀이 켜기 / 끄기
+          </h2>
+          {(appState.disabledGames?.length || 0) > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                (appState.disabledGames || []).forEach(id => onToggleGameDisabled?.(id));
+              }}
+              className="text-xs font-black text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl px-2.5 py-1 cursor-pointer shrink-0"
+            >
+              전체 켜기 ({appState.disabledGames?.length}개 꺼짐)
+            </button>
+          )}
+        </div>
+        <p className="text-[11px] sm:text-xs font-bold text-[#8C7B79] mb-2.5 break-keep">
           아이의 발달 상태나 선호도에 맞춰 개별 놀이를 켜거나 끌 수 있어요. 꺼진 놀이는 홈 화면에 나타나지 않아요.
         </p>
+
+        {/* Age Group Filter Tabs */}
+        <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1">
+          {([
+            { id: 'all', label: '전체 보기' },
+            { id: 'baby', label: '🌱 만 2세~' },
+            { id: 'sprout', label: '🌿 만 3세~' },
+            { id: 'bloom', label: '🌻 만 4세~' },
+          ] as const).map(tab => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setGameFilter(tab.id)}
+              className={`px-2.5 py-1 rounded-xl text-xs font-black border cursor-pointer shrink-0 transition-all ${
+                gameFilter === tab.id
+                  ? 'bg-amber-500 text-white border-amber-600 shadow-sm'
+                  : 'bg-gray-50 text-[#4A3E3D] border-gray-200 hover:bg-gray-100'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-          {Object.entries(GAME_CATALOG).map(([gameId, game]) => {
+          {Object.entries(GAME_CATALOG)
+            .filter(([, game]) => gameFilter === 'all' || (game.minAge || 'baby') === gameFilter)
+            .map(([gameId, game]) => {
             const isDisabled = appState.disabledGames?.includes(gameId as GameId);
             const ageBadge = game.minAge === 'bloom' ? '만 4세' : game.minAge === 'sprout' ? '만 3세' : '만 2세';
             const ageBadgeColor = game.minAge === 'bloom' ? 'bg-purple-100 text-purple-700' : game.minAge === 'sprout' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700';

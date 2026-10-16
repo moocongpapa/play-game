@@ -25,9 +25,12 @@ export function BubblePopGame(props: ToddlerGameProps) {
   const [count, setCount] = useState(0);
   const [happy, setHappy] = useState(false);
   const [bursts, setBursts] = useState<{ id: number; x: number; y: number; golden: boolean }[]>([]);
+  const roundGoal = props.ageGroup === 'baby' ? 6 : props.ageGroup === 'sprout' ? 8 : 10;
+  const baseSize = props.ageGroup === 'baby' ? 82 : props.ageGroup === 'sprout' ? 72 : 66;
+  const baseDuration = props.ageGroup === 'baby' ? 13 : props.ageGroup === 'sprout' ? 11 : 9.5;
   const makeBubble = (delay = 0): Bubble => {
     const id = ++sequence.current;
-    return { id, lane: (id - 1) % 5, size: 72 + (id % 3) * 12, toy: id % 3 === 0 ? null : BUBBLE_TOYS[id % BUBBLE_TOYS.length], golden: id % 5 === 0, duration: 11 + id % 3, delay };
+    return { id, lane: (id - 1) % 5, size: baseSize + (id % 3) * 12, toy: id % 3 === 0 ? null : BUBBLE_TOYS[id % BUBBLE_TOYS.length], golden: id % 5 === 0, duration: baseDuration + id % 3, delay };
   };
   const [bubbles, setBubbles] = useState<Bubble[]>(() => Array.from({ length: 5 }, (_, i) => makeBubble(-2 - i * 2)));
   useEffect(() => {
@@ -61,7 +64,7 @@ export function BubblePopGame(props: ToddlerGameProps) {
       playSparkleChime(props.soundEnabled);
       fireStarExplosion({ x: x / window.innerWidth, y: y / window.innerHeight });
     }
-    if (popped.current % 8 === 0) {
+    if (popped.current % roundGoal === 0) {
       props.onCompleteQuiz(1);
       setHappy(true);
       speakText('퐁퐁! 반짝이는 방울을 잘 찾았어! 계속 놀자!', props.soundEnabled, { characterId: props.buddy });
@@ -83,7 +86,7 @@ export function BubblePopGame(props: ToddlerGameProps) {
       </button>)}
       {bursts.map(burst => <span key={burst.id} className={`soap-burst ${burst.golden ? 'soap-burst-gold' : ''}`} style={{ left: `${burst.x}%`, top: `${burst.y}%` }} aria-hidden="true">{Array.from({ length: 7 }, (_, i) => <motion.i key={i} initial={{ x: 0, y: 0, opacity: 1, scale: 1 }} animate={{ x: Math.cos(i * Math.PI * 2 / 7) * 55, y: Math.sin(i * Math.PI * 2 / 7) * 55, opacity: 0, scale: .2 }} transition={{ duration: .65 }} />)}</span>)}
     </div>
-    <PlayProgress total={8} done={count % 8} label={`터뜨린 비눗방울 ${count}개, 이번 놀이`} />
+    <PlayProgress total={roundGoal} done={count % roundGoal} label={`터뜨린 비눗방울 ${count}개, 이번 놀이`} />
     <PlayHint>톡! 톡! 황금 방울도 찾아봐!</PlayHint>
   </PlayShell>;
 }

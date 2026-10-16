@@ -5,7 +5,7 @@ export function createRecordedAudioPlayer(createAudio: (src: string) => HTMLAudi
   let cancelActive: (() => void) | undefined;
   return {
     stop() { cancelActive?.(); },
-    play(src: string): Promise<PlaybackResult> {
+    play(src: string, volumeScale = 1): Promise<PlaybackResult> {
       cancelActive?.();
       return new Promise(resolve => {
         let audio: HTMLAudioElement;
@@ -26,7 +26,7 @@ export function createRecordedAudioPlayer(createAudio: (src: string) => HTMLAudi
         const cancel = () => finish('cancelled');
         const watchdog = setTimeout(() => finish('unavailable'), 10000);
         cancelActive = cancel;
-        audio.volume = .85;
+        audio.volume = Math.max(0, Math.min(1, .85 * volumeScale));
         audio.onended = () => finish('ended');
         audio.onerror = () => finish('unavailable');
         try { void audio.play().catch(() => finish('unavailable')); }

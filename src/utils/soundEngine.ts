@@ -226,6 +226,7 @@ let requestedSfxVolume = 1.0;
 let sfxGainNode: GainNode | null = null;
 
 export function getSfxDestination(ctx: AudioContext): AudioNode {
+  if (typeof ctx.createGain !== 'function') return ctx.destination;
   if (!sfxGainNode || sfxGainNode.context !== ctx) {
     sfxGainNode = ctx.createGain();
     sfxGainNode.gain.setValueAtTime(requestedSfxVolume, ctx.currentTime);
@@ -257,7 +258,7 @@ export function playJellyTap(enabled = true) {
   if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const ctx = getAudioContext();
-    if (tryGeneratedEffect('tap', ctx)) { return; }
+    if (tryGeneratedEffect('tap', ctx, getSfxDestination(ctx))) { return; }
     const pitch = randomEffectPitch();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -289,7 +290,7 @@ export function playBouncyBoing(enabled = true) {
   if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const ctx = getAudioContext();
-    if (tryGeneratedEffect('bounce', ctx)) { return; }
+    if (tryGeneratedEffect('bounce', ctx, getSfxDestination(ctx))) { return; }
     const pitch = randomEffectPitch();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -322,7 +323,7 @@ export function playBalloonPop(enabled = true) {
   if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const ctx = getAudioContext();
-    if (tryGeneratedEffect('pop', ctx)) { duckForEffect(550); return; }
+    if (tryGeneratedEffect('pop', ctx, getSfxDestination(ctx))) { duckForEffect(550); return; }
     const pitch = randomEffectPitch();
     const now = ctx.currentTime;
     duckForEffect(220);
@@ -413,7 +414,7 @@ export function playSparkleChime(enabled = true) {
   if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const ctx = getAudioContext();
-    if (tryGeneratedEffect('sparkle', ctx)) { duckForEffect(1050); return; }
+    if (tryGeneratedEffect('sparkle', ctx, getSfxDestination(ctx))) { duckForEffect(1050); return; }
     duckForEffect(500);
     const pitches = [1046.50, 1318.51, 1567.98, 2093.00, 2637.02]; // C6, E6, G6, C7, E7
     pitches.forEach((freq, idx) => {
@@ -445,7 +446,7 @@ export function playCelebrationFanfare(enabled = true) {
   if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const ctx = getAudioContext();
-    if (tryGeneratedEffect('success', ctx)) { duckForEffect(1600); return; }
+    if (tryGeneratedEffect('success', ctx, getSfxDestination(ctx))) { duckForEffect(1600); return; }
     duckForEffect(1000);
     const melody = [
       { f: 523.25, t: 0.00, d: 0.12 }, // C5
@@ -541,7 +542,7 @@ export async function playAnimalSound(animal: string, enabled = true): Promise<P
   const request = ++animalRequest;
   animalClueActive = true;
   setBGMDucked('animal', true);
-  const result = await animalPlayer.play(ANIMAL_RECORDINGS[id]);
+  const result = await animalPlayer.play(ANIMAL_RECORDINGS[id], requestedSfxVolume);
   if (request !== animalRequest) return 'cancelled';
   animalClueActive = false;
   setBGMDucked('animal', false);
@@ -690,7 +691,7 @@ function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions
 
     utterance.pitch = options.pitch ?? basePitch;
     utterance.rate = options.rate ?? baseRate;
-    utterance.volume = 1.0;
+    utterance.volume = requestedSfxVolume;
 
     utterance.onstart = () => {
       if (activeBrowserUtterance !== utterance) return;
@@ -782,6 +783,7 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
         language: speechLanguage,
         characterId: options.characterId,
         audioCtx: ctx,
+        destination: getSfxDestination(ctx),
         onStart: () => options.onStart?.('ai'),
         onEnd: options.onEnd,
       }).then((ok) => {
@@ -929,7 +931,8 @@ export function playCareSound(kind: 'brush' | 'chew' | 'drink' | 'bubble', enabl
       playToyTone(420 * pitch, .14, .045, 220 * pitch);
       playToyTone(520 * pitch, .18, .035, 260 * pitch, .18);
     } else {
-      if (tryGeneratedEffect('bubble', getAudioContext())) { duckForEffect(550); return; }
+      const ctx = getAudioContext();
+      if (tryGeneratedEffect('bubble', ctx, getSfxDestination(ctx))) { duckForEffect(550); return; }
       const frequency = 920 * pitch;
       duckForEffect(200);
       playToyTone(frequency, .2, .085, frequency * 1.65);
@@ -971,6 +974,6 @@ export function playSleepBreath(enabled = true) {
     const source = ctx.createBufferSource(), gain = ctx.createGain(), now = ctx.currentTime;
     source.buffer = sleepNoise; source.playbackRate.value = randomEffectPitch();
     gain.gain.setValueAtTime(.0001, now); gain.gain.linearRampToValueAtTime(.08, now + .5); gain.gain.exponentialRampToValueAtTime(.0001, now + 1.3);
-    source.connect(gain); gain.connect(ctx.destination); trackEffect(source, gain); source.start(now);
+    source.connect(gain); gain.connect(getSfxDestination(ctx)); trackEffect(source, gain); source.start(now);
   } catch { /* Sleeping remains peaceful when audio is unavailable. */ }
 }

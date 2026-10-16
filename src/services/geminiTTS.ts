@@ -97,6 +97,7 @@ export async function playGeminiSpeech(
     characterId?: string;
     language?: SpeechLanguage;
     audioCtx: AudioContext;
+    destination?: AudioNode;
     onStart?: () => void;
     onEnd?: () => void;
   },
@@ -185,7 +186,7 @@ export async function playGeminiSpeech(
     const sourceNode = ctx.createBufferSource();
     sourceNode.buffer = clip.buffer;
     sourceNode.playbackRate.value = clip.playbackRate;
-    sourceNode.connect(ctx.destination);
+    sourceNode.connect(options.destination || ctx.destination);
     activeSourceNode = sourceNode;
     sourceNode.onended = () => {
       if (activeSourceNode !== sourceNode) return;

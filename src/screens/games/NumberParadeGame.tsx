@@ -42,22 +42,26 @@ export function NumberParadeGame(props: ToddlerGameProps) {
     return () => { speaker.clear(); stopAllSpeech(); stopPlaySounds(); };
   }, [speaker, props.buddy, props.soundEnabled, paused]);
 
+  const maxNumber = props.ageGroup === 'baby' ? 10 : props.ageGroup === 'sprout' ? 20 : 100;
+  const milestoneStep = props.ageGroup === 'baby' || props.ageGroup === 'sprout' ? 5 : 10;
+
   const tap = (mode: NumberReading) => {
     if (paused) return;
-    const value = nextPlayNumber(count.current);
+    const rawNext = nextPlayNumber(count.current);
+    const value = rawNext > maxNumber ? 1 : rawNext;
     count.current = value;
     setView(previous => ({ value, mode, taps: previous.taps + 1 }));
     playJellyTap(props.soundEnabled);
     speaker.push({ value, mode });
     emitJuice({ kind: 'snap' });
-    if (value > 0 && value % 10 === 0) {
+    if (value > 0 && value % milestoneStep === 0) {
       fireStarExplosion();
       props.onCompleteQuiz(1);
     }
   };
   const color = COLORS[view.value % COLORS.length];
   const beads = view.value ? (view.value - 1) % 10 + 1 : 0;
-  const milestone = view.taps > 0 && view.value > 0 && view.value % 10 === 0;
+  const milestone = view.taps > 0 && view.value > 0 && view.value % milestoneStep === 0;
   return <div className="number-play" data-reading={view.mode}>
     <GameCue buddy={props.buddy} happy={milestone} disabled={!props.soundEnabled || paused}
       onReplay={() => speaker.push({ value: view.value, mode: view.mode })} />

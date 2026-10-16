@@ -27,7 +27,10 @@ export function SymmetryPuzzleGame(props: ToddlerGameProps) {
 }
 function WingScene({ props, pattern, locked, onComplete }: { props: ToddlerGameProps; pattern: number; locked: boolean; onComplete: (praise: string) => void }) {
   const placed = useRef(false);
-  const choices = [0, 1, 2].map(i => Math.floor(pattern / 3) * 3 + (pattern + i + 1) % 3);
+  const allChoices = [0, 1, 2].map(i => Math.floor(pattern / 3) * 3 + (pattern + i + 1) % 3);
+  const choices = props.ageGroup === 'baby'
+    ? allChoices.filter((p, idx) => p === pattern || idx === 0).slice(0, 2)
+    : allChoices;
   return <DragMatch canDrop={id => id === String(pattern)} juicy resetKey={pattern} disabled={locked} hint={{ pieceId: String(pattern), targetId: 'wing' }}
     onDrop={id => { if (placed.current || locked) return false; if (Number(id) !== pattern) { playBouncyBoing(props.soundEnabled); trySpeakIdleHint('왼쪽 날개의 무늬도 살펴봐!', props.soundEnabled, props.buddy); return false; } placed.current = true; onComplete('날개가 꼭 닮았네! 팔랑팔랑, 고마워!'); return true; }}>
     <div className="discovery-scene symmetry-scene"><LandscapeArt/>

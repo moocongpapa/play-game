@@ -196,14 +196,32 @@ function VideoTheater({ onClose, initialCharacterId, soundEnabled }: Omit<Charac
     onCancel={event => { event.preventDefault(); closeTheater(); }}>
     <div className="theater-landscape" aria-hidden="true" />
     <header className="theater-header">
-      <button
-        type="button"
-        className={`theater-back-play-button ${videoEnded ? 'pulse-attention' : ''}`}
-        onClick={closeTheater}
-        aria-label={`${buddy.name}랑 놀러가기`}
-      >
-        👈 {buddy.name}랑 놀자!
-      </button>
+      <div className="theater-header-top">
+        <button
+          type="button"
+          className={`theater-back-play-button ${videoEnded ? 'pulse-attention' : ''}`}
+          onClick={closeTheater}
+          aria-label={`${buddy.name}랑 놀러가기`}
+        >
+          👈 {buddy.name}랑 놀자!
+        </button>
+
+        <div className="theater-header-actions">
+          {presentation.hasLandscape && (
+            <button
+              type="button"
+              className="theater-aspect-pill"
+              onClick={toggleOrientation}
+              aria-label={orientation === 'portrait' ? '가로 화면으로 보기' : '세로 화면으로 보기'}
+              title={orientation === 'portrait' ? '가로 화면으로 보기' : '세로 화면으로 보기'}
+            >
+              {orientation === 'portrait' ? <Tv size={17} /> : <Smartphone size={17} />}
+              <span>{orientation === 'portrait' ? '가로영상' : '세로영상'}</span>
+            </button>
+          )}
+          <button className="theater-button theater-close" onClick={closeTheater} aria-label="영상 닫고 돌아가기" autoFocus><X /></button>
+        </div>
+      </div>
 
       {/* In-Theater Character Switcher */}
       <div className="theater-char-switcher" role="tablist" aria-label="다른 친구 영상 보기">
@@ -227,8 +245,6 @@ function VideoTheater({ onClose, initialCharacterId, soundEnabled }: Omit<Charac
           </button>
         ))}
       </div>
-
-      <button className="theater-button theater-close" onClick={closeTheater} aria-label="영상 닫고 돌아가기" autoFocus><X /></button>
     </header>
 
     <div className="theater-body">
@@ -303,19 +319,6 @@ function VideoTheater({ onClose, initialCharacterId, soundEnabled }: Omit<Charac
           <button className="theater-button" onClick={() => void requestPlay(true)} aria-label="처음부터 다시 보기"><RotateCcw /></button>
           <button className="theater-button theater-primary" onClick={() => playing ? pause() : void requestPlay()} aria-label={playing ? '영상 잠깐 멈추기' : '영상 재생하기'}>{playing ? <Pause fill="currentColor" /> : <Play fill="currentColor" />}</button>
 
-          {/* Orientation Toggle Button */}
-          {presentation.hasLandscape && (
-            <button
-              type="button"
-              className="theater-button theater-aspect-toggle"
-              onClick={toggleOrientation}
-              aria-label={orientation === 'portrait' ? '가로 화면으로 보기' : '세로 화면으로 보기'}
-              title={orientation === 'portrait' ? '가로 화면으로 보기' : '세로 화면으로 보기'}
-            >
-              {orientation === 'portrait' ? <Tv /> : <Smartphone />}
-            </button>
-          )}
-
           {/* Bonus Scene Jump Button (when watching portrait 38s video) */}
           {!presentation.isLandscape && (
             <button
@@ -325,7 +328,7 @@ function VideoTheater({ onClose, initialCharacterId, soundEnabled }: Omit<Charac
               aria-label="30초 댄스 파티 바로보기"
               title="30초 댄스 파티 바로보기"
             >
-              <Sparkles size={16} />
+              <Sparkles size={15} />
               <span>댄스타임!</span>
             </button>
           )}

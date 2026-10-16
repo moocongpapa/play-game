@@ -54,7 +54,7 @@ async function warmEffect(id: PlayEffectId, ctx: AudioContext) {
 }
 
 /** False means the caller should play its immediate procedural sound. */
-export function tryGeneratedEffect(id: PlayEffectId, ctx: AudioContext): boolean {
+export function tryGeneratedEffect(id: PlayEffectId, ctx: AudioContext, destination?: AudioNode): boolean {
   if (typeof document === 'undefined' || !enabled || !isGeminiTTSEnabled() || isPageHidden()) return false;
   const buffer = buffers.get(id);
   if (!buffer) { void warmEffect(id, ctx); return false; }
@@ -68,7 +68,7 @@ export function tryGeneratedEffect(id: PlayEffectId, ctx: AudioContext): boolean
   source.buffer = buffer;
   source.playbackRate.value = .95 + Math.random() * .1;
   gain.gain.value = PLAY_EFFECTS[id].volume;
-  source.connect(gain); gain.connect(ctx.destination);
+  source.connect(gain); gain.connect(destination || ctx.destination);
   sources.add(source);
   source.onended = () => { sources.delete(source); source.disconnect(); gain.disconnect(); };
   source.start();
