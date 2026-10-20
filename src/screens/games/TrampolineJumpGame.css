@@ -1,0 +1,146 @@
+/* TrampolineJumpGame.css - 통통 트램펄린 */
+.trampoline-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px max(16px, env(safe-area-inset-bottom));
+  overflow: hidden;
+  user-select: none;
+  background: linear-gradient(180deg, #93c5fd 0%, #bfdbfe 45%, #dbeafe 70%, #86efac 100%);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.trampoline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 520px;
+  z-index: 20;
+}
+
+.trampoline-score-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 3px solid #38bdf8;
+  border-radius: 9999px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0369a1;
+  box-shadow: 0 4px 12px rgba(3, 105, 161, 0.16);
+}
+
+.trampoline-combo-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  background: #fef08a;
+  border: 2px solid #eab308;
+  border-radius: 9999px;
+  font-weight: 900;
+  font-size: 0.95rem;
+  color: #a16207;
+}
+
+/* Play arena */
+.trampoline-arena {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* Sky items floating down */
+.sky-item {
+  position: absolute;
+  font-size: 38px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+  cursor: pointer;
+  z-index: 10;
+  transition: transform 0.1s ease;
+}
+
+/* Character on trampoline */
+.trampoline-jumper {
+  position: absolute;
+  bottom: 90px;
+  width: 130px;
+  height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 15;
+  transition: transform 0.15s ease-out;
+}
+
+/* Trampoline base */
+.trampoline-base {
+  position: relative;
+  width: 260px;
+  height: 70px;
+  margin-bottom: 24px;
+  z-index: 10;
+}
+
+.trampoline-mat {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 42px;
+  background: linear-gradient(180deg, #ec4899 0%, #db2777 100%);
+  border: 4px solid #be185d;
+  border-radius: 50%;
+  box-shadow: 0 8px 20px rgba(190, 24, 93, 0.35);
+  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.trampoline-mat.spring-down {
+  transform: scaleY(0.55) translateY(14px);
+}
+
+.trampoline-legs {
+  position: absolute;
+  bottom: 0;
+  left: 20px;
+  right: 20px;
+  height: 38px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.trampoline-leg {
+  width: 8px;
+  height: 100%;
+  background: #64748b;
+  border-radius: 4px;
+}
+
+/* Prompt pill at bottom */
+.trampoline-tap-hint {
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  background: #ffffff;
+  border: 3px solid #38bdf8;
+  border-radius: 9999px;
+  font-weight: 800;
+  color: #0284c7;
+  box-shadow: 0 6px 16px rgba(2, 132, 199, 0.18);
+  margin-bottom: 8px;
+}

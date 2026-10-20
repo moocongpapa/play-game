@@ -91,6 +91,15 @@ export function GameArtwork({ gameId, buddy = 'jelly' }: { gameId: GameId; buddy
     case 'balloon_pop':
       scene = <>{['#df91a5','#e5bb6e','#91b8cf'].map((c,i) => <span key={c} className={`picture-balloon balloon-${i}`} style={{ background: c }}><i /></span>)}<Hand className="scene-hand" /><Sparkles className="scene-pop" /></>;
       break;
+    case 'fruit_munch':
+      scene = <><span className="mini-care-friend mini-food-friend"><CareFriend buddy={buddy} mouth="chew" /></span><Toy emoji="🍓" x={52} y={15} size={28} rotate={12} /><Toy emoji="🍌" x={68} y={46} size={26} rotate={-18} /><Sparkles className="scene-pop" /></>;
+      break;
+    case 'trampoline_jump':
+      scene = <><span className="mini-hide-friend" style={{ top: '10%', transform: 'scale(1.1)' }}><CharacterAvatar id={buddy} mood="happy" /></span><span className="xylophone" style={{ bottom: '8px', height: '14px', borderRadius: '10px' }}><i style={{ background: '#7ec7c1', width: '100%' }} /></span><Toy emoji="⭐" x={10} y={15} size={24} /><Sparkles className="scene-pop" /></>;
+      break;
+    case 'bubble_bath':
+      scene = <><span className="mini-care-friend"><CareFriend buddy={buddy} /></span><span className="mini-soap soap-a" style={{ bottom: '15%', left: '10%' }}><ToyArtwork emoji="🫧" /></span><span className="mini-soap soap-b" style={{ bottom: '25%', right: '15%' }}><ToyArtwork emoji="🫧" /></span><Toy emoji="🐤" x={60} y={35} size={28} /></>;
+      break;
   }
   return <div className={`game-artwork theme-${theme}`} aria-hidden="true"><span className="scene-cloud cloud-a" /><span className="scene-cloud cloud-b" />{scene}</div>;
 }

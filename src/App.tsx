@@ -59,6 +59,9 @@ const GoodNightSleepGame = lazy(() => import('./screens/games/GoodNightSleepGame
 const EmotionFaceGame = lazy(() => import('./screens/games/EmotionFaceGame').then(module => ({ default: module.EmotionFaceGame })));
 const SensoryPaintCanvas = lazy(() => import('./screens/games/SensoryPaintCanvas').then(module => ({ default: module.SensoryPaintCanvas })));
 const RainbowStageAdventure = lazy(() => import('./screens/RainbowStageAdventure').then(module => ({ default: module.RainbowStageAdventure })));
+const FruitMunchGame = lazy(() => import('./screens/games/FruitMunchGame').then(module => ({ default: module.FruitMunchGame })));
+const TrampolineJumpGame = lazy(() => import('./screens/games/TrampolineJumpGame').then(module => ({ default: module.TrampolineJumpGame })));
+const BubbleBathGame = lazy(() => import('./screens/games/BubbleBathGame').then(module => ({ default: module.BubbleBathGame })));
 
 export default function App() {
   useViewportLock();
@@ -645,6 +648,36 @@ export default function App() {
                 case 'balloon_pop':
                   return (
                     <BalloonPopGame
+                      buddy={appState.selectedCharacter}
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'fruit_munch':
+                  return (
+                    <FruitMunchGame
+                      buddy={appState.selectedCharacter}
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'trampoline_jump':
+                  return (
+                    <TrampolineJumpGame
+                      buddy={appState.selectedCharacter}
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'bubble_bath':
+                  return (
+                    <BubbleBathGame
                       buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={soundEnabled}

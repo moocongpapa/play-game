@@ -31,7 +31,10 @@ export type GameId =
   | 'goodnight_sleep'
   | 'emotion_face'
   | 'sensory_paint'
-  | 'balloon_pop';       // 꿀꿀이의 둥둥 풍선 팡팡 놀이
+  | 'balloon_pop'        // 꿀꿀이의 둥둥 풍선 팡팡 놀이
+  | 'fruit_munch'        // 과일 냠냠 몇 개?
+  | 'trampoline_jump'    // 통통 트램펄린 점프
+  | 'bubble_bath';       // 뽀글뽀글 거품 목욕
 
 export type SpeechLanguage = 'en' | 'ko';
 
