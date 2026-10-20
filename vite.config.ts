@@ -63,6 +63,9 @@ export default defineConfig(({ mode }) => {
               if (id.includes('canvas-confetti')) {
                 return 'vendor-media';
               }
+              if (id.includes('pixi.js') || id.includes('@pixi/')) {
+                return 'vendor-pixi';
+              }
             }
           },
         },

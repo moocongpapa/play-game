@@ -139,6 +139,59 @@ export function ToyArtwork({ emoji, className = '', label }: { emoji: string; cl
       drawing = <g stroke="#507d58" strokeWidth="3"><ellipse cx="50" cy="55" rx="42" ry="33" fill="#89b872" /><path d="M32 25 Q13 55 32 85 M45 23 Q33 55 45 87 M59 23 Q68 55 59 87 M72 28 Q91 55 72 82" fill="none" strokeWidth="6" /><path d="M50 22 Q45 10 55 9" fill="none" /><path d="M24 44 Q28 35 33 33" stroke="#fff4c5" strokeWidth="4" opacity=".65" strokeLinecap="round" /></g>;
     } else if (emoji === '🍋' || emoji === '🥝') {
       drawing = <g stroke="#9e9358" strokeWidth="2"><ellipse cx="50" cy="54" rx="39" ry="30" fill={emoji === '🍋' ? '#edcf6d' : '#b9cb82'} /><path d="M50 21 Q58 1 78 14 Q67 29 50 21" fill="#85ac77" />{emoji === '🥝' && <><ellipse cx="50" cy="54" rx="28" ry="24" fill="#c5da8e" /><ellipse cx="50" cy="54" rx="8" ry="14" fill="#fff0c6" />{[0,1,2,3,4,5,6,7].map(i=><circle key={i} cx={50+19*Math.cos(i*Math.PI/4)} cy={54+15*Math.sin(i*Math.PI/4)} r="2" fill="#74624c" />)}</>}</g>;
+    } else if (emoji === '🐤') {
+      drawing = <g stroke="#9b7842" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round">
+        <path d="M22 62 C18 44 34 40 46 46 C50 30 74 30 76 48 C88 47 92 64 82 76 C72 88 26 88 22 62 Z" fill="#f7d560" />
+        <circle cx="56" cy="34" r="18" fill="#fae078" />
+        <path d="M52 16 Q56 8 62 15 Q68 9 65 18" fill="none" stroke="#e5b93c" strokeWidth="3" />
+        <circle cx="62" cy="31" r="3" fill="#4f3d2a" stroke="none" />
+        <circle cx="63" cy="30" r="1" fill="#ffffff" stroke="none" />
+        <ellipse cx="55" cy="37" rx="4" ry="2.5" fill="#f29b94" stroke="none" />
+        <path d="M72 31 L86 35 L72 40 Z" fill="#f28f4b" />
+        <path d="M36 58 Q48 53 56 63 Q44 72 36 58 Z" fill="#f0c243" />
+      </g>;
+    } else if (emoji === '🫧') {
+      drawing = <g stroke="#7db8d6" strokeWidth="2.2">
+        <circle cx="42" cy="54" r="26" fill="#dff4ff" fillOpacity=".75" />
+        <path d="M28 40 Q34 32 44 33" fill="none" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" />
+        <circle cx="72" cy="30" r="14" fill="#eef9ff" fillOpacity=".8" />
+        <path d="M65 23 Q69 19 74 20" fill="none" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" />
+        <circle cx="68" cy="72" r="9" fill="#e5f6ff" fillOpacity=".85" />
+      </g>;
+    } else if (emoji === '🧼') {
+      drawing = <g stroke="#9b7286" strokeWidth="2.5" strokeLinejoin="round">
+        <rect x="16" y="30" width="68" height="44" rx="20" fill="#f4b8d0" />
+        <rect x="24" y="37" width="52" height="30" rx="14" fill="#fad2e2" />
+        <circle cx="24" cy="24" r="8" fill="#eef9ff" stroke="#8abdd9" strokeWidth="2" />
+        <circle cx="38" cy="20" r="6" fill="#eef9ff" stroke="#8abdd9" strokeWidth="2" />
+        <circle cx="76" cy="26" r="9" fill="#eef9ff" stroke="#8abdd9" strokeWidth="2" />
+      </g>;
+    } else if (emoji === '🚿') {
+      drawing = <g stroke="#648396" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M18 18 H48 Q64 18 64 34 V38" fill="none" strokeWidth="6" />
+        <path d="M44 38 H84 L76 52 H52 Z" fill="#b8d4e3" />
+        <path d="M50 60 L44 76 M60 60 L58 80 M70 60 L72 80 M78 60 L84 76" stroke="#56b4e9" strokeWidth="3.5" strokeDasharray="4 5" />
+      </g>;
+    } else if (emoji === '🎈') {
+      drawing = <g stroke="#9c5b6b" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round">
+        <path d="M50 86 Q44 94 53 97" fill="none" stroke="#9e8c7a" />
+        <polygon points="45,78 55,78 50,71" fill="#e87a90" />
+        <ellipse cx="50" cy="43" rx="28" ry="32" fill="#f2849e" />
+        <path d="M35 26 Q40 18 48 18" fill="none" stroke="#ffffff" strokeWidth="4" opacity=".7" />
+      </g>;
+    } else if (emoji === '🍭') {
+      drawing = <g stroke="#8e6c5e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M50 56 V92" stroke="#d8cbb8" strokeWidth="5" />
+        <circle cx="50" cy="36" r="26" fill="#f7a8b8" />
+        <path d="M50 36 m0 -18 a18 18 0 1 1 -13 30 a11 11 0 1 0 19 -12" fill="none" stroke="#fff3d6" strokeWidth="5" />
+      </g>;
+    } else if (emoji === '🌈') {
+      drawing = <g fill="none" strokeLinecap="round" strokeWidth="6">
+        <path d="M14 74 A36 36 0 0 1 86 74" stroke="#f28b82" />
+        <path d="M21 74 A29 29 0 0 1 79 74" stroke="#fbbc04" />
+        <path d="M28 74 A22 22 0 0 1 72 74" stroke="#81c995" />
+        <path d="M35 74 A15 15 0 0 1 65 74" stroke="#78d9ec" />
+      </g>;
     } else {
       // Retain exact meaning for the less common older-age vocabulary.
       return <span role={label ? 'img' : undefined} aria-label={label} aria-hidden={!label || undefined} className={`toy-art toy-art-fallback ${className}`}>{emoji}</span>;
