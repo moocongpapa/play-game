@@ -35,12 +35,12 @@ interface StackedBlock {
 }
 
 const BLOCK_PALETTES = [
-  { bg: 'from-[#FF8FA3] to-[#FF4D6D]', border: '#C9184A', hex: 0xff4d6d, emoji: '🍓' },
-  { bg: 'from-[#FDE047] to-[#F59E0B]', border: '#B45309', hex: 0xf59e0b, emoji: '⭐' },
-  { bg: 'from-[#6EE7B7] to-[#10B981]', border: '#047857', hex: 0x10b981, emoji: '🍀' },
-  { bg: 'from-[#7DD3FC] to-[#0284C7]', border: '#0369A1', hex: 0x0284c7, emoji: '🐬' },
-  { bg: 'from-[#D8B4FE] to-[#9333EA]', border: '#6B21A8', hex: 0x9333ea, emoji: '🦄' },
-  { bg: 'from-[#FDBA74] to-[#EA580C]', border: '#9A3412', hex: 0xea580c, emoji: '🍊' },
+  { bg: 'from-[#FF758F] to-[#FF4D6D]', border: '#A4133C', stud: '#FFB3C1', hex: 0xff4d6d, emoji: '🍓' },
+  { bg: 'from-[#FDE047] to-[#F59E0B]', border: '#92400E', stud: '#FEF08A', hex: 0xf59e0b, emoji: '⭐' },
+  { bg: 'from-[#34D399] to-[#059669]', border: '#065F46', stud: '#A7F3D0', hex: 0x10b981, emoji: '🍀' },
+  { bg: 'from-[#38BDF8] to-[#0284C7]', border: '#075985', stud: '#BAE6FD', hex: 0x0284c7, emoji: '🐬' },
+  { bg: 'from-[#C084FC] to-[#7C3AED]', border: '#5B21B6', stud: '#E9D5FF', hex: 0x9333ea, emoji: '🦄' },
+  { bg: 'from-[#FB923C] to-[#EA580C]', border: '#9A3412', stud: '#FED7AA', hex: 0xea580c, emoji: '🍊' },
 ];
 
 const GUIDE = '화면을 톡 눌러서 알록달록 블록 탑을 높이 쌓아 볼까?';
@@ -55,10 +55,10 @@ export const BlockTowerGame: React.FC<BlockTowerGameProps> = ({
   const pixiRef = useRef<PixiStageHandle>(null);
   const stageRef = useRef<HTMLDivElement>(null);
 
-  const targetBlocks = ageGroup === 'baby' ? 4 : ageGroup === 'sprout' ? 5 : 6;
+  const targetBlocks = ageGroup === 'baby' ? 5 : ageGroup === 'sprout' ? 6 : 7;
 
   const [blocks, setBlocks] = useState<StackedBlock[]>([]);
-  const [craneX, setCraneX] = useState(0); // -90 to +90 px from center
+  const [craneX, setCraneX] = useState(0); // integer px from center
   const [droppingBlock, setDroppingBlock] = useState<{
     x: number;
     y: number;
@@ -90,16 +90,16 @@ export const BlockTowerGame: React.FC<BlockTowerGameProps> = ({
   // Subscribe to wind gusts ("후~!") so blowing sways the tower playfully
   useEffect(() => {
     return subscribeWindGust((intensity) => {
-      setTowerSway((prev) => (prev >= 0 ? -6 * intensity : 6 * intensity));
+      setTowerSway((prev) => (prev >= 0 ? -5 * intensity : 5 * intensity));
       scheduleGameTimeout(() => setTowerSway(0), 650);
     });
   }, [scheduleGameTimeout]);
 
-  // 60fps crane sway + dropping block physics loop
+  // 60fps crane sway with integer-pixel rounding (no CSS transition lag or subpixel blur)
   useEffect(() => {
     let rafId = 0;
     let lastTime = performance.now();
-    const speed = ageGroup === 'baby' ? 1.5 : ageGroup === 'sprout' ? 1.9 : 2.3;
+    const speed = ageGroup === 'baby' ? 1.45 : ageGroup === 'sprout' ? 1.85 : 2.25;
 
     const step = (now: number) => {
       const dt = Math.min(0.05, (now - lastTime) / 1000);
@@ -107,9 +107,11 @@ export const BlockTowerGame: React.FC<BlockTowerGameProps> = ({
 
       if (!completedRef.current && !droppingRef.current) {
         craneTimeRef.current += dt * speed;
-        const nextX = Math.sin(craneTimeRef.current) * 76;
-        craneXRef.current = nextX;
-        setCraneX(nextX);
+        const nextX = Math.round(Math.sin(craneTimeRef.current) * 96);
+        if (nextX !== craneXRef.current) {
+          craneXRef.current = nextX;
+          setCraneX(nextX);
+        }
       }
 
       rafId = requestAnimationFrame(step);
@@ -128,22 +130,24 @@ export const BlockTowerGame: React.FC<BlockTowerGameProps> = ({
 
       const paletteIdx = currentCount % BLOCK_PALETTES.length;
       const releaseX = craneXRef.current;
-      // Forgiving magnetic clamp so toddlers never lose a block off the tower
+      // Forgiving magnetic clamp rounded to integer pixels for crisp alignment
       const prevOffset = currentCount > 0 ? blocksRef.current[currentCount - 1].offsetX : 0;
-      const clampedOffset = Math.max(-34, Math.min(34, prevOffset * 0.45 + releaseX * 0.45));
-      const isPerfect = Math.abs(releaseX - prevOffset) < 22;
+      const clampedOffset = Math.round(
+        Math.max(-42, Math.min(42, prevOffset * 0.45 + releaseX * 0.45)),
+      );
+      const isPerfect = Math.abs(releaseX - prevOffset) < 26;
 
       playBouncyBoing(soundEnabled);
       setDroppingBlock({
         x: releaseX,
-        y: 64,
-        targetY: 260 - currentCount * 38,
+        y: 68,
+        targetY: 280 - currentCount * 46,
         paletteIdx,
       });
 
       const rect = stageRef.current?.getBoundingClientRect();
-      const hitX = (rect?.width || 360) * 0.5 + clampedOffset;
-      const hitY = (rect?.height || 440) - 96 - currentCount * 38;
+      const hitX = (rect?.width || 400) * 0.5 + clampedOffset;
+      const hitY = (rect?.height || 560) - 110 - currentCount * 46;
 
       scheduleGameTimeout(() => {
         const nextBlock: StackedBlock = {
@@ -157,9 +161,9 @@ export const BlockTowerGame: React.FC<BlockTowerGameProps> = ({
         setBlocks(updated);
         setDroppingBlock(null);
 
-        // Tower spring wobble on impact
-        setTowerSway(clampedOffset * 0.14 + (currentCount % 2 === 0 ? 2.5 : -2.5));
-        scheduleGameTimeout(() => setTowerSway(0), 420);
+        // Gentle spring wobble on impact
+        setTowerSway(clampedOffset * 0.1 + (currentCount % 2 === 0 ? 2 : -2));
+        scheduleGameTimeout(() => setTowerSway(0), 380);
 
         playComboChime(updated.length, soundEnabled);
         emitJuice({
@@ -173,7 +177,7 @@ export const BlockTowerGame: React.FC<BlockTowerGameProps> = ({
           y: hitY,
           color: BLOCK_PALETTES[paletteIdx].hex,
           secondaryColor: 0xfde047,
-          count: isPerfect ? 22 : 14,
+          count: isPerfect ? 24 : 16,
           kind: isPerfect ? 'star' : 'bounce',
         });
 
@@ -203,7 +207,7 @@ export const BlockTowerGame: React.FC<BlockTowerGameProps> = ({
             setPerfectPopup(0);
           }, 2900);
         }
-      }, 240);
+      }, 220);
     },
     [targetBlocks, soundEnabled, scheduleGameTimeout, buddy, onCompleteQuiz],
   );
@@ -224,12 +228,21 @@ export const BlockTowerGame: React.FC<BlockTowerGameProps> = ({
           handleDropBlock({ button: 0 } as React.PointerEvent<HTMLDivElement>);
         }
       }}
-      className="relative flex flex-col justify-between w-full min-h-[430px] sm:min-h-[480px] rounded-3xl overflow-hidden select-none cursor-pointer bg-gradient-to-b from-[#E0F2FE] via-[#F0F9FF] to-[#FEF9C3] border-3 border-[#BAE6FD] p-3 sm:p-4 shadow-inner"
+      className="block-tower-stage relative flex flex-col justify-between w-full h-[var(--game-play-height,calc(100dvh-84px))] min-h-[var(--game-play-height,calc(100dvh-84px))] rounded-3xl overflow-hidden select-none cursor-pointer bg-gradient-to-b from-[#7DD3FC] via-[#BAE6FD] to-[#FEF08A] border-3 border-[#38BDF8] p-3 sm:p-5"
     >
-      <PixiStageOverlay ref={pixiRef} ambientKind="sky" className="z-20" />
+      {/* Crisp vector sky backdrop (no translucent fog over blocks) */}
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute -top-10 right-8 w-28 h-28 rounded-full bg-[#FDE047] border-4 border-[#F59E0B] shadow-[0_0_0_12px_rgba(253,224,71,0.35)]" />
+        <div className="absolute top-16 left-6 w-28 h-10 rounded-full bg-white border-2 border-[#BAE6FD]" />
+        <div className="absolute top-24 right-16 w-36 h-12 rounded-full bg-white border-2 border-[#BAE6FD]" />
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[#4ADE80] to-[#86EFAC] border-t-4 border-[#22C55E]" />
+      </div>
 
-      {/* Top Guide */}
-      <div className="relative z-30 flex items-center justify-between gap-2 pointer-events-auto">
+      {/* Burst-only Pixi overlay (ambientKind="none" keeps blocks 100% sharp and vivid) */}
+      <PixiStageOverlay ref={pixiRef} ambientKind="none" className="z-30" />
+
+      {/* Top HUD: Guide + Progress */}
+      <div className="relative z-30 flex flex-wrap items-center justify-between gap-2 pointer-events-auto">
         <PlayGuide
           buddy={buddy}
           soundEnabled={soundEnabled}
@@ -237,29 +250,43 @@ export const BlockTowerGame: React.FC<BlockTowerGameProps> = ({
           guide={GUIDE}
           happy={isCompleted}
         />
+        <div className="pointer-events-none">
+          <PlayProgress total={targetBlocks} done={blocks.length} label="쌓은 블록" />
+        </div>
       </div>
 
-      {/* Moving Cloud Crane */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-between py-2 pointer-events-none">
+      {/* Full-Height Interactive Block Arena */}
+      <div className="relative z-20 flex-1 flex flex-col items-center justify-between py-1 pointer-events-none">
+        {/* Moving Cloud Crane */}
         <div
           style={{ transform: `translate3d(${craneX}px, 0, 0)` }}
-          className="relative flex flex-col items-center mt-1 transition-transform duration-75"
+          className="relative flex flex-col items-center mt-0.5 will-change-transform"
         >
-          {/* Fluffy Cloud Crane */}
-          <div className="px-5 py-1.5 rounded-full bg-white/95 border-2 border-[#7DD3FC] shadow-[0_4px_0_#38BDF8] flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-amber-400" aria-hidden="true" />
-            <span className="text-xs font-black text-sky-700">톡! 놓기</span>
+          {/* Crane Track Pill */}
+          <div className="px-6 py-2 rounded-full bg-white border-3 border-[#0284C7] shadow-[0_4px_0_#0369A1] flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-amber-500 fill-amber-400" aria-hidden="true" />
+            <span className="text-sm sm:text-base font-black text-sky-900 tracking-tight">
+              화면을 톡! 눌러 놓기
+            </span>
           </div>
-          <div className="w-1 h-4 bg-sky-300" />
+          <div className="w-1.5 h-4 bg-[#0284C7]" />
           {/* Held Block */}
           {!droppingBlock && !isCompleted && (
             <div
               style={{ borderColor: currentPalette.border }}
-              className={`w-28 sm:w-32 h-10 rounded-2xl border-3 bg-gradient-to-b ${currentPalette.bg} shadow-[inset_0_3px_0_rgba(255,255,255,0.6),0_5px_0_rgba(0,0,0,0.15)] flex items-center justify-center`}
+              className={`relative w-44 sm:w-56 h-12 sm:h-14 rounded-2xl border-4 bg-gradient-to-b ${currentPalette.bg} shadow-[inset_0_4px_0_rgba(255,255,255,0.75),0_6px_0_rgba(0,0,0,0.22)] flex items-center justify-between px-4`}
             >
-              <span className="w-7 h-7 flex items-center justify-center">
+              <span
+                style={{ backgroundColor: currentPalette.stud, borderColor: currentPalette.border }}
+                className="w-5 h-3 -mt-6 rounded-t-md border-2"
+              />
+              <span className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center drop-shadow-sm">
                 <ToyArtwork emoji={currentPalette.emoji} />
               </span>
+              <span
+                style={{ backgroundColor: currentPalette.stud, borderColor: currentPalette.border }}
+                className="w-5 h-3 -mt-6 rounded-t-md border-2"
+              />
             </div>
           )}
         </div>
@@ -269,14 +296,14 @@ export const BlockTowerGame: React.FC<BlockTowerGameProps> = ({
           {droppingBlock && (
             <motion.div
               key="dropping"
-              initial={{ x: droppingBlock.x, y: -120, scale: 1.05 }}
-              animate={{ x: droppingBlock.x * 0.5, y: 0, scale: [1, 1.14, 0.92, 1] }}
+              initial={{ x: droppingBlock.x, y: -140, scale: 1.04 }}
+              animate={{ x: Math.round(droppingBlock.x * 0.5), y: 0, scale: [1, 1.12, 0.94, 1] }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.22, ease: 'easeIn' }}
+              transition={{ duration: 0.2, ease: 'easeIn' }}
               style={{ borderColor: BLOCK_PALETTES[droppingBlock.paletteIdx].border }}
-              className={`w-28 sm:w-32 h-10 rounded-2xl border-3 bg-gradient-to-b ${BLOCK_PALETTES[droppingBlock.paletteIdx].bg} shadow-lg flex items-center justify-center`}
+              className={`w-44 sm:w-56 h-12 sm:h-14 rounded-2xl border-4 bg-gradient-to-b ${BLOCK_PALETTES[droppingBlock.paletteIdx].bg} shadow-xl flex items-center justify-center`}
             >
-              <span className="w-7 h-7 flex items-center justify-center">
+              <span className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center">
                 <ToyArtwork emoji={BLOCK_PALETTES[droppingBlock.paletteIdx].emoji} />
               </span>
             </motion.div>
@@ -289,13 +316,13 @@ export const BlockTowerGame: React.FC<BlockTowerGameProps> = ({
             <motion.div
               key={perfectPopup}
               initial={{ scale: 0.5, opacity: 0, y: 10 }}
-              animate={{ scale: 1, opacity: 1, y: -6 }}
+              animate={{ scale: 1, opacity: 1, y: -4 }}
               exit={{ scale: 0.7, opacity: 0 }}
               transition={JUICE_SPRING}
-              className="absolute top-16 z-30 flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-400 text-amber-950 font-black text-xs border-2 border-white shadow-md"
+              className="absolute top-20 z-30 flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-amber-400 text-amber-950 font-black text-sm border-3 border-white shadow-lg"
             >
               <Crown className="w-4 h-4 fill-current" />
-              <span>PERFECT!</span>
+              <span>정가운데 PERFECT!</span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -303,12 +330,12 @@ export const BlockTowerGame: React.FC<BlockTowerGameProps> = ({
         {/* Stacked Tower + Cheering Buddy */}
         <motion.div
           animate={{ rotate: towerSway }}
-          transition={{ type: 'spring', stiffness: 280, damping: 14 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 16 }}
           style={{ transformOrigin: 'bottom center' }}
           className="relative flex flex-col-reverse items-center justify-start mt-auto mb-1"
         >
-          {/* Meadow Pedestal */}
-          <div className="w-48 sm:w-56 h-5 rounded-full bg-gradient-to-b from-[#86EFAC] to-[#22C55E] border-2 border-[#15803D] shadow-[0_4px_0_#166534]" />
+          {/* Wide Castle Foundation Pedestal */}
+          <div className="w-64 sm:w-80 h-6 sm:h-7 rounded-full bg-gradient-to-b from-[#4ADE80] to-[#16A34A] border-4 border-[#14532D] shadow-[0_6px_0_#14532D]" />
 
           {/* Stacked Blocks */}
           {blocks.map((block) => {
@@ -316,17 +343,17 @@ export const BlockTowerGame: React.FC<BlockTowerGameProps> = ({
             return (
               <motion.div
                 key={block.id}
-                initial={{ scaleY: 0.65, scaleX: 1.2, y: -14 }}
+                initial={{ scaleY: 0.7, scaleX: 1.15, y: -14 }}
                 animate={{ scaleY: 1, scaleX: 1, y: 0, x: block.offsetX }}
                 transition={JUICE_SPRING}
                 style={{ borderColor: pal.border }}
-                className={`relative w-28 sm:w-32 h-10 -mb-0.5 rounded-2xl border-3 bg-gradient-to-b ${pal.bg} shadow-[inset_0_3px_0_rgba(255,255,255,0.65),0_4px_0_rgba(0,0,0,0.12)] flex items-center justify-between px-3`}
+                className={`relative w-44 sm:w-56 h-11 sm:h-13 -mb-1 rounded-2xl border-4 bg-gradient-to-b ${pal.bg} shadow-[inset_0_4px_0_rgba(255,255,255,0.75),0_5px_0_rgba(0,0,0,0.18)] flex items-center justify-between px-4`}
               >
-                <span className="w-3 h-4 rounded-t-full bg-white/75 border border-white" />
-                <span className="w-7 h-7 flex items-center justify-center">
+                <span className="w-3.5 h-5 rounded-full bg-white/85 border-2 border-white shadow-sm" />
+                <span className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center">
                   <ToyArtwork emoji={block.emoji} />
                 </span>
-                <span className="w-3 h-4 rounded-t-full bg-white/75 border border-white" />
+                <span className="w-3.5 h-5 rounded-full bg-white/85 border-2 border-white shadow-sm" />
               </motion.div>
             );
           })}
@@ -335,7 +362,7 @@ export const BlockTowerGame: React.FC<BlockTowerGameProps> = ({
           <motion.div
             animate={{
               x: topBlockOffset,
-              y: isCompleted ? [0, -14, 0] : [0, -4, 0],
+              y: isCompleted ? [0, -16, 0] : [0, -5, 0],
             }}
             transition={{
               y: { duration: isCompleted ? 0.55 : 1.4, repeat: Infinity },
@@ -348,25 +375,21 @@ export const BlockTowerGame: React.FC<BlockTowerGameProps> = ({
                 initial={{ scale: 0, y: 12 }}
                 animate={{ scale: 1, y: 0 }}
                 transition={JUICE_SPRING}
-                className="mb-0.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-400 via-pink-400 to-sky-400 text-white text-xs font-black border-2 border-white shadow-md flex items-center gap-1"
+                className="mb-1 px-4 py-1 rounded-full bg-gradient-to-r from-amber-400 via-pink-500 to-sky-500 text-white text-sm font-black border-3 border-white shadow-lg flex items-center gap-1.5"
               >
                 <Crown className="w-4 h-4 fill-current" />
-                <span>무지개 성 완성!</span>
+                <span>무지개 블록 성 완성!</span>
               </motion.div>
             )}
             <CharacterAvatar
               id={buddy}
-              size="md"
+              size="lg"
               mood={isCompleted ? 'dancing' : blocks.length > 0 ? 'happy' : 'waving'}
             />
           </motion.div>
         </motion.div>
       </div>
-
-      {/* Progress Bar */}
-      <div className="relative z-30 pointer-events-none">
-        <PlayProgress total={targetBlocks} done={blocks.length} label="쌓은 블록" />
-      </div>
     </div>
   );
 };
+
