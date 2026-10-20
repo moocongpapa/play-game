@@ -62,6 +62,7 @@ const RainbowStageAdventure = lazy(() => import('./screens/RainbowStageAdventure
 const FruitMunchGame = lazy(() => import('./screens/games/FruitMunchGame').then(module => ({ default: module.FruitMunchGame })));
 const TrampolineJumpGame = lazy(() => import('./screens/games/TrampolineJumpGame').then(module => ({ default: module.TrampolineJumpGame })));
 const BubbleBathGame = lazy(() => import('./screens/games/BubbleBathGame').then(module => ({ default: module.BubbleBathGame })));
+const BlockTowerGame = lazy(() => import('./screens/games/BlockTowerGame').then(module => ({ default: module.BlockTowerGame })));
 
 export default function App() {
   useViewportLock();
@@ -678,6 +679,16 @@ export default function App() {
                 case 'bubble_bath':
                   return (
                     <BubbleBathGame
+                      buddy={appState.selectedCharacter}
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'block_tower':
+                  return (
+                    <BlockTowerGame
                       buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={soundEnabled}

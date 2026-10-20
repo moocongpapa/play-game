@@ -12,6 +12,7 @@ import { motion } from 'motion/react';
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playWrongBoing, playSparkleChime, playDingDongDang } from '../../utils/soundEngine';
 import { fireConfetti } from '../../utils/confetti';
+import { emitJuice } from '../../utils/juice';
 import { getDifficultyConfig, pickDistractors } from '../../utils/ageEngine';
 import { OBJECT_ITEMS_BY_AGE } from '../../data/gameData';
 import { AgeGroup, QuizItem } from '../../types';
@@ -30,7 +31,6 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
   buddy,
   soundEnabled,
   ageGroup,
-  childName,
 }) => {
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
@@ -42,7 +42,7 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
   const [isRevealed, setIsRevealed] = useState(false);
   const [shakingCardId, setShakingCardId] = useState<string | null>(null);
   const [streak, setStreak] = useState(0);
-  const [showComboBanner, setShowComboBanner] = useState(false);
+  const [, setShowComboBanner] = useState(false);
 
   const generateRound = () => {
     clearGameTimeouts();
@@ -72,6 +72,7 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
     if (item.id === targetItem.id) {
       // Correct!
       setIsRevealed(true);
+      emitJuice({ kind: 'success' });
       playSparkleChime(soundEnabled);
       playDingDongDang(soundEnabled);
       fireConfetti();
@@ -112,17 +113,24 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
       <GameCue buddy={buddy} disabled={!soundEnabled} onReplay={() => speakText(`그림을 잡아서 똑같은 그림자 위에 쏙 올려 주세요!`, soundEnabled, { characterId: buddy })} />
 
       {/* Shadow Reveal Stage */}
-      <DropSlot id="shadow" label="그림자" filled={isRevealed} className="my-4 p-6 sm:p-8 w-full bg-gradient-to-b from-slate-900 to-indigo-950 rounded-3xl border-3 border-purple-400 shadow-xl flex flex-col items-center justify-center min-h-[220px] relative overflow-hidden">
+      <DropSlot id="shadow" label="그림자" filled={isRevealed} className="my-4 p-6 sm:p-8 w-full bg-gradient-to-b from-slate-900 via-indigo-950 to-purple-950 rounded-3xl border-3 border-purple-400 shadow-xl flex flex-col items-center justify-center min-h-[220px] relative overflow-hidden">
         <div className="sr-only">
           <Eye className="w-4 h-4" /> 실루엣 탐정
         </div>
+        {/* Spotlight cone */}
+        <span
+          aria-hidden="true"
+          className={`pointer-events-none absolute w-48 h-48 rounded-full transition-all duration-700 ${
+            isRevealed ? 'bg-amber-300/35 scale-125 blur-xl' : 'bg-indigo-300/15 scale-100 blur-lg'
+          }`}
+        />
 
         <motion.div
           key={targetItem.id}
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', damping: 12 }}
-          className="flex flex-col items-center justify-center"
+          className="relative z-10 flex flex-col items-center justify-center"
         >
           <span
             className={`text-8xl sm:text-9xl transition-all duration-700 select-none ${

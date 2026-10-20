@@ -15,10 +15,11 @@ import { SOUND_ITEMS_BY_AGE } from '../../data/gameData';
 
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playWrongBoing, playDingDongDang } from '../../utils/soundEngine';
-import { fireConfetti } from '../../utils/confetti';
+import { fireStarExplosion } from '../../utils/confetti';
+import { emitJuice, JUICE_SPRING } from '../../utils/juice';
 import { getDifficultyConfig, pickDistractors } from '../../utils/ageEngine';
 import { AgeGroup } from '../../types';
-import { RefreshCw, Timer } from 'lucide-react';
+import { RefreshCw, Timer, Volume2 } from 'lucide-react';
 
 interface SoundItem {
   id: string;
@@ -41,7 +42,6 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
   buddy,
   soundEnabled,
   ageGroup,
-  childName,
 }) => {
   const { playClue, status: clueStatus } = useSoundClue(soundEnabled, buddy);
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
@@ -53,6 +53,7 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
   const [options, setOptions] = useState<SoundItem[]>([]);
   const [shakingCardId, setShakingCardId] = useState<string | null>(null);
   const [selectedCorrectId, setSelectedCorrectId] = useState<string | null>(null);
+  const [wavePulse, setWavePulse] = useState(0);
 
   // 타이머 상태 (꽃잎반/별님반)
   const { timeLeft, timeOut, startRoundTimer, stopRoundTimer } = useRoundTimer(diffConfig.timeLimit, () => {
@@ -80,6 +81,7 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
     const roundOptions = [target, ...distractors].sort(() => Math.random() - 0.5);
     setOptions(roundOptions);
 
+    setWavePulse((n) => n + 1);
     playClue(target.id, target.soundText);
 
     startRoundTimer();
@@ -92,17 +94,26 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
     };
   }, [ageGroup]);
 
-  const handlePlaySoundClue = () => playClue(targetItem.id, targetItem.soundText);
+  const handlePlaySoundClue = () => {
+    setWavePulse((n) => n + 1);
+    playClue(targetItem.id, targetItem.soundText);
+  };
 
-  const handleSelectCard = (item: typeof itemPool[0]) => {
+  const handleSelectCard = (item: typeof itemPool[0], event: React.MouseEvent<HTMLButtonElement>) => {
     if (selectedCorrectId || timeOut) return;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
 
     if (item.id === targetItem.id) {
       stopRoundTimer();
 
+      emitJuice({ kind: 'success', x: cx, y: cy });
+      fireStarExplosion({ x: cx / window.innerWidth, y: cy / window.innerHeight });
+
       setSelectedCorrectId(item.id);
       playDingDongDang(soundEnabled);
-      fireConfetti();
       speakText(`딩동댕! 정답이에요! 귀여운 ${item.name}!`, soundEnabled, { characterId: buddy });
       onCompleteQuiz(diffConfig.starsPerCorrect);
     } else {
@@ -143,7 +154,36 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
         </div>
       )}
 
-      {(!soundEnabled || clueStatus === 'fallback') && <div className="visual-prompt"><ToyArtwork emoji={targetItem.emoji} label="찾을 동물이나 탈것" /><span aria-hidden="true">→ ?</span></div>}
+      {/* Interactive Soundwave Stage */}
+      <div className="visual-prompt">
+        <motion.button
+          key={wavePulse}
+          type="button"
+          whileTap={{ scale: 0.9 }}
+          animate={{ scale: [1, 1.12, 1] }}
+          transition={JUICE_SPRING}
+          onClick={handlePlaySoundClue}
+          aria-label="소리 다시 듣기"
+          className="relative flex items-center justify-center gap-3 px-5 py-2 rounded-full bg-gradient-to-r from-[#FFF8E1] to-[#FFECB3] border-3 border-[#FFB300] shadow-[inset_0_2px_0_#ffffff,0_4px_0_#FFA000] cursor-pointer"
+        >
+          <Volume2 className="w-8 h-8 text-[#F57C00] animate-bounce" aria-hidden="true" />
+          <span className="flex items-end gap-1 h-6" aria-hidden="true">
+            {[0.5, 1, 0.7, 0.95, 0.6].map((h, idx) => (
+              <motion.i
+                key={idx}
+                animate={{ scaleY: [0.4, h, 0.45] }}
+                transition={{ duration: 0.65, repeat: Infinity, delay: idx * 0.1 }}
+                className="w-1.5 h-5 rounded-full bg-[#FB8C00] block origin-bottom"
+              />
+            ))}
+          </span>
+          {(!soundEnabled || clueStatus === 'fallback') && (
+            <span className="w-10 h-10 flex items-center justify-center">
+              <ToyArtwork emoji={targetItem.emoji} label="찾을 동물이나 탈것" />
+            </span>
+          )}
+        </motion.button>
+      </div>
 
       {/* Options */}
       <div className="game-choice-grid w-full my-3">
@@ -156,15 +196,16 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
           return (
             <motion.button
               key={item.id}
+              whileTap={{ scale: 0.93 }}
               animate={
                 isShaking
                   ? { x: [-10, 10, -8, 8, 0] }
                   : isSolved
-                  ? { scale: 1.05 }
+                  ? { scale: 1.08, y: -4 }
                   : { scale: 1 }
               }
               transition={{ duration: 0.5 }}
-              onClick={() => handleSelectCard(item)}
+              onClick={(e) => handleSelectCard(item, e)}
               className={`game-choice flex flex-col items-center justify-center p-4 sm:p-5 rounded-3xl border-3 sm:border-4 cursor-pointer select-none transition-all shadow-md touch-manipulation min-h-[130px] sm:min-h-[160px] ${
                 isSolved
                   ? 'bg-[#E8F5E9] border-[#66BB6A]'

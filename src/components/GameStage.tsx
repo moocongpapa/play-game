@@ -11,7 +11,7 @@ import { playComboChime } from '../utils/soundEngine';
 import { useBlowSensor } from '../hooks/useBlowSensor';
 import './GameStage.css';
 
-const SELF_HOSTED_PIXI_GAMES = new Set<GameId>(['fruit_munch', 'trampoline_jump', 'bubble_bath']);
+const SELF_HOSTED_PIXI_GAMES = new Set<GameId>(['fruit_munch', 'trampoline_jump', 'bubble_bath', 'block_tower']);
 
 export function GameStage({ gameId, buddy, children, soundEnabled = false }: { gameId: GameId; buddy: CharacterId; children: React.ReactNode; soundEnabled?: boolean }) {
   const game = GAME_CATALOG[gameId];

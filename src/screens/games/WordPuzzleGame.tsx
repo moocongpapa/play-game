@@ -12,6 +12,8 @@ import React, { useState, useEffect } from 'react';
 
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
+import { fireStarExplosion } from '../../utils/confetti';
+import { emitJuice } from '../../utils/juice';
 import { getDifficultyConfig } from '../../utils/ageEngine';
 import { WORD_PUZZLE_ITEMS_BY_AGE } from '../../data/gameData';
 import { AgeGroup, WordPuzzleItem } from '../../types';
@@ -30,9 +32,8 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
   buddy,
   soundEnabled,
   ageGroup,
-  childName,
 }) => {
-  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+  const { clearGameTimeouts } = useGameTimeouts();
 
   const diffConfig = getDifficultyConfig(ageGroup);
   // bloom/star 외의 그룹 방어코드
@@ -94,10 +95,13 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
     if (next.every(letter => letter !== null)) {
       stopRoundTimer();
       setIsCompleted(true);
+      emitJuice({ kind: 'success' });
+      fireStarExplosion();
       playCorrectFanfare(soundEnabled);
       speakText(`와아! 단어가 완성되었어요! ${targetItem.word}!`, soundEnabled, { characterId: buddy });
       onCompleteQuiz(diffConfig.starsPerCorrect);
     } else {
+      emitJuice({ kind: 'snap' });
       speakText(piece.letter, soundEnabled, { characterId: buddy, playIntroSFX: false });
     }
     return true;

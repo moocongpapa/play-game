@@ -174,14 +174,22 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
               }
               transition={{ duration: isShaking ? 0.5 : shouldPulse ? 1.0 : 0.5 }}
               onClick={(e) => handleSelectTreasure(item, e)}
-              className={`game-choice flex flex-col items-center justify-center p-3 sm:p-6 rounded-2xl sm:rounded-3xl border-3 sm:border-4 cursor-pointer select-none transition-all shadow-md touch-manipulation min-h-[120px] sm:min-h-[160px] min-w-[100px] sm:min-w-[140px] ${
+              className={`game-choice relative flex flex-col items-center justify-center p-3 sm:p-6 rounded-2xl sm:rounded-3xl border-3 sm:border-4 cursor-pointer select-none transition-all shadow-[inset_0_3px_0_#ffffff,0_7px_0_#F59E0B,0_12px_20px_rgba(245,158,11,0.18)] touch-manipulation min-h-[120px] sm:min-h-[160px] min-w-[100px] sm:min-w-[140px] ${
                 isSolved
-                  ? 'bg-[#E8F5E9] border-[#81C784] ring-4 ring-amber-300/60'
+                  ? 'bg-gradient-to-b from-[#FFFDE7] to-[#DCEDC8] border-[#66BB6A] ring-4 ring-amber-300/80'
                   : shouldPulse
                   ? 'bg-amber-50 border-amber-400 ring-4 ring-amber-300'
-                  : 'bg-white hover:bg-[#FFF8E1] border-[#FFE082]'
+                  : 'bg-gradient-to-b from-white to-[#FFF8E1] hover:bg-[#FFFDE7] border-[#FFB300]'
               }`}
             >
+              <span
+                aria-hidden="true"
+                className={`absolute -top-3 px-2.5 py-0.5 rounded-full text-xs font-black border-2 border-white shadow-xs ${
+                  isSolved ? 'bg-emerald-500 text-white' : 'bg-amber-400 text-amber-950'
+                }`}
+              >
+                {isSolved ? '✨ 발견!' : '🎁 보물상자'}
+              </span>
               {isSolved && <Sparkles className="w-5 h-5 sm:w-8 sm:h-8 text-[#FFA000] animate-bounce mb-1" />}
               <span className="text-4xl sm:text-6xl mb-1 sm:mb-2 drop-shadow-xs"><ToyArtwork emoji={item.emoji} /></span>
               <span className="sr-only">{item.name}</span>

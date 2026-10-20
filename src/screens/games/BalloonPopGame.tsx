@@ -8,6 +8,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { speakText, playBalloonPop, playDingDongDang, playSparkleChime } from '../../utils/soundEngine';
 import { fireBalloonPopParticle, fireConfetti } from '../../utils/confetti';
+import { emitJuice, subscribeWindGust } from '../../utils/juice';
 import { AgeGroup } from '../../types';
 import { Star } from 'lucide-react';
 import './BalloonPopGame.css';
@@ -112,7 +113,15 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
       if (!document.hidden && !(isStageMode && popCount.current >= targetCount)) spawnBalloon();
     }, 700);
 
-    return () => clearInterval(interval);
+    const unsubWind = subscribeWindGust(() => {
+      spawnBalloon(0);
+      spawnBalloon(1);
+    });
+
+    return () => {
+      clearInterval(interval);
+      unsubWind();
+    };
   }, []);
 
   const handlePop = (balloon: BalloonItem, event: React.MouseEvent | React.TouchEvent) => {
@@ -134,6 +143,7 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
       clientY = event.touches[0].clientY;
     }
 
+    emitJuice({ kind: 'pop', x: clientX, y: clientY });
     fireBalloonPopParticle(clientX, clientY, balloon.color);
 
     // Remove balloon

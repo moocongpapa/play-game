@@ -4,6 +4,7 @@ import { useReducedMotion } from 'motion/react';
 import { DevelopmentShell, DiscoveryHint, useDevelopmentRound } from '../../components/development/DevelopmentShell';
 import { createSensoryPaint, type SensoryMode } from '../../utils/sensoryPaint';
 import { playCareSound } from '../../utils/soundEngine';
+import { subscribeWindGust } from '../../utils/juice';
 import type { ToddlerGameProps } from '../../hooks/useToddlerPlay';
 const GUIDE='손가락으로 쓱쓱! 물감이 몽실몽실 퍼져. 반짝이 모래도 내려 볼까?';
 const COLORS=[-1,335,38,155,210,275];
@@ -32,9 +33,10 @@ export function SensoryPaintCanvas(props:ToddlerGameProps){
     const visibility=()=>{if(document.hidden)cancel();else start();};
     const keyboard=(e:KeyboardEvent)=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setPainted(true);pour(width*(.25+Math.random()*.5),height*.35,20,0);}};
     clear.current=()=>{pool.clear();ctx.clearRect(0,0,width,height);};
+    const unsubWind=subscribeWindGust((intensity)=>{setPainted(true);for(const p of pool.particles){p.vx+=(Math.random()-.25)*140*intensity;p.vy-=60*intensity;}for(let i=0;i<4;i++)pour(width*(.2+i*.2),height*.45,18,-12);});
     const observer=new ResizeObserver(size);observer.observe(node);size();
     node.addEventListener('pointerdown',down);node.addEventListener('pointermove',move);node.addEventListener('pointerup',up);node.addEventListener('pointercancel',up);node.addEventListener('lostpointercapture',up);node.addEventListener('keydown',keyboard);window.addEventListener('blur',cancel);document.addEventListener('visibilitychange',visibility);
-    return()=>{cancel();pool.clear();observer.disconnect();node.removeEventListener('pointerdown',down);node.removeEventListener('pointermove',move);node.removeEventListener('pointerup',up);node.removeEventListener('pointercancel',up);node.removeEventListener('lostpointercapture',up);node.removeEventListener('keydown',keyboard);window.removeEventListener('blur',cancel);document.removeEventListener('visibilitychange',visibility);clear.current=()=>{};};
+    return()=>{unsubWind();cancel();pool.clear();observer.disconnect();node.removeEventListener('pointerdown',down);node.removeEventListener('pointermove',move);node.removeEventListener('pointerup',up);node.removeEventListener('pointercancel',up);node.removeEventListener('lostpointercapture',up);node.removeEventListener('keydown',keyboard);window.removeEventListener('blur',cancel);document.removeEventListener('visibilitychange',visibility);clear.current=()=>{};};
   },[]);
   return <DevelopmentShell {...props} title="몽실몽실 마법 물감" guide={GUIDE} className="sensory-play"><div className="sensory-tools"><button aria-label="무지개 물감" aria-pressed={mode==='water'} onClick={()=>setMode('water')}><Droplets/><span>물감</span></button><button aria-label="별가루 모래" aria-pressed={mode==='sand'} onClick={()=>setMode('sand')}><Sparkles/><span>모래</span></button><button aria-label="그림 지우기" onClick={()=>clear.current()}><Eraser/></button></div><div className="sensory-pool"><canvas ref={canvas} data-juice-surface tabIndex={0} role="application" aria-label="마법 물감 놀이판" aria-description="한 손가락 또는 여러 손가락으로 문질러요. Enter나 Space로도 물감을 뿌릴 수 있어요."/>{!painted&&<span className="sensory-drag-guide" aria-hidden="true"><Hand/><i/><i/><i/></span>}<span className="sensory-watermark" aria-hidden="true"><Sparkles/></span></div><div className="sensory-palette" aria-label="물감 색상">{COLORS.map((color,i)=><button key={color} aria-label={['무지개색','분홍색','노란색','초록색','파란색','보라색'][i]} aria-pressed={hue===color} style={{'--paint':color<0?'conic-gradient(#efa8c5,#f0d385,#9bd6bd,#96cce8,#c3a5dc,#efa8c5)':`hsl(${color} 65% 75%)`} as React.CSSProperties} onClick={()=>setHue(color)}>{color<0?<Rainbow/>:hue===color?<Check/>:<span/>}</button>)}</div><DiscoveryHint>쓱쓱 문질러 마음껏 그려요</DiscoveryHint></DevelopmentShell>;
 }

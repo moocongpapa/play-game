@@ -12,6 +12,8 @@ import { motion } from 'motion/react';
 
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
+import { fireStarExplosion } from '../../utils/confetti';
+import { emitJuice, JUICE_SPRING } from '../../utils/juice';
 import { getDifficultyConfig } from '../../utils/ageEngine';
 import { PATTERN_ITEMS_BY_AGE } from '../../data/gameData';
 import { AgeGroup, PatternItem } from '../../types';
@@ -30,7 +32,6 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
   buddy,
   soundEnabled,
   ageGroup,
-  childName,
 }) => {
   const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
@@ -84,6 +85,9 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
     if (ans === targetItem.answer) {
       stopRoundTimer();
 
+      emitJuice({ kind: 'success' });
+      fireStarExplosion();
+
       setSelectedCorrectId(ans);
       playCorrectFanfare(soundEnabled);
       speakText(`우와! 정답이에요! 패턴을 예쁘게 완성했어요!`, soundEnabled, { characterId: buddy });
@@ -131,25 +135,33 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
         </div>
       )}
 
-      {/* Pattern Sequence Display Box */}
-      <div data-play-area className="my-4 sm:my-6 p-4 sm:p-6 w-full bg-white rounded-3xl border-3 sm:border-4 border-[#C8E6C9] shadow-inner flex flex-col items-center justify-center">
+      {/* Choo-Choo Pattern Train Box */}
+      <motion.div
+        data-play-area
+        animate={selectedCorrectId ? { x: [0, 12, 0], scale: [1, 1.03, 1] } : undefined}
+        transition={JUICE_SPRING}
+        className="my-4 sm:my-6 p-4 sm:p-6 w-full bg-gradient-to-b from-[#F0FDF4] to-[#DCFCE7] rounded-3xl border-3 sm:border-4 border-[#86EFAC] shadow-[inset_0_3px_0_#ffffff,0_8px_20px_rgba(34,197,94,0.12)] flex flex-col items-center justify-center"
+      >
         <span className="sr-only">패턴 레일</span>
-        <div className="flex items-center justify-center gap-2 sm:gap-4 flex-wrap max-w-full">
+        <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap max-w-full">
           {targetItem.sequence.map((emoji, idx) => (
             <motion.div
               key={idx}
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-2xl sm:text-4xl shadow-xs"
+              initial={{ scale: 0, y: 12 }}
+              animate={{ scale: 1, y: 0 }}
+              transition={{ ...JUICE_SPRING, delay: idx * 0.06 }}
+              className="relative w-13 h-13 sm:w-16 sm:h-16 rounded-2xl bg-white border-2 border-[#86EFAC] flex items-center justify-center text-2xl sm:text-4xl shadow-[0_4px_0_#4ADE80]"
             >
               <ToyArtwork emoji={emoji} />
+              <span aria-hidden="true" className="absolute -bottom-2 left-2.5 w-3 h-3 rounded-full bg-slate-600 border-2 border-white" />
+              <span aria-hidden="true" className="absolute -bottom-2 right-2.5 w-3 h-3 rounded-full bg-slate-600 border-2 border-white" />
             </motion.div>
           ))}
-          <DropSlot id="pattern" label="빈칸" filled={!!selectedCorrectId} className="pattern-drop-slot rounded-2xl flex items-center justify-center text-3xl sm:text-4xl shadow-inner border-3 border-dashed border-amber-400 bg-amber-50">
+          <DropSlot id="pattern" label="빈칸" filled={!!selectedCorrectId} className="pattern-drop-slot relative rounded-2xl flex items-center justify-center text-3xl sm:text-4xl shadow-[0_4px_0_#F59E0B] border-3 border-dashed border-amber-400 bg-amber-50">
             {selectedCorrectId ? <ToyArtwork emoji={targetItem.answer} /> : '?'}
           </DropSlot>
         </div>
-      </div>
+      </motion.div>
 
       <DragHint>빈칸으로 쏙 옮겨요!</DragHint>
       {/* Options Buttons */}

@@ -261,4 +261,8 @@ export const SPEECH_ENGLISH: ReadonlyArray<readonly [string, string]> = [
   ['꽥꽥 오리 친구와 첨벙첨벙 놀아볼까?', 'Shall we splash with our rubber duck friend?'],
   ['물로 거품을 깨끗하게 쏴아아 씻어내요!', 'Rinse off the bubbles with clean water!'],
   ['우와! 뽀송뽀송 깨끗해졌어요! 상쾌해!', 'Yay! So clean and fluffy! Feeling fresh!'],
+  ['카드를 톡 뒤집어서 똑같은 그림 짝꿍을 찾아 주세요!', 'Flip the cards to find the matching pictures!'],
+  ['화면을 톡 눌러서 알록달록 블록 탑을 높이 쌓아 볼까?', 'Tap the screen to stack the colorful blocks high!'],
+  ['반짝반짝! 정가운데에 꼭 맞게 쌓았어!', 'Sparkle, sparkle! You stacked it right in the middle!'],
+  ['우와! 알록달록 멋진 무지개 블록 성이 완성되었어요!', 'Hooray! You built a wonderful rainbow block castle!'],
 ];

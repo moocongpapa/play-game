@@ -7,6 +7,7 @@ import { PullToy } from '../../components/development/PullToy';
 import { DevelopmentShell, DiscoveryHint, DiscoveryNext, useDevelopmentRound } from '../../components/development/DevelopmentShell';
 import { usePageVisible, type ToddlerGameProps } from '../../hooks/useToddlerPlay';
 import { playCareSound, playSleepBreath, speakText } from '../../utils/soundEngine';
+import { emitJuice, subscribeWindGust } from '../../utils/juice';
 const GUIDE='인형을 꼭 안겨 주고, 이불을 올려 덮어 줘. 전등 줄도 살짝 당겨 볼까?';
 export function GoodNightSleepGame(props:ToddlerGameProps){
   const {round,completed,finish,next}=useDevelopmentRound(props,GUIDE,true);
@@ -14,7 +15,8 @@ export function GoodNightSleepGame(props:ToddlerGameProps){
   const visible=usePageVisible();
   useEffect(()=>{if(dark&&hugged&&covered)finish(`포근하다. 고마워. 좋은 꿈 꾸자, ${props.childName}야.`);},[dark,hugged,covered]);
   useEffect(()=>{if(!completed||!visible)return;const timer=window.setInterval(()=>playSleepBreath(props.soundEnabled),3300);return()=>window.clearInterval(timer);},[completed,visible,props.soundEnabled]);
-  const praise=(text:string)=>{playCareSound('bubble',props.soundEnabled);speakText(text,props.soundEnabled,{characterId:props.buddy,rate:.8});};
+  const praise=(text:string)=>{emitJuice({kind:'snap'});playCareSound('bubble',props.soundEnabled);speakText(text,props.soundEnabled,{characterId:props.buddy,rate:.8});};
+  useEffect(()=>subscribeWindGust(()=>{if(!completed&&!dark){setDark(true);praise('불을 끄니 눈이 스르르 감겨.');}}),[completed,dark,props.soundEnabled,props.buddy]);
   return <DevelopmentShell {...props} title="포근하게, 코~ 자자" guide={GUIDE} className="sleep-play"><DragMatch juicy resetKey={round} disabled={completed} onDrop={id=>{if(id!=='teddy'||hugged)return false;setHugged(true);praise('인형을 꼭 안으니 마음이 포근해.');return true;}} hint={!hugged?{pieceId:'teddy',targetId:'hug'}:undefined}>
     <div className={`sleep-room ${dark?'room-dark':''} ${completed?'room-asleep':''}`}>
       <div className="sleep-window" aria-hidden="true"><Moon fill="#f1e0a2"/>{[0,1,2].map(i=><Star key={i}/>)}</div>

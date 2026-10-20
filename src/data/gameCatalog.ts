@@ -18,6 +18,7 @@ export const GAME_CATALOG: Record<GameId, { title: string; prompt: string; theme
   fruit_munch: { developmentArea: 'logic', title: '과일 냠냠 몇 개?', prompt: '냠냠 먹은 과일은 모두 몇 개일까?', theme: 'picnic', badge: '냠냠 · 과일 수 세기', category: 'hands' },
   trampoline_jump: { developmentArea: 'creative', title: '통통 트램펄린', prompt: '톡톡 눌러서 하늘 높이 점프!', theme: 'sky', badge: '폴짝 · 리듬 점프' },
   bubble_bath: { developmentArea: 'care', title: '뽀글뽀글 거품 목욕', prompt: '비누 거품 몽글몽글, 시원하게 목욕해요!', theme: 'magic', badge: '뽀글 · 목욕 습관', category: 'care' },
+  block_tower: { developmentArea: 'creative', title: '차곡차곡 블록 탑', prompt: '알록달록 블록을 차곡차곡 쌓아 봐!', theme: 'sky', badge: '차곡 · 균형 탑 쌓기', category: 'hands' },
 
   // --- 🌱 새싹반부터 즐기는 놀이 (만 3세~) ---
   korean_letters: { developmentArea: 'language', title: '글자 방울', prompt: '같은 글자 방울을 톡!', theme: 'sky', minAge: 'sprout', badge: '가나다 · 첫 한글' },
