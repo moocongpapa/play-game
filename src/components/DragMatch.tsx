@@ -60,7 +60,9 @@ export function DragMatch({ children, onDrop, canDrop, disabled = false, resetKe
   const animations = useRef<ReturnType<typeof animate>[]>([]);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
+  const rotate = useMotionValue(0);
   const opacity = useMotionValue(1);
+  const lastMoveX = useRef(0);
   const reducedMotion = useReducedMotion();
 
   const cancel = () => {
@@ -70,6 +72,7 @@ export function DragMatch({ children, onDrop, canDrop, disabled = false, resetKe
     if (settlingTimer.current) clearTimeout(settlingTimer.current);
     animations.current.forEach(animation => animation.stop());
     animations.current = [];
+    rotate.set(0);
     setGhost(null);
     setOverId(null);
     selectedRef.current = null;
@@ -118,6 +121,7 @@ export function DragMatch({ children, onDrop, canDrop, disabled = false, resetKe
     measure(); window.addEventListener('scroll', measure, true); window.addEventListener('resize', measure);
     return () => { window.removeEventListener('scroll', measure, true); window.removeEventListener('resize', measure); };
   }, [showHint, hint?.pieceId, hint?.targetId]);
+
   const targetAt = (clientX: number, clientY: number) => {
     const current = gesture.current;
     if (!current) return null;
@@ -155,6 +159,8 @@ export function DragMatch({ children, onDrop, canDrop, disabled = false, resetKe
     setSelected(null);
     x.set(rect.left);
     y.set(rect.top);
+    rotate.set(0);
+    lastMoveX.current = event.clientX;
     opacity.set(1);
     if (juicy) { setGhost(gesture.current); playJellyTap(voice?.soundEnabled ?? false); }
   };
@@ -166,6 +172,12 @@ export function DragMatch({ children, onDrop, canDrop, disabled = false, resetKe
     const dy = event.clientY - current.startY;
     if (!current.moved && Math.hypot(dx, dy) < 6) return;
     if (!current.moved) { current.moved = true; setGhost(current); }
+    const vx = event.clientX - lastMoveX.current;
+    lastMoveX.current = event.clientX;
+    if (!reducedMotion) {
+      const targetTilt = Math.max(-16, Math.min(16, vx * 0.75));
+      rotate.set(rotate.get() * 0.65 + targetTilt * 0.35);
+    }
     const target = targetAt(event.clientX, event.clientY);
     const acceptable = target && (!canDrop || canDrop(current.id, target));
     const magnet = acceptable ? current.targets.find(slot => slot.id === target) : null;
@@ -201,6 +213,7 @@ export function DragMatch({ children, onDrop, canDrop, disabled = false, resetKe
     animations.current = [
       animate(x, accepted && targetRect ? (targetRect.left + targetRect.right - current.rect.width) / 2 : current.rect.left, settling),
       animate(y, accepted && targetRect ? (targetRect.top + targetRect.bottom - current.rect.height) / 2 : current.rect.top, settling),
+      animate(rotate, 0, settling),
     ];
     // Complete the spring before fading; cancel/next-grab must never deliver a stale snap.
     void Promise.all(animations.current).then(() => {
@@ -234,7 +247,7 @@ export function DragMatch({ children, onDrop, canDrop, disabled = false, resetKe
     <span role="status" aria-live="polite" className="sr-only">{announcement}</span>
     {children}
     {demo && showHint && createPortal(<div className="drag-help-demo" aria-hidden="true" style={{ left: demo.x, top: demo.y, '--help-dx': `${demo.dx}px`, '--help-dy': `${demo.dy}px` } as React.CSSProperties}><Hand /></div>, document.body)}
-    {ghost && createPortal(<motion.div aria-hidden="true" className={`drag-ghost ${ghost.className}`} style={{ x, y, opacity, scale: juicy && !reducedMotion ? 1.1 : 1, width: ghost.rect.width, height: ghost.rect.height }}>
+    {ghost && createPortal(<motion.div aria-hidden="true" className={`drag-ghost ${ghost.className}`} style={{ x, y, rotate, opacity, scale: juicy && !reducedMotion ? 1.15 : 1, width: ghost.rect.width, height: ghost.rect.height }}>
       {ghost.children}
     </motion.div>, document.body)}
   </MatchContext.Provider></MotionConfig>;

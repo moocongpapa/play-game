@@ -33,7 +33,21 @@
   touch-action: manipulation;
 }
 .game-cue > div { width: 54px !important; height: 54px !important; pointer-events: none; }
-.game-cue .game-cue-speaker { position: absolute; right: 1px; bottom: 1px; width: 23px; height: 23px; padding: 3px; border-radius: 50%; color: #697e62; background: #fffdf3; pointer-events: none; }
+.game-cue .game-cue-speaker { position: absolute; right: 1px; bottom: 1px; width: 23px; height: 23px; padding: 3px; border-radius: 50%; color: #697e62; background: #fffdf3; pointer-events: none; transition: transform .2s ease, background-color .2s ease, color .2s ease; }
+.game-cue[data-speaking='true'] {
+  border-color: #f59e0b;
+  box-shadow: inset 0 2px 0 #fff, 0 3px 0 #d97706, 0 0 0 6px rgba(251, 191, 36, 0.32);
+  animation: game-cue-pulse 1.1s ease-in-out infinite;
+}
+.game-cue[data-speaking='true'] .game-cue-speaker {
+  background: #fef3c7;
+  color: #d97706;
+  transform: scale(1.12);
+}
+@keyframes game-cue-pulse {
+  0%, 100% { box-shadow: inset 0 2px 0 #fff, 0 3px 0 #d97706, 0 0 0 4px rgba(251, 191, 36, 0.25); }
+  50% { box-shadow: inset 0 2px 0 #fff, 0 3px 0 #d97706, 0 0 0 10px rgba(251, 191, 36, 0.45); }
+}
 .game-cue:disabled .game-cue-speaker { opacity: .45; }
 .game-stage .game-board:not(.size-sort-board):has(> .visual-prompt), .game-stage .play-journey { padding-top: 0; }
 .game-stage .game-board > .visual-prompt {
@@ -60,9 +74,9 @@
 .game-stage .harvest-scene { height: clamp(290px, 46dvh, 430px); }
 .game-stage .drag-hint { min-height: 20px; padding: 0; }
 .game-stage .drag-hint > span:last-child { display: none; }
-.game-stage .round-continuation { width: auto; margin-inline: auto; padding: 3px 8px; gap: 8px; border-radius: 24px; }
-.game-stage .round-continuation button { width: 64px; height: 64px; min-height: 64px; padding: 0; }
-.game-stage .round-continuation button svg { width: 30px; height: 30px; }
+.game-stage .round-continuation { width: auto; margin-inline: auto; padding: 6px 10px 6px 14px; gap: 10px; border-radius: 9999px; }
+.game-stage .round-continuation button { width: 52px; height: 52px; min-height: 52px; padding: 0; }
+.game-stage .round-continuation button svg { width: 26px; height: 26px; }
 .game-stage .day-next { padding: 0; margin: 0; }
 .game-stage .day-next button { min-height: 64px; }
 .app-world .game-stage .game-surface[data-game='balloon_pop'] { padding: 0; }

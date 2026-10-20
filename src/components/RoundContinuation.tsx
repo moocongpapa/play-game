@@ -2,6 +2,7 @@ import { useContext, useLayoutEffect, useRef } from 'react';
 import { createRoundContinuation, ROUND_CONTINUATION_DELAY_MS } from '../utils/roundContinuation';
 import { isSpeechBusy } from '../utils/soundEngine';
 import { DayContinuationContext, PlayHintsPausedContext } from './PlayFlowContext';
+import { emitJuice } from '../utils/juice';
 
 interface RoundContinuationProps {
   onNext: () => void;
@@ -20,6 +21,7 @@ export function RoundContinuation({ onNext, delayMs = ROUND_CONTINUATION_DELAY_M
 
   useLayoutEffect(() => {
     if (paused) return;
+    emitJuice({ kind: 'success' });
     const transition = createRoundContinuation(() => nextRef.current(), day ? 450 : delayMs, window, () => !!day || !isSpeechBusy());
     const syncVisibility = () => {
       if (document.hidden) transition.pause();

@@ -563,7 +563,21 @@ let browserSpeechStartTimer: number | null = null;
 let pendingBrowserSpeech: (() => void) | null = null;
 let currentVoiceToneMode: 'cheerful' | 'gentle' | 'energetic' = 'cheerful';
 let speechRequestId = 0;
-let activeSpeech: { key: string; provider?: 'ai' | 'browser'; startedAt?: number; onCancel?: () => void } | null = null;
+let activeSpeech: { key: string; characterId?: string; provider?: 'ai' | 'browser'; startedAt?: number; onCancel?: () => void } | null = null;
+const speechListeners = new Set<(state: { speaking: boolean; characterId: string | null }) => void>();
+
+function notifySpeechState() {
+  const speaking = activeSpeech !== null && activeSpeech.startedAt !== undefined;
+  const characterId = speaking ? (activeSpeech?.characterId ?? null) : null;
+  speechListeners.forEach(listener => listener({ speaking, characterId }));
+}
+
+export function subscribeSpeechState(listener: (state: { speaking: boolean; characterId: string | null }) => void) {
+  speechListeners.add(listener);
+  const speaking = activeSpeech !== null && activeSpeech.startedAt !== undefined;
+  listener({ speaking, characterId: speaking ? (activeSpeech?.characterId ?? null) : null });
+  return () => { speechListeners.delete(listener); };
+}
 
 /** Read-only gate for story transitions; includes pending voice downloads. */
 export function isSpeechBusy() { return activeSpeech !== null || animalClueActive; }
@@ -755,11 +769,12 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
 
   stopAllSpeech();
   const requestId = speechRequestId;
-  activeSpeech = { key, onCancel: options.onCancel };
+  activeSpeech = { key, characterId: options.characterId || 'ggomi', onCancel: options.onCancel };
   const originalOptions = options;
   const finish = (callback?: () => void) => {
     if (requestId !== speechRequestId) return;
     activeSpeech = null;
+    notifySpeechState();
     setBGMDucked('speech', false);
     callback?.();
   };
@@ -768,6 +783,7 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
       if (requestId !== speechRequestId || !activeSpeech) return;
       activeSpeech.provider = provider;
       activeSpeech.startedAt = performance.now();
+      notifySpeechState();
       originalOptions.onStart?.(provider);
     },
     onEnd: () => finish(originalOptions.onEnd),
@@ -806,7 +822,9 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
  */
 export function stopAllSpeech() {
   const cancelled = activeSpeech?.onCancel;
+  const wasSpeaking = activeSpeech !== null;
   activeSpeech = null;
+  if (wasSpeaking) notifySpeechState();
   stopAnimalSound();
   setBGMDucked('speech', false);
   speechRequestId += 1;

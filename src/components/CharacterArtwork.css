@@ -1,5 +1,14 @@
-.character-artwork { overflow: visible; filter: drop-shadow(0 1px 1px #76624b18); }
-.character-artwork .friend-head { transform-box: view-box; transform-origin: 50px 61px; }
+.character-artwork { overflow: visible; filter: drop-shadow(0 3px 5px rgba(118, 98, 75, 0.16)); }
+.character-artwork .friend-head {
+  transform-box: view-box;
+  transform-origin: 50px 61px;
+  rotate: var(--head-tilt, 0deg);
+  transition: rotate 0.22s ease-out;
+}
+.character-artwork .friend-open-eyes {
+  translate: var(--gaze-x, 0px) var(--gaze-y, 0px);
+  transition: translate 0.14s ease-out;
+}
 .character-artwork[data-variant='portrait'] .friend-fine-detail { display: none; }
 :where(.character-artwork) .friend-rest-eyes { display: none; }
 .character-avatar { flex-shrink: 0; -webkit-tap-highlight-color: transparent; }
@@ -37,7 +46,7 @@
 .character-avatar:is([data-character='ggomi'], [data-character='dochi'], [data-character='ggulgguli']) { --friend-wave-lift: -70deg; }
 .character-artwork[data-expression='talking'] .friend-mouth {
   transform-box: fill-box; transform-origin: 50% 25%;
-  animation: friend-speaking .72s ease-in-out infinite;
+  animation: friend-speaking .46s ease-in-out infinite;
 }
 .character-artwork[data-expression='curious'] .friend-head { rotate: -4deg; }
 .character-artwork[data-expression='comfort'] .friend-head { rotate: 3deg; }
@@ -49,7 +58,7 @@
 @keyframes friend-cloth-settle { 0%,100% { rotate: -1deg; } 55% { rotate: 1.8deg; } }
 @keyframes friend-tail-settle { 0%,100% { rotate: -3deg; } 55% { rotate: 5deg; } }
 @keyframes friend-hello { 0%,60%,100% { transform: rotate(0); } 10%,28% { transform: rotate(calc(var(--friend-wave-lift, 0deg) - 16deg)); } 19%,36% { transform: rotate(calc(var(--friend-wave-lift, 0deg) + 9deg)); } 45% { transform: rotate(var(--friend-wave-lift, 0deg)); } }
-@keyframes friend-speaking { 0%,42%,100% { scale: 1 .6; } 18%,68% { scale: .93 1.13; } 80% { scale: 1 .82; } }
+@keyframes friend-speaking { 0%,100% { scale: 1 .55; } 25% { scale: .92 1.22; } 50% { scale: 1.04 .72; } 75% { scale: .94 1.15; } }
 @media (prefers-reduced-motion: reduce) {
   .character-artwork *, .character-avatar * { animation: none !important; transition: none !important; }
 }
