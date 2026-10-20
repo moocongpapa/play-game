@@ -1,6 +1,6 @@
 import { DEFAULT_SPEECH_LANGUAGE, chooseSpeechVoice, localizeSpeech, type SpeechLanguage } from './speechLanguage';
 import { getCharacterVoice } from '../data/characterVoices';
-import { randomEffectPitch } from './juice';
+import { getComboState, randomEffectPitch } from './juice';
 import { BACKGROUND_MUSIC, SLEEP_MUSIC, type MusicTrack } from '../data/backgroundMusic';
 import { ANIMAL_RECORDINGS, resolveAnimalSound } from '../data/animalSounds';
 import { createRoundDeck } from './roundDeck';
@@ -106,7 +106,7 @@ export function setBGMDucked(reason: 'speech' | 'animal' | 'rhythm' | 'instrumen
   applyBgmVolume();
 }
 
-function musicNote(ctx: AudioContext, midi: number, duration: number, bass = false, level = 1, pan = 0) {
+function musicNote(ctx: AudioContext, midi: number, duration: number, bass = false, level = 1, pan = 0, isHarmony = false) {
   if (!bgmVolumeNode || !currentTrack || !midi) return;
   const instrument = currentTrack.instrument;
   // Additive voices: wooden resonances, soft flute harmonics, and little metal
@@ -140,6 +140,11 @@ function musicNote(ctx: AudioContext, midi: number, duration: number, bass = fal
     osc.onended = () => { bgmNotes.delete(osc); osc.disconnect(); gain.disconnect(); panner?.disconnect(); };
     osc.start(now); osc.stop(now + length + .025);
   });
+
+  // Combo Fever Mode: layer a warm marimba/celesta fifth harmony on top of the melody
+  if (!bass && !isHarmony && bgmScene === 'play' && getComboState().fever) {
+    musicNote(ctx, midi + 7, duration * 0.85, false, level * 0.38, -pan * 0.8, true);
+  }
 }
 
 export function startBGM(volume = requestedBgmVolume) {
@@ -516,6 +521,68 @@ export function playWrongBoing(enabled = true) {
     trackEffect(osc, gain);
     osc.start(now);
     osc.stop(now + 0.22);
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+const COMBO_PENTATONIC_HZ = [523.25, 587.33, 659.25, 783.99, 880.0, 1046.5, 1174.66, 1318.51];
+
+/**
+ * 콤보 피버 마림바/첼레스타 펜타토닉 화음 (연속 성공 시 음계가 맑게 올라감)
+ */
+export function playComboChime(combo: number, enabled = true) {
+  if (!enabled || !masterSoundEnabled || isPageHidden() || combo < 1) return;
+  try {
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+    const baseFreq = COMBO_PENTATONIC_HZ[(combo - 1) % COMBO_PENTATONIC_HZ.length];
+    const notes = combo >= 3 ? [baseFreq, baseFreq * 1.25, baseFreq * 1.5] : [baseFreq, baseFreq * 2];
+
+    notes.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = idx === 0 ? 'triangle' : 'sine';
+      const start = now + idx * 0.045;
+      osc.frequency.setValueAtTime(freq, start);
+      gain.gain.setValueAtTime(0.001, start);
+      gain.gain.linearRampToValueAtTime(idx === 0 ? 0.18 : 0.1, start + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.34);
+      osc.connect(gain);
+      gain.connect(getSfxDestination(ctx));
+      trackEffect(osc, gain);
+      osc.start(start);
+      osc.stop(start + 0.35);
+    });
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+/**
+ * 후~! 바람 불기 효과음 (부드러운 바람 결 + 풍경 차임벨)
+ */
+export function playWindChime(enabled = true) {
+  if (!enabled || !masterSoundEnabled || isPageHidden()) return;
+  try {
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+    const chimeNotes = [783.99, 987.77, 1174.66, 1567.98];
+    chimeNotes.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      const start = now + idx * 0.055;
+      osc.frequency.setValueAtTime(freq, start);
+      gain.gain.setValueAtTime(0.001, start);
+      gain.gain.linearRampToValueAtTime(0.11, start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.42);
+      osc.connect(gain);
+      gain.connect(getSfxDestination(ctx));
+      trackEffect(osc, gain);
+      osc.start(start);
+      osc.stop(start + 0.44);
+    });
   } catch (e) {
     console.warn(e);
   }

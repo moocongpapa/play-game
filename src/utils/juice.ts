@@ -1,7 +1,53 @@
 export const JUICE_SPRING = { type: 'spring' as const, stiffness: 450, damping: 15, mass: .8 };
 export type JuiceImpact = { kind: 'pop' | 'success' | 'snap'; x?: number; y?: number };
 const listeners = new Set<(impact: JuiceImpact) => void>();
-export function emitJuice(impact: JuiceImpact) { listeners.forEach(listener => listener(impact)); }
+
+export interface ComboState {
+  combo: number;
+  fever: boolean;
+}
+let currentCombo = 0;
+const comboListeners = new Set<(state: ComboState) => void>();
+const windListeners = new Set<(intensity: number) => void>();
+
+function notifyCombo() {
+  const state: ComboState = { combo: currentCombo, fever: currentCombo >= 3 };
+  comboListeners.forEach(listener => listener(state));
+}
+
+export function subscribeCombo(listener: (state: ComboState) => void) {
+  comboListeners.add(listener);
+  listener({ combo: currentCombo, fever: currentCombo >= 3 });
+  return () => { comboListeners.delete(listener); };
+}
+
+export function resetCombo() {
+  if (currentCombo === 0) return;
+  currentCombo = 0;
+  notifyCombo();
+}
+
+export function getComboState(): ComboState {
+  return { combo: currentCombo, fever: currentCombo >= 3 };
+}
+
+export function emitWindGust(intensity = 1) {
+  const clamped = Math.max(0.2, Math.min(2, intensity));
+  windListeners.forEach(listener => listener(clamped));
+}
+
+export function subscribeWindGust(listener: (intensity: number) => void) {
+  windListeners.add(listener);
+  return () => { windListeners.delete(listener); };
+}
+
+export function emitJuice(impact: JuiceImpact) {
+  if (impact.kind === 'success' || impact.kind === 'snap') {
+    currentCombo += 1;
+    notifyCombo();
+  }
+  listeners.forEach(listener => listener(impact));
+}
 export function subscribeJuice(listener: (impact: JuiceImpact) => void) {
   listeners.add(listener);
   return () => { listeners.delete(listener); };

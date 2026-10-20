@@ -9,7 +9,7 @@ import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import { BUBBLE_TOYS } from '../../data/toddlerPlay';
 import { playCareSound, playSparkleChime, speakText } from '../../utils/soundEngine';
 import { fireStarExplosion } from '../../utils/confetti';
-import { emitJuice } from '../../utils/juice';
+import { emitJuice, subscribeWindGust } from '../../utils/juice';
 
 const GUIDE = '몽실몽실 비눗방울을 톡! 황금 방울에서는 별이 쏟아져!';
 interface Bubble { id: number; lane: number; size: number; toy: string | null; golden: boolean; duration: number; delay: number }
@@ -41,6 +41,10 @@ export function BubblePopGame(props: ToddlerGameProps) {
     }, 1800);
     return () => window.clearInterval(timer);
   }, [visible, reduced]);
+  useEffect(() => subscribeWindGust(() => {
+    setBubbles(current => [...current.slice(-6), makeBubble(0), makeBubble(-0.6), makeBubble(-1.2)]);
+    playCareSound('bubble', props.soundEnabled);
+  }), [props.soundEnabled]);
   useEffect(() => {
     const active = new Set(bubbles.map(bubble => bubble.id));
     for (const id of handled.current) if (!active.has(id)) handled.current.delete(id);

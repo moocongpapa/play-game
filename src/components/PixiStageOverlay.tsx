@@ -1,6 +1,7 @@
 import React, { useEffect, useImperativeHandle, useRef, forwardRef } from 'react';
 import { Application, Container, Graphics } from 'pixi.js';
-import { subscribeJuice } from '../utils/juice';
+import { subscribeJuice, subscribeWindGust } from '../utils/juice';
+import { createPhysicsWorld } from '../utils/physics2d';
 import type { GameTheme } from '../data/gameCatalog';
 
 export interface PixiBurstOptions {
@@ -44,6 +45,10 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
     const hostRef = useRef<HTMLDivElement>(null);
     const particlesRef = useRef<Particle[]>([]);
     const layerRef = useRef<Container | null>(null);
+    const physicsLayerRef = useRef<Container | null>(null);
+    const physicsWorldRef = useRef(createPhysicsWorld({ width: 400, height: 600, maxBodies: 24 }));
+    const physicsGraphicsRef = useRef<Map<number, Graphics>>(new Map());
+    const windBoostRef = useRef(0);
     const reducedMotionRef = useRef(false);
 
     useEffect(() => {
@@ -51,6 +56,52 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
         typeof window !== 'undefined' &&
         window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     }, []);
+
+    const spawnPhysicsCandies = (x: number, y: number, count = 4) => {
+      const physLayer = physicsLayerRef.current;
+      if (!physLayer || reducedMotionRef.current) return;
+      const world = physicsWorldRef.current;
+      const palette = [
+        [0xfacc15, 0xfef08a],
+        [0xf472b6, 0xfbcfe8],
+        [0x38bdf8, 0xbae6fd],
+        [0x4ade80, 0xbbf7d0],
+        [0xc084fc, 0xe9d5ff],
+        [0xfb923c, 0xfed7aa],
+      ];
+      for (let i = 0; i < count; i++) {
+        const [color, secondaryColor] = palette[(world.bodies.length + i) % palette.length];
+        const radius = 11 + (i % 3) * 3;
+        const kind = i % 2 === 0 ? 'star' : 'candy';
+        const body = world.spawn({
+          x: x + (Math.random() - 0.5) * 36,
+          y: Math.max(24, y - 10),
+          vx: (Math.random() - 0.5) * 9,
+          vy: -4.5 - Math.random() * 5.5,
+          radius,
+          restitution: 0.76,
+          color,
+          secondaryColor,
+          kind,
+          maxLife: 240,
+        });
+
+        const g = new Graphics();
+        g.circle(0, 0, radius);
+        g.fill({ color, alpha: 0.94 });
+        g.stroke({ width: 2.2, color: 0xffffff, alpha: 0.9 });
+        // 3D specular highlight & inner star emblem
+        g.circle(-radius * 0.3, -radius * 0.32, radius * 0.28);
+        g.fill({ color: 0xffffff, alpha: 0.78 });
+        if (kind === 'star') {
+          g.star(0, 0, 5, radius * 0.58, radius * 0.28);
+          g.fill({ color: secondaryColor, alpha: 0.95 });
+        }
+        g.position.set(body.x, body.y);
+        physLayer.addChild(g);
+        physicsGraphicsRef.current.set(body.id, g);
+      }
+    };
 
     const spawnParticles = (options: PixiBurstOptions) => {
       const layer = layerRef.current;
@@ -276,12 +327,22 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
         lastX = e.clientX;
         lastY = e.clientY;
         spawnTrailSparkle(e.clientX, e.clientY, false);
+        const host = hostRef.current;
+        if (host) {
+          const rect = host.getBoundingClientRect();
+          physicsWorldRef.current.impulseAt(e.clientX - rect.left, e.clientY - rect.top, 48);
+        }
       };
 
       const onPointerDown = (e: PointerEvent) => {
         lastX = e.clientX;
         lastY = e.clientY;
         spawnTrailSparkle(e.clientX, e.clientY, true);
+        const host = hostRef.current;
+        if (host) {
+          const rect = host.getBoundingClientRect();
+          physicsWorldRef.current.impulseAt(e.clientX - rect.left, e.clientY - rect.top, 75);
+        }
       };
 
       window.addEventListener('pointermove', onPointerMove, { passive: true });
@@ -293,6 +354,52 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
     }, []);
 
     useEffect(() => {
+      const stopWind = subscribeWindGust((intensity) => {
+        const host = hostRef.current;
+        const layer = layerRef.current;
+        if (!host || !layer || reducedMotionRef.current || document.hidden) return;
+        const rect = host.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) return;
+
+        windBoostRef.current = Math.min(3.5, windBoostRef.current + intensity * 1.8);
+        physicsWorldRef.current.applyWind(7.5 * intensity, -4.2 * intensity);
+
+        // Spawn a sweeping magical breeze of soap bubbles & dandelion star seeds across the stage
+        const count = Math.min(20, Math.max(0, 140 - particlesRef.current.length));
+        const breezeColors = [0xbae6fd, 0xfef08a, 0xfbcfe8, 0xbbf7d0, 0xe9d5ff];
+        for (let i = 0; i < count; i++) {
+          const g = new Graphics();
+          const c = breezeColors[i % breezeColors.length];
+          if (i % 2 === 0) {
+            const r = 6 + (i % 4) * 3.5;
+            g.circle(0, 0, r);
+            g.fill({ color: 0xffffff, alpha: 0.45 });
+            g.stroke({ width: 1.8, color: c, alpha: 0.85 });
+            g.circle(-r * 0.3, -r * 0.3, r * 0.25);
+            g.fill({ color: 0xffffff, alpha: 0.85 });
+          } else {
+            g.star(0, 0, 5, 8, 3.5);
+            g.fill({ color: c, alpha: 0.9 });
+            g.stroke({ width: 1.2, color: 0xffffff, alpha: 0.85 });
+          }
+          g.position.set(16 + Math.random() * 60, rect.height * (0.2 + Math.random() * 0.65));
+          layer.addChild(g);
+          particlesRef.current.push({
+            graphic: g,
+            vx: (4.5 + Math.random() * 6.5) * intensity,
+            vy: -1.5 + (Math.random() - 0.5) * 3.2,
+            gravity: -0.03,
+            drag: 0.985,
+            life: 0,
+            maxLife: 56,
+            spin: (Math.random() - 0.5) * 0.22,
+            scaleStart: 0.9,
+            scaleEnd: 1.25,
+            kind: 'bubble',
+          });
+        }
+      });
+
       const stopJuice = subscribeJuice((impact) => {
         const host = hostRef.current;
         if (!host || reducedMotionRef.current || document.hidden) return;
@@ -325,6 +432,7 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
             count: 16,
             kind: 'star',
           });
+          spawnPhysicsCandies(localX, localY, 2);
         } else if (impact.kind === 'success') {
           spawnParticles({
             x: localX,
@@ -334,6 +442,7 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
             count: 26,
             kind: 'star',
           });
+          spawnPhysicsCandies(localX, localY, 6);
           if (!hasCoords) {
             spawnParticles({
               x: Math.max(32, rect.width * 0.25),
@@ -354,7 +463,10 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
           }
         }
       });
-      return () => stopJuice();
+      return () => {
+        stopWind();
+        stopJuice();
+      };
     }, []);
 
     useEffect(() => {
@@ -381,10 +493,13 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
           host.appendChild(app.canvas);
 
           const ambientLayer = new Container();
+          const physicsLayer = new Container();
           const fxLayer = new Container();
           app.stage.addChild(ambientLayer);
+          app.stage.addChild(physicsLayer);
           app.stage.addChild(fxLayer);
           layerRef.current = fxLayer;
+          physicsLayerRef.current = physicsLayer;
 
           // 1. Soft Volumetric Sunbeams (God-rays) for magical storybook depth
           const sunbeams: Array<{ g: Graphics; baseX: number; phase: number }> = [];
@@ -437,7 +552,7 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
               motes.push({ g: m, baseX: bx, baseY: by, speed: 0.38 + (i % 4) * 0.14, phase: i * 1.1 });
             }
 
-            // Theme critters: fluttering butterflies for garden/picnic, soft clouds for sky, glowing orbs for magic/music
+            // Theme critters: fluttering butterflies for garden/picnic
             if (ambientKind === 'garden' || ambientKind === 'picnic') {
               for (let c = 0; c < 2; c++) {
                 const root = new Container();
@@ -466,7 +581,8 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
 
           app.ticker.add((ticker) => {
             const dt = Math.min(2.5, ticker.deltaTime);
-            ambientTick += 0.02 * dt;
+            windBoostRef.current *= 0.95;
+            ambientTick += (0.02 + windBoostRef.current * 0.025) * dt;
 
             const w = app.screen.width || 360;
             const h = app.screen.height || 480;
@@ -477,7 +593,7 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
             }
 
             for (const mote of motes) {
-              mote.g.x = mote.baseX * w + Math.sin(ambientTick * mote.speed + mote.phase) * 18;
+              mote.g.x = mote.baseX * w + Math.sin(ambientTick * mote.speed + mote.phase) * (18 + windBoostRef.current * 24);
               mote.g.y =
                 ((mote.baseY * h - ambientTick * 12 * mote.speed) % h + h) % h;
               mote.g.rotation = Math.sin(ambientTick * mote.speed + mote.phase) * 0.4;
@@ -491,6 +607,30 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
               critter.root.rotation = Math.cos(ambientTick * critter.speed + critter.phase) * 0.22;
               if (critter.wings) {
                 critter.wings.scale.x = 0.35 + Math.abs(Math.sin(ambientTick * 7 + critter.phase)) * 0.65;
+              }
+            }
+
+            // Step 2D Rigid-Body Physics World & sync graphics
+            const world = physicsWorldRef.current;
+            world.resize(w, h);
+            world.step(dt);
+            const activeIds = new Set<number>();
+            for (const body of world.bodies) {
+              activeIds.add(body.id);
+              const g = physicsGraphicsRef.current.get(body.id);
+              if (g) {
+                g.x = body.x;
+                g.y = body.y;
+                g.rotation = body.angle;
+                const fadeProgress = Math.max(0, (body.life - body.maxLife * 0.75) / (body.maxLife * 0.25));
+                g.alpha = 1 - fadeProgress;
+                g.scale.set(1 - fadeProgress * 0.3);
+              }
+            }
+            for (const [id, g] of physicsGraphicsRef.current.entries()) {
+              if (!activeIds.has(id)) {
+                g.destroy();
+                physicsGraphicsRef.current.delete(id);
               }
             }
 
@@ -524,7 +664,10 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
       return () => {
         disposed = true;
         layerRef.current = null;
+        physicsLayerRef.current = null;
         particlesRef.current.length = 0;
+        physicsWorldRef.current.clear();
+        physicsGraphicsRef.current.clear();
         try {
           if (app.renderer) {
             app.destroy(true, { children: true });

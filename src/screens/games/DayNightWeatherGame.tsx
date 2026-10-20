@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Cloud, Moon, Sun, Flower2, Wind, Check, CloudRain } from 'lucide-react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { PullToy } from '../../components/development/PullToy';
@@ -6,7 +6,7 @@ import { LandscapeArt } from '../../components/development/DevelopmentArt';
 import { DevelopmentShell, DiscoveryHint, DiscoveryNext, useDevelopmentRound } from '../../components/development/DevelopmentShell';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import { playCareSound, speakText } from '../../utils/soundEngine';
-import { emitJuice } from '../../utils/juice';
+import { emitJuice, subscribeWindGust } from '../../utils/juice';
 import type { ToddlerGameProps } from '../../hooks/useToddlerPlay';
 const GUIDE='해님을 아래로 끌면 밤이 돼! 구름과 꽃, 풍차도 톡톡 만져 봐.';
 export function DayNightWeatherGame(props:ToddlerGameProps){
@@ -14,6 +14,7 @@ export function DayNightWeatherGame(props:ToddlerGameProps){
   const [cloud,setCloud]=useState(0);const [raining,setRaining]=useState(false);const [bloom,setBloom]=useState(0);const [spin,setSpin]=useState(0);
   const seen=useRef(new Set<string>());const [seenKeys,setSeenKeys]=useState<string[]>([]);const {scheduleGameTimeout,clearGameTimeouts}=useGameTimeouts();
   const mark=(key:string)=>{if(completed)return;seen.current.add(key);setSeenKeys([...seen.current]);if(seen.current.size===4)finish('해님 달님, 비와 꽃! 네가 세상을 움직였네!');};
+  useEffect(()=>subscribeWindGust(()=>{setSpin(n=>n+1);setBloom(n=>n+1);mark('wind');mark('flower');playCareSound('bubble',props.soundEnabled);}),[completed,props.soundEnabled]);
   const mix=night?1-pull:pull;
   const rain=(e:React.MouseEvent<HTMLButtonElement>)=>{const r=e.currentTarget.getBoundingClientRect();emitJuice({kind:'pop',x:r.left+r.width/2,y:r.top+r.height/2});const n=cloud+1;setCloud(n);playCareSound('bubble',props.soundEnabled);if(n%3===0){clearGameTimeouts();setRaining(true);speakText('토독토독, 비가 온다! 개구리 우산을 펼치자!',props.soundEnabled,{characterId:props.buddy});scheduleGameTimeout(()=>setRaining(false),6500);mark('rain');}};
   return <DevelopmentShell {...props} title="내가 만드는 하늘" guide={GUIDE} className="weather-play"><div className="discovery-scene weather-scene" style={{'--night':mix} as React.CSSProperties}>

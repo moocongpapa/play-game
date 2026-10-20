@@ -53,7 +53,7 @@ function HarvestScene({ props, stage, cycle, locked, onComplete }: { props: Todd
       <div className="harvest-baskets">{FRUITS.map(fruit => {
         const count = fruits.filter(f => f.id === fruit.id && picked.includes(f.key)).length;
         return <DropSlot key={fruit.id} id={fruit.id} label={`${fruit.name} 바구니`} className="harvest-basket" filled={fruits.filter(f => f.id === fruit.id).every(f => picked.includes(f.key))}>
-          <motion.span key={count} className="basket-weight" animate={count ? { scaleY: [1, .83, 1.07, 1], scaleX: [1, 1.08, .96, 1] } : undefined} transition={{ duration: .5 }}><BasketArt color={fruit.color}/><span className="basket-fruit-picture"><ToyArtwork emoji={fruit.emoji}/></span>{count > 0 && <span className="harvest-inside">{Array.from({ length: count }, (_, i) => <ToyArtwork key={i} emoji={fruit.emoji}/>)}</span>}</motion.span>
+          <motion.span key={count} className="basket-weight" animate={count ? { scaleY: [1, .83, 1.07, 1], scaleX: [1, 1.08, .96, 1] } : undefined} transition={{ duration: .5 }}><BasketArt color={fruit.color}/><span className="basket-fruit-picture"><ToyArtwork emoji={fruit.emoji}/></span>{count > 0 && <span className="harvest-inside">{Array.from({ length: count }, (_, i) => <motion.span key={i} initial={{ y: -38, scale: 0.65, rotate: i % 2 === 0 ? -42 : 42 }} animate={{ y: 0, scale: 1, rotate: (i - (count - 1) / 2) * 14 }} transition={{ type: 'spring', stiffness: 520, damping: 16, mass: 0.7 }} className="inline-flex"><ToyArtwork emoji={fruit.emoji}/></motion.span>)}</span>}</motion.span>
         </DropSlot>;
       })}</div>}
   </DragMatch>;
