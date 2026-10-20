@@ -12,6 +12,8 @@ import { KOREAN_LETTER_ITEMS_BY_AGE } from '../../data/gameData';
 
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
+import { fireStarExplosion } from '../../utils/confetti';
+import { emitJuice } from '../../utils/juice';
 import { getDifficultyConfig, pickDistractors } from '../../utils/ageEngine';
 import { AgeGroup } from '../../types';
 import { Sparkles, RefreshCw, Timer } from 'lucide-react';
@@ -37,7 +39,6 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
   buddy,
   soundEnabled,
   ageGroup,
-  childName,
 }) => {
   const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
@@ -83,7 +84,7 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
 
     let prompt = '';
     if (ageGroup !== 'baby' && target.word && Math.random() > 0.4) {
-      prompt = `'${target.word}' ${target.emoji} 할 때 첫 글자는 무엇일까요? '${target.letter}' 방울을 터트려주세요!`;
+      prompt = `'${target.word}' 할 때 첫 글자는 무엇일까요? '${target.letter}' 방울을 터트려주세요!`;
     } else {
       prompt = `${friend.name}와 함께 '${target.letter}' 글자 비누방울을 팡팡 터트려주세요!`;
     }
@@ -111,12 +112,19 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
     };
   }, [ageGroup]);
 
-  const handlePopBubble = (bubble: KoreanLetterItem) => {
+  const handlePopBubble = (bubble: KoreanLetterItem, event: React.MouseEvent<HTMLButtonElement>) => {
     if (isCompleted || timeOut) return;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
 
     if (bubble.id === targetItem.id) {
       if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       stopRoundTimer();
+
+      emitJuice({ kind: 'pop', x: cx, y: cy });
+      fireStarExplosion({ x: cx / window.innerWidth, y: cy / window.innerHeight });
 
       setPoppedIds((prev) => [...prev, bubble.id]);
       setIsCompleted(true);
@@ -134,6 +142,7 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
 
       onCompleteQuiz(diffConfig.starsPerCorrect);
     } else {
+      emitJuice({ kind: 'pop', x: cx, y: cy });
       setStreak(0);
       playWrongBoing(soundEnabled);
       setPoppedIds((prev) => [...prev, bubble.id]);
@@ -188,8 +197,8 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
                 <motion.div
                   key={item.id}
                   initial={{ scale: 1 }}
-                  animate={{ scale: [1.2, 0], opacity: 0 }}
-                  transition={{ duration: 0.3 }}
+                  animate={{ scale: [1.3, 0], opacity: 0 }}
+                  transition={{ duration: 0.35 }}
                   className="flex flex-col items-center justify-center"
                 >
                   <Sparkles className="w-10 h-10 sm:w-12 sm:h-12 text-[#AB47BC] animate-ping" />
@@ -200,6 +209,7 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
             return (
               <motion.button
                 key={item.id}
+                whileTap={{ scale: 0.9 }}
                 animate={
                   shouldPulse
                     ? { scale: [1, 1.15, 1], y: [0, -12, 0] }
@@ -213,15 +223,16 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
                   repeat: Infinity,
                   ease: 'easeInOut',
                 }}
-                onClick={() => handlePopBubble(item)}
-                className={`w-20 h-20 sm:w-28 sm:h-28 rounded-full flex flex-col items-center justify-center cursor-pointer select-none border-3 sm:border-4 shadow-lg touch-manipulation backdrop-blur-xs transition-transform hover:scale-105 active:scale-90 ${
+                onClick={(e) => handlePopBubble(item, e)}
+                className={`relative w-20 h-20 sm:w-28 sm:h-28 rounded-full flex flex-col items-center justify-center cursor-pointer select-none border-3 sm:border-4 shadow-[inset_-6px_-6px_14px_rgba(171,71,188,0.18),inset_6px_6px_12px_rgba(255,255,255,0.9),0_8px_18px_rgba(123,31,162,0.14)] touch-manipulation backdrop-blur-xs transition-transform hover:scale-105 active:scale-90 ${
                   isTarget
                     ? 'bg-gradient-to-tr from-[#E1BEE7] to-[#FFFFFF] border-[#AB47BC] text-[#7B1FA2]'
                     : 'bg-gradient-to-tr from-[#FFF3E0] to-[#FFFFFF] border-[#FFB7D5] text-[#E65100]'
                 } ${shouldPulse ? 'ring-4 ring-amber-400 ring-offset-2' : ''}`}
               >
+                <span aria-hidden="true" className="pointer-events-none absolute top-2 left-3.5 w-3.5 h-2 rounded-full bg-white/80 -rotate-30" />
                 <span className="text-2xl sm:text-3xl font-black mb-0.5">{item.letter}</span>
-                <span className="text-xl sm:text-2xl"><ToyArtwork emoji={item.emoji} /></span>
+                <span className="w-7 h-7 sm:w-9 sm:h-9"><ToyArtwork emoji={item.emoji} /></span>
               </motion.button>
             );
           })}

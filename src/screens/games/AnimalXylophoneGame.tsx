@@ -9,6 +9,7 @@ import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import { XYLOPHONE_KEYS } from '../../data/toddlerPlay';
 import { playXylophoneNote, setBGMDucked, speakText, stopAllSpeech, stopPlaySounds } from '../../utils/soundEngine';
 import { fireStarExplosion } from '../../utils/confetti';
+import { emitJuice } from '../../utils/juice';
 
 import { DayContinuationContext } from '../../components/PlayFlowContext';
 import { RoundContinuation } from '../../components/RoundContinuation';
@@ -80,10 +81,14 @@ export function AnimalXylophoneGame(props: ToddlerGameProps) {
       if (day && concertAwarded.current) setConcertDone(true);
     }, melody[melody.length - 1].at + 1000));
   };
-  const strike = (index: number) => {
+  const strike = (index: number, element?: HTMLElement | null) => {
     const now = performance.now();
     if (now - (lastStrike.current.get(index) ?? -100) < 65) return;
     lastStrike.current.set(index, now);
+    if (element) {
+      const rect = element.getBoundingClientRect();
+      emitJuice({ kind: 'snap', x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+    }
     // A new touch always takes the instrument back immediately, including mid-echo.
     if (echoing) { clearAudio(); setEchoing(false); setActive([]); }
     if (echoTimer.current) clearTimeout(echoTimer.current);
@@ -111,8 +116,9 @@ export function AnimalXylophoneGame(props: ToddlerGameProps) {
       <div className="animal-xylophone" aria-label="동물 실로폰">
         {XYLOPHONE_KEYS.map((key, index) => <motion.button key={key.note} type="button" aria-label={`${key.name} ${key.note} 연주`} data-help={help.level > 0 && index === 0} className={`animal-key ${active.includes(index) ? 'key-playing' : ''}`} style={{ '--key-color': key.color, '--key-order': index } as React.CSSProperties}
           animate={{ y: active.includes(index) ? 7 : 0 }}
-          onPointerDown={event => { if (event.button !== 0) return; event.preventDefault(); strike(index); }}
-          onClick={event => { if (event.detail === 0) strike(index); }}>
+          onPointerDown={event => { if (event.button !== 0) return; event.preventDefault(); strike(index, event.currentTarget); }}
+          onPointerEnter={event => { if (event.buttons === 1) strike(index, event.currentTarget); }}
+          onClick={event => { if (event.detail === 0) strike(index, event.currentTarget); }}>
           {index === 0 && <GentleHint level={help.level >= 3 ? 3 : 0} text="콕콕" />}<span className="key-pin" /><motion.span className="key-animal" animate={{ y: active.includes(index) ? -12 : 0 }}><ToyArtwork emoji={key.animal} /></motion.span><span className="key-note">{index === 7 ? '도♪' : key.note}</span><span className="key-pin" />
         </motion.button>)}
       </div>

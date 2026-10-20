@@ -1,5 +1,7 @@
 import React, { useEffect, useImperativeHandle, useRef, forwardRef } from 'react';
 import { Application, Container, Graphics } from 'pixi.js';
+import { subscribeJuice } from '../utils/juice';
+import type { GameTheme } from '../data/gameCatalog';
 
 export interface PixiBurstOptions {
   x: number;
@@ -30,9 +32,11 @@ interface Particle {
   kind: 'juice' | 'star' | 'bubble' | 'water' | 'bounce' | 'ring';
 }
 
+export type PixiAmbientKind = GameTheme | 'bath' | 'none';
+
 interface PixiStageOverlayProps {
   className?: string;
-  ambientKind?: 'picnic' | 'sky' | 'bath' | 'none';
+  ambientKind?: PixiAmbientKind;
 }
 
 export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProps>(
@@ -172,6 +176,71 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
     }));
 
     useEffect(() => {
+      const stopJuice = subscribeJuice((impact) => {
+        const host = hostRef.current;
+        if (!host || reducedMotionRef.current || document.hidden) return;
+        const rect = host.getBoundingClientRect();
+        if (rect.width <= 0 || rect.height <= 0) return;
+
+        const hasCoords = impact.x !== undefined && impact.y !== undefined;
+        const localX = hasCoords
+          ? Math.max(24, Math.min(rect.width - 24, impact.x! - rect.left))
+          : rect.width * 0.5;
+        const localY = hasCoords
+          ? Math.max(24, Math.min(rect.height - 24, impact.y! - rect.top))
+          : rect.height * 0.42;
+
+        if (impact.kind === 'pop') {
+          spawnParticles({
+            x: localX,
+            y: localY,
+            color: 0xff6b8b,
+            secondaryColor: 0x38bdf8,
+            count: 16,
+            kind: 'juice',
+          });
+        } else if (impact.kind === 'snap') {
+          spawnParticles({
+            x: localX,
+            y: localY,
+            color: 0xfbbf24,
+            secondaryColor: 0x4ade80,
+            count: 14,
+            kind: 'star',
+          });
+        } else if (impact.kind === 'success') {
+          spawnParticles({
+            x: localX,
+            y: localY,
+            color: 0xfacc15,
+            secondaryColor: 0xf472b6,
+            count: 20,
+            kind: 'star',
+          });
+          if (!hasCoords) {
+            spawnParticles({
+              x: Math.max(32, rect.width * 0.25),
+              y: rect.height * 0.48,
+              color: 0x38bdf8,
+              secondaryColor: 0xa78bfa,
+              count: 14,
+              kind: 'juice',
+            });
+            spawnParticles({
+              x: Math.min(rect.width - 32, rect.width * 0.75),
+              y: rect.height * 0.48,
+              color: 0x4ade80,
+              secondaryColor: 0xfb923c,
+              count: 14,
+              kind: 'juice',
+            });
+          }
+        }
+      });
+      return () => stopJuice();
+    }, []);
+
+    useEffect(() => {
       const host = hostRef.current;
       if (!host) return;
 
@@ -200,18 +269,27 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
           app.stage.addChild(fxLayer);
           layerRef.current = fxLayer;
 
-          // Subtle ambient floating motes for depth
+          // Subtle ambient floating motes for depth across all 5 GameThemes + bath
           const motes: Array<{ g: Graphics; baseX: number; baseY: number; speed: number; phase: number }> = [];
           if (!reducedMotionRef.current && ambientKind !== 'none') {
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 12; i++) {
               const m = new Graphics();
               if (ambientKind === 'bath') {
                 m.circle(0, 0, 6 + (i % 3) * 4);
                 m.fill({ color: 0xffffff, alpha: 0.28 });
                 m.stroke({ width: 1.5, color: 0xbae6fd, alpha: 0.5 });
               } else if (ambientKind === 'sky') {
-                m.star(0, 0, 4, 6, 3);
-                m.fill({ color: 0xffffff, alpha: 0.45 });
+                m.star(0, 0, 4, 6 + (i % 2) * 2, 3);
+                m.fill({ color: i % 2 === 0 ? 0xffffff : 0xe0f2fe, alpha: 0.48 });
+              } else if (ambientKind === 'magic') {
+                m.star(0, 0, 5, 5 + (i % 3) * 2, 2.5);
+                m.fill({ color: i % 2 === 0 ? 0xfef08a : 0xe9d5ff, alpha: 0.45 });
+              } else if (ambientKind === 'music') {
+                m.circle(0, 0, 4 + (i % 3) * 2.5);
+                m.fill({ color: i % 2 === 0 ? 0xfbcfe8 : 0xddd6fe, alpha: 0.38 });
+              } else if (ambientKind === 'garden') {
+                m.circle(0, 0, 3.5 + (i % 3) * 2);
+                m.fill({ color: i % 2 === 0 ? 0xfef08a : 0xbbf7d0, alpha: 0.45 });
               } else {
                 m.circle(0, 0, 4 + (i % 3) * 2);
                 m.fill({ color: 0xfffbeb, alpha: 0.5 });
@@ -219,7 +297,7 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
               const bx = ((i * 97) % 100) / 100;
               const by = ((i * 61) % 100) / 100;
               ambientLayer.addChild(m);
-              motes.push({ g: m, baseX: bx, baseY: by, speed: 0.4 + (i % 4) * 0.15, phase: i * 1.1 });
+              motes.push({ g: m, baseX: bx, baseY: by, speed: 0.38 + (i % 4) * 0.14, phase: i * 1.1 });
             }
           }
 

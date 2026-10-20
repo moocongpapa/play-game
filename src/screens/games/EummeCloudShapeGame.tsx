@@ -11,6 +11,8 @@ import { motion } from 'motion/react';
 
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
+import { fireStarExplosion } from '../../utils/confetti';
+import { emitJuice } from '../../utils/juice';
 import { getDifficultyConfig, pickDistractors } from '../../utils/ageEngine';
 import { CLOUD_SHAPES_BY_AGE, CloudItem } from '../../data/gameData';
 import { AgeGroup } from '../../types';
@@ -29,7 +31,6 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
   buddy,
   soundEnabled,
   ageGroup,
-  childName,
 }) => {
   const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
@@ -91,12 +92,18 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
     };
   }, [ageGroup]);
 
-  const handleSelectCloud = (cloud: CloudItem) => {
+  const handleSelectCloud = (cloud: CloudItem, event: React.MouseEvent<HTMLButtonElement>) => {
     if (selectedCorrectId || timeOut) return;
 
     if (cloud.id === targetCloud.id) {
       if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       stopRoundTimer();
+
+      const rect = event.currentTarget.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      emitJuice({ kind: 'pop', x: cx, y: cy });
+      fireStarExplosion({ x: cx / window.innerWidth, y: cy / window.innerHeight });
 
       setSelectedCorrectId(cloud.id);
       playBubblePop(soundEnabled);
@@ -156,6 +163,7 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
           return (
             <motion.button
               key={cloud.id}
+              whileTap={{ scale: 0.93 }}
               animate={
                 isShaking
                   ? { x: [-10, 10, -8, 8, 0] }
@@ -170,16 +178,16 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
                 repeat: isShaking ? 0 : Infinity,
                 ease: 'easeInOut',
               }}
-              onClick={() => handleSelectCloud(cloud)}
-              className={`game-choice relative px-2 sm:px-6 py-4 sm:py-8 rounded-2xl sm:rounded-[40px] flex flex-col items-center justify-center cursor-pointer select-none shadow-md border-3 sm:border-4 touch-manipulation transition-all min-h-[120px] sm:min-h-[160px] min-w-[100px] sm:min-w-[140px] ${
+              onClick={(e) => handleSelectCloud(cloud, e)}
+              className={`game-choice relative px-2 sm:px-6 py-4 sm:py-8 rounded-2xl sm:rounded-[40px] flex flex-col items-center justify-center cursor-pointer select-none shadow-[inset_0_4px_0_#ffffff,0_8px_18px_rgba(56,189,248,0.16)] border-3 sm:border-4 touch-manipulation transition-all min-h-[120px] sm:min-h-[160px] min-w-[100px] sm:min-w-[140px] ${
                 isSolved
-                  ? 'bg-white border-[#81C784]'
+                  ? 'bg-white border-[#81C784] ring-4 ring-[#81C784]/30'
                   : shouldPulse
                   ? 'bg-amber-50 border-amber-400 ring-4 ring-amber-300'
-                  : 'bg-white/90 hover:bg-white border-[#90CAF9]'
+                  : 'bg-white/95 hover:bg-white border-[#90CAF9]'
               }`}
             >
-              <span className="text-4xl sm:text-6xl mb-1"><ToyArtwork emoji={cloud.emoji} /></span>
+              <span className="text-4xl sm:text-6xl mb-1 drop-shadow-xs"><ToyArtwork emoji={cloud.emoji} /></span>
               <span className="sr-only">{cloud.name}</span>
             </motion.button>
           );

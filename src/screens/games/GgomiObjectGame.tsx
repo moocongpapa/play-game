@@ -15,6 +15,8 @@ import { OBJECT_ITEMS_BY_AGE } from '../../data/gameData';
 
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
+import { fireStarExplosion } from '../../utils/confetti';
+import { emitJuice } from '../../utils/juice';
 import { getDifficultyConfig, pickDistractors } from '../../utils/ageEngine';
 import { RefreshCw, Timer } from 'lucide-react';
 
@@ -104,12 +106,17 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
     };
   }, [ageGroup]);
 
-  const handleSelectCard = (item: QuizItem) => {
+  const handleSelectCard = (item: QuizItem, event: React.MouseEvent<HTMLButtonElement>) => {
     if (selectedCorrectId || timeOut) return;
 
     if (item.id === targetItem.id) {
       stopRoundTimer();
-      
+      const rect = event.currentTarget.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      emitJuice({ kind: 'pop', x: cx, y: cy });
+      fireStarExplosion({ x: cx / window.innerWidth, y: cy / window.innerHeight });
+
       setSelectedCorrectId(item.id);
       playCorrectFanfare(soundEnabled);
 
@@ -179,6 +186,7 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
           return (
             <motion.button
               key={item.id}
+              whileTap={{ scale: 0.94 }}
               animate={
                 isShaking
                   ? { x: [-10, 10, -8, 8, -4, 4, 0] }
@@ -190,7 +198,7 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
                 duration: isShaking ? 0.5 : 2,
                 repeat: isShaking ? 0 : Infinity,
               }}
-              onClick={() => handleSelectCard(item)}
+              onClick={(e) => handleSelectCard(item, e)}
               className={`game-choice flex flex-col items-center justify-center p-4 sm:p-6 rounded-3xl border-3 sm:border-4 cursor-pointer select-none transition-all shadow-md touch-manipulation min-h-[140px] sm:min-h-[180px] ${
                 isSolved
                   ? 'bg-[#E8F5E9] border-[#81C784] ring-4 ring-[#81C784]/30'

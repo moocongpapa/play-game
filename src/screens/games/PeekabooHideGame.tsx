@@ -9,6 +9,7 @@ import { CHARACTERS } from '../../data/characters';
 import { HIDE_FRIENDS } from '../../data/toddlerPlay';
 import { shuffle } from '../../utils/roundDeck';
 import { playBouncyBoing, speakText } from '../../utils/soundEngine';
+import { emitJuice } from '../../utils/juice';
 import type { CharacterId } from '../../types';
 import { useGentleHelp } from '../../hooks/useGentleHelp';
 import { PlayHintsPausedContext } from '../../components/PlayFlowContext';
@@ -51,9 +52,13 @@ function HideScene({ props, round, theme, completed, finish, onFound }: { props:
   const [friends] = useState(() => { const others = HIDE_FRIENDS.filter(id => id !== props.buddy); return shuffle([props.buddy, others[round * 2 % others.length], others[(round * 2 + 1) % others.length]]); });
   const [found, setFound] = useState<number[]>([]);
   const foundRef = useRef(new Set<number>());
-  const reveal = (index: number) => {
+  const reveal = (index: number, element?: HTMLElement | null) => {
     if (completed || foundRef.current.has(index)) return;
     foundRef.current.add(index);
+    if (element) {
+      const rect = element.getBoundingClientRect();
+      emitJuice({ kind: 'pop', x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+    }
     onFound(friends[index]);
     help.progress();
     setFound([...foundRef.current]);
@@ -66,7 +71,7 @@ function HideScene({ props, round, theme, completed, finish, onFound }: { props:
       {theme === 1 && <svg viewBox="0 0 600 420" className="trace-theme-art" aria-hidden="true"><g stroke="#ae9271" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"><path d="M30 200 L60 45 H210 L240 200 M70 52 L48 168 M204 52 L225 168" fill="none"/><path d="M100 50 V154 M169 50 V154" stroke="#d8b16a"/><path d="M95 155 Q136 167 175 155" stroke="#c78f93" strokeWidth="17"/><path d="M440 75 V203 M472 75 V203 M440 115 H472 M440 155 H472 M440 190 H472" fill="none"/><path d="M456 76 H499 Q502 181 577 194" stroke="#d7a1ba" strokeWidth="22" fill="none"/></g></svg>}
       <div className="garden-tree tree-left" aria-hidden="true" /><div className="garden-tree tree-right" aria-hidden="true" />
       <span className="garden-path" aria-hidden="true" />
-      {friends.map((friend, index) => <button key={`${round}-${index}`} type="button" data-help={help.level > 0 && index === friends.findIndex((_, i) => !found.includes(i))} className={`hideout hideout-${index} ${found.includes(index) ? 'is-found' : ''}`} disabled={completed || found.includes(index)} aria-label={found.includes(index) ? `${CHARACTERS[friend].name} 찾았어요` : `숨은 친구 ${index + 1} 찾기`} onClick={() => reveal(index)}>
+      {friends.map((friend, index) => <button key={`${round}-${index}`} type="button" data-help={help.level > 0 && index === friends.findIndex((_, i) => !found.includes(i))} className={`hideout hideout-${index} ${found.includes(index) ? 'is-found' : ''}`} disabled={completed || found.includes(index)} aria-label={found.includes(index) ? `${CHARACTERS[friend].name} 찾았어요` : `숨은 친구 ${index + 1} 찾기`} onClick={e => reveal(index, e.currentTarget)}>
         <motion.span className="hiding-friend" animate={reduced ? { y: found.includes(index) ? -35 : 22 } : found.includes(index) ? { y: -35, scale: [1, 1.12, 1] } : { y: [25, 19, 25], rotate: [-3, 3, -3] }} transition={{ duration: found.includes(index) ? .55 : 2.4, repeat: found.includes(index) ? 0 : Infinity, delay: index * .3 }}><CharacterAvatar id={friend} size="xl" mood={found.includes(index) ? 'dancing' : 'still'} /></motion.span>
         <motion.span className="hiding-place" animate={{ y: found.includes(index) ? 32 : 0, opacity: found.includes(index) ? .6 : 1 }}><HidingCover kind={theme === 2 ? 2 : theme === 1 ? [1, 0, 1][index] : [0, 3, 0][index]} /></motion.span>
         {found.includes(index) && <span className="peekaboo-word">까꿍!</span>}

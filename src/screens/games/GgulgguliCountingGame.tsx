@@ -12,6 +12,8 @@ import { FOOD_COUNTING_ITEMS } from '../../data/gameData';
 
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
+import { fireStarExplosion } from '../../utils/confetti';
+import { emitJuice, JUICE_SPRING } from '../../utils/juice';
 import { getDifficultyConfig, getKoreanCounts } from '../../utils/ageEngine';
 import { AgeGroup } from '../../types';
 import { RefreshCw, Timer } from 'lucide-react';
@@ -29,7 +31,6 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
   buddy,
   soundEnabled,
   ageGroup,
-  childName,
 }) => {
   const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
@@ -108,9 +109,11 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
     };
   }, [ageGroup]);
 
-  const handleTapFoodItem = (index: number) => {
+  const handleTapFoodItem = (index: number, event: React.MouseEvent<HTMLButtonElement>) => {
     if (tappedIndices.includes(index) || timeOut || selectedCorrectNumber) return;
 
+    const rect = event.currentTarget.getBoundingClientRect();
+    emitJuice({ kind: 'pop', x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
     playBubblePop(soundEnabled);
     const currentTappedCount = tappedIndices.length + 1;
     setTappedIndices((prev) => [...prev, index]);
@@ -120,12 +123,18 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
     }
   };
 
-  const handleSelectNumber = (num: number) => {
+  const handleSelectNumber = (num: number, event: React.MouseEvent<HTMLButtonElement>) => {
     if (selectedCorrectNumber || timeOut) return;
 
     if (num === targetCount) {
       if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       stopRoundTimer();
+
+      const rect = event.currentTarget.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      emitJuice({ kind: 'success', x: cx, y: cy });
+      fireStarExplosion({ x: cx / window.innerWidth, y: cy / window.innerHeight });
 
       setSelectedCorrectNumber(num);
       playCorrectFanfare(soundEnabled);
@@ -168,25 +177,46 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
       )}
 
       {/* Food Plate Container */}
-      <div data-play-area className="my-3 sm:my-5 p-4 sm:p-6 w-full bg-white rounded-3xl sm:rounded-[40px] border-3 sm:border-4 border-[#FFCCBC] shadow-inner flex flex-col items-center justify-center">
+      <div data-play-area className="my-3 sm:my-5 p-4 sm:p-6 w-full bg-gradient-to-b from-white to-[#FFF8EE] rounded-3xl sm:rounded-[40px] border-3 sm:border-4 border-[#FFCCBC] shadow-[inset_0_4px_12px_rgba(251,140,0,0.08),0_8px_20px_rgba(120,90,60,0.08)] flex flex-col items-center justify-center">
         <p className="sr-only">
           👇 음식을 손가락으로 누르면 숫자를 세어줘요!
         </p>
 
-        <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 min-h-[100px] sm:min-h-[120px] max-w-full">
+        <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 min-h-[100px] sm:min-h-[120px] max-w-full">
           {Array.from({ length: targetCount }).map((_, idx) => {
-            const isTapped = tappedIndices.includes(idx);
+            const tapOrder = tappedIndices.indexOf(idx) + 1;
+            const isTapped = tapOrder > 0;
 
             return (
               <motion.button
                 key={idx}
                 aria-label={`${targetFood.name} ${idx + 1}번째 세기`}
-                onClick={() => handleTapFoodItem(idx)}
-                className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl flex items-center justify-center text-2xl sm:text-4xl cursor-pointer select-none shadow-md border-2 sm:border-3 transition-transform ${
+                whileTap={{ scale: 0.9 }}
+                animate={
+                  selectedCorrectNumber
+                    ? { y: [0, -10, 0], scale: [1, 1.12, 1] }
+                    : isTapped
+                    ? { scale: 1.08, y: -4 }
+                    : { scale: 1, y: 0 }
+                }
+                transition={JUICE_SPRING}
+                onClick={(e) => handleTapFoodItem(idx, e)}
+                className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl flex items-center justify-center text-2xl sm:text-4xl cursor-pointer select-none shadow-md border-2 sm:border-3 transition-colors ${
                   isTapped ? 'bg-[#FFE0B2] border-[#FB8C00]' : 'bg-[#FFF8EE] border-[#FFCCBC]'
                 }`}
               >
                 <ToyArtwork emoji={targetFood.emoji} />
+                {isTapped && (
+                  <motion.span
+                    initial={{ scale: 0, rotate: -15 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={JUICE_SPRING}
+                    aria-hidden="true"
+                    className="absolute -top-2 -right-2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#FB8C00] text-white text-sm sm:text-base font-black flex items-center justify-center border-2 border-white shadow-sm"
+                  >
+                    {tapOrder}
+                  </motion.span>
+                )}
               </motion.button>
             );
           })}
@@ -203,6 +233,7 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
           return (
             <motion.button
               key={num}
+              whileTap={{ scale: 0.92 }}
               animate={
                 isShaking
                   ? { x: [-8, 8, -6, 6, 0] }
@@ -213,7 +244,7 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
                   : { scale: 1 }
               }
               transition={{ duration: isShaking ? 0.5 : shouldPulse ? 1.0 : 0.2 }}
-              onClick={() => handleSelectNumber(num)}
+              onClick={(e) => handleSelectNumber(num, e)}
               className={`count-answer min-w-16 min-h-20 px-3 py-2 rounded-2xl text-xl sm:text-3xl font-black flex flex-col items-center justify-center shadow-md border-b-4 transition-all cursor-pointer ${
                 isCorrect
                   ? 'bg-[#81C784] text-white border-[#388E3C]'

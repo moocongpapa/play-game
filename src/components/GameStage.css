@@ -5,8 +5,8 @@
 .app-world[data-screen='game'] .app-main {
   padding: 8px max(8px, env(safe-area-inset-right, 0px)) max(8px, env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px));
 }
-.app-world .game-stage { min-height: 0; border-width: 2px; border-radius: 26px; }
-.app-world .game-stage .game-surface { padding: 8px; }
+.app-world .game-stage { position: relative; min-height: 0; border-width: 2px; border-radius: 26px; }
+.app-world .game-stage .game-surface { position: relative; z-index: 1; padding: 8px; }
 .game-stage :is(.game-board, .toddler-play, .development-play) {
   position: relative;
   min-height: 0;

@@ -12,6 +12,8 @@ import { motion } from 'motion/react';
 
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
+import { fireStarExplosion } from '../../utils/confetti';
+import { emitJuice } from '../../utils/juice';
 import { getDifficultyConfig, pickDistractors } from '../../utils/ageEngine';
 import { EMOTION_ITEMS_BY_AGE } from '../../data/gameData';
 import { AgeGroup, EmotionItem } from '../../types';
@@ -30,7 +32,6 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
   buddy,
   soundEnabled,
   ageGroup,
-  childName,
 }) => {
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
@@ -94,12 +95,18 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
     };
   }, [ageGroup]);
 
-  const handleSelectCard = (item: EmotionItem) => {
+  const handleSelectCard = (item: EmotionItem, event: React.MouseEvent<HTMLButtonElement>) => {
     if (selectedCorrectId || timeOut) return;
 
     if (item.id === targetItem.id) {
       if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       stopRoundTimer();
+
+      const rect = event.currentTarget.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      emitJuice({ kind: 'pop', x: cx, y: cy });
+      fireStarExplosion({ x: cx / window.innerWidth, y: cy / window.innerHeight });
 
       setSelectedCorrectId(item.id);
       playCorrectFanfare(soundEnabled);
@@ -159,26 +166,27 @@ export const EmotionQuizGame: React.FC<EmotionQuizGameProps> = ({
           return (
             <motion.button
               key={item.id}
+              whileTap={{ scale: 0.93 }}
               animate={
                 isShaking
                   ? { x: [-10, 10, -8, 8, 0] }
                   : isSolved
-                  ? { scale: 1.05 }
+                  ? { scale: 1.08, y: -4 }
                   : shouldPulse
                   ? { scale: [1, 1.08, 1], filter: ['brightness(1)', 'brightness(1.15)', 'brightness(1)'] }
                   : { scale: 1 }
               }
               transition={{ duration: isShaking ? 0.5 : shouldPulse ? 1.0 : 0.5 }}
-              onClick={() => handleSelectCard(item)}
+              onClick={(e) => handleSelectCard(item, e)}
               className={`game-choice flex flex-col items-center justify-center p-3 sm:p-5 rounded-3xl border-3 sm:border-4 cursor-pointer select-none transition-all shadow-md touch-manipulation min-h-[130px] sm:min-h-[160px] ${
                 isSolved
-                  ? 'bg-[#E8F5E9] border-[#81C784]'
+                  ? 'bg-[#E8F5E9] border-[#81C784] ring-4 ring-[#81C784]/30'
                   : shouldPulse
                   ? 'bg-amber-50 border-amber-400 ring-4 ring-amber-300'
                   : 'bg-white hover:bg-[#FFF5F8] border-[#FFB7D5]'
               }`}
             >
-              <span className="text-5xl sm:text-6xl mb-1 sm:mb-2"><ToyArtwork emoji={item.emoji} /></span>
+              <span className="text-5xl sm:text-6xl mb-1 sm:mb-2 drop-shadow-xs"><ToyArtwork emoji={item.emoji} /></span>
               <span className="sr-only">{item.name}</span>
             </motion.button>
           );

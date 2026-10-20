@@ -13,6 +13,8 @@ import { SHAPE_COLOR_ITEMS_BY_AGE } from '../../data/gameData';
 
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
+import { fireStarExplosion } from '../../utils/confetti';
+import { emitJuice } from '../../utils/juice';
 import { getDifficultyConfig, pickDistractors } from '../../utils/ageEngine';
 import { AgeGroup } from '../../types';
 import { RefreshCw, Timer } from 'lucide-react';
@@ -35,20 +37,33 @@ interface RanoShapeColorGameProps {
 }
 
 /**
- * High-precision SVG Shape Renderer
- * Ensures Circle, Triangle, Square, Star, Heart, etc. render 100% accurately in the correct color
+ * High-precision 3D Storybook SVG Shape Renderer
+ * Ensures Circle, Triangle, Square, Star, Heart, etc. render with glossy depth and friendly eyes
  */
 const ShapeFigure: React.FC<{ shape: string; color: string; className?: string }> = ({
   shape,
   color,
   className = 'w-16 h-16 sm:w-20 sm:h-20',
 }) => {
+  const face = (cy = 52) => (
+    <g stroke="#514238" strokeWidth="2.5" strokeLinecap="round" fill="none">
+      <circle cx="41" cy={cy - 3} r="2.8" fill="#514238" stroke="none" />
+      <circle cx="59" cy={cy - 3} r="2.8" fill="#514238" stroke="none" />
+      <circle cx="42" cy={cy - 4} r="1" fill="#ffffff" stroke="none" />
+      <circle cx="60" cy={cy - 4} r="1" fill="#ffffff" stroke="none" />
+      <path d={`M45 ${cy + 4} Q50 ${cy + 9} 55 ${cy + 4}`} />
+    </g>
+  );
+  const shine = <path d="M30 28 Q38 20 48 20" stroke="#ffffff" strokeWidth="4.5" strokeLinecap="round" opacity="0.65" fill="none" />;
+
   switch (shape) {
     case '동그라미':
     case 'circle':
       return (
         <svg viewBox="0 0 100 100" className={className}>
           <circle cx="50" cy="50" r="44" fill={color} stroke="#725e4b" strokeOpacity="0.55" strokeWidth="4" />
+          {shine}
+          {face(52)}
         </svg>
       );
     case '세모':
@@ -56,13 +71,17 @@ const ShapeFigure: React.FC<{ shape: string; color: string; className?: string }
       return (
         <svg viewBox="0 0 100 100" className={className}>
           <polygon points="50,10 92,88 8,88" fill={color} stroke="#725e4b" strokeOpacity="0.55" strokeWidth="4" strokeLinejoin="round" />
+          <path d="M46 26 L32 52" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" opacity="0.6" fill="none" />
+          {face(64)}
         </svg>
       );
     case '네모':
     case 'square':
       return (
         <svg viewBox="0 0 100 100" className={className}>
-          <rect x="12" y="12" width="76" height="76" rx="8" fill={color} stroke="#725e4b" strokeOpacity="0.55" strokeWidth="4" />
+          <rect x="12" y="12" width="76" height="76" rx="14" fill={color} stroke="#725e4b" strokeOpacity="0.55" strokeWidth="4" />
+          <path d="M24 24 H44" stroke="#ffffff" strokeWidth="4.5" strokeLinecap="round" opacity="0.65" fill="none" />
+          {face(52)}
         </svg>
       );
     case '별':
@@ -76,6 +95,7 @@ const ShapeFigure: React.FC<{ shape: string; color: string; className?: string }
             strokeWidth="4"
             strokeLinejoin="round"
           />
+          {face(52)}
         </svg>
       );
     case '하트':
@@ -89,6 +109,8 @@ const ShapeFigure: React.FC<{ shape: string; color: string; className?: string }
             strokeWidth="4"
             strokeLinejoin="round"
           />
+          <path d="M24 22 Q28 16 36 16" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" opacity="0.65" fill="none" />
+          {face(46)}
         </svg>
       );
     case '다이아몬드':
@@ -96,6 +118,8 @@ const ShapeFigure: React.FC<{ shape: string; color: string; className?: string }
       return (
         <svg viewBox="0 0 100 100" className={className}>
           <polygon points="50,10 88,50 50,90 12,50" fill={color} stroke="#725e4b" strokeOpacity="0.55" strokeWidth="4" strokeLinejoin="round" />
+          <path d="M46 22 L28 40" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" opacity="0.6" fill="none" />
+          {face(52)}
         </svg>
       );
     case '오각형':
@@ -103,6 +127,8 @@ const ShapeFigure: React.FC<{ shape: string; color: string; className?: string }
       return (
         <svg viewBox="0 0 100 100" className={className}>
           <polygon points="50,10 90,40 75,88 25,88 10,40" fill={color} stroke="#725e4b" strokeOpacity="0.55" strokeWidth="4" strokeLinejoin="round" />
+          {shine}
+          {face(54)}
         </svg>
       );
     case '타원':
@@ -110,6 +136,8 @@ const ShapeFigure: React.FC<{ shape: string; color: string; className?: string }
       return (
         <svg viewBox="0 0 100 100" className={className}>
           <ellipse cx="50" cy="50" rx="44" ry="30" fill={color} stroke="#725e4b" strokeOpacity="0.55" strokeWidth="4" />
+          <path d="M26 36 Q36 28 48 28" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" opacity="0.65" fill="none" />
+          {face(50)}
         </svg>
       );
     case '육각형':
@@ -117,6 +145,8 @@ const ShapeFigure: React.FC<{ shape: string; color: string; className?: string }
       return (
         <svg viewBox="0 0 100 100" className={className}>
           <polygon points="50,10 88,30 88,70 50,90 12,70 12,30" fill={color} stroke="#725e4b" strokeOpacity="0.55" strokeWidth="4" strokeLinejoin="round" />
+          {shine}
+          {face(52)}
         </svg>
       );
     case '초승달':
@@ -124,12 +154,15 @@ const ShapeFigure: React.FC<{ shape: string; color: string; className?: string }
       return (
         <svg viewBox="0 0 100 100" className={className}>
           <path d="M 50,10 A 40,40 0 1,0 90,50 A 30,30 0 1,1 50,10 Z" fill={color} stroke="#725e4b" strokeOpacity="0.55" strokeWidth="4" />
+          <path d="M26 36 Q22 50 28 64" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" opacity="0.6" fill="none" />
         </svg>
       );
     default:
       return (
         <svg viewBox="0 0 100 100" className={className}>
           <circle cx="50" cy="50" r="40" fill={color} stroke="#725e4b" strokeOpacity="0.55" strokeWidth="4" />
+          {shine}
+          {face(52)}
         </svg>
       );
   }
@@ -140,7 +173,6 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
   buddy,
   soundEnabled,
   ageGroup,
-  childName,
 }) => {
   const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
@@ -193,6 +225,8 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
 
     if (item.id === targetItem.id) {
       stopRoundTimer();
+      emitJuice({ kind: 'success' });
+      fireStarExplosion();
 
       setSelectedCorrectId(item.id);
       playCorrectFanfare(soundEnabled);

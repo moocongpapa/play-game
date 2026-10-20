@@ -19,6 +19,8 @@ import { getDifficultyConfig } from '../../utils/ageEngine';
 import { SIZE_ITEMS_BY_AGE } from '../../data/gameData';
 import { AgeGroup, SizeItem } from '../../types';
 import { Maximize2, Minimize2, ArrowRight, RefreshCw, Timer } from 'lucide-react';
+import { fireStarExplosion } from '../../utils/confetti';
+import { emitJuice, JUICE_SPRING } from '../../utils/juice';
 
 interface SizeComparisonGameProps {
   buddy: CharacterId;
@@ -133,13 +135,24 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
   };
 
   // 정답 탭 인터랙션
-  const handleSelectCard = (index: number) => {
+  const handleSelectCard = (index: number, e?: React.MouseEvent<HTMLButtonElement>) => {
     if (isCompleted || timeOut) return;
+
+    const triggerRewardBurst = () => {
+      if (e) {
+        const rect = e.currentTarget.getBoundingClientRect();
+        emitJuice({ kind: 'success', x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+        fireStarExplosion({ x: (rect.left + rect.width / 2) / window.innerWidth, y: (rect.top + rect.height / 2) / window.innerHeight });
+      } else {
+        fireStarExplosion();
+      }
+    };
 
     if (questionType === 'find_largest') {
       const correctIdx = getLargestIdx();
       if (index === correctIdx) {
         setIsCompleted(true);
+        triggerRewardBurst();
         playCorrectFanfare(soundEnabled);
         speakText(`정답이에요! 정말 커다란 친구를 잘 찾았어요!`, soundEnabled, { characterId: buddy });
         onCompleteQuiz(diffConfig.starsPerCorrect);
@@ -153,6 +166,7 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
       const correctIdx = getSmallestIdx();
       if (index === correctIdx) {
         setIsCompleted(true);
+        triggerRewardBurst();
         playCorrectFanfare(soundEnabled);
         speakText(`정답이에요! 정말 작고 귀여운 친구를 찾았어요!`, soundEnabled, { characterId: buddy });
         onCompleteQuiz(diffConfig.starsPerCorrect);
@@ -285,7 +299,8 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
                 repeat: hasHint ? Infinity : 0,
               }}
               aria-label={item.name}
-              onClick={() => handleSelectCard(idx)}
+              whileTap={!isCompleted ? { scale: 0.92, transition: JUICE_SPRING } : undefined}
+              onClick={(e) => handleSelectCard(idx, e)}
               className={`game-choice p-3 sm:p-5 rounded-2xl border-3 flex flex-col items-center justify-center cursor-pointer select-none transition-all shadow-xs w-full min-h-[150px] sm:min-h-[190px] ${
                 isSelectedInSort || isCorrectAnswer
                   ? 'bg-emerald-50 border-emerald-400 opacity-60'

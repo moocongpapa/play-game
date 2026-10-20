@@ -11,6 +11,8 @@ import { motion } from 'motion/react';
 
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
+import { fireStarExplosion } from '../../utils/confetti';
+import { emitJuice } from '../../utils/juice';
 import { getDifficultyConfig, pickDistractors } from '../../utils/ageEngine';
 import { TREASURE_ITEMS_BY_AGE, TreasureItem } from '../../data/gameData';
 import { AgeGroup } from '../../types';
@@ -29,7 +31,6 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
   buddy,
   soundEnabled,
   ageGroup,
-  childName,
 }) => {
   const friend = CHARACTERS[buddy];
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
@@ -91,12 +92,18 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
     };
   }, [ageGroup]);
 
-  const handleSelectTreasure = (item: TreasureItem) => {
+  const handleSelectTreasure = (item: TreasureItem, event: React.MouseEvent<HTMLButtonElement>) => {
     if (selectedCorrectId || timeOut) return;
 
     if (item.id === targetItem.id) {
       if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       stopRoundTimer();
+
+      const rect = event.currentTarget.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      emitJuice({ kind: 'success', x: cx, y: cy });
+      fireStarExplosion({ x: cx / window.innerWidth, y: cy / window.innerHeight });
 
       setSelectedCorrectId(item.id);
       playCorrectFanfare(soundEnabled);
@@ -155,27 +162,28 @@ export const NurungjiTreasureGame: React.FC<NurungjiTreasureGameProps> = ({
           return (
             <motion.button
               key={item.id}
+              whileTap={{ scale: 0.93 }}
               animate={
                 isShaking
                   ? { x: [-10, 10, -8, 8, 0] }
                   : isSolved
-                  ? { scale: 1.1 }
+                  ? { scale: 1.12, y: -4 }
                   : shouldPulse
                   ? { scale: [1, 1.1, 1] }
                   : { scale: 1 }
               }
               transition={{ duration: isShaking ? 0.5 : shouldPulse ? 1.0 : 0.5 }}
-              onClick={() => handleSelectTreasure(item)}
+              onClick={(e) => handleSelectTreasure(item, e)}
               className={`game-choice flex flex-col items-center justify-center p-3 sm:p-6 rounded-2xl sm:rounded-3xl border-3 sm:border-4 cursor-pointer select-none transition-all shadow-md touch-manipulation min-h-[120px] sm:min-h-[160px] min-w-[100px] sm:min-w-[140px] ${
                 isSolved
-                  ? 'bg-[#E8F5E9] border-[#81C784]'
+                  ? 'bg-[#E8F5E9] border-[#81C784] ring-4 ring-amber-300/60'
                   : shouldPulse
                   ? 'bg-amber-50 border-amber-400 ring-4 ring-amber-300'
                   : 'bg-white hover:bg-[#FFF8E1] border-[#FFE082]'
               }`}
             >
               {isSolved && <Sparkles className="w-5 h-5 sm:w-8 sm:h-8 text-[#FFA000] animate-bounce mb-1" />}
-              <span className="text-4xl sm:text-6xl mb-1 sm:mb-2"><ToyArtwork emoji={item.emoji} /></span>
+              <span className="text-4xl sm:text-6xl mb-1 sm:mb-2 drop-shadow-xs"><ToyArtwork emoji={item.emoji} /></span>
               <span className="sr-only">{item.name}</span>
             </motion.button>
           );

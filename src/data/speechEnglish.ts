@@ -224,6 +224,7 @@ export const SPEECH_ENGLISH: ReadonlyArray<readonly [string, string]> = [
   ['와아! 단어가 완성되었어요! {0}!', 'Hooray! You finished the word! {0}!'],
   ['힌트! {0}', 'Here is a clue! {0}'],
   ['\'{0}\' {1} 할 때 첫 글자는 무엇일까요? \'{2}\' 방울을 터트려주세요!', 'What is the first letter of the Korean word for {0}? Pop the {2} bubble!'],
+  ['\'{0}\' 할 때 첫 글자는 무엇일까요? \'{1}\' 방울을 터트려주세요!', 'What is the first letter of the Korean word for {0}? Pop the {1} bubble!'],
   ['{0}와 함께 \'{1}\' 글자 비누방울을 팡팡 터트려주세요!', 'Play with {0}! Pop the Korean letter bubble, {1}!'],
   ['여기 흔들리는 글자를 톡 눌러봐!', 'Tap the wiggling letter!'],
   ['시간이 완료되었어요. 다른 방울을 터트려보자!', 'Let us pop another bubble!'],

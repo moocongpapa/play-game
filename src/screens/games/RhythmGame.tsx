@@ -11,6 +11,8 @@ import { motion } from 'motion/react';
 
 import { JellyButton } from '../../components/JellyButton';
 import { speakText, stopAllSpeech, setBGMDucked, playRhythmTone, stopPlaySounds, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
+import { fireStarExplosion } from '../../utils/confetti';
+import { emitJuice } from '../../utils/juice';
 import { getDifficultyConfig } from '../../utils/ageEngine';
 import { RHYTHM_ITEMS_BY_AGE } from '../../data/gameData';
 import { AgeGroup, RhythmItem } from '../../types';
@@ -117,20 +119,27 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
     };
   }, [ageGroup]);
 
-  const handleTapButton = (note: number, index: number) => {
+  const handleTapButton = (note: number, event: React.MouseEvent<HTMLButtonElement>) => {
     if (isPlayingSequence || isCompleted || timeOut) return;
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
 
     playRhythmTone(note, soundEnabled, .3);
     const nextExpectedIdx = userSequence.length;
     const expectedNote = targetItem.notes[nextExpectedIdx];
 
     if (note === expectedNote) {
+      emitJuice({ kind: 'snap', x: cx, y: cy });
       const newSeq = [...userSequence, note];
       setUserSequence(newSeq);
 
       // 리듬 완성 체크
       if (newSeq.length === targetItem.notes.length) {
         stopRoundTimer();
+        emitJuice({ kind: 'success', x: cx, y: cy });
+        fireStarExplosion({ x: cx / window.innerWidth, y: cy / window.innerHeight });
 
         setIsCompleted(true);
         playCorrectFanfare(soundEnabled);
@@ -170,11 +179,11 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
       {/* Picture cue follows the lit instruments: listen, tap, then celebrate. */}
       <div className="visual-prompt" role="status">
         {isPlayingSequence ? (
-          <><Volume2 className="w-9 h-9" aria-hidden="true" /><span className="sr-only">친구의 악기 연주를 듣고 있어요</span></>
+          <><Volume2 className="w-9 h-9 text-purple-600 animate-pulse" aria-hidden="true" /><span className="sr-only">친구의 악기 연주를 듣고 있어요</span></>
         ) : isCompleted ? (
-          <><Sparkles className="w-9 h-9" aria-hidden="true" /><span className="sr-only">축하해요! 리듬 연주를 마쳤어요</span></>
+          <><Sparkles className="w-9 h-9 text-amber-500 animate-bounce" aria-hidden="true" /><span className="sr-only">축하해요! 리듬 연주를 마쳤어요</span></>
         ) : (
-          <><Hand className="w-9 h-9" aria-hidden="true" /><span className="sr-only">{childName} 차례예요! 순서대로 톡톡 터치하세요. {userSequence.length} / {targetItem.notes.length}</span></>
+          <><Hand className="w-9 h-9 text-amber-600" aria-hidden="true" /><span className="sr-only">{childName} 차례예요! 순서대로 톡톡 터치하세요. {userSequence.length} / {targetItem.notes.length}</span></>
         )}
       </div>
 
@@ -191,16 +200,17 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
           return (
             <motion.button
               key={index}
-              animate={isActive ? { scale: 1.25, filter: 'brightness(1.2)' } : { scale: 1 }}
+              whileTap={{ scale: 0.9 }}
+              animate={isActive ? { scale: 1.25, y: -8, filter: 'brightness(1.2)' } : isTapped ? { scale: 0.96, y: 2 } : { scale: 1, y: 0 }}
               aria-label={`${index + 1}번 악기`}
               disabled={isPlayingSequence || isCompleted || timeOut}
-              onClick={() => handleTapButton(note, index)}
+              onClick={(e) => handleTapButton(note, e)}
               style={{ backgroundColor: color }}
-              className={`rhythm-key w-18 h-18 sm:w-24 sm:h-24 rounded-full flex flex-col items-center justify-center text-4xl sm:text-5xl shadow-lg border-4 transition-all cursor-pointer ${
-                isActive ? 'border-white ring-4 ring-amber-400' : 'border-slate-100'
-              } ${isTapped ? 'opacity-50' : 'opacity-100'} ${isPlayingSequence ? 'cursor-wait' : ''}`}
+              className={`rhythm-key relative w-18 h-18 sm:w-24 sm:h-24 rounded-full flex flex-col items-center justify-center text-4xl sm:text-5xl shadow-[inset_0_4px_8px_rgba(255,255,255,0.6),0_8px_16px_rgba(0,0,0,0.15)] border-4 transition-all cursor-pointer ${
+                isActive ? 'border-white ring-4 ring-amber-400' : 'border-white/80'
+              } ${isTapped ? 'opacity-65' : 'opacity-100'} ${isPlayingSequence ? 'cursor-wait' : ''}`}
             >
-              <span><ToyArtwork emoji={emoji} /></span>
+              <span className="w-10 h-10 sm:w-13 sm:h-13 drop-shadow-xs"><ToyArtwork emoji={emoji} /></span>
             </motion.button>
           );
         })}
