@@ -20,6 +20,7 @@ export const GAME_CATALOG: Record<GameId, { title: string; prompt: string; theme
   bubble_bath: { developmentArea: 'care', title: '뽀글뽀글 거품 목욕', prompt: '비누 거품 몽글몽글, 시원하게 목욕해요!', theme: 'magic', badge: '뽀글 · 목욕 습관', category: 'care' },
   block_tower: { developmentArea: 'creative', title: '차곡차곡 블록 탑', prompt: '알록달록 블록을 차곡차곡 쌓아 봐!', theme: 'sky', badge: '차곡 · 균형 탑 쌓기', category: 'hands' },
   mirror_maze: { developmentArea: 'logic', title: '거울과 별빛 미로', prompt: '거울을 돌리고 스위치를 밟아 길을 열어줘!', theme: 'magic', badge: '길 찾기 · 두뇌 퍼즐', category: 'hands' },
+  forest_peekaboo: { developmentArea: 'logic', title: '숲속 친구들 까꿍 팡팡', prompt: '풀숲에서 까꿍 나오는 목표 친구를 빠르게 톡!', theme: 'garden', badge: '순발력 · 까꿍 반응', category: 'hands' },
 
   // --- 🌱 새싹반부터 즐기는 놀이 (만 3세~) ---
   korean_letters: { developmentArea: 'language', title: '글자 방울', prompt: '같은 글자 방울을 톡!', theme: 'sky', minAge: 'sprout', badge: '가나다 · 첫 한글' },

@@ -84,11 +84,13 @@
 .app-world .game-stage .game-surface[data-game='block_tower'],
 .app-world .game-stage .game-surface[data-game='trampoline_jump'],
 .app-world .game-stage .game-surface[data-game='bubble_bath'],
-.app-world .game-stage .game-surface[data-game='mirror_maze'] { padding: 0; }
+.app-world .game-stage .game-surface[data-game='mirror_maze'],
+.app-world .game-stage .game-surface[data-game='forest_peekaboo'] { padding: 0; }
 .game-stage .block-tower-stage,
 .game-stage .trampoline-stage,
 .game-stage .bath-stage,
-.game-stage .mirror-maze-stage {
+.game-stage .mirror-maze-stage,
+.game-stage .forest-peekaboo-stage {
   height: var(--game-play-height, calc(100dvh - 84px));
   min-height: var(--game-play-height, calc(100dvh - 84px));
   border-radius: 24px;

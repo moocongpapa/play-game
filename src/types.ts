@@ -36,7 +36,8 @@ export type GameId =
   | 'trampoline_jump'    // 통통 트램펄린 점프
   | 'bubble_bath'        // 뽀글뽀글 거품 목욕
   | 'block_tower'        // 차곡차곡 블록 탑
-  | 'mirror_maze';       // 거울과 별빛 미로 (공간지각·원인추론)
+  | 'mirror_maze'        // 거울과 별빛 미로 (공간지각·원인추론)
+  | 'forest_peekaboo';   // 숲속 친구들 까꿍 팡팡 (순발력·반응속도)
 
 export type SpeechLanguage = 'en' | 'ko';
 
