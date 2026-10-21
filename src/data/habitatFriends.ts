@@ -32,4 +32,18 @@ export const AQUARIUM_FRIENDS: readonly HabitatFriend[] = [
   { id: 'ray', name: '가오리', color: '#b3bacf', motion: 'swim', speed: 12, greeting: '넓은 지느러미를 날개처럼 훨훨!', reaction: '훨훨, 안녕!' },
 ];
 export const HABITAT_FRIENDS = { garden: GARDEN_FRIENDS, aquarium: AQUARIUM_FRIENDS } as const;
-export const MAX_HABITAT_FRIENDS = 18;
+export const INITIAL_HABITAT_FRIENDS = 5;
+export const MAX_HABITAT_FRIENDS = 50;
+
+/** Picks random unique friends from the catalogue for the initial habitat spawn. */
+export function pickRandomHabitatFriends(
+  catalogue: readonly HabitatFriend[],
+  count: number = INITIAL_HABITAT_FRIENDS
+): HabitatFriend[] {
+  const pool = [...catalogue];
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, Math.min(count, pool.length));
+}

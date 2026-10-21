@@ -2,7 +2,14 @@ import { useContext, useEffect, useRef, useState } from 'react';
 import { useReducedMotion } from 'motion/react';
 import { Heart, Pause, Play, RotateCcw, Check } from 'lucide-react';
 import type { CharacterId } from '../../types';
-import { HABITAT_FRIENDS, MAX_HABITAT_FRIENDS, type HabitatFriend, type HabitatKind } from '../../data/habitatFriends';
+import {
+  HABITAT_FRIENDS,
+  INITIAL_HABITAT_FRIENDS,
+  MAX_HABITAT_FRIENDS,
+  pickRandomHabitatFriends,
+  type HabitatFriend,
+  type HabitatKind,
+} from '../../data/habitatFriends';
 import { CreatureArtwork } from './CreatureArtwork';
 import { HabitatBackdrop } from './HabitatBackdrop';
 import { useHabitatMotion, type LivingFriend } from './useHabitatMotion';
@@ -40,7 +47,9 @@ export function HabitatPlay({ kind, buddy, childName, soundEnabled }: HabitatPla
     position,
   });
 
-  const [friends, setFriends] = useState<LivingFriend[]>(() => catalogue.map(species => makeFriend(species)));
+  const [friends, setFriends] = useState<LivingFriend[]>(() =>
+    pickRandomHabitatFriends(catalogue, INITIAL_HABITAT_FRIENDS).map(species => makeFriend(species))
+  );
   const friendsRef = useRef(friends);
   friendsRef.current = friends;
 
@@ -139,6 +148,12 @@ export function HabitatPlay({ kind, buddy, childName, soundEnabled }: HabitatPla
     friendsRef.current = [...current.slice(-(MAX_HABITAT_FRIENDS - 1)), next];
     setFriends(friendsRef.current);
     react(next, true);
+
+    if (friendsRef.current.length === MAX_HABITAT_FRIENDS) {
+      playSparkleChime(soundEnabled);
+      emitJuice({ kind: 'success', x: clientPos?.x || 200, y: clientPos?.y || 200 });
+      speakText('친구들이 50마리나 모였어! 정말 신난다!', soundEnabled, { characterId: buddy, playIntroSFX: false });
+    }
   };
 
   const touchFriend = (friend: LivingFriend, clientPos?: { x: number; y: number }) => {
@@ -155,7 +170,7 @@ export function HabitatPlay({ kind, buddy, childName, soundEnabled }: HabitatPla
     setHappyUid(null);
     held.current.clear();
     setTaps([]);
-    friendsRef.current = catalogue.map(species => makeFriend(species));
+    friendsRef.current = pickRandomHabitatFriends(catalogue, INITIAL_HABITAT_FRIENDS).map(species => makeFriend(species));
     setFriends(friendsRef.current);
     playJellyTap(soundEnabled);
     speakText('친구들이 다시 모였네! 반가워!', soundEnabled, { characterId: buddy, playIntroSFX: false });
@@ -190,6 +205,14 @@ export function HabitatPlay({ kind, buddy, childName, soundEnabled }: HabitatPla
         )}
 
         <div className="habitat-controls">
+          <div
+            className="habitat-count-pill"
+            aria-label={`현재 친구 ${friends.length}마리, 최대 ${MAX_HABITAT_FRIENDS}마리`}
+          >
+            <span className="habitat-count-current">{friends.length}</span>
+            <span className="habitat-count-divider">/</span>
+            <span className="habitat-count-max">{MAX_HABITAT_FRIENDS}</span>
+          </div>
           <button
             onClick={() => setPaused(value => !value)}
             aria-label={paused ? '친구들 다시 움직이기' : '친구들 움직임 멈추기'}

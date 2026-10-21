@@ -60,6 +60,7 @@ export const SPEECH_ENGLISH: ReadonlyArray<readonly [string, string]> = [
   ['이름을 입력해주세요!', 'Please enter your name!'],
   ['반짝이는 그림을 이쪽으로 쏙!', 'Move the sparkling picture over here!'],
   ['친구들이 다시 모였네! 반가워!', 'Our friends are back! Hello, everyone!'],
+  ['친구들이 50마리나 모였어! 정말 신난다!', '50 friends gathered together! Wow, so exciting!'],
   ['다른 친구랑도 놀아볼까?', 'Shall we play with another friend?'],
   ['어떤 게임 해볼까? 하고 싶은 그림을 눌러봐!', 'What shall we play? Tap a picture!'],
   ['{0}야, 같이 놀 친구를 골라줘!', '{0}, choose a friend to play with!'],

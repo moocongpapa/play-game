@@ -88,3 +88,33 @@ test('free roaming curves change heading, preserve speed and remain bounded thro
     if (i === 60) assert.ok(Math.abs(friend.vy) > 4, 'friends explore vertically instead of only crossing horizontal lanes');
   }
 });
+
+test('habitat spawns 5 random initial friends and supports up to 50 friends stably', async () => {
+  const { AQUARIUM_FRIENDS, GARDEN_FRIENDS, INITIAL_HABITAT_FRIENDS, MAX_HABITAT_FRIENDS, pickRandomHabitatFriends } = await import('../data/habitatFriends.ts');
+  assert.equal(INITIAL_HABITAT_FRIENDS, 5);
+  assert.equal(MAX_HABITAT_FRIENDS, 50);
+
+  const initialAquarium = pickRandomHabitatFriends(AQUARIUM_FRIENDS);
+  assert.equal(initialAquarium.length, 5);
+  const aquariumIds = new Set(initialAquarium.map(f => f.id));
+  assert.equal(aquariumIds.size, 5, '5 initial creatures must be unique species');
+
+  const initialGarden = pickRandomHabitatFriends(GARDEN_FRIENDS);
+  assert.equal(initialGarden.length, 5);
+  const gardenIds = new Set(initialGarden.map(f => f.id));
+  assert.equal(gardenIds.size, 5, '5 initial garden friends must be unique species');
+
+  // Verify spacing with 50 simultaneous friends in the habitat
+  const bounds = { width: 1000, height: 600 };
+  const fiftyFriends = Array.from({ length: 50 }, (_, i) => ({
+    position: placeHabitatFriend(i, 50, bounds, 40, 15, Math.random),
+    radius: 40,
+    held: false,
+  }));
+  const spaced = spaceHabitatFriends(fiftyFriends, bounds);
+  assert.equal(spaced.length, 50);
+  for (const pos of spaced) {
+    assert.ok(pos.x >= 40 && pos.x <= 960);
+    assert.ok(pos.y >= 40 && pos.y <= 560);
+  }
+});

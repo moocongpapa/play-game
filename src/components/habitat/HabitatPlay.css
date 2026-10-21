@@ -99,6 +99,52 @@
   box-shadow: 0 4px 12px rgba(255, 179, 0, 0.25), 0 3px 0 #e6a817;
 }
 
+.habitat-count-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 64px;
+  min-height: 64px;
+  padding: 0 16px;
+  border: 3px solid #ffffff;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #3d5a52;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 3px 0 #d0ddd8;
+  backdrop-filter: blur(8px);
+  user-select: none;
+  font-weight: 900;
+}
+
+.habitat-aquarium .habitat-count-pill {
+  color: #0077b6;
+  border-color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 119, 182, 0.12), 0 3px 0 #bfe3ed;
+}
+
+.habitat-garden .habitat-count-pill {
+  color: #2e7d32;
+  border-color: #ffffff;
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.12), 0 3px 0 #cde3ce;
+}
+
+.habitat-count-current {
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.habitat-count-divider {
+  font-size: 14px;
+  opacity: 0.55;
+  margin: 0 1px;
+}
+
+.habitat-count-max {
+  font-size: 14px;
+  opacity: 0.75;
+}
+
 .habitat-add-surface {
   position: absolute;
   inset: 0;
@@ -493,6 +539,20 @@
   .habitat-screen {
     --creature-size: 66px;
   }
+  .habitat-controls button,
+  .habitat-count-pill {
+    height: 52px;
+    min-height: 52px;
+  }
+  .habitat-controls button {
+    width: 52px;
+  }
+  .habitat-count-pill {
+    padding: 0 10px;
+  }
+  .habitat-count-current {
+    font-size: 17px;
+  }
   .habitat-choice {
     height: 68px;
   }
@@ -528,6 +588,20 @@
   }
   .habitat-controls {
     top: 6px;
+  }
+  .habitat-controls button,
+  .habitat-count-pill {
+    height: 48px;
+    min-height: 48px;
+  }
+  .habitat-controls button {
+    width: 48px;
+  }
+  .habitat-count-pill {
+    padding: 0 8px;
+  }
+  .habitat-count-current {
+    font-size: 15px;
   }
 }
 
