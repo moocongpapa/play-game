@@ -33,7 +33,7 @@ export function CareRoutine({ props, kind, locked, onComplete }: {
     voice: { text: '우르르, 퉤! 물방울을 눌러 뱉어 볼까?', buddy: props.buddy, soundEnabled: props.soundEnabled } });
   const labels = { paste: '치약', drink: '물컵', rinse: '헹구는 물컵', wipe: '입 닦는 수건' };
   const target = kind === 'paste' ? '칫솔' : '친구의 입';
-  const finish = () => onComplete({ paste: '치약을 조금 짰어! 이제 윗니를 닦아 볼까?', drink: '꿀꺽! 시원한 물도 마셨어. 입도 닦아 볼까?', rinse: '우르르, 퉤! 입안이 깨끗해졌어. 고마워!', wipe: '입도 뽀송뽀송! 골고루 먹고 깨끗하게 마무리했어!' }[kind]);
+  const finish = () => onComplete({ paste: '치약을 조금 짰어! 이제 이를 닦아 볼까?', drink: '꿀꺽! 시원한 물도 마셨어. 입도 닦아 볼까?', rinse: '우르르, 퉤! 입안이 깨끗해졌어. 고마워!', wipe: '입도 뽀송뽀송! 골고루 먹고 깨끗하게 마무리했어!' }[kind]);
   const drop = () => {
     if (locked || claimed.current) return false;
     claimed.current = true; setUsed(true);

@@ -86,6 +86,8 @@ export const SPEECH_ENGLISH: ReadonlyArray<readonly [string, string]> = [
   ['목마른 친구에게 물이 닿을 수 있도록 파이프를 톡톡 돌려 물길을 연결해 볼까?', 'Let us tap and turn the pipes so water can reach our thirsty friend!'],
   ['찰랑찰랑! 물길이 시원하게 이어지고 있어!', 'Splash, splash! The cool water stream is connecting!'],
   ['우와! 시원한 물이 콸콸! 친구가 정말 시원하고 기뻐해요!', 'Wow! Fresh water is gushing through! Our friend is so happy and refreshed!'],
+  ['치약을 조금 짰어! 이제 이를 닦아 볼까?', 'A little toothpaste! Let us brush our teeth now.'],
+  ['윗니 아랫니 왔다 갔다, 쓱싹쓱싹 닦아 줘!', 'Brush the top and bottom teeth back and forth, swish, swish!'],
   ['파이프를 톡 눌러서 방향을 돌려보자!', 'Tap the pipe to rotate its direction!'],
   ['다른 친구랑도 놀아볼까?', 'Shall we play with another friend?'],
   ['어떤 게임 해볼까? 하고 싶은 그림을 눌러봐!', 'What shall we play? Tap a picture!'],
