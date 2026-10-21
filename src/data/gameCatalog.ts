@@ -22,6 +22,9 @@ export const GAME_CATALOG: Record<GameId, { title: string; prompt: string; theme
   mirror_maze: { developmentArea: 'logic', title: '거울과 별빛 미로', prompt: '거울을 돌리고 스위치를 밟아 길을 열어줘!', theme: 'magic', badge: '길 찾기 · 두뇌 퍼즐', category: 'hands' },
   forest_peekaboo: { developmentArea: 'logic', title: '숲속 친구들 까꿍 팡팡', prompt: '풀숲에서 까꿍 나오는 목표 친구를 빠르게 톡!', theme: 'garden', badge: '순발력 · 까꿍 반응', category: 'hands' },
   magic_slime: { developmentArea: 'creative', title: '반짝이 마법 슬라임', prompt: '말랑말랑 슬라임을 주무르고, 반짝이 토핑으로 꾸며 봐!', theme: 'magic', badge: '촉감 · 창의 슬라임', category: 'hands' },
+  magic_potion: { developmentArea: 'creative', title: '알록달록 마법 물약', prompt: '신비한 재료를 퐁당 넣고 보글보글 저어봐!', theme: 'magic', badge: '상상 · 마법 물약', category: 'hands' },
+  fruit_catcher: { developmentArea: 'logic', title: '바구니 과일 캐치', prompt: '하늘에서 떨어지는 달콤한 과일을 쏙 받아봐!', theme: 'picnic', badge: '순발력 · 과일 캐치', category: 'hands' },
+  pipe_connect: { developmentArea: 'logic', title: '시원한 물길 연결', prompt: '파이프를 톡톡 돌려 친구에게 시원한 물을 보내줘!', theme: 'sky', badge: '두뇌 · 물길 퍼즐', category: 'hands' },
 
   // --- 🌱 새싹반부터 즐기는 놀이 (만 3세~) ---
   korean_letters: { developmentArea: 'language', title: '글자 방울', prompt: '같은 글자 방울을 톡!', theme: 'sky', minAge: 'sprout', badge: '가나다 · 첫 한글' },

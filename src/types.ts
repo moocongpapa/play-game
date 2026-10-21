@@ -38,7 +38,10 @@ export type GameId =
   | 'block_tower'        // 차곡차곡 블록 탑
   | 'mirror_maze'        // 거울과 별빛 미로 (공간지각·원인추론)
   | 'forest_peekaboo'    // 숲속 친구들 까꿍 팡팡 (순발력·반응속도)
-  | 'magic_slime';       // 반짝이 마법 슬라임 (창의력·촉감놀이)
+  | 'magic_slime'        // 반짝이 마법 슬라임 (창의력·촉감놀이)
+  | 'magic_potion'       // 알록달록 마법 물약/요리 만들기 (창의력·조합)
+  | 'fruit_catcher'      // 하늘에서 슝슝! 바구니 과일 캐치 (순발력·동체시력)
+  | 'pipe_connect';      // 시원한 물길/파이프 연결하기 (두뇌·공간추론)
 
 export type SpeechLanguage = 'en' | 'ko';
 

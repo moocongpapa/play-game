@@ -67,6 +67,9 @@ const BlockTowerGame = lazy(() => import('./screens/games/BlockTowerGame').then(
 const MirrorMazeGame = lazy(() => import('./screens/games/MirrorMazeGame').then(module => ({ default: module.MirrorMazeGame })));
 const ForestPeekabooGame = lazy(() => import('./screens/games/ForestPeekabooGame').then(module => ({ default: module.ForestPeekabooGame })));
 const MagicSlimeGame = lazy(() => import('./screens/games/MagicSlimeGame').then(module => ({ default: module.MagicSlimeGame })));
+const MagicPotionGame = lazy(() => import('./screens/games/MagicPotionGame').then(module => ({ default: module.MagicPotionGame })));
+const FruitCatcherGame = lazy(() => import('./screens/games/FruitCatcherGame').then(module => ({ default: module.FruitCatcherGame })));
+const PipeConnectGame = lazy(() => import('./screens/games/PipeConnectGame').then(module => ({ default: module.PipeConnectGame })));
 
 export default function App() {
   useViewportLock();
@@ -728,6 +731,36 @@ export default function App() {
                 case 'magic_slime':
                   return (
                     <MagicSlimeGame
+                      buddy={appState.selectedCharacter}
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'magic_potion':
+                  return (
+                    <MagicPotionGame
+                      buddy={appState.selectedCharacter}
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'fruit_catcher':
+                  return (
+                    <FruitCatcherGame
+                      buddy={appState.selectedCharacter}
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'pipe_connect':
+                  return (
+                    <PipeConnectGame
                       buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={soundEnabled}

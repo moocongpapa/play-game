@@ -86,13 +86,19 @@
 .app-world .game-stage .game-surface[data-game='bubble_bath'],
 .app-world .game-stage .game-surface[data-game='mirror_maze'],
 .app-world .game-stage .game-surface[data-game='forest_peekaboo'],
-.app-world .game-stage .game-surface[data-game='magic_slime'] { padding: 0; }
+.app-world .game-stage .game-surface[data-game='magic_slime'],
+.app-world .game-stage .game-surface[data-game='magic_potion'],
+.app-world .game-stage .game-surface[data-game='fruit_catcher'],
+.app-world .game-stage .game-surface[data-game='pipe_connect'] { padding: 0; }
 .game-stage .block-tower-stage,
 .game-stage .trampoline-stage,
 .game-stage .bath-stage,
 .game-stage .mirror-maze-stage,
 .game-stage .forest-peekaboo-stage,
-.game-stage .magic-slime-stage {
+.game-stage .magic-slime-stage,
+.game-stage .magic-potion-stage,
+.game-stage .fruit-catcher-stage,
+.game-stage .pipe-connect-stage {
   height: var(--game-play-height, calc(100dvh - 84px));
   min-height: var(--game-play-height, calc(100dvh - 84px));
   border-radius: 24px;

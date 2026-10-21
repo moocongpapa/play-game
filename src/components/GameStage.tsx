@@ -10,7 +10,7 @@ import { useBlowSensor } from '../hooks/useBlowSensor';
 import './GameStage.css';
 
 const PlayEffects = lazy(() => import('./PixiStageOverlay').then(m => ({ default: m.PixiStageOverlay })));
-const LOCAL_FEEDBACK_GAMES = new Set<GameId>(['fruit_munch', 'trampoline_jump', 'bubble_bath', 'block_tower', 'mirror_maze', 'forest_peekaboo', 'magic_slime']);
+const LOCAL_FEEDBACK_GAMES = new Set<GameId>(['fruit_munch', 'trampoline_jump', 'bubble_bath', 'block_tower', 'mirror_maze', 'forest_peekaboo', 'magic_slime', 'magic_potion', 'fruit_catcher', 'pipe_connect']);
 
 export function GameStage({ gameId, buddy, children, soundEnabled = false, microphoneEnabled = false }: {
   gameId: GameId; buddy: CharacterId; children: React.ReactNode; soundEnabled?: boolean; microphoneEnabled?: boolean;
