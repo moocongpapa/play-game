@@ -84,6 +84,8 @@ export const FruitCatcherGame: React.FC<FruitCatcherGameProps> = ({
   isFrozenRef.current = isFrozen;
   const gameWonRef = useRef(gameWon);
   gameWonRef.current = gameWon;
+  const comboRef = useRef(0);
+  const isFeverRef = useRef(false);
 
   // Initial speech guide
   useEffect(() => {
@@ -116,9 +118,13 @@ export const FruitCatcherGame: React.FC<FruitCatcherGameProps> = ({
   useEffect(() => {
     let animId: number;
     let lastSpawn = performance.now();
+    let lastFrame = lastSpawn;
 
     const loop = (now: number) => {
       if (gameWonRef.current) return;
+      // Speeds are tuned per 60Hz frame; scale by elapsed time (clamped after tab stalls).
+      const dt = Math.min(50, Math.max(0, now - lastFrame)) / (1000 / 60);
+      lastFrame = now;
 
       // Spawn falling items
       const spawnInterval = isFever ? 450 : 750;
@@ -163,12 +169,12 @@ export const FruitCatcherGame: React.FC<FruitCatcherGameProps> = ({
       const remaining: FallingItem[] = [];
 
       for (const item of itemsRef.current) {
-        item.y += item.speed;
+        item.y += item.speed * dt;
 
         // Magnet attraction
         if (hasMagnet && item.kind === 'fruit') {
           const dx = currentBasketX - item.x;
-          item.x += dx * 0.05;
+          item.x += dx * (1 - Math.pow(0.95, dt));
         }
 
         // Check collision with basket
@@ -182,16 +188,17 @@ export const FruitCatcherGame: React.FC<FruitCatcherGameProps> = ({
             setCatches(nextCatches);
             catchesRef.current = nextCatches;
 
-            setCombo((c) => {
-              const nextC = c + 1;
-              playComboChime(nextC, soundEnabled);
-              if (nextC >= 4 && !isFever) {
-                setIsFever(true);
-                speakText('우와! 콤보 피버! 황금 과일이 쏟아져요!', soundEnabled, { characterId: buddy, playIntroSFX: false });
-                scheduleGameTimeout(() => setIsFever(false), 5000);
-              }
-              return nextC;
-            });
+            // Side effects stay outside the state updater so StrictMode cannot replay them.
+            const nextC = comboRef.current + 1;
+            comboRef.current = nextC;
+            setCombo(nextC);
+            playComboChime(nextC, soundEnabled);
+            if (nextC >= 4 && !isFeverRef.current) {
+              isFeverRef.current = true;
+              setIsFever(true);
+              speakText('우와! 콤보 피버! 황금 과일이 쏟아져요!', soundEnabled, { characterId: buddy, playIntroSFX: false });
+              scheduleGameTimeout(() => { isFeverRef.current = false; setIsFever(false); }, 5000);
+            }
 
             recordPlaySuccess();
             playCareSound('drink', soundEnabled);
@@ -235,6 +242,8 @@ export const FruitCatcherGame: React.FC<FruitCatcherGameProps> = ({
           } else {
             // Obstacle hit (ice / stone)
             resetCombo();
+            comboRef.current = 0;
+            isFeverRef.current = false;
             setCombo(0);
             setIsFever(false);
             playWrongBoing(soundEnabled);

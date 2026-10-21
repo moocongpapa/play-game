@@ -15,6 +15,7 @@ import {
   playCareSound,
   playJellyTap,
   playStarGain,
+  playWrongBoing,
 } from '../../utils/soundEngine';
 import { fireConfetti, fireStarExplosion } from '../../utils/confetti';
 import { emitJuice, JUICE_SPRING } from '../../utils/juice';
@@ -124,6 +125,12 @@ export const MagicPotionGame: React.FC<MagicPotionGameProps> = ({
   // Drop ingredient into cauldron
   const handleSelectIngredient = (ingredient: Ingredient) => {
     if (phase !== 'adding' || addedIngredients.length >= requiredCount) return;
+    if (addedIngredients.some((i) => i.id === ingredient.id)) return;
+    if (isRecipeMode && !targetRecipe.required.includes(ingredient.id)) {
+      playWrongBoing(soundEnabled);
+      speakText('앗, 이 재료는 레시피에 없어! 책을 다시 볼까?', soundEnabled, { characterId: buddy, playIntroSFX: false });
+      return;
+    }
 
     playCareSound('drink', soundEnabled);
     playBubblePop(soundEnabled);

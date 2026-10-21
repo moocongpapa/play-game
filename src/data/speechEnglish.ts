@@ -68,6 +68,7 @@ export const SPEECH_ENGLISH: ReadonlyArray<readonly [string, string]> = [
   ['풀숲에서 까꿍 나오는 목표 친구를 톡 터치해 볼까? 잠자는 곰은 깨우지 마!', 'Let us tap our target friend popping out of the grass! Do not wake the sleeping bear!'],
   ['찾았다! 까꿍!', 'Found you! Peekaboo!'],
   ['쉿! 곰이 쿨쿨 자고 있어!', 'Shh! The bear is fast asleep!'],
+  ['앗, 이 재료는 레시피에 없어! 책을 다시 볼까?', 'Oops, that is not in the recipe! Shall we check the book again?'],
   ['우와! 콤보 피버! 신나게 팡팡!', 'Wow! Combo Fever! Pop, pop, let us go!'],
   ['우와! 빠른 손놀림으로 숲속 친구들을 모두 찾았어!', 'Wow! With quick reflexes, you found all the forest friends!'],
   ['말랑말랑 슬라임을 콕콕 주무르고, 반짝이와 과일 토핑을 올려 예쁘게 꾸며볼까?', 'Let us squish the bouncy slime, sprinkle glitter, and decorate with fruit toppings!'],
