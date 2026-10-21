@@ -64,20 +64,42 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
     speakText('다른 친구랑도 놀아볼까?', soundEnabled, { characterId: selectedCharacter });
   };
 
-  const renderCard = (id: GameId) => (
-    <button
-      key={id}
-      className={`picture-game-card theme-${GAME_CATALOG[id].theme}${GAME_CATALOG[id].badge ? ' card-tall' : ''}`}
-      onClick={() => {
-        stopAllSpeech();
-        playJellyTap(soundEnabled);
-        onStartGame(id, selectedCharacter);
-      }}
-      aria-label={`${GAME_CATALOG[id].title} 시작`}
-    >
-      <GameArtwork gameId={id} buddy={selectedCharacter} />
-    </button>
-  );
+  const renderCard = (id: GameId) => {
+    const game = GAME_CATALOG[id];
+    const categoryTag = game.badge ? game.badge.split('·')[0].trim() : '';
+    const featureText = game.badge ? (game.badge.split('·')[1]?.trim() || game.badge) : game.prompt;
+
+    return (
+      <button
+        key={id}
+        className={`picture-game-card theme-${game.theme}`}
+        onClick={() => {
+          stopAllSpeech();
+          playJellyTap(soundEnabled);
+          onStartGame(id, selectedCharacter);
+        }}
+        aria-label={`${game.title} 시작`}
+      >
+        <div className="card-artwork-wrap">
+          <GameArtwork gameId={id} buddy={selectedCharacter} />
+          {categoryTag && (
+            <span className="card-floating-badge">
+              {categoryTag}
+            </span>
+          )}
+        </div>
+        <div className="game-card-caption">
+          <div className="card-title-col">
+            <strong className="card-title">{game.title}</strong>
+            <span className="card-desc">{featureText}</span>
+          </div>
+          <span className="play-medallion" aria-hidden="true">
+            <Play fill="currentColor" size={16} />
+          </span>
+        </div>
+      </button>
+    );
+  };
 
   return <div className={`storybook-home home-${step}`}>
     <section className="welcome-scene">

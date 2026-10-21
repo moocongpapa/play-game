@@ -87,12 +87,12 @@ export const FruitCatcherGame: React.FC<FruitCatcherGameProps> = ({
 
   // Initial speech guide
   useEffect(() => {
-    speakText(GUIDE);
+    speakText(GUIDE, soundEnabled, { characterId: buddy });
     return () => {
       stopAllSpeech();
       clearGameTimeouts();
     };
-  }, [clearGameTimeouts]);
+  }, [buddy, soundEnabled, clearGameTimeouts]);
 
   // Touch / Pointer Tracking
   const handlePointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
@@ -187,7 +187,7 @@ export const FruitCatcherGame: React.FC<FruitCatcherGameProps> = ({
               playComboChime(nextC, soundEnabled);
               if (nextC >= 4 && !isFever) {
                 setIsFever(true);
-                speakText('우와! 콤보 피버! 황금 과일이 쏟아져요!');
+                speakText('우와! 콤보 피버! 황금 과일이 쏟아져요!', soundEnabled, { characterId: buddy, playIntroSFX: false });
                 scheduleGameTimeout(() => setIsFever(false), 5000);
               }
               return nextC;
@@ -227,7 +227,7 @@ export const FruitCatcherGame: React.FC<FruitCatcherGameProps> = ({
               playCelebrationFanfare(soundEnabled);
               playCorrectFanfare(soundEnabled);
               fireConfetti();
-              speakText('우와! 바구니 가득 맛있는 과일을 모두 모았어요!');
+              speakText('우와! 바구니 가득 맛있는 과일을 모두 모았어요!', soundEnabled, { characterId: buddy, playIntroSFX: false });
               scheduleGameTimeout(() => {
                 onCompleteQuiz(3);
               }, 2600);
@@ -238,7 +238,7 @@ export const FruitCatcherGame: React.FC<FruitCatcherGameProps> = ({
             setCombo(0);
             setIsFever(false);
             playWrongBoing(soundEnabled);
-            speakText('조심해! 차가운 얼음은 피해야 해!');
+            speakText('조심해! 차가운 얼음은 피해야 해!', soundEnabled, { characterId: buddy, playIntroSFX: false });
             setIsFrozen(true);
             scheduleGameTimeout(() => setIsFrozen(false), 900);
           }

@@ -114,12 +114,12 @@ export const MagicPotionGame: React.FC<MagicPotionGameProps> = ({
 
   // Initial speech guide
   useEffect(() => {
-    speakText(GUIDE);
+    speakText(GUIDE, soundEnabled, { characterId: buddy });
     return () => {
       stopAllSpeech();
       clearGameTimeouts();
     };
-  }, [clearGameTimeouts]);
+  }, [buddy, soundEnabled, clearGameTimeouts]);
 
   // Drop ingredient into cauldron
   const handleSelectIngredient = (ingredient: Ingredient) => {
@@ -155,10 +155,10 @@ export const MagicPotionGame: React.FC<MagicPotionGameProps> = ({
     }
 
     if (nextAdded.length >= requiredCount) {
-      speakText('빙글빙글 저어주세요! 마법이 일어나고 있어!');
+      speakText('빙글빙글 저어주세요! 마법이 일어나고 있어!', soundEnabled, { characterId: buddy, playIntroSFX: false });
       setPhase('stirring');
     } else {
-      speakText('재료를 퐁당! 알록달록 색깔이 섞이고 있어!');
+      speakText('재료를 퐁당! 알록달록 색깔이 섞이고 있어!', soundEnabled, { characterId: buddy, playIntroSFX: false });
     }
   };
 
@@ -198,10 +198,10 @@ export const MagicPotionGame: React.FC<MagicPotionGameProps> = ({
         playSparkleChime(soundEnabled);
         playCorrectFanfare(soundEnabled);
         fireStarExplosion();
-        speakText('우와! 반짝반짝 신기한 마법 생명체가 태어났어요!');
+        speakText('우와! 반짝반짝 신기한 마법 생명체가 태어났어요!', soundEnabled, { characterId: buddy, playIntroSFX: false });
       }, 1200);
     }
-  }, [phase, soundEnabled, stirProgress, targetRecipe, isRecipeMode, round, liquidColor, scheduleGameTimeout]);
+  }, [phase, soundEnabled, stirProgress, targetRecipe, isRecipeMode, round, liquidColor, buddy, scheduleGameTimeout]);
 
   // Next round
   const handleNextRound = () => {
@@ -220,7 +220,7 @@ export const MagicPotionGame: React.FC<MagicPotionGameProps> = ({
       setCreatedCreature(null);
       setLiquidColor([147, 51, 234]);
       playStarGain(soundEnabled);
-      speakText(GUIDE);
+      speakText(GUIDE, soundEnabled, { characterId: buddy, playIntroSFX: false });
     }
   };
 

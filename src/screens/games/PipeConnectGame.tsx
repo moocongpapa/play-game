@@ -227,12 +227,12 @@ export const PipeConnectGame: React.FC<PipeConnectGameProps> = ({
 
   // Initial speech guide
   useEffect(() => {
-    speakText(GUIDE);
+    speakText(GUIDE, soundEnabled, { characterId: buddy });
     return () => {
       stopAllSpeech();
       clearGameTimeouts();
     };
-  }, [clearGameTimeouts]);
+  }, [buddy, soundEnabled, clearGameTimeouts]);
 
   // Pathfinding to evaluate connected pipes & check win condition
   const evaluateConnections = useCallback((currentGrid: PipeCell[][]) => {
@@ -297,7 +297,7 @@ export const PipeConnectGame: React.FC<PipeConnectGameProps> = ({
         pixiRef.current?.emitWaterSpray(rect.right - 80, rect.bottom - 80);
       }
 
-      speakText('우와! 시원한 물이 콸콸! 친구가 정말 시원하고 기뻐해요!');
+      speakText('우와! 시원한 물이 콸콸! 친구가 정말 시원하고 기뻐해요!', soundEnabled, { characterId: buddy, playIntroSFX: false });
 
       scheduleGameTimeout(() => {
         playCorrectFanfare(soundEnabled);

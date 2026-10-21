@@ -92,34 +92,117 @@ export function GameArtwork({ gameId, buddy = 'jelly' }: { gameId: GameId; buddy
       scene = <>{['#df91a5','#e5bb6e','#91b8cf'].map((c,i) => <span key={c} className={`picture-balloon balloon-${i}`} style={{ background: c }}><i /></span>)}<Hand className="scene-hand" /><Sparkles className="scene-pop" /></>;
       break;
     case 'fruit_munch':
-      scene = <><span className="mini-care-friend mini-food-friend"><CareFriend buddy={buddy} mouth="chew" /></span><Toy emoji="🍓" x={52} y={15} size={28} rotate={12} /><Toy emoji="🍌" x={68} y={46} size={26} rotate={-18} /><Sparkles className="scene-pop" /></>;
+      scene = (
+        <>
+          <span className="scene-plate" />
+          <Toy emoji="🍉" x={10} y={18} size={42} rotate={-10} />
+          <Toy emoji="🍓" x={52} y={14} size={34} rotate={15} />
+          <Toy emoji="🍌" x={66} y={42} size={30} rotate={-20} />
+          <Sparkles className="scene-pop" />
+        </>
+      );
       break;
     case 'trampoline_jump':
-      scene = <><span className="mini-hide-friend" style={{ top: '10%', transform: 'scale(1.1)' }}><CharacterAvatar id={buddy} mood="happy" /></span><span className="xylophone" style={{ bottom: '8px', height: '14px', borderRadius: '10px' }}><i style={{ background: '#7ec7c1', width: '100%' }} /></span><Toy emoji="⭐" x={10} y={15} size={24} /><Sparkles className="scene-pop" /></>;
+      scene = (
+        <>
+          <span className="xylophone" style={{ bottom: '10px', left: '15%', width: '70%', height: '16px', borderRadius: '10px' }}>
+            <i style={{ background: '#7ec7c1', width: '100%' }} />
+          </span>
+          <Toy emoji="⭐" x={42} y={8} size={42} />
+          <Toy emoji="☁️" x={8} y={18} size={32} />
+          <Toy emoji="☁️" x={68} y={14} size={28} />
+          <Sparkles className="scene-pop" />
+        </>
+      );
       break;
     case 'bubble_bath':
-      scene = <><span className="mini-care-friend"><CareFriend buddy={buddy} /></span><span className="mini-soap soap-a" style={{ bottom: '15%', left: '10%' }}><ToyArtwork emoji="🫧" /></span><span className="mini-soap soap-b" style={{ bottom: '25%', right: '15%' }}><ToyArtwork emoji="🫧" /></span><Toy emoji="🐤" x={60} y={35} size={28} /></>;
+      scene = (
+        <>
+          <Toy emoji="🛁" x={14} y={26} size={46} />
+          <Toy emoji="🐤" x={54} y={16} size={32} rotate={10} />
+          <Toy emoji="🫧" x={34} y={8} size={28} />
+          <Sparkles className="scene-pop" />
+        </>
+      );
       break;
     case 'block_tower':
-      scene = <><span className="mini-hide-friend" style={{ top: '4%', transform: 'scale(0.95)' }}><CharacterAvatar id={buddy} mood="happy" /></span><span className="xylophone" style={{ bottom: '8px', height: '38px', flexDirection: 'column', gap: '3px' }}><i style={{ background: '#f59e0b', width: '65%', height: '10px', borderRadius: '6px' }} /><i style={{ background: '#10b981', width: '80%', height: '10px', borderRadius: '6px' }} /><i style={{ background: '#f43f5e', width: '95%', height: '10px', borderRadius: '6px' }} /></span><Toy emoji="👑" x={66} y={14} size={26} /><Sparkles className="scene-pop" /></>;
+      scene = (
+        <>
+          <span className="xylophone" style={{ bottom: '8px', left: '22%', width: '56%', height: '42px', flexDirection: 'column', gap: '4px' }}>
+            <i style={{ background: '#f59e0b', width: '65%', height: '11px', borderRadius: '6px' }} />
+            <i style={{ background: '#10b981', width: '80%', height: '11px', borderRadius: '6px' }} />
+            <i style={{ background: '#f43f5e', width: '95%', height: '11px', borderRadius: '6px' }} />
+          </span>
+          <Toy emoji="👑" x={38} y={6} size={36} />
+          <Toy emoji="⭐" x={74} y={22} size={24} />
+          <Sparkles className="scene-pop" />
+        </>
+      );
       break;
     case 'mirror_maze':
-      scene = <><span className="mini-hide-friend" style={{ top: '8%', left: '8%', transform: 'scale(0.95)' }}><CharacterAvatar id={buddy} mood="happy" /></span><Toy emoji="🪞" x={54} y={18} size={28} rotate={-15} /><Toy emoji="⭐" x={70} y={58} size={26} /><Sparkles className="scene-pop" /></>;
+      scene = (
+        <>
+          <Toy emoji="🪞" x={16} y={16} size={46} rotate={-12} />
+          <Toy emoji="⭐" x={56} y={14} size={38} />
+          <Toy emoji="💎" x={66} y={50} size={26} />
+          <Sparkles className="scene-pop" />
+        </>
+      );
       break;
     case 'forest_peekaboo':
-      scene = <><span className="mini-hide-friend" style={{ top: '6%', transform: 'scale(1.05)' }}><CharacterAvatar id={buddy} mood="happy" /></span><Toy emoji="🌳" x={10} y={45} size={28} /><Toy emoji="🪵" x={68} y={48} size={28} /><Sparkles className="scene-pop" /></>;
+      scene = (
+        <>
+          <Toy emoji="🌳" x={4} y={14} size={40} />
+          <Toy emoji="🐻" x={36} y={12} size={44} rotate={-6} />
+          <Toy emoji="🪵" x={64} y={44} size={32} />
+          <Search className="scene-search" />
+          <Sparkles className="scene-pop" />
+        </>
+      );
       break;
     case 'magic_slime':
-      scene = <><span className="mini-hide-friend" style={{ top: '6%', transform: 'scale(1.05)' }}><CharacterAvatar id={buddy} mood="happy" /></span><Toy emoji="🫧" x={12} y={48} size={28} /><Toy emoji="🍓" x={70} y={20} size={26} rotate={15} /><Sparkles className="scene-pop" /></>;
+      scene = (
+        <>
+          <Toy emoji="🫧" x={24} y={14} size={50} />
+          <Toy emoji="🍓" x={12} y={38} size={32} rotate={-15} />
+          <Toy emoji="🫐" x={64} y={22} size={28} rotate={12} />
+          <Toy emoji="✨" x={60} y={50} size={26} />
+          <Sparkles className="scene-pop" />
+        </>
+      );
       break;
     case 'magic_potion':
-      scene = <><span className="mini-hide-friend" style={{ top: '6%', transform: 'scale(1.05)' }}><CharacterAvatar id={buddy} mood="happy" /></span><Toy emoji="🧪" x={12} y={48} size={28} /><Toy emoji="✨" x={70} y={20} size={26} rotate={15} /><Sparkles className="scene-pop" /></>;
+      scene = (
+        <>
+          <Toy emoji="🧪" x={16} y={16} size={46} rotate={-10} />
+          <Toy emoji="✨" x={54} y={14} size={38} />
+          <Toy emoji="🔮" x={66} y={48} size={28} />
+          <Toy emoji="🦄" x={36} y={38} size={32} />
+          <Sparkles className="scene-pop" />
+        </>
+      );
       break;
     case 'fruit_catcher':
-      scene = <><span className="mini-hide-friend" style={{ top: '6%', transform: 'scale(1.05)' }}><CharacterAvatar id={buddy} mood="happy" /></span><Toy emoji="🧺" x={12} y={50} size={28} /><Toy emoji="🍎" x={68} y={18} size={26} rotate={-10} /><Sparkles className="scene-pop" /></>;
+      scene = (
+        <>
+          <Toy emoji="🧺" x={30} y={38} size={48} />
+          <Toy emoji="🍎" x={14} y={10} size={34} rotate={-12} />
+          <Toy emoji="🍓" x={48} y={8} size={28} rotate={10} />
+          <Toy emoji="🍌" x={70} y={18} size={30} rotate={20} />
+          <Sparkles className="scene-pop" />
+        </>
+      );
       break;
     case 'pipe_connect':
-      scene = <><span className="mini-hide-friend" style={{ top: '6%', transform: 'scale(1.05)' }}><CharacterAvatar id={buddy} mood="happy" /></span><Toy emoji="⛲" x={12} y={48} size={28} /><Toy emoji="💧" x={70} y={22} size={26} /><Sparkles className="scene-pop" /></>;
+      scene = (
+        <>
+          <Toy emoji="⛲" x={12} y={16} size={46} />
+          <Toy emoji="💧" x={54} y={14} size={36} />
+          <Toy emoji="🌊" x={64} y={44} size={32} />
+          <Toy emoji="🌈" x={38} y={8} size={26} />
+          <Sparkles className="scene-pop" />
+        </>
+      );
       break;
   }
   return <div className={`game-artwork theme-${theme}`} aria-hidden="true"><span className="scene-cloud cloud-a" /><span className="scene-cloud cloud-b" />{scene}</div>;

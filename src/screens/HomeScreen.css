@@ -86,30 +86,135 @@
 .selected-buddy-halo > * { pointer-events: none; }
 .selected-buddy-halo:focus-visible { outline-offset: 3px; }
 
-/* Keep 90% of the former artwork + footer + frame height. The artwork now
-   fills that entire space; the sizing pseudo-element contains no hidden copy. */
+/* Modern High-Quality Game Cards */
+.storybook-home .game-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
 .storybook-home .picture-game-card {
-  --card-art-ratio: 2.3;
-  --card-chrome-height: 65px;
-  --card-frame: 16px;
-  --card-padding: 6px;
-  padding: var(--card-padding);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 8px 12px;
+  background: #ffffff;
+  border: 2.5px solid #ece4d8;
+  border-radius: 26px;
+  box-shadow: 0 5px 0 #ded6c5, 0 8px 22px rgba(128, 112, 87, 0.08);
+  text-align: left;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.18s ease;
+  overflow: hidden;
+  cursor: pointer;
+  outline: none;
 }
-.storybook-home .picture-game-card.card-tall { --card-chrome-height: 95px; }
-.storybook-home .picture-game-card::before {
-  content: '';
-  display: block;
-  padding-top: calc((100% / var(--card-art-ratio) + var(--card-chrome-height)) * .9 - var(--card-frame));
+.storybook-home .picture-game-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 0 #ded6c5, 0 14px 28px rgba(128, 112, 87, 0.12);
 }
-.storybook-home .picture-game-card > .game-artwork {
-  position: absolute;
-  inset: var(--card-padding);
-  width: auto;
+.storybook-home .picture-game-card:active {
+  transform: translateY(3px) scale(0.98);
+  box-shadow: 0 2px 0 #ded6c5;
+}
+
+.storybook-home .picture-game-card.theme-garden { border-color: #dbe6ce; background: linear-gradient(180deg, #f7faf3 0%, #ffffff 45%); }
+.storybook-home .picture-game-card.theme-sky { border-color: #d6e8ed; background: linear-gradient(180deg, #f2f9fc 0%, #ffffff 45%); }
+.storybook-home .picture-game-card.theme-music { border-color: #edd9c2; background: linear-gradient(180deg, #fdf8f0 0%, #ffffff 45%); }
+.storybook-home .picture-game-card.theme-picnic { border-color: #edd9cf; background: linear-gradient(180deg, #fdf5f0 0%, #ffffff 45%); }
+.storybook-home .picture-game-card.theme-magic { border-color: #e4d8ee; background: linear-gradient(180deg, #f9f3fd 0%, #ffffff 45%); }
+
+.storybook-home .card-artwork-wrap {
+  position: relative;
+  width: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #fdfcf9;
+}
+
+.storybook-home .card-artwork-wrap > .game-artwork {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1.45;
   height: auto;
-  aspect-ratio: auto;
+  border-radius: 20px;
+  display: block;
 }
-.storybook-home .picture-game-card .thumb-bears,
-.storybook-home .picture-game-card .mini-hide-friend { scale: .8; transform-origin: center bottom; }
+
+.storybook-home .card-floating-badge {
+  position: absolute;
+  top: 7px;
+  left: 7px;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 9px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  font-size: 11px;
+  font-weight: 850;
+  color: #334155;
+  letter-spacing: -0.02em;
+}
+
+.storybook-home .game-card-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 4px 0;
+}
+
+.storybook-home .card-title-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  text-align: left;
+}
+
+.storybook-home .card-title {
+  font-size: 15px;
+  font-weight: 900;
+  color: #1e293b;
+  line-height: 1.25;
+  letter-spacing: -0.03em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.storybook-home .card-desc {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  line-height: 1.3;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.storybook-home .play-medallion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fef08a, #facc15);
+  color: #78350f;
+  box-shadow: 0 3px 6px rgba(234, 179, 8, 0.35), inset 0 -2px 0 rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.picture-game-card:hover .play-medallion {
+  transform: scale(1.08);
+}
 .storybook-home .friend-day-copy { position: relative; }
 .storybook-home .friend-day-copy > .day-mini-pictures { position: absolute; inset: 0; margin: 0; }
 .storybook-home .day-mini-pictures > .game-artwork { min-width: 0; height: 100%; aspect-ratio: auto; }
@@ -158,8 +263,15 @@
   .home-games .selected-buddy-stage .selected-buddy-halo { width: 112px; height: 112px; padding: 4px; }
   .home-games .selected-buddy-stage .selected-buddy-halo > .buddy-switch-cue svg { width: auto; height: auto; }
   .home-games .selected-buddy-stage .selected-buddy-halo > .buddy-switch-cue > svg { width: 17px; height: 17px; }
-  .storybook-home .picture-game-card { --card-art-ratio: 1.6; --card-chrome-height: 54px; --card-frame: 12px; --card-padding: 4px; }
-  .storybook-home .picture-game-card.card-tall { --card-chrome-height: 83.5px; }
+  .storybook-home .game-card-grid { gap: 12px; }
+  .storybook-home .picture-game-card { padding: 6px 6px 10px; border-radius: 22px; }
+  .storybook-home .card-artwork-wrap { border-radius: 17px; }
+  .storybook-home .card-artwork-wrap > .game-artwork { aspect-ratio: 1.4; border-radius: 17px; }
+  .storybook-home .card-floating-badge { font-size: 10px; padding: 2px 7px; top: 5px; left: 5px; }
+  .storybook-home .game-card-caption { padding: 8px 2px 0; }
+  .storybook-home .card-title { font-size: 13.5px; }
+  .storybook-home .card-desc { font-size: 10px; }
+  .storybook-home .play-medallion { width: 28px; height: 28px; }
   .storybook-home .friend-day-card { min-height: 68px; padding: 4px 8px; gap: 6px; }.storybook-home .friend-day-copy { height: 52px; }
   .storybook-home .friend-day-card > div:first-child { width: 48px; height: 48px; }
 }
