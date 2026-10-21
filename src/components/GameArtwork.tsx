@@ -103,6 +103,9 @@ export function GameArtwork({ gameId, buddy = 'jelly' }: { gameId: GameId; buddy
     case 'block_tower':
       scene = <><span className="mini-hide-friend" style={{ top: '4%', transform: 'scale(0.95)' }}><CharacterAvatar id={buddy} mood="happy" /></span><span className="xylophone" style={{ bottom: '8px', height: '38px', flexDirection: 'column', gap: '3px' }}><i style={{ background: '#f59e0b', width: '65%', height: '10px', borderRadius: '6px' }} /><i style={{ background: '#10b981', width: '80%', height: '10px', borderRadius: '6px' }} /><i style={{ background: '#f43f5e', width: '95%', height: '10px', borderRadius: '6px' }} /></span><Toy emoji="👑" x={66} y={14} size={26} /><Sparkles className="scene-pop" /></>;
       break;
+    case 'mirror_maze':
+      scene = <><span className="mini-hide-friend" style={{ top: '8%', left: '8%', transform: 'scale(0.95)' }}><CharacterAvatar id={buddy} mood="happy" /></span><Toy emoji="🪞" x={54} y={18} size={28} rotate={-15} /><Toy emoji="⭐" x={70} y={58} size={26} /><Sparkles className="scene-pop" /></>;
+      break;
   }
   return <div className={`game-artwork theme-${theme}`} aria-hidden="true"><span className="scene-cloud cloud-a" /><span className="scene-cloud cloud-b" />{scene}</div>;
 }

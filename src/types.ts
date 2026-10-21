@@ -35,7 +35,8 @@ export type GameId =
   | 'fruit_munch'        // 과일 냠냠 몇 개?
   | 'trampoline_jump'    // 통통 트램펄린 점프
   | 'bubble_bath'        // 뽀글뽀글 거품 목욕
-  | 'block_tower';       // 차곡차곡 블록 탑
+  | 'block_tower'        // 차곡차곡 블록 탑
+  | 'mirror_maze';       // 거울과 별빛 미로 (공간지각·원인추론)
 
 export type SpeechLanguage = 'en' | 'ko';
 

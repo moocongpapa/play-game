@@ -27,7 +27,7 @@
     min-height: 0;
     padding: 8px;
   }
-  .game-stage .game-surface > :is(.game-board, .toddler-play, .development-play, .adventure-board, .block-tower-stage, .trampoline-stage, .bath-stage) {
+  .game-stage .game-surface > :is(.game-board, .toddler-play, .development-play, .adventure-board, .block-tower-stage, .trampoline-stage, .bath-stage, .mirror-maze-stage) {
     flex: 1;
     width: 100%;
     max-width: none;
