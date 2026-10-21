@@ -21,6 +21,7 @@ export const GAME_CATALOG: Record<GameId, { title: string; prompt: string; theme
   block_tower: { developmentArea: 'creative', title: '차곡차곡 블록 탑', prompt: '알록달록 블록을 차곡차곡 쌓아 봐!', theme: 'sky', badge: '차곡 · 균형 탑 쌓기', category: 'hands' },
   mirror_maze: { developmentArea: 'logic', title: '거울과 별빛 미로', prompt: '거울을 돌리고 스위치를 밟아 길을 열어줘!', theme: 'magic', badge: '길 찾기 · 두뇌 퍼즐', category: 'hands' },
   forest_peekaboo: { developmentArea: 'logic', title: '숲속 친구들 까꿍 팡팡', prompt: '풀숲에서 까꿍 나오는 목표 친구를 빠르게 톡!', theme: 'garden', badge: '순발력 · 까꿍 반응', category: 'hands' },
+  magic_slime: { developmentArea: 'creative', title: '반짝이 마법 슬라임', prompt: '말랑말랑 슬라임을 주무르고, 반짝이 토핑으로 꾸며 봐!', theme: 'magic', badge: '촉감 · 창의 슬라임', category: 'hands' },
 
   // --- 🌱 새싹반부터 즐기는 놀이 (만 3세~) ---
   korean_letters: { developmentArea: 'language', title: '글자 방울', prompt: '같은 글자 방울을 톡!', theme: 'sky', minAge: 'sprout', badge: '가나다 · 첫 한글' },

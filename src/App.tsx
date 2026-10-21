@@ -66,6 +66,7 @@ const BubbleBathGame = lazy(() => import('./screens/games/BubbleBathGame').then(
 const BlockTowerGame = lazy(() => import('./screens/games/BlockTowerGame').then(module => ({ default: module.BlockTowerGame })));
 const MirrorMazeGame = lazy(() => import('./screens/games/MirrorMazeGame').then(module => ({ default: module.MirrorMazeGame })));
 const ForestPeekabooGame = lazy(() => import('./screens/games/ForestPeekabooGame').then(module => ({ default: module.ForestPeekabooGame })));
+const MagicSlimeGame = lazy(() => import('./screens/games/MagicSlimeGame').then(module => ({ default: module.MagicSlimeGame })));
 
 export default function App() {
   useViewportLock();
@@ -717,6 +718,16 @@ export default function App() {
                 case 'forest_peekaboo':
                   return (
                     <ForestPeekabooGame
+                      buddy={appState.selectedCharacter}
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'magic_slime':
+                  return (
+                    <MagicSlimeGame
                       buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={soundEnabled}

@@ -37,7 +37,8 @@ export type GameId =
   | 'bubble_bath'        // 뽀글뽀글 거품 목욕
   | 'block_tower'        // 차곡차곡 블록 탑
   | 'mirror_maze'        // 거울과 별빛 미로 (공간지각·원인추론)
-  | 'forest_peekaboo';   // 숲속 친구들 까꿍 팡팡 (순발력·반응속도)
+  | 'forest_peekaboo'    // 숲속 친구들 까꿍 팡팡 (순발력·반응속도)
+  | 'magic_slime';       // 반짝이 마법 슬라임 (창의력·촉감놀이)
 
 export type SpeechLanguage = 'en' | 'ko';
 

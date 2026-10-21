@@ -109,6 +109,9 @@ export function GameArtwork({ gameId, buddy = 'jelly' }: { gameId: GameId; buddy
     case 'forest_peekaboo':
       scene = <><span className="mini-hide-friend" style={{ top: '6%', transform: 'scale(1.05)' }}><CharacterAvatar id={buddy} mood="happy" /></span><Toy emoji="🌳" x={10} y={45} size={28} /><Toy emoji="🪵" x={68} y={48} size={28} /><Sparkles className="scene-pop" /></>;
       break;
+    case 'magic_slime':
+      scene = <><span className="mini-hide-friend" style={{ top: '6%', transform: 'scale(1.05)' }}><CharacterAvatar id={buddy} mood="happy" /></span><Toy emoji="🫧" x={12} y={48} size={28} /><Toy emoji="🍓" x={70} y={20} size={26} rotate={15} /><Sparkles className="scene-pop" /></>;
+      break;
   }
   return <div className={`game-artwork theme-${theme}`} aria-hidden="true"><span className="scene-cloud cloud-a" /><span className="scene-cloud cloud-b" />{scene}</div>;
 }
