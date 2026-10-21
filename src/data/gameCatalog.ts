@@ -43,7 +43,7 @@ export const GAME_CATALOG: Record<GameId, { title: string; prompt: string; theme
   emotion_face: { developmentArea: 'care', title: '마음 거울', prompt: '눈과 입으로 마음을 만들어 봐!', theme: 'picnic', minAge: 'sprout', badge: '방긋 · 감정 표현', category: 'care' },
 
   // --- 🌻 꽃잎반부터 즐기는 놀이 (만 4세~) ---
-  number_parade: { developmentArea: 'logic', title: '통통 숫자 놀이터', prompt: '토끼는 하나 둘, 곰은 일 이 삼! 톡톡 숫자를 만나 봐!', theme: 'magic', badge: '통통 · 0부터 100' },
+  number_parade: { developmentArea: 'logic', title: '통통 숫자 놀이터', prompt: '토끼는 하나 둘, 곰은 일 이 삼! 톡톡 숫자를 만나 봐!', theme: 'magic', badge: '통통 · 1부터 100' },
   word_puzzle: { developmentArea: 'language', title: '단어 퍼즐', prompt: '그림을 보고 글자를 모아봐!', theme: 'magic', minAge: 'bloom', badge: '낱말 · 글자 조합' },
   memory_card: { developmentArea: 'logic', title: '짝꿍 카드', prompt: '뒤집어서 같은 그림을 찾아봐!', theme: 'magic', minAge: 'bloom', badge: '뒤집기 · 기억력 쑥쑥' },
   symmetry_puzzle: { developmentArea: 'logic', title: '반쪽 날개', prompt: '같은 무늬의 날개를 쏙!', theme: 'garden', minAge: 'sprout', badge: '팔랑 · 대칭 퍼즐', category: 'hands' },

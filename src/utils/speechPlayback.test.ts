@@ -400,6 +400,17 @@ test('speech playback respects preferences, navigation and uninterrupted repeate
       assert.equal(spoken.at(-1)?.text, '이');
       engine.stopAllSpeech();
     });
+    await t.test('preferBrowserTTS skips AI speech and uses device voices directly', async () => {
+      voices = [{ name: 'Yuna', lang: 'ko-KR' }];
+      ai.setGeminiTTSEnabled(true);
+      engine.setAudioPreferences(true, true);
+      engine.setSpeechLanguage('ko');
+      const priorRequests = requests.length;
+      engine.speakText('하나', true, { characterId: 'ggomi', preferBrowserTTS: true, playIntroSFX: false });
+      assert.equal(requests.length, priorRequests, 'Does not call cloud speech endpoint');
+      assert.equal(spoken.at(-1)?.text, '하나');
+      engine.stopAllSpeech();
+    });
   } finally {
     engine.stopAllSpeech(); ai.clearGeminiAudioCache();
     for (const [key, descriptor] of original) {

@@ -743,6 +743,7 @@ export interface SpeakOptions {
   pitch?: number;
   rate?: number;
   playIntroSFX?: boolean;
+  preferBrowserTTS?: boolean;
   onStart?: (provider: 'ai' | 'browser') => void;
   onEnd?: () => void;
   onError?: () => void;
@@ -820,6 +821,9 @@ function speakWithBrowserTTS(text: string, enabled = true, options: SpeakOptions
       window.speechSynthesis.cancel();
       options.onError?.();
     }, 8000);
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+    }
     window.speechSynthesis.speak(utterance);
   } catch (e) {
     clearBrowserSpeechStartTimer();
@@ -878,7 +882,7 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
 
   setBGMDucked('speech', true);
 
-  if (isGeminiTTSEnabled()) {
+  if (!options.preferBrowserTTS && isGeminiTTSEnabled()) {
     try {
       const ctx = getAudioContext();
       playGeminiSpeech(clean, {

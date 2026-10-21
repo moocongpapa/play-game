@@ -26,14 +26,18 @@ export function NumberParadeGame(props: ToddlerGameProps) {
   const paused = useContext(PlayHintsPausedContext);
   const reduced = useReducedMotion();
   const id = useId();
-  const [view, setView] = useState({ value: 0, taps: 0, mode: 'native' as NumberReading });
-  const count = useRef(-1);
+  const [view, setView] = useState({ value: 1, taps: 0, mode: 'native' as NumberReading });
+  const count = useRef(0);
   const latest = useRef(props);
   latest.current = props;
   const [speaker] = useState(() => createNumberSpeaker((request, callbacks) => {
     const p = latest.current;
     speakText(numberWord(request.value, request.mode), p.soundEnabled, {
-      characterId: p.buddy, englishText: englishNumberWord(request.value), playIntroSFX: false, ...callbacks,
+      characterId: p.buddy,
+      englishText: englishNumberWord(request.value),
+      playIntroSFX: false,
+      preferBrowserTTS: true,
+      ...callbacks,
     });
   }));
   useEffect(() => {
@@ -42,13 +46,13 @@ export function NumberParadeGame(props: ToddlerGameProps) {
     return () => { speaker.clear(); stopAllSpeech(); stopPlaySounds(); };
   }, [speaker, props.buddy, props.soundEnabled, paused]);
 
-  const maxNumber = props.ageGroup === 'baby' ? 10 : props.ageGroup === 'sprout' ? 20 : 100;
-  const milestoneStep = props.ageGroup === 'baby' || props.ageGroup === 'sprout' ? 5 : 10;
+  const maxNumber = 100;
+  const milestoneStep = props.ageGroup === 'baby' ? 5 : 10;
 
   const tap = (mode: NumberReading) => {
     if (paused) return;
     const rawNext = nextPlayNumber(count.current);
-    const value = rawNext > maxNumber ? 1 : rawNext;
+    const value = rawNext > maxNumber || rawNext === 0 ? 1 : rawNext;
     count.current = value;
     setView(previous => ({ value, mode, taps: previous.taps + 1 }));
     playJellyTap(props.soundEnabled);
@@ -98,7 +102,7 @@ export function NumberParadeGame(props: ToddlerGameProps) {
     </div>
     <div className="number-controls" role="group" aria-label="숫자 읽기 버튼">
       {(['native', 'sino'] as const).map(mode => <motion.button key={mode} type="button" className={`number-button number-button-${mode}`} disabled={paused}
-        aria-label={mode === 'native' ? '토끼와 하나 둘 셋 세기' : '곰과 영 일 이 삼 세기'} onClick={() => tap(mode)}
+        aria-label={mode === 'native' ? '토끼와 하나 둘 셋 세기' : '곰과 일 이 삼 세기'} onClick={() => tap(mode)}
         whileTap={reduced ? undefined : { scaleX: 1.09, scaleY: .88 }} transition={JUICE_SPRING}>
         <ToyArtwork emoji={mode === 'native' ? '🐰' : '🐻'} />
         <span className="number-button-badge" aria-hidden="true">{mode === 'native' ? <span>☝️</span> : <span>123</span>}</span>
