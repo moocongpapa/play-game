@@ -10,7 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 
 import { JellyButton } from '../../components/JellyButton';
-import { speakText, playWrongBoing, playSparkleChime, playDingDongDang } from '../../utils/soundEngine';
+import { speakText, playWrongBoing, playSparkleChime, playDingDongDang, stopAllSpeech } from '../../utils/soundEngine';
 import { fireConfetti } from '../../utils/confetti';
 import { emitJuice } from '../../utils/juice';
 import { getDifficultyConfig, pickDistractors } from '../../utils/ageEngine';
@@ -64,6 +64,10 @@ export const ShadowQuizGame: React.FC<ShadowQuizGameProps> = ({
 
   useEffect(() => {
     generateRound();
+    return () => {
+      clearGameTimeouts();
+      stopAllSpeech();
+    };
   }, [ageGroup]);
 
   const handleSelectOption = (item: QuizItem) => {

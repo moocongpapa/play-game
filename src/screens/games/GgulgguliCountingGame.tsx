@@ -11,7 +11,7 @@ import { motion } from 'motion/react';
 import { FOOD_COUNTING_ITEMS } from '../../data/gameData';
 
 import { JellyButton } from '../../components/JellyButton';
-import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
+import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing, stopAllSpeech } from '../../utils/soundEngine';
 import { fireStarExplosion } from '../../utils/confetti';
 import { emitJuice, JUICE_SPRING } from '../../utils/juice';
 import { getDifficultyConfig, getKoreanCounts } from '../../utils/ageEngine';
@@ -104,8 +104,10 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
   useEffect(() => {
     generateRound();
     return () => {
+      clearGameTimeouts();
       if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       stopRoundTimer();
+      stopAllSpeech();
     };
   }, [ageGroup]);
 

@@ -10,7 +10,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 
 import { JellyButton } from '../../components/JellyButton';
-import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
+import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing, stopAllSpeech } from '../../utils/soundEngine';
 import { fireStarExplosion } from '../../utils/confetti';
 import { emitJuice } from '../../utils/juice';
 import { getDifficultyConfig, pickDistractors } from '../../utils/ageEngine';
@@ -87,8 +87,10 @@ export const EummeCloudShapeGame: React.FC<EummeCloudShapeGameProps> = ({
   useEffect(() => {
     generateRound();
     return () => {
+      clearGameTimeouts();
       if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       stopRoundTimer();
+      stopAllSpeech();
     };
   }, [ageGroup]);
 

@@ -11,7 +11,7 @@ import { CHARACTERS } from '../../data/characters';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import { pickNextRound, shuffle } from '../../utils/roundDeck';
 import { getDifficultyConfig } from '../../utils/ageEngine';
-import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing, playStarGain } from '../../utils/soundEngine';
+import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing, playStarGain, stopAllSpeech } from '../../utils/soundEngine';
 import { emitJuice, JUICE_SPRING } from '../../utils/juice';
 import { fireStarExplosion } from '../../utils/confetti';
 import type { AgeGroup, CharacterId } from '../../types';
@@ -86,7 +86,10 @@ export function MemoryCardGame({ buddy, onCompleteQuiz, soundEnabled, ageGroup, 
 
   useEffect(() => {
     startNewGame();
-    return () => clearGameTimeouts();
+    return () => {
+      clearGameTimeouts();
+      stopAllSpeech();
+    };
   }, [ageGroup]);
 
   const handlePeekHint = () => {

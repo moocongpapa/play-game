@@ -11,7 +11,7 @@ import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect } from 'react';
 
 import { JellyButton } from '../../components/JellyButton';
-import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
+import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing, stopAllSpeech } from '../../utils/soundEngine';
 import { fireStarExplosion } from '../../utils/confetti';
 import { emitJuice } from '../../utils/juice';
 import { getDifficultyConfig } from '../../utils/ageEngine';
@@ -75,7 +75,9 @@ export const WordPuzzleGame: React.FC<WordPuzzleGameProps> = ({
   useEffect(() => {
     generateRound();
     return () => {
+      clearGameTimeouts();
       stopRoundTimer();
+      stopAllSpeech();
     };
   }, [ageGroup]);
 

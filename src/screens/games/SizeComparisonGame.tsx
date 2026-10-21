@@ -14,7 +14,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 
 import { JellyButton } from '../../components/JellyButton';
-import { speakText, playCorrectFanfare, playWrongBoing, playBubblePop } from '../../utils/soundEngine';
+import { speakText, playCorrectFanfare, playWrongBoing, playBubblePop, stopAllSpeech } from '../../utils/soundEngine';
 import { getDifficultyConfig } from '../../utils/ageEngine';
 import { SIZE_ITEMS_BY_AGE } from '../../data/gameData';
 import { AgeGroup, SizeItem } from '../../types';
@@ -104,7 +104,9 @@ export const SizeComparisonGame: React.FC<SizeComparisonGameProps> = ({
   useEffect(() => {
     generateRound();
     return () => {
+      clearGameTimeouts();
       stopRoundTimer();
+      stopAllSpeech();
     };
   }, [ageGroup]);
 

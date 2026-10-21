@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { KOREAN_LETTER_ITEMS_BY_AGE } from '../../data/gameData';
 
 import { JellyButton } from '../../components/JellyButton';
-import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
+import { speakText, playBubblePop, playCorrectFanfare, playWrongBoing, stopAllSpeech } from '../../utils/soundEngine';
 import { fireStarExplosion } from '../../utils/confetti';
 import { emitJuice } from '../../utils/juice';
 import { getDifficultyConfig, pickDistractors } from '../../utils/ageEngine';
@@ -107,8 +107,10 @@ export const JellyKoreanGame: React.FC<JellyKoreanGameProps> = ({
   useEffect(() => {
     startNewRound();
     return () => {
+      clearGameTimeouts();
       if (hintTimerRef.current) clearTimeout(hintTimerRef.current);
       stopRoundTimer();
+      stopAllSpeech();
     };
   }, [ageGroup]);
 

@@ -460,6 +460,7 @@ export const MagicSlimeGame: React.FC<MagicSlimeGameProps> = ({
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
+            onPointerLeave={handlePointerUp}
             className="relative z-10 w-full h-full cursor-grab active:cursor-grabbing touch-none rounded-full"
             aria-label="말랑말랑 마법 슬라임 (손가락으로 주무르거나 탭해 꾸미기)"
           />

@@ -116,6 +116,7 @@ export const RhythmGame: React.FC<RhythmGameProps> = ({
     return () => {
       stopRoundTimer();
       playback.cancel();
+      stopAllSpeech();
     };
   }, [ageGroup]);
 

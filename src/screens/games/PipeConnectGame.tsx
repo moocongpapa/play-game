@@ -208,13 +208,13 @@ export const PipeConnectGame: React.FC<PipeConnectGameProps> = ({
         rotation: 180,
         connections: getConnectionsForShape('elbow', 180),
       };
-      // (2,3) straight vertical [0, 2] (leads into sink at 3,3)
+      // (2,3) elbow [2, 3] (left to bottom, leads into sink at 3,3)
       newGrid[2][3] = {
         r: 2,
         c: 3,
-        shape: 'straight',
+        shape: 'elbow',
         rotation: (round % 2 === 0 ? 0 : 90),
-        connections: getConnectionsForShape('straight', round % 2 === 0 ? 0 : 90),
+        connections: getConnectionsForShape('elbow', round % 2 === 0 ? 0 : 90),
       };
     }
 

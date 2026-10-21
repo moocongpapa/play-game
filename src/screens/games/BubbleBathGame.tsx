@@ -83,6 +83,7 @@ export const BubbleBathGame: React.FC<BubbleBathGameProps> = ({
 
   const advancingRef = useRef(false);
   const lastSoundAtRef = useRef(0);
+  const stepProgressRef = useRef(0);
 
   useEffect(() => {
     stopAllSpeech();
@@ -102,6 +103,7 @@ export const BubbleBathGame: React.FC<BubbleBathGameProps> = ({
 
       if (completedStep === 'water') {
         scheduleGameTimeout(() => {
+          stepProgressRef.current = 0;
           setStepProgress(0);
           setCurrentStep('soap');
           advancingRef.current = false;
@@ -109,6 +111,7 @@ export const BubbleBathGame: React.FC<BubbleBathGameProps> = ({
       } else if (completedStep === 'soap') {
         setFoamLevel(6);
         scheduleGameTimeout(() => {
+          stepProgressRef.current = 0;
           setStepProgress(0);
           setQuackedDucks([]);
           setCurrentStep('duck');
@@ -116,6 +119,7 @@ export const BubbleBathGame: React.FC<BubbleBathGameProps> = ({
         }, 750);
       } else if (completedStep === 'duck') {
         scheduleGameTimeout(() => {
+          stepProgressRef.current = 0;
           setStepProgress(0);
           setCurrentStep('rinse');
           advancingRef.current = false;
@@ -144,6 +148,7 @@ export const BubbleBathGame: React.FC<BubbleBathGameProps> = ({
 
         scheduleGameTimeout(() => {
           setIsFinished(false);
+          stepProgressRef.current = 0;
           setStepProgress(0);
           setQuackedDucks([]);
           setCurrentStep('water');
@@ -179,14 +184,13 @@ export const BubbleBathGame: React.FC<BubbleBathGameProps> = ({
       if (now - lastSoundAtRef.current < 240) return;
       lastSoundAtRef.current = now;
 
+      const nextProgress = Math.min(4, stepProgressRef.current + 1);
+      stepProgressRef.current = nextProgress;
+      setStepProgress(nextProgress);
+
       if (currentStep === 'water') {
         playCareSound('drink', soundEnabled);
         pixiRef.current?.emitWaterSpray(px, py);
-        setStepProgress((prev) => {
-          const next = Math.min(4, prev + 1);
-          if (next >= 4) advanceToNextStep('water');
-          return next;
-        });
       } else if (currentStep === 'soap') {
         playCareSound('bubble', soundEnabled);
         pixiRef.current?.emitBurst({
@@ -198,11 +202,6 @@ export const BubbleBathGame: React.FC<BubbleBathGameProps> = ({
           kind: 'bubble',
         });
         setFoamLevel((f) => Math.min(6, f + 2));
-        setStepProgress((prev) => {
-          const next = Math.min(4, prev + 1);
-          if (next >= 4) advanceToNextStep('soap');
-          return next;
-        });
       } else if (currentStep === 'duck') {
         playBouncyBoing(soundEnabled);
         pixiRef.current?.emitBurst({
@@ -213,20 +212,14 @@ export const BubbleBathGame: React.FC<BubbleBathGameProps> = ({
           count: 12,
           kind: 'bubble',
         });
-        setStepProgress((prev) => {
-          const next = Math.min(4, prev + 1);
-          if (next >= 4) advanceToNextStep('duck');
-          return next;
-        });
       } else if (currentStep === 'rinse') {
         playSparkleChime(soundEnabled);
         pixiRef.current?.emitWaterSpray(px, py);
         setFoamLevel((f) => Math.max(0, f - 2));
-        setStepProgress((prev) => {
-          const next = Math.min(4, prev + 1);
-          if (next >= 4) advanceToNextStep('rinse');
-          return next;
-        });
+      }
+
+      if (nextProgress >= 4) {
+        advanceToNextStep(currentStep);
       }
     },
     [currentStep, isFinished, soundEnabled, advanceToNextStep]

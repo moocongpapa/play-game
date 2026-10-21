@@ -14,7 +14,7 @@ import { QuizItem, AgeGroup } from '../../types';
 import { OBJECT_ITEMS_BY_AGE } from '../../data/gameData';
 
 import { JellyButton } from '../../components/JellyButton';
-import { speakText, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
+import { speakText, playCorrectFanfare, playWrongBoing, stopAllSpeech } from '../../utils/soundEngine';
 import { fireStarExplosion } from '../../utils/confetti';
 import { emitJuice } from '../../utils/juice';
 import { getDifficultyConfig, pickDistractors } from '../../utils/ageEngine';
@@ -102,7 +102,9 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
   useEffect(() => {
     generateRound();
     return () => {
+      clearGameTimeouts();
       stopRoundTimer();
+      stopAllSpeech();
     };
   }, [ageGroup]);
 

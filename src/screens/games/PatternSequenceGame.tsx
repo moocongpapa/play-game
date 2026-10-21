@@ -11,7 +11,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 
 import { JellyButton } from '../../components/JellyButton';
-import { speakText, playCorrectFanfare, playWrongBoing } from '../../utils/soundEngine';
+import { speakText, playCorrectFanfare, playWrongBoing, stopAllSpeech } from '../../utils/soundEngine';
 import { fireStarExplosion } from '../../utils/confetti';
 import { emitJuice, JUICE_SPRING } from '../../utils/juice';
 import { getDifficultyConfig } from '../../utils/ageEngine';
@@ -60,9 +60,11 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
     if (!target) return;
     setTargetItem(target);
 
-    // 정답 + 오답 구성 (선택지 2~4개)
-    const distractors = (target.distractors || ['🍎', '⭐']).slice(0, diffConfig.optionCount - 1);
-    const roundOptions = [target.answer, ...distractors].sort(() => Math.random() - 0.5);
+    // 정답 + 오답 구성 (중복 방지 및 선택지 수 조정)
+    const filteredDistractors = (target.distractors || ['🍎', '⭐']).filter((d) => d !== target.answer);
+    const roundOptions = Array.from(new Set([target.answer, ...filteredDistractors]))
+      .slice(0, diffConfig.optionCount)
+      .sort(() => Math.random() - 0.5);
     setOptions(roundOptions);
 
     if (soundEnabled) {
@@ -75,7 +77,9 @@ export const PatternSequenceGame: React.FC<PatternSequenceGameProps> = ({
   useEffect(() => {
     generateRound();
     return () => {
+      clearGameTimeouts();
       stopRoundTimer();
+      stopAllSpeech();
     };
   }, [ageGroup]);
 

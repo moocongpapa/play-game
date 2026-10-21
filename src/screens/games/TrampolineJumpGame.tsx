@@ -231,10 +231,12 @@ export const TrampolineJumpGame: React.FC<TrampolineJumpGameProps> = ({
         setCollectibles(updated);
         playSparkleChime(soundEnabled);
 
+        const prevMilestone = Math.floor(p.score / targetStars);
         p.score += hitCount;
+        const nextMilestone = Math.floor(p.score / targetStars);
         setScore(p.score);
 
-        if (p.score > 0 && p.score % targetStars === 0) {
+        if (nextMilestone > prevMilestone) {
           playCorrectFanfare(soundEnabled);
           fireStarExplosion();
           fireConfetti();

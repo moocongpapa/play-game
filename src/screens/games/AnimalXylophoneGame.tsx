@@ -45,7 +45,7 @@ export function AnimalXylophoneGame(props: ToddlerGameProps) {
     if (releaseMusic.current) clearTimeout(releaseMusic.current);
     if (echoTimer.current) clearTimeout(echoTimer.current);
     echoTimers.current.forEach(clearTimeout); echoTimers.current = [];
-    stopPlaySounds(); setBGMDucked('instrument', false);
+    stopPlaySounds(); stopAllSpeech(); setBGMDucked('instrument', false);
   };
   useEffect(() => {
     const hide = () => {

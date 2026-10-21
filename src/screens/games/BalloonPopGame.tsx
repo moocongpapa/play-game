@@ -6,7 +6,7 @@ import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
-import { speakText, playBalloonPop, playDingDongDang, playSparkleChime } from '../../utils/soundEngine';
+import { speakText, stopAllSpeech, playBalloonPop, playDingDongDang, playSparkleChime } from '../../utils/soundEngine';
 import { fireBalloonPopParticle, fireConfetti } from '../../utils/confetti';
 import { emitJuice, subscribeWindGust } from '../../utils/juice';
 import { AgeGroup } from '../../types';
@@ -58,7 +58,7 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
   isStageMode = false,
 }) => {
   const targetCount = targetCountProp ?? (ageGroup === 'baby' ? 4 : ageGroup === 'sprout' ? 5 : 7);
-  const { scheduleGameTimeout } = useGameTimeouts();
+  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const reducedMotion = useReducedMotion();
   const fieldRef = useRef<HTMLDivElement>(null);
@@ -121,6 +121,8 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
     return () => {
       clearInterval(interval);
       unsubWind();
+      clearGameTimeouts();
+      stopAllSpeech();
     };
   }, []);
 

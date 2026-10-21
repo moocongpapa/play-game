@@ -205,28 +205,26 @@ export const FruitMunchGame: React.FC<FruitMunchGameProps> = ({
           playCareSound('chew', soundEnabled);
           playCareReaction(currentFruit.motion === 'crunch' ? 'chew' : 'yum', soundEnabled, buddy);
 
-          setEatenCount((prev) => {
-            const next = prev + 1;
-            if (next >= targetCount) {
-              scheduleGameTimeout(() => {
-                setIsChewing(false);
-                setReactionWord(null);
-                setMouthState('smile');
-                setPhase('answering');
-                isFeedingRef.current = false;
-                stopAllSpeech();
-                speakText('과일을 모두 몇 개 먹었을까요?', soundEnabled, { characterId: buddy });
-              }, 1150);
-            } else {
-              scheduleGameTimeout(() => {
-                setIsChewing(false);
-                setReactionWord(null);
-                setMouthState('rest');
-                isFeedingRef.current = false;
-              }, 760);
-            }
-            return next;
-          });
+          const nextEaten = eatenCount + 1;
+          setEatenCount(nextEaten);
+          if (nextEaten >= targetCount) {
+            scheduleGameTimeout(() => {
+              setIsChewing(false);
+              setReactionWord(null);
+              setMouthState('smile');
+              setPhase('answering');
+              isFeedingRef.current = false;
+              stopAllSpeech();
+              speakText('과일을 모두 몇 개 먹었을까요?', soundEnabled, { characterId: buddy });
+            }, 1150);
+          } else {
+            scheduleGameTimeout(() => {
+              setIsChewing(false);
+              setReactionWord(null);
+              setMouthState('rest');
+              isFeedingRef.current = false;
+            }, 760);
+          }
         }
       };
 

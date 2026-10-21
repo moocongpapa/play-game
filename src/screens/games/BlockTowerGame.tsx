@@ -35,7 +35,7 @@ export function BlockTowerGame({ buddy, onCompleteQuiz, soundEnabled, ageGroup =
   const [falling, setFalling] = useState<{ from: number; to: number; y: number; palette: number } | null>(null);
   const [completed, setCompleted] = useState(false), [sway, setSway] = useState(0);
   const target = ageGroup === 'baby' ? 5 : ageGroup === 'sprout' ? 6 : 7;
-  const { scheduleGameTimeout } = useGameTimeouts();
+  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
   const latest = useRef({ blocks, falling, completed, paused }); latest.current = { blocks, falling, completed, paused };
   const lock = useRef(false), craneX = useRef(0);
   const pendingLanding = useRef(false);
@@ -53,7 +53,13 @@ export function BlockTowerGame({ buddy, onCompleteQuiz, soundEnabled, ageGroup =
     resize(); const observer = new ResizeObserver(resize); observer.observe(node);
     return () => observer.disconnect();
   }, []);
-  useEffect(() => { speakText(GUIDE, soundEnabled, { characterId: buddy, playIntroSFX: false }); return stopAllSpeech; }, [buddy, soundEnabled]);
+  useEffect(() => {
+    speakText(GUIDE, soundEnabled, { characterId: buddy, playIntroSFX: false });
+    return () => {
+      clearGameTimeouts();
+      stopAllSpeech();
+    };
+  }, [buddy, soundEnabled, clearGameTimeouts]);
   useEffect(() => {
     let frame = 0, last = performance.now(), phase = 0;
     const step = (now: number) => {

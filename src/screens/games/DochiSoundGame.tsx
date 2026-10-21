@@ -14,7 +14,7 @@ import { motion } from 'motion/react';
 import { SOUND_ITEMS_BY_AGE } from '../../data/gameData';
 
 import { JellyButton } from '../../components/JellyButton';
-import { speakText, playWrongBoing, playDingDongDang } from '../../utils/soundEngine';
+import { speakText, playWrongBoing, playDingDongDang, stopAllSpeech } from '../../utils/soundEngine';
 import { fireStarExplosion } from '../../utils/confetti';
 import { emitJuice, JUICE_SPRING } from '../../utils/juice';
 import { getDifficultyConfig, pickDistractors } from '../../utils/ageEngine';
@@ -90,7 +90,9 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
   useEffect(() => {
     generateRound();
     return () => {
+      clearGameTimeouts();
       stopRoundTimer();
+      stopAllSpeech();
     };
   }, [ageGroup]);
 
