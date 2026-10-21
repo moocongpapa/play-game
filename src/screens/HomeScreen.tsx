@@ -76,7 +76,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
       aria-label={`${GAME_CATALOG[id].title} 시작`}
     >
       <GameArtwork gameId={id} buddy={selectedCharacter} />
-      <span className="game-card-title-pill">{GAME_CATALOG[id].title}</span>
     </button>
   );
 

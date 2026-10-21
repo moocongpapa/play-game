@@ -13,6 +13,7 @@ import { ToyArtwork } from '../../components/ToyArtwork';
 import { FOOD_PLATES } from '../../data/toddlerPlay';
 import { playCareReaction } from '../../utils/soundEngine';
 import { useCareReactions } from '../../hooks/useCareReactions';
+import { CHARACTER_PERFORMANCE } from '../../utils/characterPerformance';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import { type ToddlerGameProps } from '../../hooks/useToddlerPlay';
 
@@ -46,6 +47,7 @@ function FeedMeal({ props, plate, completed, finish }: { props: ToddlerGameProps
   const [eaten, setEaten] = useState<string[]>([]);
   const eatenRef = useRef(new Set<string>());
   const [chewing, setChewing] = useState(false);
+  const [savoring, setSavoring] = useState(false);
   const busy = useRef(false);
   const portrait = useRef<HTMLDivElement>(null);
   const [gaze, setGaze] = useState({ x: 0, y: 0 });
@@ -60,23 +62,29 @@ function FeedMeal({ props, plate, completed, finish }: { props: ToddlerGameProps
     eatenRef.current.add(id);
     setEaten([...eatenRef.current]);
     setChewing(true);
+    setSavoring(false);
+    setAnticipating(false);
+    setGaze({ x: 0, y: 0 });
     setLastFood(id);
     const voiceDuration = playCareReaction(FOOD_REACTIONS[id]?.motion === 'crunch' ? 'chew' : 'yum', props.soundEnabled, props.buddy);
+    const mealDuration = Math.max(1300, voiceDuration);
+    scheduleGameTimeout(() => { setChewing(false); setSavoring(true); }, Math.max(800, mealDuration - 320));
     scheduleGameTimeout(() => {
       setChewing(false);
+      setSavoring(false);
       busy.current = false;
       if (eatenRef.current.size === plate.length) finish(`${props.childName}야, 골고루 먹으니 힘이 쑥쑥! 배가 든든해. 고마워!`);
-    }, Math.max(1600, voiceDuration));
+    }, mealDuration);
     return true;
   };
-  return <DragMatch resetKey="meal" disabled={completed || chewing} onDrop={feed} hint={nextFood ? { pieceId: nextFood.id, targetId: 'mouth' } : undefined} onDragMove={point => {
+  return <DragMatch resetKey="meal" disabled={completed || chewing || savoring} onDrop={feed} hint={nextFood ? { pieceId: nextFood.id, targetId: 'mouth' } : undefined} onDragMove={point => {
       const rect = portrait.current?.getBoundingClientRect();
       setAnticipating(point?.targetId === 'mouth');
       setGaze(point && rect ? { x: Math.max(-6, Math.min(6, (point.x - rect.left - rect.width / 2) / 20)), y: Math.max(-4, Math.min(4, (point.y - rect.top - rect.height / 2) / 20)) } : { x: 0, y: 0 });
     }}>
       <div className="feeding-scene">
-        <div ref={portrait} className={`feeding-friend ${chewing ? `is-chewing food-${reaction?.motion}` : ''}`}>
-          <CareFriend buddy={props.buddy} gaze={gaze} blush={chewing ? reaction?.blush : undefined} mouth={chewing ? 'chew' : anticipating ? 'open' : 'rest'} />
+        <div ref={portrait} style={{ '--chew-beat': `${CHARACTER_PERFORMANCE[props.buddy].chewBeat}ms` } as React.CSSProperties} className={`feeding-friend ${chewing ? `is-chewing food-${reaction?.motion}` : ''}`}>
+          <CareFriend buddy={props.buddy} gaze={gaze} blush={chewing ? reaction?.blush : undefined} mouth={chewing ? 'chew' : savoring || completed ? 'smile' : anticipating ? 'open' : 'rest'} />
           {chewing && reaction && <><span className="food-reaction-word" key={lastFood}>{reaction.word}</span>{reaction.motion === 'crown' && <Crown className="broccoli-crown" fill="currentColor" />}</>}
           <DropSlot id="mouth" label="친구의 입" className="feeding-mouth" filled={completed}><span aria-hidden="true" /></DropSlot>
           {(chewing || completed) && <motion.span key={eaten.length} className="feeding-heart" initial={{ y: 15, opacity: 0, scale: .7 }} animate={{ y: -18, opacity: 1, scale: 1 }}><Heart fill="currentColor" /></motion.span>}
@@ -86,7 +94,7 @@ function FeedMeal({ props, plate, completed, finish }: { props: ToddlerGameProps
       </div>
       <div className="food-plate" aria-label="과일과 채소 접시">
         {plate.map(food => <DragPiece key={food.id} id={food.id} label={food.name} disabled={eaten.includes(food.id)} className={`food-piece ${eaten.includes(food.id) ? 'food-eaten' : ''}`}>
-          <ToyArtwork emoji={food.emoji} /><span>{food.name}</span>
+          <ToyArtwork emoji={food.emoji} /><span className="sr-only">{food.name}</span>
         </DragPiece>)}
       </div>
     </DragMatch>;

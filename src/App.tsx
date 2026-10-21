@@ -4,7 +4,6 @@ import React, { useState, useEffect, useLayoutEffect, useCallback, useRef, lazy,
 import { AppState, CharacterId, GameId, ChildProfile } from './types';
 import { CharacterAvatar } from './components/CharacterAvatar';
 import { Header } from './components/Header';
-import { ConfettiEffect } from './components/ConfettiEffect';
 import { ParentalGateModal } from './components/ParentalGateModal';
 import { stopCelebrations } from './utils/confetti';
 import { GameStage } from './components/GameStage';
@@ -12,12 +11,13 @@ import { useGameTimeouts } from './hooks/useGameTimeouts';
 import { SplashLoader } from './components/SplashLoader';
 import { useViewportLock } from './hooks/useViewportLock';
 
-import { getAudioContext, setSpeechLanguage, setBGMScene, startBGM, stopBGM, setBGMVolume, setSFXVolume, playStarGain, speakText, stopAllSpeech, stopPlaySounds, setAudioPreferences } from './utils/soundEngine';
+import { getAudioContext, setSpeechLanguage, setBGMScene, startBGM, stopBGM, setBGMVolume, setSFXVolume, speakText, stopAllSpeech, stopPlaySounds, setAudioPreferences } from './utils/soundEngine';
 import { listenForAudioGestures } from './utils/audioContextLifecycle';
 import { Moon, Shield } from 'lucide-react';
 import { refreshChildProfile } from './utils/ageEngine';
 import { advancePlayTime, createForegroundClock, localPlayDate, refreshPlaySession, restartPlayTimer } from './utils/playSession';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { recordPlaySuccess } from './utils/juice';
 
 const OnboardingScreen = lazy(() => import('./screens/OnboardingScreen').then(module => ({ default: module.OnboardingScreen })));
 const FriendDayScreen = lazy(() => import('./screens/FriendDayScreen').then(m => ({ default: m.FriendDayScreen })));
@@ -49,7 +49,8 @@ const FeedingGame = lazy(() => import('./screens/games/FeedingGame').then(module
 const BubblePopGame = lazy(() => import('./screens/games/BubblePopGame').then(module => ({ default: module.BubblePopGame })));
 const PeekabooHideGame = lazy(() => import('./screens/games/PeekabooHideGame').then(module => ({ default: module.PeekabooHideGame })));
 const AnimalXylophoneGame = lazy(() => import('./screens/games/AnimalXylophoneGame').then(module => ({ default: module.AnimalXylophoneGame })));
-const HomeScreen = lazy(() => import('./screens/HomeScreen').then(module => ({ default: module.HomeScreen })));
+const loadHomeScreen = () => import('./screens/HomeScreen').then(module => ({ default: module.HomeScreen }));
+const HomeScreen = lazy(loadHomeScreen);
 const PathTracingGame = lazy(() => import('./screens/games/PathTracingGame').then(module => ({ default: module.PathTracingGame })));
 const FruitHarvestGame = lazy(() => import('./screens/games/FruitHarvestGame').then(module => ({ default: module.FruitHarvestGame })));
 const SymmetryPuzzleGame = lazy(() => import('./screens/games/SymmetryPuzzleGame').then(module => ({ default: module.SymmetryPuzzleGame })));
@@ -134,12 +135,20 @@ export default function App() {
   });
 
   const [showSplash, setShowSplash] = useState(true);
+  const [homeReady, setHomeReady] = useState(false);
+  useEffect(() => {
+    let mounted = true;
+    // Prepare the actual destination; scenery may fade in independently on slow networks.
+    const scenery = new Image();
+    scenery.src = '/art/playground-meadow.jpg';
+    void loadHomeScreen().catch(() => {}).finally(() => { if (mounted) setHomeReady(true); });
+    return () => { mounted = false; };
+  }, []);
   const finishSplash = useCallback(() => setShowSplash(false), []);
   const [homeStep, setHomeStep] = useState<'friends' | 'games'>('friends');
-  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+  const { clearGameTimeouts } = useGameTimeouts();
   const [currentScreen, setCurrentScreen] = useState<'home' | 'game' | 'day' | 'bugs' | 'stickers' | 'aquarium' | 'park' | 'talk' | 'parent' | 'drawing'>('home');
   const [activeGameId, setActiveGameId] = useState<GameId | null>(null);
-  const [showConfetti, setShowConfetti] = useState(false);
   const [isParentGateOpen, setIsParentGateOpen] = useState(false);
   const homeScrollTopRef = useRef(0);
   const previousHomeStepRef = useRef(homeStep);
@@ -169,7 +178,6 @@ export default function App() {
     stopPlaySounds();
     stopCelebrations();
     clearGameTimeouts();
-    setShowConfetti(false);
     setActiveGameId(null);
     setCurrentScreen('home');
     if (currentScreen === 'home') {
@@ -252,9 +260,7 @@ export default function App() {
 
   // Play Celebration when a quiz round is completed (점수 누적 없이 순수한 성취 축하)
   const handleCompleteQuiz = (_starsEarned: number, completedGameId: GameId | null = activeGameId) => {
-    const calm = ['goodnight_sleep', 'sensory_paint', 'emotion_face'].includes(completedGameId || '');
-    setShowConfetti(!calm && !document.hidden);
-    if (!calm) playStarGain(appState.soundEnabled && !document.hidden);
+    if (!document.hidden) recordPlaySuccess();
 
     setAppState((prev) => {
       // 완료한 게임 카운트 및 캐릭터별 놀이 횟수 부모 대시보드 통계용 기록
@@ -274,7 +280,6 @@ export default function App() {
       };
     });
 
-    scheduleGameTimeout(() => setShowConfetti(false), 1800);
   };
 
   const handleToggleGameDisabled = (gameId: GameId) => {
@@ -365,7 +370,7 @@ export default function App() {
         );
 
       case 'day':
-        return <FriendDayScreen buddy={appState.selectedCharacter} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} onCompleteGame={id => handleCompleteQuiz(1, id)} onGoHome={handleGoHome} />;
+        return <FriendDayScreen buddy={appState.selectedCharacter} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} microphoneEnabled={appState.microphoneEnabled === true} onCompleteGame={id => handleCompleteQuiz(1, id)} onGoHome={handleGoHome} />;
 
       case 'drawing':
         return (
@@ -424,6 +429,7 @@ export default function App() {
               setAppState(prev => ({ ...prev, speechLanguage: language }));
             }}
             onToggleSound={handleToggleSound}
+            onUpdateMicrophone={enabled => setAppState(prev => ({ ...prev, microphoneEnabled: enabled }))}
             onToggleHaptics={() => setAppState(prev => ({ ...prev, hapticsEnabled: prev.hapticsEnabled === false }))}
             onToggleBGM={() =>
               setAppState((prev) => ({ ...prev, bgmEnabled: !prev.bgmEnabled }))
@@ -461,7 +467,7 @@ export default function App() {
             fallbackTitle="앗! 이 놀이에서 동물 친구가 잠시 쉬고 있어요!"
             onReset={handleGoHome}
           >
-            <GameStage gameId={activeGameId || 'object_recognition'} buddy={appState.selectedCharacter} soundEnabled={soundEnabled}>
+            <GameStage gameId={activeGameId || 'object_recognition'} buddy={appState.selectedCharacter} soundEnabled={soundEnabled} microphoneEnabled={appState.microphoneEnabled === true}>
             {(() => {
               switch (activeGameId) {
                 // 기존 7개 게임
@@ -730,7 +736,6 @@ export default function App() {
       <Suspense fallback={null}>
         <TouchEffects active={!showSplash && !isParentGateOpen && currentScreen !== 'parent' && !appState.isTimeUp} screenKey={`${currentScreen}:${activeGameId}:${homeStep}`} hapticsEnabled={appState.hapticsEnabled !== false} />
       </Suspense>
-      <ConfettiEffect active={showConfetti} buddy={appState.selectedCharacter} />
 
       {!showSplash && <>
       <Header
@@ -768,6 +773,7 @@ export default function App() {
 
       {showSplash && (
         <SplashLoader
+          ready={homeReady}
           onFinish={finishSplash}
           childName={childName}
           soundEnabled={soundEnabled}

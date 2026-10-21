@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { emitWindGust } from '../utils/juice';
+import { createMediaRequestGuard } from '../utils/microphonePermission';
 import { playWindChime } from '../utils/soundEngine';
 
 /**
@@ -20,10 +21,13 @@ export function detectBlowEnergy(bins: ArrayLike<number>, threshold = 68): numbe
   return Math.min(1.8, Math.max(0.45, (avg - threshold) / 75 + 0.55));
 }
 
-export function useBlowSensor(soundEnabled = true, onBlow?: (intensity: number) => void) {
+export function useBlowSensor(soundEnabled = true, onBlow?: (intensity: number) => void, allowMicrophone = false) {
   const [micActive, setMicActive] = useState(false);
   const [blowing, setBlowing] = useState(false);
-  const streamRef = useRef<MediaStream | null>(null);
+  const [media] = useState(createMediaRequestGuard);
+  const mounted = useRef(true);
+  const microphoneAllowed = useRef(allowMicrophone);
+  microphoneAllowed.current = allowMicrophone;
   const ctxRef = useRef<AudioContext | null>(null);
   const timerRef = useRef<number | null>(null);
   const blowVisualTimerRef = useRef<number | null>(null);
@@ -36,16 +40,13 @@ export function useBlowSensor(soundEnabled = true, onBlow?: (intensity: number) 
       window.clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
+    media.stop();
     if (ctxRef.current && ctxRef.current.state !== 'closed') {
       void ctxRef.current.close().catch(() => {});
       ctxRef.current = null;
     }
     setMicActive(false);
-  }, []);
+  }, [media]);
 
   const triggerGust = useCallback(
     (intensity = 1.1) => {
@@ -68,26 +69,28 @@ export function useBlowSensor(soundEnabled = true, onBlow?: (intensity: number) 
     // Always trigger an immediate satisfying wind gust on tap
     triggerGust(1.15);
 
-    if (micActive) {
+    if (micActive || !allowMicrophone) {
       return;
     }
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
       return;
     }
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false,
-        },
-      });
-      streamRef.current = stream;
+      // Child taps never open a permission dialog. Unsupported permission queries
+      // keep the fully playable tap gesture instead of guessing OS authorization.
+      const permission = await navigator.permissions?.query({ name: 'microphone' as PermissionName });
+      if (!mounted.current || !microphoneAllowed.current || permission?.state !== 'granted' || document.hidden) return;
+      const stream = await media.acquire(() => navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: false },
+      }));
+      if (!stream) return;
       const AudioCtx =
         window.AudioContext ||
         (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       const ctx = new AudioCtx();
       ctxRef.current = ctx;
+      await ctx.resume();
+      if (!mounted.current || !microphoneAllowed.current || ctxRef.current !== ctx || document.hidden) return;
       const source = ctx.createMediaStreamSource(stream);
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 256;
@@ -106,16 +109,20 @@ export function useBlowSensor(soundEnabled = true, onBlow?: (intensity: number) 
       }, 65);
     } catch {
       // Permission denied or no mic available: tap-to-blow still works 100%!
-      setMicActive(false);
+      stopMic();
     }
-  }, [micActive, triggerGust]);
+  }, [micActive, triggerGust, allowMicrophone, media, stopMic]);
+
+  useEffect(() => { if (!allowMicrophone) stopMic(); }, [allowMicrophone, stopMic]);
 
   useEffect(() => {
+    mounted.current = true;
     const onVis = () => {
       if (document.hidden) stopMic();
     };
     document.addEventListener('visibilitychange', onVis);
     return () => {
+      mounted.current = false;
       document.removeEventListener('visibilitychange', onVis);
       if (blowVisualTimerRef.current !== null) {
         window.clearTimeout(blowVisualTimerRef.current);

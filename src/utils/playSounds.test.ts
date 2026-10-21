@@ -11,7 +11,7 @@ test('instrument has eight ordered notes across one octave', () => {
 test('play sounds honor mute, bound rapid polyphony and stop every voice on exit', async () => {
   const savedWindow = globalThis.window;
   const voices: { stopped: boolean; disconnected: boolean; frequency: { value: number } }[] = [];
-  const parameter = () => ({ value: 0, setValueAtTime(v: number) { this.value = v; }, linearRampToValueAtTime(v: number) { this.value = v; }, exponentialRampToValueAtTime(v: number) { this.value = v; } });
+  const parameter = () => ({ value: 0, cancelScheduledValues() {}, setTargetAtTime(v: number) { this.value = v; }, setValueAtTime(v: number) { this.value = v; }, linearRampToValueAtTime(v: number) { this.value = v; }, exponentialRampToValueAtTime(v: number) { this.value = v; } });
   const timers = new Set<number>();
   const durations: number[] = [];
   let timerId = 0;
@@ -39,6 +39,11 @@ test('play sounds honor mute, bound rapid polyphony and stop every voice on exit
     assert.equal(voices.length, 0);
     sound.playXylophoneNote(440);
     assert.equal(voices[0].frequency.value, 440, 'the fundamental matches the selected key');
+    const effects = sound.getSfxDestination(sound.getAudioContext()) as GainNode;
+    sound.setBGMDucked('speech', true);
+    assert.equal(effects.gain.value, .28, 'character speech lowers the effects bus');
+    sound.setBGMDucked('speech', false);
+    assert.equal(effects.gain.value, 1, 'effects recover when speech ends');
     for (let i = 0; i < 30; i++) sound.playXylophoneNote(XYLOPHONE_KEYS[i % 8].frequency);
     for (const kind of ['brush', 'chew', 'bubble'] as const) sound.playCareSound(kind);
     assert.ok(voices.filter(voice => !voice.stopped).length <= 32, 'rapid taps never accumulate unbounded audio nodes');

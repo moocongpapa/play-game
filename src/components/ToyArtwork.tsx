@@ -67,7 +67,7 @@ export function ToyArtwork({ emoji, className = '', label }: { emoji: string; cl
     const colors = [...new Set(template.regions.map(r => r.fixed || regionColor(template, r.id, base)))];
     drawing = <>
       <defs>{colors.map((color, i) => <linearGradient key={color} id={`${uid}-${i}`} x1="0%" y1="0%" x2="80%" y2="100%">
-        <stop stopColor={color} /><stop offset="1" stopColor={color} style={{ stopColor: `color-mix(in srgb, ${color} 86%, #795e46)` }} />
+        <stop stopColor={color} style={{ stopColor: `color-mix(in srgb, ${color} 84%, #fff9e9)` }} /><stop offset=".4" stopColor={color} /><stop offset="1" stopColor={color} style={{ stopColor: `color-mix(in srgb, ${color} 86%, #795e46)` }} />
       </linearGradient>)}</defs>
       <g stroke="#725744" strokeOpacity=".55" strokeWidth="3.5" strokeLinejoin="round" strokeLinecap="round">
         {template.regions.map(r => <path key={r.id} d={r.d} fill={`url(#${uid}-${colors.indexOf(r.fixed || regionColor(template, r.id, base))})`} />)}

@@ -1,6 +1,6 @@
 import { DEFAULT_SPEECH_LANGUAGE, chooseSpeechVoice, localizeSpeech, type SpeechLanguage } from './speechLanguage';
 import { getCharacterVoice } from '../data/characterVoices';
-import { getComboState, randomEffectPitch } from './juice';
+import { getComboState, getPlayFeedbackMode, randomEffectPitch } from './juice';
 import { BACKGROUND_MUSIC, SLEEP_MUSIC, type MusicTrack } from '../data/backgroundMusic';
 import { ANIMAL_RECORDINGS, resolveAnimalSound } from '../data/animalSounds';
 import { createRoundDeck } from './roundDeck';
@@ -103,6 +103,7 @@ function applyBgmVolume() {
 
 export function setBGMDucked(reason: 'speech' | 'animal' | 'rhythm' | 'instrument' | 'effect' | 'video', ducked: boolean) {
   if (ducked) bgmDucks.add(reason); else bgmDucks.delete(reason);
+  if (reason === 'speech') syncEffectVolume();
   applyBgmVolume();
 }
 
@@ -229,12 +230,29 @@ export function setBGMVolume(vol: number) {
 
 let requestedSfxVolume = 1.0;
 let sfxGainNode: GainNode | null = null;
+let voiceGainNode: GainNode | null = null;
+function effectVolume() { return requestedSfxVolume * (bgmDucks.has('speech') ? .28 : 1) * (getPlayFeedbackMode() === 'quiet' ? .5 : 1); }
+function syncEffectVolume() {
+  if (!sfxGainNode || !audioCtx || audioCtx.state === 'closed') return;
+  sfxGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+  sfxGainNode.gain.setTargetAtTime(effectVolume(), audioCtx.currentTime, .07);
+}
+// Speech has its own bus so effect ducking never muffles the character.
+function getVoiceDestination(ctx: AudioContext): AudioNode {
+  if (typeof ctx.createGain !== 'function') return ctx.destination;
+  if (!voiceGainNode || voiceGainNode.context !== ctx) {
+    voiceGainNode = ctx.createGain();
+    voiceGainNode.gain.setValueAtTime(requestedSfxVolume, ctx.currentTime);
+    voiceGainNode.connect(ctx.destination);
+  }
+  return voiceGainNode;
+}
 
 export function getSfxDestination(ctx: AudioContext): AudioNode {
   if (typeof ctx.createGain !== 'function') return ctx.destination;
   if (!sfxGainNode || sfxGainNode.context !== ctx) {
     sfxGainNode = ctx.createGain();
-    sfxGainNode.gain.setValueAtTime(requestedSfxVolume, ctx.currentTime);
+    sfxGainNode.gain.setValueAtTime(effectVolume(), ctx.currentTime);
     sfxGainNode.connect(ctx.destination);
   }
   return sfxGainNode;
@@ -242,9 +260,10 @@ export function getSfxDestination(ctx: AudioContext): AudioNode {
 
 export function setSFXVolume(vol: number) {
   requestedSfxVolume = Math.max(0, Math.min(1.0, vol));
+  if (voiceGainNode && audioCtx && audioCtx.state !== 'closed') voiceGainNode.gain.setTargetAtTime(requestedSfxVolume, audioCtx.currentTime, .05);
   if (sfxGainNode && audioCtx && audioCtx.state !== 'closed') {
     sfxGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
-    sfxGainNode.gain.setTargetAtTime(requestedSfxVolume, audioCtx.currentTime, 0.05);
+    sfxGainNode.gain.setTargetAtTime(effectVolume(), audioCtx.currentTime, 0.05);
   }
 }
 
@@ -532,7 +551,7 @@ const COMBO_PENTATONIC_HZ = [523.25, 587.33, 659.25, 783.99, 880.0, 1046.5, 1174
  * 콤보 피버 마림바/첼레스타 펜타토닉 화음 (연속 성공 시 음계가 맑게 올라감)
  */
 export function playComboChime(combo: number, enabled = true) {
-  if (!enabled || !masterSoundEnabled || isPageHidden() || combo < 1) return;
+  if (!enabled || !masterSoundEnabled || isPageHidden() || getPlayFeedbackMode() !== 'play' || combo < 1 || isSpeechBusy()) return;
   try {
     const ctx = getAudioContext();
     const now = ctx.currentTime;
@@ -866,7 +885,7 @@ export function speakText(text: string, enabled = true, options: SpeakOptions = 
         language: speechLanguage,
         characterId: options.characterId,
         audioCtx: ctx,
-        destination: getSfxDestination(ctx),
+        destination: getVoiceDestination(ctx),
         onStart: () => options.onStart?.('ai'),
         onEnd: options.onEnd,
       }).then((ok) => {

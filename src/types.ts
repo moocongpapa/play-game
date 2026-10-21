@@ -113,6 +113,7 @@ export interface AppState {
   ttsEnabled: boolean;
   speechLanguage: SpeechLanguage;
   hapticsEnabled?: boolean;
+  microphoneEnabled?: boolean;
   timerMinutes: number; // 0 means unlimited
   playTimeSeconds: number;
   playDate: string; // Device-local calendar date for today's foreground play.

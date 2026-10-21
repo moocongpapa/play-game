@@ -5,12 +5,12 @@ import { CharacterAvatar } from './CharacterAvatar';
 import {
   playWelcomeFanfare,
   playBubblePop,
-  playCelebrationFanfare,
 } from '../utils/soundEngine';
 import './SplashLoader.css';
 import type { CharacterId } from '../types';
 
 interface SplashLoaderProps {
+  ready: boolean;
   onFinish: () => void;
   childName: string;
   soundEnabled?: boolean;
@@ -43,9 +43,8 @@ const SPLASH_CHARACTERS: ReadonlyArray<{
 ];
 
 const TAP_EMOJIS = ['⭐', '💖', '✨', '🎈', '🎉', '🌟', '🌈'];
-const TOTAL_DURATION_MS = 5200;
 
-export const SplashLoader: React.FC<SplashLoaderProps> = ({ onFinish, childName, soundEnabled = true }) => {
+export const SplashLoader: React.FC<SplashLoaderProps> = ({ ready, onFinish, childName, soundEnabled = true }) => {
   const [progress, setProgress] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [taps, setTaps] = useState<FloatingTap[]>([]);
@@ -59,38 +58,18 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onFinish, childName,
   }, [onFinish]);
 
   useEffect(() => {
-    if (soundEnabled) {
-      playWelcomeFanfare(true);
-    }
-
-    // Choreographed sound cues: rapid wave arrivals then grand celebration
-    const waveTimers = [
-      setTimeout(() => soundEnabled && playBubblePop(true), 250),
-      setTimeout(() => soundEnabled && playBubblePop(true), 750),
-      setTimeout(() => soundEnabled && playBubblePop(true), 1250),
-      setTimeout(() => soundEnabled && playBubblePop(true), 1750),
-      setTimeout(() => soundEnabled && playCelebrationFanfare(true), 2200),
-    ];
-
+    if (soundEnabled) playWelcomeFanfare(true);
     const start = performance.now();
-    const interval = window.setInterval(() => {
-      const now = performance.now();
-      const diff = now - start;
-      const p = Math.min(1, diff / TOTAL_DURATION_MS);
-      setProgress(p);
-      setElapsed(diff);
-
-      if (diff >= TOTAL_DURATION_MS) {
-        window.clearInterval(interval);
-        handleFinish();
-      }
-    }, 30);
-
-    return () => {
-      window.clearInterval(interval);
-      waveTimers.forEach(t => clearTimeout(t));
-    };
-  }, [soundEnabled, handleFinish]);
+    const interval = window.setInterval(() => setElapsed(performance.now() - start), 80);
+    return () => clearInterval(interval);
+  }, [soundEnabled]);
+  useEffect(() => {
+    setProgress(ready ? 1 : .15);
+    if (!ready) return;
+    // No minimum animation duration: a cached app opens on the next paint.
+    const frame = requestAnimationFrame(handleFinish);
+    return () => cancelAnimationFrame(frame);
+  }, [ready, handleFinish]);
 
   const handleStageTap = (e: React.MouseEvent<HTMLDivElement>) => {
     if (soundEnabled) playBubblePop(true);
@@ -109,8 +88,7 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onFinish, childName,
     return () => clearTimeout(timer);
   }, [taps]);
 
-  const isCelebrationPhase = elapsed >= 2200;
-  const arrivedCount = SPLASH_CHARACTERS.filter(f => elapsed >= f.delay * 1000).length;
+  const isCelebrationPhase = ready;
 
   return (
     <div
@@ -146,6 +124,7 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onFinish, childName,
             e.stopPropagation();
             handleFinish();
           }}
+          disabled={!ready}
           aria-label="놀이터로 바로 가기"
         >
           <span>바로 시작하기</span>
@@ -178,7 +157,7 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onFinish, childName,
         {/* 8 Character Friends Grand Showcase */}
         <div className="splash-friends-roster">
           {SPLASH_CHARACTERS.map((friend, index) => {
-            const hasArrived = elapsed >= friend.delay * 1000;
+            const hasArrived = elapsed >= friend.delay * 100;
             const style = {
               '--friend-color': friend.color,
               '--friend-bg': friend.bg,
@@ -250,11 +229,7 @@ export const SplashLoader: React.FC<SplashLoaderProps> = ({ onFinish, childName,
           </div>
         </div>
         <p className="splash-progress-hint">
-          {arrivedCount < 8
-            ? `친구들이 모이고 있어요! (${arrivedCount}/8) 🎶`
-            : elapsed >= 4500
-              ? '놀이숲 문이 활짝 열려요! 🎈'
-              : '다 모였어요! 우리 함께 신나게 놀자! 🌈✨'}
+          {ready ? '놀이숲 문이 열렸어요!' : '놀이숲을 준비하고 있어요…'}
         </p>
       </footer>
 

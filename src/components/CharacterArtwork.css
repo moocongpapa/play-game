@@ -46,7 +46,7 @@
 .character-avatar:is([data-character='ggomi'], [data-character='dochi'], [data-character='ggulgguli']) { --friend-wave-lift: -70deg; }
 .character-artwork[data-expression='talking'] .friend-mouth {
   transform-box: fill-box; transform-origin: 50% 25%;
-  animation: friend-speaking .46s ease-in-out infinite;
+  animation: friend-speaking var(--friend-speech, .46s) ease-in-out infinite;
 }
 .character-artwork[data-expression='curious'] .friend-head { rotate: -4deg; }
 .character-artwork[data-expression='comfort'] .friend-head { rotate: 3deg; }

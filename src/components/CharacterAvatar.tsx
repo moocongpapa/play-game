@@ -4,6 +4,7 @@ import type { CharacterId } from '../types';
 import { CHARACTERS } from '../data/characters';
 import { CharacterArtwork, type CharacterExpression, type CharacterView } from './CharacterArtwork';
 import { subscribeSpeechState } from '../utils/soundEngine';
+import { CHARACTER_PERFORMANCE } from '../utils/characterPerformance';
 import { emitJuice } from '../utils/juice';
 
 type CharacterMood = 'happy' | 'dancing' | 'talking' | 'waving' | 'excited' | 'thinking' | 'still' | 'sleepy' | 'comfort';
@@ -99,8 +100,8 @@ export function CharacterAvatar({ id, size = 'md', mood = 'happy', expression, v
 
   return <motion.div
     animate={animate}
-    transition={{ duration: still ? .2 : effectiveMood === 'talking' ? 0.68 : lively ? 1.5 : RHYTHMS[id][0], repeat: still ? 0 : Infinity, ease: 'easeInOut' }}
-    style={{ transformOrigin: '50% 94%', '--friend-breath': `${RHYTHMS[id][0]}s`, '--friend-delay': `${RHYTHMS[id][1]}s` } as CSSProperties}
+    transition={{ duration: still ? .2 : effectiveMood === 'talking' ? CHARACTER_PERFORMANCE[id].chewBeat / 600 : lively ? 1.5 : RHYTHMS[id][0], repeat: still ? 0 : Infinity, ease: 'easeInOut' }}
+    style={{ transformOrigin: '50% 94%', '--friend-breath': `${RHYTHMS[id][0]}s`, '--friend-speech': `${CHARACTER_PERFORMANCE[id].chewBeat * 1.1}ms`, '--friend-delay': `${RHYTHMS[id][1]}s` } as CSSProperties}
     data-character={id} data-mood={effectiveMood} data-speaking={liveSpeaking || undefined} data-idle={!still && !lively} data-portrait={portrait === 'portrait'}
     data-juice-target={onClick ? '' : undefined}
     onPointerDown={reactToTouch}

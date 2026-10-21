@@ -21,8 +21,8 @@ const GAME_LOADERS = [
 ];
 const GAMES = GAME_LOADERS.map(load => lazy(load));
 
-export function FriendDayScreen({ onCompleteGame, onGoHome: _onGoHome, ...props }: Omit<ToddlerGameProps, 'onCompleteQuiz'> & {
-  onCompleteGame: (gameId: GameId) => void; onGoHome: () => void;
+export function FriendDayScreen({ onCompleteGame, onGoHome: _onGoHome, microphoneEnabled = false, ...props }: Omit<ToddlerGameProps, 'onCompleteQuiz'> & {
+  onCompleteGame: (gameId: GameId) => void; onGoHome: () => void; microphoneEnabled?: boolean;
 }) {
   const [step, setStep] = useState(0);
   const [done, setDone] = useState(false);
@@ -58,7 +58,7 @@ export function FriendDayScreen({ onCompleteGame, onGoHome: _onGoHome, ...props 
     </Fragment>)}</div>
     {finished ? <div className="day-finale"><PlayResultScene kind="dance" buddy={props.buddy} friends={[props.buddy]} caption="우리 함께 만든 멋진 하루!" /><RoundContinuation onNext={next} /></div>
     :
-      <GameStage gameId={scene.gameId} buddy={props.buddy} soundEnabled={props.soundEnabled}>
+      <GameStage gameId={scene.gameId} buddy={props.buddy} soundEnabled={props.soundEnabled} microphoneEnabled={microphoneEnabled}>
         <Suspense fallback={<div className="game-loading"><CharacterAvatar id={props.buddy} mood="waving" /><span className="sr-only">다음 놀이를 꺼내고 있어!</span></div>}>
           <Game key={step} {...props} onCompleteQuiz={() => {
             if (completedStep.current) return;

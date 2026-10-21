@@ -9,6 +9,23 @@ export interface ComboState {
 let currentCombo = 0;
 const comboListeners = new Set<(state: ComboState) => void>();
 const windListeners = new Set<(intensity: number) => void>();
+export type PlayFeedbackMode = 'play' | 'care' | 'quiet';
+let feedbackMode: PlayFeedbackMode = 'play';
+export const getPlayFeedbackMode = () => feedbackMode;
+export function setPlayFeedbackMode(mode: PlayFeedbackMode) { feedbackMode = mode; }
+
+/** A solved round is a semantic event. Decorative stars/snaps never award combos. */
+export function recordPlaySuccess() {
+  if (feedbackMode !== 'play') return;
+  currentCombo += 1;
+  notifyCombo();
+}
+
+/** Keep care faces clear: feedback lands beside the portrait, not over its mouth. */
+export function feedbackPoint(x: number, y: number, width: number, height: number) {
+  if (feedbackMode !== 'care') return { x, y };
+  return { x: x < width / 2 ? Math.min(24, width / 2) : Math.max(0, width - 24), y: Math.max(32, Math.min(height - 32, y)) };
+}
 
 function notifyCombo() {
   const state: ComboState = { combo: currentCombo, fever: currentCombo >= 3 };
@@ -42,10 +59,7 @@ export function subscribeWindGust(listener: (intensity: number) => void) {
 }
 
 export function emitJuice(impact: JuiceImpact) {
-  if (impact.kind === 'success' || impact.kind === 'snap') {
-    currentCombo += 1;
-    notifyCombo();
-  }
+  if (feedbackMode === 'quiet') return;
   listeners.forEach(listener => listener(impact));
 }
 export function subscribeJuice(listener: (impact: JuiceImpact) => void) {

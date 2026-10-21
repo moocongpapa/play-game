@@ -11,7 +11,7 @@ import { localizeSpeech } from './speechLanguage';
 test('every care action has a shipped, measured voice for all eight friends in both languages', async () => {
   const files = new Set<string>();
   for (const character of Object.keys(CHARACTER_VOICES)) for (const reaction of Object.values(CARE_REACTIONS)) for (const language of ['ko', 'en'] as const) {
-    const text = reaction[language], id = bundledSpeechId(text, character, language);
+    const text = reaction[language], id = await bundledSpeechId(text, character, language);
     assert.ok(id, `${character}/${language}/${text} must never require runtime generation`);
     assert.equal(localizeSpeech(reaction.ko, language), text);
     const seconds = CARE_VOICE_DURATIONS[speechSynthesisKey(text, character, language)];

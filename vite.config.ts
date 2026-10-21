@@ -50,6 +50,9 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks(id) {
+            // Shared preload helpers must not pull the entire optional renderer
+            // into the first page merely because Rollup assigned a helper to it.
+            if (id.includes('vite/preload-helper') || id.includes('commonjsHelpers')) return 'vendor-runtime';
             if (id.includes('node_modules')) {
               if (id.includes('react/') || id.includes('react-dom/')) {
                 return 'vendor-react';

@@ -1,17 +1,17 @@
 # 게임 목록과 등록 방법
 
-기준일: 2026-10-10 · [목차](README.md)
+기준일: 2026-10-21 · [목차](README.md)
 
-실제 홈 메뉴는 [GAME_CATALOG](../src/data/gameCatalog.ts)와 `availableGameIds`를 기준으로 합니다. 이름·설명은 접근성·음성·부모 정보에도 사용하지만 홈 카드는 그림만 표시합니다. 아래 목록은 현재 소스의 33종을 전부 포함합니다.
+실제 홈 메뉴는 [GAME_CATALOG](../src/data/gameCatalog.ts)와 `availableGameIds`를 기준으로 합니다. 이름·설명은 접근성·음성·부모 정보에도 사용하지만 홈 카드는 그림만 표시합니다. 아래 목록은 현재 소스의 34종을 전부 포함합니다.
 
 ## 연령과 난이도
 
 | 그룹 | 월령 판정 | 메뉴 게임 수 | 기본 보기 | 기본 문제 제한 | 수 세기 범위 |
 |---|---|---|---|---|---|
-| baby · 아기반 | 36개월 미만 | 28 | 2개 | 없음 | 1~3 |
+| baby · 아기반 | 36개월 미만 | 16 | 2개 | 없음 | 1~3 |
 | sprout · 새싹반 | 36~47개월 | 32 | 4개 | 없음 | 1~7 |
-| bloom · 꽃잎반 | 48~59개월 | 33 | 4개 | 30초 | 1~10 |
-| star · 별님반 | 60개월 이상 | 33 | 4개 | 20초 | 1~20 |
+| bloom · 꽃잎반 | 48~59개월 | 34 | 4개 | 30초 | 1~10 |
+| star · 별님반 | 60개월 이상 | 34 | 4개 | 20초 | 1~20 |
 
 기본 프로필은 유하, 2023-01-03입니다. 2026-10-09 기준 45개월로 새싹반입니다. 월령은 현재 날짜와 생일의 현지 날짜로 계산합니다. 보호자 설정에서 연령 자동 맞춤 또는 수동 단계 선택, 개별 놀이 ON/OFF(연령대별 필터·전체 켜기 포함)를 제어할 수 있습니다. 숫자 놀이터는 아기반 0~10, 새싹반 0~20, 꽃잎반·별님반 0~100 범위를 사용합니다.
 
@@ -51,6 +51,7 @@
 | `balloon_pop` | 풍선 팡팡 | 음악·창작 | 아기반부터 | [BalloonPopGame](../src/screens/games/BalloonPopGame.tsx) |
 | `fruit_munch` | 과일 냠냠 몇 개? | 관찰·논리 | 아기반부터 | [FruitMunchGame](../src/screens/games/FruitMunchGame.tsx) |
 | `trampoline_jump` | 통통 트램펄린 | 음악·창작 | 아기반부터 | [TrampolineJumpGame](../src/screens/games/TrampolineJumpGame.tsx) |
+| `block_tower` | 차곡차곡 블록 탑 | 음악·창작 | 아기반부터 | [BlockTowerGame](../src/screens/games/BlockTowerGame.tsx) |
 | `bubble_bath` | 뽀글뽀글 거품 목욕 | 생활·감정 | 아기반부터 | [BubbleBathGame](../src/screens/games/BubbleBathGame.tsx) |
 
 ## 홈 하단의 자유 놀이와 연속 놀이

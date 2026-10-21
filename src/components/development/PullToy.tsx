@@ -26,9 +26,17 @@ export function PullToy({ children, label, direction = 1, distance = 90, onPull,
   useEffect(() => { if (disabled) cancel(); }, [disabled]);
   const commit = () => { if (!disabled) { emitJuice({ kind: 'snap' }); onPull(); } };
   return <motion.button type="button" className={`pull-toy ${className}`} aria-label={label} disabled={disabled} style={{ y }} whileTap={reduced ? undefined : { scale: 1.1 }} transition={JUICE_SPRING}
-    onPointerDown={e => { if (disabled || !e.isPrimary || e.button !== 0) return; animation.current?.stop(); drag.current = { id: e.pointerId, start: e.clientY, amount: 0, node: e.currentTarget }; e.currentTarget.setPointerCapture(e.pointerId); }}
+    onPointerDown={e => {
+      // Motion may synthesize a press for keyboard activation. Only a real,
+      // active pointer can be captured; the native click handles Enter/Space.
+      if (disabled || !e.isPrimary || e.button !== 0 || !e.pointerType || e.pointerId < 0) return;
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch { return; }
+      animation.current?.stop();
+      drag.current = { id: e.pointerId, start: e.clientY, amount: 0, node: e.currentTarget };
+    }}
     onPointerMove={e => { const d = drag.current; if (!d || d.id !== e.pointerId) return; d.amount = Math.max(0, Math.min(1, (e.clientY - d.start) * direction / distance)); y.set(d.amount * distance * direction); progress.current?.(d.amount); }}
     onPointerUp={e => { const d = drag.current; if (!d || d.id !== e.pointerId) return; const accepted = d.amount >= .45 || Math.abs(e.clientY - d.start) < 6; cancel(); if (accepted) commit(); }}
+    onKeyDown={e => { if (e.repeat) e.preventDefault(); }}
     onPointerCancel={cancel} onLostPointerCapture={() => { if (drag.current) cancel(); }} onClick={e => { if (e.detail === 0) commit(); }}>
     {children}
   </motion.button>;

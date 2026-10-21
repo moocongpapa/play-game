@@ -133,3 +133,11 @@
   .play-progress > span { transition: none; }
   .soap-bubble { animation: none; bottom: auto; top: var(--bubble-still-y); transform: translateX(-50%); }
 }
+/* Eyes follow the offered food; a bite ends with a short, satisfied smile. */
+.care-friend .care-canonical-head { transition: transform .18s ease; }
+.feeding-friend .care-mouth-chew, .feeding-friend .care-friend[data-chewing='true'] .friend-cheek { animation-duration: var(--chew-beat,440ms); animation-iteration-count: infinite; }
+.feeding-friend.is-chewing .care-friend { animation-duration: var(--chew-beat,440ms); animation-iteration-count: infinite; }
+.feeding-friend .food-reaction-word { display: none; }
+.feeding-friend .feeding-heart { right: -8%; top: 26%; }
+.feeding-friend .broccoli-crown { top: -10%; }
+@media (prefers-reduced-motion: reduce) { .care-friend .care-canonical-head { transition: none; }.feeding-friend .care-mouth-chew,.feeding-friend .care-friend[data-chewing='true'] .friend-cheek,.feeding-friend.is-chewing .care-friend { animation: none; } }

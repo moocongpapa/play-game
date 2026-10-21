@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { animate, useReducedMotion } from 'motion/react';
-import { createHaptics, JUICE_SPRING, subscribeJuice } from '../utils/juice';
+import { createHaptics, getPlayFeedbackMode, JUICE_SPRING, subscribeJuice } from '../utils/juice';
 import { createTouchParticles, drawTouchParticles } from '../utils/touchParticles';
 
 type Spring = { x: number; y: number; controls: { stop: () => void }[] };
@@ -51,7 +51,8 @@ export function TouchEffects({ active, screenKey, hapticsEnabled }: { active: bo
       if (particles.particles.length) frame = requestAnimationFrame(draw);
     };
     const emit = (x: number, y: number, burst: boolean) => {
-      if (reduced || !ctx || document.hidden) return;
+      if (reduced || !ctx || document.hidden || getPlayFeedbackMode() === 'quiet') return;
+      if (getPlayFeedbackMode() === 'care') return;
       particles.emit(x, y, burst);
       if (!frame) { lastFrame = performance.now(); frame = requestAnimationFrame(draw); }
     };
@@ -83,10 +84,10 @@ export function TouchEffects({ active, screenKey, hapticsEnabled }: { active: bo
     const hide = () => { if (document.hidden) reset(); };
     const resize = () => { reset(); size(); };
     const stop = subscribeJuice(impact => {
-      if (document.hidden || reduced || performance.now() - lastImpact < 180) return;
+      if (document.hidden || reduced || getPlayFeedbackMode() === 'quiet' || performance.now() - lastImpact < 180) return;
       lastImpact = performance.now(); haptics.play(impact.kind === 'snap' ? 'snap' : 'success');
       if (impact.x !== undefined && impact.y !== undefined) emit(impact.x, impact.y, true);
-      if (impact.kind === 'snap') return;
+      if (impact.kind === 'snap' || getPlayFeedbackMode() === 'care') return;
       // Keep navigation and fixed overlays still while the play surface briefly reacts.
       const scene = document.querySelector<HTMLElement>('.game-stage, .greeting-card');
       shake?.cancel();

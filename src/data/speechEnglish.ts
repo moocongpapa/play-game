@@ -3,6 +3,8 @@
  * Keep complete directions here so English works offline without a translation API.
  */
 export const SPEECH_ENGLISH: ReadonlyArray<readonly [string, string]> = [
+  ['블록이 둥실둥실! 화면을 톡 누르면 차곡차곡 쌓여. 함께 멋진 집을 만들자!', 'The block is floating! Tap to stack it. Let us build a lovely house together!'],
+  ['우와! 멋진 블록 집이 완성됐어! 고마워!', 'Wow! Our lovely block house is ready! Thank you!'],
   ['토끼를 누르면 하나 둘 셋, 곰을 누르면 일 이 삼! 숫자가 통통! 함께 눌러 볼까?', 'Tap the bunny or the bear to count! Bouncy numbers! Shall we tap together?'],
   ['토끼는 하나 둘, 곰은 일 이 삼! 톡톡 숫자를 만나 봐!', 'Tap the bunny or the bear and meet the numbers!'],
   ['우와! 멋진 그림을 전시했어!', 'Wow! We displayed a wonderful drawing!'],

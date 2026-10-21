@@ -273,3 +273,47 @@
   .game-stage .game-surface[data-game='shape_color'] .game-board > .drop-slot { height: 128px; min-height: 128px; }
   .game-stage .game-surface:is([data-game='shadow_quiz'], [data-game='shape_color']) .game-board > .drag-hint { display: none; }
 }
+
+/* Size the picture and its frame together, rather than stretching empty cards. */
+.game-stage .game-surface:is([data-game='object_recognition'],[data-game='sound_quiz'],[data-game='cloud_shapes'],[data-game='treasure_hunt'],[data-game='emotion_quiz']) .game-choice-grid {
+  width: min(100%, 680px, 78dvh);
+  align-self: center;
+  flex: 0 0 auto;
+  min-height: 0;
+  grid-auto-rows: auto;
+  margin-block: auto;
+  gap: clamp(12px,2vw,22px);
+}
+.game-stage .game-surface:is([data-game='object_recognition'],[data-game='sound_quiz'],[data-game='cloud_shapes'],[data-game='treasure_hunt'],[data-game='emotion_quiz']) .game-choice-grid > .game-choice {
+  aspect-ratio: 1.12;
+  height: auto;
+  min-height: 100px;
+  max-height: 300px;
+  padding: clamp(12px,2vw,24px);
+  border-width: 2px;
+  border-color: #d8c3c9;
+  box-shadow: 0 4px 0 #cbb6bd, inset 0 2px 0 #fff;
+}
+.game-stage .game-surface:is([data-game='object_recognition'],[data-game='sound_quiz'],[data-game='cloud_shapes'],[data-game='treasure_hunt'],[data-game='emotion_quiz']) .game-choice-grid > .game-choice .toy-art {
+  width: 74%;
+  max-width: 190px;
+  height: auto;
+  max-height: 90%;
+  aspect-ratio: 1;
+}
+@media (orientation: landscape) and (max-height: 540px) {
+  .game-stage .game-surface:is([data-game='object_recognition'],[data-game='sound_quiz'],[data-game='cloud_shapes'],[data-game='treasure_hunt'],[data-game='emotion_quiz']) .game-choice-grid {
+    width: min(100%, 740px);
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+  .game-stage .game-surface .game-choice-grid:has(> :nth-child(4):last-child) { grid-template-columns: repeat(4,minmax(0,1fr)); }
+  .game-stage .game-surface:is([data-game='object_recognition'],[data-game='sound_quiz'],[data-game='cloud_shapes'],[data-game='treasure_hunt'],[data-game='emotion_quiz']) .game-choice-grid > .game-choice {
+    height: clamp(96px,calc(100dvh - 236px),180px);
+    min-height: 96px;
+    max-height: 180px;
+    aspect-ratio: auto;
+  }
+}
+.game-stage .game-surface:is([data-game='object_recognition'],[data-game='sound_quiz'],[data-game='cloud_shapes'],[data-game='treasure_hunt'],[data-game='emotion_quiz']) .game-choice > span:has(> .toy-art) {
+  display: grid; place-items: center; width: 100%; height: 100%; min-height: 0; margin: 0; line-height: 1;
+}

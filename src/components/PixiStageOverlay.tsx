@@ -1,6 +1,8 @@
-import React, { useEffect, useImperativeHandle, useRef, forwardRef } from 'react';
+import React, { useContext, useEffect, useImperativeHandle, useRef, forwardRef } from 'react';
 import { Application, Container, Graphics } from 'pixi.js';
-import { subscribeJuice, subscribeWindGust } from '../utils/juice';
+import { feedbackPoint, getPlayFeedbackMode, subscribeJuice, subscribeWindGust } from '../utils/juice';
+import { useReducedMotion } from 'motion/react';
+import { PlayHintsPausedContext } from './PlayFlowContext';
 import { createPhysicsWorld } from '../utils/physics2d';
 import type { GameTheme } from '../data/gameCatalog';
 
@@ -49,17 +51,22 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
     const physicsWorldRef = useRef(createPhysicsWorld({ width: 400, height: 600, maxBodies: 24 }));
     const physicsGraphicsRef = useRef<Map<number, Graphics>>(new Map());
     const windBoostRef = useRef(0);
-    const reducedMotionRef = useRef(false);
-
+    const reducedMotion = useReducedMotion();
+    const reducedMotionRef = useRef(Boolean(reducedMotion));
+    reducedMotionRef.current = Boolean(reducedMotion);
+    const paused = useContext(PlayHintsPausedContext);
+    const pausedRef = useRef(paused);
+    pausedRef.current = paused;
+    const appRef = useRef<Application | null>(null);
     useEffect(() => {
-      reducedMotionRef.current =
-        typeof window !== 'undefined' &&
-        window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    }, []);
+      const app = appRef.current;
+      if (!app?.renderer) return;
+      if (paused || document.hidden) app.stop(); else app.start();
+    }, [paused]);
 
     const spawnPhysicsCandies = (x: number, y: number, count = 4) => {
       const physLayer = physicsLayerRef.current;
-      if (!physLayer || reducedMotionRef.current) return;
+      if (!physLayer || reducedMotionRef.current || getPlayFeedbackMode() !== 'play') return;
       const world = physicsWorldRef.current;
       const palette = [
         [0xfacc15, 0xfef08a],
@@ -105,7 +112,7 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
 
     const spawnParticles = (options: PixiBurstOptions) => {
       const layer = layerRef.current;
-      if (!layer || reducedMotionRef.current) return;
+      if (!layer || reducedMotionRef.current || pausedRef.current || getPlayFeedbackMode() === 'quiet') return;
 
       const {
         x,
@@ -114,10 +121,11 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
         secondaryColor = 0xffd166,
         count = 18,
         kind = 'juice',
-      } = options;
+      } = { ...options, ...feedbackPoint(options.x, options.y, hostRef.current?.clientWidth || 400, hostRef.current?.clientHeight || 600),
+        count: Math.min(options.count ?? 18, getPlayFeedbackMode() === 'care' ? 7 : 20) };
 
       // Expanding double shockwave ring for juice, star, or bounce bursts
-      if (kind === 'juice' || kind === 'star' || kind === 'bounce') {
+      if (getPlayFeedbackMode() !== 'care' && (kind === 'juice' || kind === 'star' || kind === 'bounce')) {
         const ring = new Graphics();
         ring.circle(0, 0, 22);
         ring.stroke({ width: 4.5, color, alpha: 0.88 });
@@ -271,7 +279,7 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
       const spawnTrailSparkle = (clientX: number, clientY: number, isDown = false) => {
         const host = hostRef.current;
         const layer = layerRef.current;
-        if (!host || !layer || reducedMotionRef.current || document.hidden) return;
+        if (!host || !layer || reducedMotionRef.current || pausedRef.current || document.hidden || getPlayFeedbackMode() !== 'play') return;
         const rect = host.getBoundingClientRect();
         if (
           clientX < rect.left ||
@@ -357,7 +365,7 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
       const stopWind = subscribeWindGust((intensity) => {
         const host = hostRef.current;
         const layer = layerRef.current;
-        if (!host || !layer || reducedMotionRef.current || document.hidden) return;
+        if (!host || !layer || reducedMotionRef.current || pausedRef.current || document.hidden || getPlayFeedbackMode() !== 'play') return;
         const rect = host.getBoundingClientRect();
         if (rect.width <= 0 || rect.height <= 0) return;
 
@@ -402,7 +410,7 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
 
       const stopJuice = subscribeJuice((impact) => {
         const host = hostRef.current;
-        if (!host || reducedMotionRef.current || document.hidden) return;
+        if (!host || reducedMotionRef.current || pausedRef.current || document.hidden || getPlayFeedbackMode() === 'quiet') return;
         const rect = host.getBoundingClientRect();
         if (rect.width <= 0 || rect.height <= 0) return;
 
@@ -473,8 +481,10 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
       const host = hostRef.current;
       if (!host) return;
 
+      if (reducedMotion) return;
       let disposed = false;
       const app = new Application();
+      appRef.current = app;
       let ambientTick = 0;
 
       const setup = async () => {
@@ -580,6 +590,7 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
           }
 
           app.ticker.add((ticker) => {
+            if (document.hidden || pausedRef.current) return;
             const dt = Math.min(2.5, ticker.deltaTime);
             windBoostRef.current *= 0.95;
             ambientTick += (0.02 + windBoostRef.current * 0.025) * dt;
@@ -659,9 +670,17 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
         }
       };
 
-      void setup();
+      const syncVisibility = () => {
+        if (disposed) return;
+        if (!app.renderer) return;
+        if (document.hidden || pausedRef.current) app.stop(); else app.start();
+      };
+      document.addEventListener('visibilitychange', syncVisibility);
+      void setup().then(syncVisibility);
 
       return () => {
+        document.removeEventListener('visibilitychange', syncVisibility);
+        appRef.current = null;
         disposed = true;
         layerRef.current = null;
         physicsLayerRef.current = null;
@@ -676,7 +695,7 @@ export const PixiStageOverlay = forwardRef<PixiStageHandle, PixiStageOverlayProp
           // Ignore teardown errors if init was still in flight
         }
       };
-    }, [ambientKind]);
+    }, [ambientKind, reducedMotion]);
 
     return (
       <div

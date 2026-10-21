@@ -34,7 +34,7 @@ export function CareFriend({ buddy, mouth = 'open', children, className = '', sm
   const c = CHARACTER_ART[buddy];
   const happy = mouth === 'smile' || smilingEyes;
   const expression = sleeping ? 'sleepy' : happy || mouth === 'chew' ? 'excited' : mouth === 'rest' ? 'curious' : 'happy';
-  return <svg viewBox="0 0 300 258" className={`care-friend ${className}`} data-character={buddy} data-expression={expression} data-chewing={mouth === 'chew'} role="img" aria-label={`${CHARACTERS[buddy].name}${faceLabel ? `의 ${faceLabel}` : sleeping ? '의 잠든 얼굴' : hideExpression ? '의 마음 얼굴' : happy ? '의 활짝 웃는 얼굴' : mouth === 'chew' ? '의 냠냠 먹는 얼굴' : mouth === 'rest' ? '의 배고픈 얼굴' : '의 아 벌린 입'}`}>
+  return <svg viewBox="0 0 300 258" className={`care-friend ${className}`} data-protected-face data-character={buddy} data-expression={expression} data-chewing={mouth === 'chew'} role="img" aria-label={`${CHARACTERS[buddy].name}${faceLabel ? `의 ${faceLabel}` : sleeping ? '의 잠든 얼굴' : hideExpression ? '의 마음 얼굴' : happy ? '의 활짝 웃는 얼굴' : mouth === 'chew' ? '의 냠냠 먹는 얼굴' : mouth === 'rest' ? '의 배고픈 얼굴' : '의 아 벌린 입'}`}>
     <CharacterPaint id={buddy} prefix={prefix} />
     <defs>
       <linearGradient id={`${prefix}-mouth`} x2="0" y2="1"><stop stopColor="#754350" /><stop offset="1" stopColor="#a65f72" /></linearGradient>

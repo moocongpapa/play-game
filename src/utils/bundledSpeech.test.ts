@@ -67,7 +67,7 @@ test('bundled speech works without Web Crypto or quota, persists across reload, 
   const clip = catalog.clips.find(item => item.language === 'ko' && item.characters.includes('ggomi') && item.characters.includes('pingu'))!;
   const key = `eleven:${clip.id}`;
   try {
-    assert.equal(bundledSpeechId(clip.text, 'ggomi', 'ko'), clip.id);
+    assert.equal(await bundledSpeechId(clip.text, 'ggomi', 'ko'), clip.id);
     assert.equal(await ai.playGeminiSpeech(clip.text, { characterId: 'ggomi', audioCtx: ctx }), true);
     assert.equal(requests.length, 1);
     assert.equal(rates[0], getCharacterVoice('ggomi').fallbackPlaybackRate);

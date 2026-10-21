@@ -5,6 +5,7 @@ import type { CharacterAudioStatus } from '../data/audioExperience';
 import { normalizeSpokenText, speechAssetId } from '../data/speechSynthesis';
 import { bundledSpeechId, hasBundledSpeech, loadBundledSpeech } from './bundledSpeech';
 import { readSavedAudio, saveAudio, deleteSavedAudio } from './audioCache';
+import { connectCharacterVoice } from '../utils/characterPerformance';
 import { resumeAudioContext } from '../utils/audioContextLifecycle';
 // Provider keys and the SDK stay on the server; the legacy public API is preserved.
 const audioBufferCache = new Map<string, { buffer: AudioBuffer; playbackRate: number }>();
@@ -12,9 +13,10 @@ const preloads = new Map<string, Promise<void>>();
 const speechBufferKey = (text: string, characterId: string, language: SpeechLanguage) => `${CHARACTER_VOICE_REVISION}:${language}:${characterId}:${normalizeSpokenText(text)}`;
 
 /** Only warm shipped clips. Preloading never requests generation or interrupts speech. */
-export function preloadBundledSpeech(text: string, characterId: string, language: SpeechLanguage, ctx: AudioContext): Promise<void> {
+export async function preloadBundledSpeech(text: string, characterId: string, language: SpeechLanguage, ctx: AudioContext): Promise<void> {
   const key = speechBufferKey(text, characterId, language);
-  const id = bundledSpeechId(text, characterId, language);
+  let id: string | undefined;
+  try { id = await bundledSpeechId(text, characterId, language); } catch { return; }
   if (!id || audioBufferCache.has(key) || isPageHidden() || !isGeminiTTSEnabled()) return Promise.resolve();
   const pending = preloads.get(key);
   if (pending) return pending;
@@ -32,6 +34,7 @@ export function preloadBundledSpeech(text: string, characterId: string, language
   return load;
 }
 let activeSourceNode: AudioBufferSourceNode | null = null;
+let releaseVoiceColor: (() => void) | null = null;
 let activeRequest: AbortController | null = null;
 let generation = 0;
 let audioStatus: CharacterAudioStatus | null = null;
@@ -89,6 +92,7 @@ export function stopGeminiAudio() {
     activeSourceNode.disconnect();
     activeSourceNode = null;
   }
+  releaseVoiceColor?.(); releaseVoiceColor = null;
 }
 
 export async function playGeminiSpeech(
@@ -120,7 +124,7 @@ export async function playGeminiSpeech(
         catch { void deleteSavedAudio(cacheKey); }
       }
     }
-    const assetId = bundledSpeechId(cleanText, options.characterId || 'ggomi', language) ||
+    const assetId = await bundledSpeechId(cleanText, options.characterId || 'ggomi', language) ||
       (!clip && globalThis.crypto?.subtle ? await speechAssetId(cleanText, options.characterId || 'ggomi', language) : null);
     const sharedKey = assetId ? `eleven:${assetId}` : cacheKey;
     const characterRate = getCharacterVoice(options.characterId || 'ggomi').fallbackPlaybackRate;
@@ -131,7 +135,7 @@ export async function playGeminiSpeech(
         catch { void deleteSavedAudio(sharedKey); }
       }
     }
-    if (!clip && assetId && hasBundledSpeech(assetId)) {
+    if (!clip && assetId && await hasBundledSpeech(assetId)) {
       if (currentGeneration !== generation || isPageHidden() || !isGeminiTTSEnabled()) return false;
       const request = new AbortController();
       activeRequest = request;
@@ -186,12 +190,13 @@ export async function playGeminiSpeech(
     const sourceNode = ctx.createBufferSource();
     sourceNode.buffer = clip.buffer;
     sourceNode.playbackRate.value = clip.playbackRate;
-    sourceNode.connect(options.destination || ctx.destination);
+    releaseVoiceColor = connectCharacterVoice(sourceNode, options.destination || ctx.destination, ctx, options.characterId || 'ggomi');
     activeSourceNode = sourceNode;
     sourceNode.onended = () => {
       if (activeSourceNode !== sourceNode) return;
       activeSourceNode = null;
       sourceNode.disconnect();
+      releaseVoiceColor?.(); releaseVoiceColor = null;
       options.onEnd?.();
     };
     sourceNode.start(0);

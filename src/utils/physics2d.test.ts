@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createPhysicsWorld } from './physics2d';
 import { detectBlowEnergy } from '../hooks/useBlowSensor';
-import { emitJuice, getComboState, resetCombo, subscribeCombo, emitWindGust, subscribeWindGust } from './juice';
+import { recordPlaySuccess, getComboState, resetCombo, subscribeCombo, emitWindGust, subscribeWindGust } from './juice';
 
 test('2D rigid-body physics world integrates gravity, floor bounce, and circle-circle collisions', () => {
   const world = createPhysicsWorld({ width: 400, height: 300 });
@@ -50,12 +50,12 @@ test('Combo Fever state and Wind Gust pub-sub work across consecutive actions', 
   const states: { combo: number; fever: boolean }[] = [];
   const unsubCombo = subscribeCombo((s) => states.push(s));
 
-  emitJuice({ kind: 'snap' });
-  emitJuice({ kind: 'snap' });
+  recordPlaySuccess();
+  recordPlaySuccess();
   assert.equal(getComboState().combo, 2);
   assert.equal(getComboState().fever, false);
 
-  emitJuice({ kind: 'success' });
+  recordPlaySuccess();
   assert.equal(getComboState().combo, 3);
   assert.equal(getComboState().fever, true);
   assert.equal(states.length, 4);

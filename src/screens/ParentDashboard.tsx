@@ -12,6 +12,7 @@ import { CHARACTER_VOICES, type CharacterVoiceId } from '../data/characterVoices
 import { CHARACTERS } from '../data/characters';
 import { GAME_CATALOG } from '../data/gameCatalog';
 import { summarizePlayActivity } from '../utils/playActivity';
+import { requestBlowPermission } from '../utils/microphonePermission';
 import { CharacterAvatar } from '../components/CharacterAvatar';
 
 interface ParentDashboardProps {
@@ -22,6 +23,7 @@ interface ParentDashboardProps {
   onUpdateSpeechLanguage: (language: SpeechLanguage) => void;
   onToggleSound: () => void;
   onToggleHaptics: () => void;
+  onUpdateMicrophone: (enabled: boolean) => void;
   onToggleBGM: () => void;
   onToggleGameDisabled?: (gameId: GameId) => void;
   onResetProgress: () => void;
@@ -37,6 +39,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   onUpdateSpeechLanguage,
   onToggleSound,
   onToggleHaptics,
+  onUpdateMicrophone,
   onToggleBGM,
   onToggleGameDisabled,
   onResetProgress,
@@ -57,6 +60,16 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
   const aiAvailable = audioStatus?.available;
   const budget = audioStatus?.elevenLabs;
   const [previewStatus, setPreviewStatus] = useState('');
+  const [micPending, setMicPending] = useState(false);
+  const [micStatus, setMicStatus] = useState('');
+  const toggleMicrophone = async () => {
+    if (appState.microphoneEnabled) { onUpdateMicrophone(false); setMicStatus('버튼으로 바람 놀이를 해요.'); return; }
+    setMicPending(true);
+    const allowed = await requestBlowPermission();
+    onUpdateMicrophone(allowed);
+    setMicStatus(allowed ? '마이크를 허용했어요. 지원 기기에서는 바람 버튼을 누른 뒤 입으로도 불 수 있어요.' : '마이크를 사용할 수 없어도 버튼으로 똑같이 놀 수 있어요.');
+    setMicPending(false);
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -530,6 +543,12 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
       <section className="w-full bg-white p-4 rounded-3xl border-2 border-amber-200 mb-4 flex items-center justify-between gap-3">
         <div><h2 className="font-bold text-sm">작은 진동 반응</h2><p className="text-xs text-stone-500">지원 기기에서 톡! 움직임 줄이기 설정 시 쉬어요.</p></div>
         <button type="button" aria-label="진동 반응" aria-pressed={appState.hapticsEnabled !== false} onClick={onToggleHaptics} className="min-h-12 min-w-16 rounded-2xl bg-amber-100 font-bold text-sm">{appState.hapticsEnabled !== false ? '켜짐' : '꺼짐'}</button>
+      </section>
+
+      <section className="w-full bg-white p-4 rounded-3xl border-2 border-amber-200 mb-4">
+        <div className="flex items-center justify-between gap-3"><div><h2 className="font-bold text-sm">입으로 후~ 불기</h2><p className="text-xs text-stone-500">보호자가 마이크를 허용할 수 있어요. 기본은 버튼 놀이예요.</p></div>
+          <button type="button" aria-label="마이크 바람 놀이" aria-pressed={appState.microphoneEnabled === true} disabled={micPending} onClick={toggleMicrophone} className="min-h-16 min-w-16 rounded-2xl bg-sky-100 font-bold text-sm">{micPending ? '확인 중' : appState.microphoneEnabled ? '켜짐' : '꺼짐'}</button></div>
+        <p role="status" className="text-xs text-stone-600 mt-2">{micStatus}</p>
       </section>
 
       {/* Quick Actions */}
