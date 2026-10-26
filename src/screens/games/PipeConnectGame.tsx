@@ -14,6 +14,7 @@ import {
   playCareSound,
   playJellyTap,
   playStarGain,
+  playRisingStepChime,
 } from '../../utils/soundEngine';
 import { fireConfetti, fireStarExplosion } from '../../utils/confetti';
 import { emitJuice } from '../../utils/juice';
@@ -286,6 +287,10 @@ export const PipeConnectGame: React.FC<PipeConnectGameProps> = ({
 
     setGrid([...currentGrid]);
 
+    if (visited.size > 1 && !reachedSink) {
+      playRisingStepChime(visited.size - 1, Math.max(2, size * 2 - 2), soundEnabled);
+    }
+
     if (reachedSink && !isRoundWon) {
       setIsRoundWon(true);
       setIsWaterFlowing(true);
@@ -295,6 +300,7 @@ export const PipeConnectGame: React.FC<PipeConnectGameProps> = ({
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
         pixiRef.current?.emitWaterSpray(rect.right - 80, rect.bottom - 80);
+        emitJuice({ kind: 'success', x: rect.right - 80, y: rect.bottom - 80, climax: true });
       }
 
       speakText('우와! 시원한 물이 콸콸! 친구가 정말 시원하고 기뻐해요!', soundEnabled, { characterId: buddy, playIntroSFX: false });

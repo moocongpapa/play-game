@@ -7,12 +7,12 @@ import { ToyArtwork } from '../../components/ToyArtwork';
 import { useToddlerPlay, usePageVisible, type ToddlerGameProps } from '../../hooks/useToddlerPlay';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import { BUBBLE_TOYS } from '../../data/toddlerPlay';
-import { playCareSound, playSparkleChime, speakText } from '../../utils/soundEngine';
+import { playCareSound, playSparkleChime, playRisingStepChime, speakText } from '../../utils/soundEngine';
 import { fireStarExplosion } from '../../utils/confetti';
 import { emitJuice, subscribeWindGust } from '../../utils/juice';
 
 const GUIDE = '몽실몽실 비눗방울을 톡! 황금 방울에서는 별이 쏟아져!';
-interface Bubble { id: number; lane: number; size: number; toy: string | null; golden: boolean; duration: number; delay: number }
+interface Bubble { id: number; lane: number; size: number; toy: string | null; golden: boolean; king?: boolean; hp?: number; duration: number; delay: number }
 export function BubblePopGame(props: ToddlerGameProps) {
   useToddlerPlay(props, GUIDE);
   const visible = usePageVisible();
@@ -30,7 +30,18 @@ export function BubblePopGame(props: ToddlerGameProps) {
   const baseDuration = props.ageGroup === 'baby' ? 13 : props.ageGroup === 'sprout' ? 11 : 9.5;
   const makeBubble = (delay = 0): Bubble => {
     const id = ++sequence.current;
-    return { id, lane: (id - 1) % 5, size: baseSize + (id % 3) * 12, toy: id % 3 === 0 ? null : BUBBLE_TOYS[id % BUBBLE_TOYS.length], golden: id % 5 === 0, duration: baseDuration + id % 3, delay };
+    const isKing = id % 6 === 0;
+    return {
+      id,
+      lane: (id - 1) % 5,
+      size: isKing ? Math.round(baseSize * 1.38) : baseSize + (id % 3) * 12,
+      toy: isKing ? '👑' : id % 3 === 0 ? null : BUBBLE_TOYS[id % BUBBLE_TOYS.length],
+      golden: isKing || id % 5 === 0,
+      king: isKing,
+      hp: isKing ? 2 : 1,
+      duration: baseDuration + id % 3,
+      delay,
+    };
   };
   const [bubbles, setBubbles] = useState<Bubble[]>(() => Array.from({ length: 5 }, (_, i) => makeBubble(-2 - i * 2)));
   useEffect(() => {
@@ -51,20 +62,34 @@ export function BubblePopGame(props: ToddlerGameProps) {
   }, [bubbles]);
   const pop = (bubble: Bubble, element: HTMLButtonElement) => {
     if (handled.current.has(bubble.id)) return;
-    handled.current.add(bubble.id);
     const rect = element.getBoundingClientRect();
     const area = arena.current!.getBoundingClientRect();
     const x = rect.left + rect.width / 2;
     const y = rect.top + rect.height / 2;
-    emitJuice({ kind: 'pop', x, y });
+
+    if (bubble.king && (bubble.hp ?? 1) > 1) {
+      playRisingStepChime(1, 2, props.soundEnabled);
+      playCareSound('bubble', props.soundEnabled);
+      emitJuice({ kind: 'pop', x, y, climax: true });
+      setBubbles(current =>
+        current.map(item =>
+          item.id === bubble.id ? { ...item, hp: (item.hp ?? 2) - 1, size: Math.round(item.size * 1.08) } : item
+        )
+      );
+      return;
+    }
+
+    handled.current.add(bubble.id);
+    emitJuice({ kind: bubble.king ? 'success' : 'pop', x, y, climax: Boolean(bubble.king || bubble.golden) });
     setBursts(current => [...current.slice(-4), { id: bubble.id, x: (x - area.left) / area.width * 100, y: (y - area.top) / area.height * 100, golden: bubble.golden }]);
     scheduleGameTimeout(() => setBursts(current => current.filter(burst => burst.id !== bubble.id)), 750);
-    const replacement = reduced ? makeBubble() : null;
-    setBubbles(current => [...current.filter(item => item.id !== bubble.id), ...(replacement ? [replacement] : [])]);
+    const bonusWave = bubble.king ? [makeBubble(0), makeBubble(-0.5)] : reduced ? [makeBubble()] : [];
+    setBubbles(current => [...current.filter(item => item.id !== bubble.id), ...bonusWave]);
     playCareSound('bubble', props.soundEnabled);
     popped.current += 1;
     setCount(popped.current);
     if (bubble.golden) {
+      if (bubble.king) playRisingStepChime(2, 2, props.soundEnabled);
       playSparkleChime(props.soundEnabled);
       fireStarExplosion({ x: x / window.innerWidth, y: y / window.innerHeight });
     }
@@ -81,12 +106,12 @@ export function BubblePopGame(props: ToddlerGameProps) {
       <span className="bubble-sun" aria-hidden="true" /><span className="bubble-cloud cloud-one" aria-hidden="true" /><span className="bubble-cloud cloud-two" aria-hidden="true" />
       <div className="bubble-buddy" aria-hidden="true"><CharacterAvatar id={props.buddy} size="lg" mood={happy ? 'happy' : 'waving'} /></div>
       <span className="bubble-wand" aria-hidden="true" />
-      {bubbles.map(bubble => <button key={bubble.id} type="button" className={`soap-bubble ${bubble.golden ? 'golden-bubble' : ''}`} aria-label={bubble.golden ? '황금 비눗방울 터뜨리기' : '비눗방울 터뜨리기'}
+      {bubbles.map(bubble => <button key={bubble.id} type="button" className={`soap-bubble ${bubble.golden ? 'golden-bubble' : ''}`} aria-label={bubble.king ? '왕 황금 비눗방울 터뜨리기' : bubble.golden ? '황금 비눗방울 터뜨리기' : '비눗방울 터뜨리기'}
         style={{ '--bubble-x': `${14 + bubble.lane * 18}%`, '--bubble-size': `${bubble.size}px`, '--bubble-time': `${bubble.duration}s`, '--bubble-delay': `${bubble.delay}s`, '--bubble-still-y': `${15 + (bubble.lane % 3) * 25}%` } as React.CSSProperties}
         onPointerDown={(event: PointerEvent<HTMLButtonElement>) => { if (event.button !== 0) return; event.preventDefault(); pop(bubble, event.currentTarget); }}
         onClick={(event: MouseEvent<HTMLButtonElement>) => { if (event.detail === 0) pop(bubble, event.currentTarget); }}
         onAnimationEnd={() => setBubbles(current => current.filter(item => item.id !== bubble.id))}>
-        {bubble.golden ? <Sparkles aria-hidden="true" /> : bubble.toy && <ToyArtwork emoji={bubble.toy} />}
+        {bubble.king && bubble.toy ? <ToyArtwork emoji={bubble.toy} /> : bubble.golden ? <Sparkles aria-hidden="true" /> : bubble.toy && <ToyArtwork emoji={bubble.toy} />}
       </button>)}
       {bursts.map(burst => <span key={burst.id} className={`soap-burst ${burst.golden ? 'soap-burst-gold' : ''}`} style={{ left: `${burst.x}%`, top: `${burst.y}%` }} aria-hidden="true">{Array.from({ length: 7 }, (_, i) => <motion.i key={i} initial={{ x: 0, y: 0, opacity: 1, scale: 1 }} animate={{ x: Math.cos(i * Math.PI * 2 / 7) * 55, y: Math.sin(i * Math.PI * 2 / 7) * 55, opacity: 0, scale: .2 }} transition={{ duration: .65 }} />)}</span>)}
     </div>

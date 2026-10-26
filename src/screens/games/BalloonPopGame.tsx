@@ -6,8 +6,8 @@ import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
-import { speakText, stopAllSpeech, playBalloonPop, playDingDongDang, playSparkleChime } from '../../utils/soundEngine';
-import { fireBalloonPopParticle, fireConfetti } from '../../utils/confetti';
+import { speakText, stopAllSpeech, playBalloonPop, playDingDongDang, playSparkleChime, playRisingStepChime } from '../../utils/soundEngine';
+import { fireBalloonPopParticle, fireConfetti, fireStarExplosion } from '../../utils/confetti';
 import { emitJuice, subscribeWindGust } from '../../utils/juice';
 import { AgeGroup } from '../../types';
 import { Star } from 'lucide-react';
@@ -23,6 +23,9 @@ interface BalloonItem {
   size: number; // px diameter
   startY: number;
   restingY: number;
+  isBoss?: boolean;
+  hp?: number;
+  maxHp?: number;
 }
 
 interface BalloonPopGameProps {
@@ -74,23 +77,31 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
   // Generate balloon
   const spawnBalloon = (initialSlot?: number) => {
     const fieldHeight = fieldRef.current?.clientHeight || 480;
+    const seq = nextIdRef.current++;
+    const isBoss = initialSlot === undefined && seq % 5 === 0;
+    const bossHp = ageGroup === 'baby' ? 2 : 3;
     const palette = BALLOON_PALETTES[Math.floor(Math.random() * BALLOON_PALETTES.length)];
     const baseSize = ageGroup === 'baby' ? 98 : ageGroup === 'sprout' ? 88 : 82;
-    const size = baseSize + Math.floor(Math.random() * 18);
+    const size = isBoss ? Math.round(baseSize * 1.36) : baseSize + Math.floor(Math.random() * 18);
     const baseSpeed = ageGroup === 'baby' ? 9.5 : ageGroup === 'sprout' ? 7 : 5.8;
     const visibleY = fieldHeight * (initialSlot === undefined ? 0.08 + Math.random() * 0.6 : [0.52, 0.3, 0.64][initialSlot]);
     const restingY = Math.max(0, Math.min(visibleY, fieldHeight - size * 1.45));
     const newBalloon: BalloonItem = {
-      id: `b-${nextIdRef.current++}`,
+      id: `b-${seq}`,
       x: initialSlot === undefined ? 18 + Math.random() * 64 : 22 + initialSlot * 28,
-      color: palette.color,
-      bgGradient: palette.bg,
-      emoji: pickNextRound(themeRef.current.items, `balloons:${themeRef.current.id}`).emoji,
-      speed: baseSpeed + Math.random() * 3.5,
+      color: isBoss ? '#FFD15C' : palette.color,
+      bgGradient: isBoss
+        ? 'radial-gradient(circle at 35% 30%, #FFF7AE 0%, #FF6B8B 38%, #A855F7 72%, #3B82F6 100%)'
+        : palette.bg,
+      emoji: isBoss ? '👑' : pickNextRound(themeRef.current.items, `balloons:${themeRef.current.id}`).emoji,
+      speed: (isBoss ? baseSpeed * 1.25 : baseSpeed) + Math.random() * 3.5,
       size,
       // The opening group is already within reach. New balloons rise gently from below.
       startY: initialSlot === undefined ? fieldHeight : restingY,
       restingY,
+      isBoss,
+      hp: isBoss ? bossHp : 1,
+      maxHp: isBoss ? bossHp : 1,
     };
 
     setBalloons((prev) => prev.length >= 9 ? prev : [...prev, newBalloon]);
@@ -128,12 +139,8 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
 
   const handlePop = (balloon: BalloonItem, event: React.MouseEvent | React.TouchEvent) => {
     if (isCompleted || (isStageMode && popCount.current >= targetCount) || poppedIds.current.has(balloon.id)) return;
-    poppedIds.current.add(balloon.id);
 
-    // SFX
-    playBalloonPop(soundEnabled);
-
-    // Particle
+    // Particle coordinates
     let clientX = window.innerWidth * (balloon.x / 100);
     let clientY = window.innerHeight * 0.5;
 
@@ -145,7 +152,50 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
       clientY = event.touches[0].clientY;
     }
 
-    emitJuice({ kind: 'pop', x: clientX, y: clientY });
+    // Multi-tap Giant Rainbow Boss Balloon
+    if (balloon.isBoss && (balloon.hp ?? 1) > 1) {
+      const remainingHp = (balloon.hp ?? 2) - 1;
+      const maxHp = balloon.maxHp ?? 3;
+      playBalloonPop(soundEnabled);
+      playRisingStepChime(maxHp - remainingHp, maxHp, soundEnabled);
+      emitJuice({ kind: 'pop', x: clientX, y: clientY, climax: true });
+      fireBalloonPopParticle(clientX, clientY, '#FFD15C');
+      setBalloons((prev) =>
+        prev.map((b) =>
+          b.id === balloon.id ? { ...b, hp: remainingHp, size: Math.round(b.size * 1.06) } : b
+        )
+      );
+      const hitPopupId = `p-hit-${Date.now()}-${Math.random()}`;
+      setPopPopups((prev) => [
+        ...prev,
+        { id: hitPopupId, x: clientX, y: clientY, text: `👑 ×${remainingHp}`, color: '#F59E0B' },
+      ]);
+      scheduleGameTimeout(() => {
+        setPopPopups((prev) => prev.filter((p) => p.id !== hitPopupId));
+      }, 650);
+      return;
+    }
+
+    poppedIds.current.add(balloon.id);
+
+    // SFX
+    playBalloonPop(soundEnabled);
+    if (balloon.isBoss) {
+      playRisingStepChime(balloon.maxHp ?? 3, balloon.maxHp ?? 3, soundEnabled);
+      playSparkleChime(soundEnabled);
+      fireStarExplosion({ x: clientX / window.innerWidth, y: clientY / window.innerHeight });
+      // Spawn a celebratory Bonus Balloon Wave!
+      spawnBalloon(0);
+      spawnBalloon(1);
+      spawnBalloon(2);
+    }
+
+    emitJuice({
+      kind: balloon.isBoss ? 'success' : 'pop',
+      x: clientX,
+      y: clientY,
+      climax: Boolean(balloon.isBoss || (isStageMode && popCount.current + 1 >= targetCount)),
+    });
     fireBalloonPopParticle(clientX, clientY, balloon.color);
 
     // Remove balloon
@@ -157,7 +207,16 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
     // Number popup
     const popupId = `p-${Date.now()}-${Math.random()}`;
     const numberText = KOREAN_NUMBERS[nextCount - 1] || `${nextCount}!`;
-    setPopPopups((prev) => [...prev, { id: popupId, x: clientX, y: clientY, text: `${nextCount}`, color: balloon.color }]);
+    setPopPopups((prev) => [
+      ...prev,
+      {
+        id: popupId,
+        x: clientX,
+        y: clientY,
+        text: balloon.isBoss ? `👑 보너스! ${nextCount}` : `${nextCount}`,
+        color: balloon.color,
+      },
+    ]);
     scheduleGameTimeout(() => {
       setPopPopups((prev) => prev.filter((p) => p.id !== popupId));
       poppedIds.current.delete(balloon.id);
@@ -208,7 +267,7 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
         {balloons.map((b) => (
           <motion.button
             key={b.id}
-            aria-label="풍선 터뜨리기"
+            aria-label={b.isBoss ? '무지개 왕풍선 터뜨리기' : '풍선 터뜨리기'}
             initial={reducedMotion ? false : { y: b.startY, opacity: 1 }}
             animate={reducedMotion ? { y: b.restingY, opacity: 1 } : { y: -170, opacity: 1 }}
             transition={reducedMotion ? { duration: 0 } : { y: { duration: b.speed, ease: 'linear' } }}
@@ -223,13 +282,18 @@ export const BalloonPopGame: React.FC<BalloonPopGameProps> = ({
               background: b.bgGradient,
             }}
             whileHover={reducedMotion ? undefined : { scale: 1.08 }}
-            className="balloon-toy absolute top-0 rounded-full cursor-pointer shadow-lg flex items-center justify-center border-2 border-white/50 active:scale-90 touch-manipulation"
+            className={`balloon-toy absolute top-0 rounded-full cursor-pointer shadow-lg flex items-center justify-center border-2 ${b.isBoss ? 'border-yellow-200 ring-4 ring-yellow-300/70' : 'border-white/50'} active:scale-90 touch-manipulation`}
           >
             {/* Balloon Highlight Shine */}
             <div className="absolute top-2 left-4 w-4 h-7 bg-white/60 rounded-full blur-[1px] rotate-[-25deg]" />
 
             {/* Center Cute Emoji */}
             <span className="text-3xl select-none filter drop-shadow-sm"><ToyArtwork emoji={b.emoji} /></span>
+            {b.isBoss && (b.hp ?? 1) > 1 && (
+              <span className="absolute -top-3 right-0 bg-amber-400 text-amber-950 text-xs font-black px-2 py-0.5 rounded-full shadow border border-white">
+                ×{b.hp}
+              </span>
+            )}
 
             {/* Balloon String */}
             <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-1.5 h-3 bg-amber-800/40 rounded-full" />

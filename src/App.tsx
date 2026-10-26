@@ -11,13 +11,13 @@ import { useGameTimeouts } from './hooks/useGameTimeouts';
 import { SplashLoader } from './components/SplashLoader';
 import { useViewportLock } from './hooks/useViewportLock';
 
-import { getAudioContext, setSpeechLanguage, setBGMScene, startBGM, stopBGM, setBGMVolume, setSFXVolume, speakText, stopAllSpeech, stopPlaySounds, setAudioPreferences } from './utils/soundEngine';
+import { getAudioContext, setSpeechLanguage, setBGMScene, startBGM, stopBGM, setBGMVolume, setSFXVolume, speakText, stopAllSpeech, stopPlaySounds, setAudioPreferences, playComboChime } from './utils/soundEngine';
 import { listenForAudioGestures } from './utils/audioContextLifecycle';
 import { Moon, Shield } from 'lucide-react';
 import { refreshChildProfile } from './utils/ageEngine';
 import { advancePlayTime, createForegroundClock, localPlayDate, refreshPlaySession, restartPlayTimer } from './utils/playSession';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import { recordPlaySuccess } from './utils/juice';
+import { getComboState, recordPlaySuccess } from './utils/juice';
 
 const OnboardingScreen = lazy(() => import('./screens/OnboardingScreen').then(module => ({ default: module.OnboardingScreen })));
 const FriendDayScreen = lazy(() => import('./screens/FriendDayScreen').then(m => ({ default: m.FriendDayScreen })));
@@ -266,7 +266,10 @@ export default function App() {
 
   // Play Celebration when a quiz round is completed (점수 누적 없이 순수한 성취 축하)
   const handleCompleteQuiz = (_starsEarned: number, completedGameId: GameId | null = activeGameId) => {
-    if (!document.hidden) recordPlaySuccess();
+    if (!document.hidden) {
+      recordPlaySuccess();
+      playComboChime(getComboState().combo, appState.soundEnabled);
+    }
 
     setAppState((prev) => {
       // 완료한 게임 카운트 및 캐릭터별 놀이 횟수 부모 대시보드 통계용 기록

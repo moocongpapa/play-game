@@ -1,5 +1,6 @@
 export type TouchParticle = { x: number; y: number; vx: number; vy: number; age: number; life: number; size: number; color: string; shape: 'star' | 'heart' | 'ring'; angle: number };
 const COLORS = ['#efb7c8', '#f1cb70', '#90c9c3', '#b9a6df', '#fff7dc'];
+const FEVER_COLORS = ['#ff6b8b', '#fbbf24', '#34d399', '#60a5fa', '#c084fc', '#fde047'];
 export const MAX_TOUCH_PARTICLES = 120;
 
 /** Small bounded pool; pointer events never allocate React elements or schedule timers. */
@@ -7,14 +8,16 @@ export function createTouchParticles(random = Math.random) {
   let particles: TouchParticle[] = [];
   return {
     get particles() { return particles; },
-    emit(x: number, y: number, burst = false) {
-      const count = burst ? 7 : 2;
+    emit(x: number, y: number, burst = false, fever = false) {
+      const count = (burst ? 7 : 2) * (fever ? 2 : 1);
+      const palette = fever ? FEVER_COLORS : COLORS;
+      const speedBoost = fever ? 1.28 : 1;
       for (let i = 0; i < count; i++) {
         const angle = random() * Math.PI * 2;
-        const speed = burst ? 45 + random() * 90 : 12 + random() * 25;
+        const speed = (burst ? 45 + random() * 90 : 12 + random() * 25) * speedBoost;
         particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 20, age: 0,
-          life: burst ? .5 + random() * .2 : .35 + random() * .2, size: burst ? 4 + random() * 5 : 3 + random() * 3,
-          color: COLORS[Math.floor(random() * COLORS.length) % COLORS.length], shape: burst && i === 0 ? 'ring' : i % 3 === 0 ? 'heart' : 'star', angle });
+          life: burst ? .5 + random() * .2 : .35 + random() * .2, size: (burst ? 4 + random() * 5 : 3 + random() * 3) * (fever ? 1.15 : 1),
+          color: palette[Math.floor(random() * palette.length) % palette.length], shape: burst && i === 0 ? 'ring' : i % 3 === 0 ? 'heart' : 'star', angle });
       }
       if (particles.length > MAX_TOUCH_PARTICLES) particles.splice(0, particles.length - MAX_TOUCH_PARTICLES);
     },

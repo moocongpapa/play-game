@@ -1,5 +1,5 @@
 export const JUICE_SPRING = { type: 'spring' as const, stiffness: 450, damping: 15, mass: .8 };
-export type JuiceImpact = { kind: 'pop' | 'success' | 'snap'; x?: number; y?: number };
+export type JuiceImpact = { kind: 'pop' | 'success' | 'snap'; x?: number; y?: number; climax?: boolean };
 const listeners = new Set<(impact: JuiceImpact) => void>();
 
 export interface ComboState {

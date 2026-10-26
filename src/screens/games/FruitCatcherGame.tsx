@@ -30,7 +30,7 @@ interface FruitCatcherGameProps {
 
 interface FallingItem {
   id: number;
-  kind: 'fruit' | 'star' | 'feather' | 'ice' | 'stone';
+  kind: 'fruit' | 'star' | 'feather' | 'giant_rainbow' | 'ice' | 'stone';
   emoji: string;
   x: number; // percentage 5% to 95%
   y: number; // percentage 0% to 100%
@@ -86,6 +86,7 @@ export const FruitCatcherGame: React.FC<FruitCatcherGameProps> = ({
   gameWonRef.current = gameWon;
   const comboRef = useRef(0);
   const isFeverRef = useRef(false);
+  const hitStopUntilRef = useRef(0);
 
   // Initial speech guide
   useEffect(() => {
@@ -122,6 +123,11 @@ export const FruitCatcherGame: React.FC<FruitCatcherGameProps> = ({
 
     const loop = (now: number) => {
       if (gameWonRef.current) return;
+      if (now < hitStopUntilRef.current) {
+        lastFrame = now;
+        animId = requestAnimationFrame(loop);
+        return;
+      }
       // Speeds are tuned per 60Hz frame; scale by elapsed time (clamped after tab stalls).
       const dt = Math.min(50, Math.max(0, now - lastFrame)) / (1000 / 60);
       lastFrame = now;
@@ -130,12 +136,19 @@ export const FruitCatcherGame: React.FC<FruitCatcherGameProps> = ({
       const spawnInterval = isFever ? 450 : 750;
       if (now - lastSpawn > spawnInterval) {
         lastSpawn = now;
+        const seq = nextIdRef.current++;
         const rand = Math.random();
         let kind: FallingItem['kind'] = 'fruit';
         let emoji = FRUITS[Math.floor(Math.random() * FRUITS.length)].emoji;
         let points = 10;
+        let itemSize = 36;
 
-        if (rand < 0.1) {
+        if (seq % 6 === 0) {
+          kind = 'giant_rainbow';
+          emoji = '🌈';
+          points = 30;
+          itemSize = 52;
+        } else if (rand < 0.1) {
           kind = 'star';
           emoji = '⭐';
           points = 25;
@@ -150,13 +163,13 @@ export const FruitCatcherGame: React.FC<FruitCatcherGameProps> = ({
         }
 
         itemsRef.current.push({
-          id: nextIdRef.current++,
+          id: seq,
           kind,
           emoji,
           x: 10 + Math.random() * 80,
           y: 0,
-          speed: baseSpeed * (0.8 + Math.random() * 0.4),
-          size: 36,
+          speed: baseSpeed * (kind === 'giant_rainbow' ? 0.92 : 0.8 + Math.random() * 0.4),
+          size: itemSize,
           points,
         });
       }
@@ -172,19 +185,20 @@ export const FruitCatcherGame: React.FC<FruitCatcherGameProps> = ({
         item.y += item.speed * dt;
 
         // Magnet attraction
-        if (hasMagnet && item.kind === 'fruit') {
+        if (hasMagnet && (item.kind === 'fruit' || item.kind === 'giant_rainbow')) {
           const dx = currentBasketX - item.x;
           item.x += dx * (1 - Math.pow(0.95, dt));
         }
 
         // Check collision with basket
         const isNearY = item.y >= basketY - 5 && item.y <= basketY + 8;
-        const isNearX = Math.abs(item.x - currentBasketX) <= effectiveBasketRadius;
+        const isNearX = Math.abs(item.x - currentBasketX) <= effectiveBasketRadius + (item.kind === 'giant_rainbow' ? 4 : 0);
 
         if (isNearY && isNearX) {
           // Catch event!
-          if (item.kind === 'fruit' || item.kind === 'star' || item.kind === 'feather') {
-            const nextCatches = catchesRef.current + 1;
+          if (item.kind === 'fruit' || item.kind === 'star' || item.kind === 'feather' || item.kind === 'giant_rainbow') {
+            const gain = item.kind === 'giant_rainbow' ? 2 : 1;
+            const nextCatches = Math.min(targetCatches, catchesRef.current + gain);
             setCatches(nextCatches);
             catchesRef.current = nextCatches;
 
@@ -197,27 +211,53 @@ export const FruitCatcherGame: React.FC<FruitCatcherGameProps> = ({
               isFeverRef.current = true;
               setIsFever(true);
               speakText('우와! 콤보 피버! 황금 과일이 쏟아져요!', soundEnabled, { characterId: buddy, playIntroSFX: false });
+              // Spawn Bonus Fruit Shower Wave across 4 lanes!
+              [20, 40, 60, 80].forEach((laneX, idx) => {
+                itemsRef.current.push({
+                  id: nextIdRef.current++,
+                  kind: idx === 1 ? 'star' : 'fruit',
+                  emoji: idx === 1 ? '⭐' : FRUITS[idx % FRUITS.length].emoji,
+                  x: laneX,
+                  y: -idx * 6,
+                  speed: baseSpeed * 0.95,
+                  size: 40,
+                  points: 20,
+                });
+              });
               scheduleGameTimeout(() => { isFeverRef.current = false; setIsFever(false); }, 5000);
             }
 
             recordPlaySuccess();
             playCareSound('drink', soundEnabled);
 
+            const isClimaxCatch = item.kind === 'giant_rainbow' || item.kind === 'star' || nextCatches >= targetCatches;
+            if (isClimaxCatch) {
+              hitStopUntilRef.current = now + 55;
+            }
+
             if (containerRef.current) {
               const rect = containerRef.current.getBoundingClientRect();
               const hitPxX = rect.left + (item.x / 100) * rect.width;
               const hitPxY = rect.top + (basketY / 100) * rect.height;
-              emitJuice({ kind: 'pop', x: hitPxX, y: hitPxY });
+              emitJuice({
+                kind: isClimaxCatch ? 'success' : 'pop',
+                x: hitPxX,
+                y: hitPxY,
+                climax: isClimaxCatch,
+              });
               pixiRef.current?.emitBurst({
                 x: hitPxX,
                 y: hitPxY,
-                color: item.kind === 'star' ? 0xfacc15 : 0xf43f5e,
-                count: 14,
+                color: item.kind === 'star' || item.kind === 'giant_rainbow' ? 0xfacc15 : 0xf43f5e,
+                count: item.kind === 'giant_rainbow' ? 24 : 14,
                 kind: 'star',
               });
             }
 
-            if (item.kind === 'star') {
+            if (item.kind === 'giant_rainbow') {
+              playSparkleChime(soundEnabled);
+              fireStarExplosion();
+            } else if (item.kind === 'star') {
               setHasMagnet(true);
               playSparkleChime(soundEnabled);
               scheduleGameTimeout(() => setHasMagnet(false), 5000);

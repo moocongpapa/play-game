@@ -185,7 +185,13 @@ export const ForestPeekabooGame: React.FC<ForestPeekabooGameProps> = ({
         playComboChime(nextCombo, soundEnabled);
         playJellyTap(soundEnabled);
 
-        emitJuice({ kind: 'pop', x: clickX, y: clickY });
+        const isClimaxHit = nextCombo >= 3 || nextCatches >= targetCatches;
+        emitJuice({
+          kind: nextCatches >= targetCatches ? 'success' : 'pop',
+          x: clickX,
+          y: clickY,
+          climax: isClimaxHit,
+        });
         pixiRef.current?.emitBurst({
           x: clickX - (stageRef.current?.getBoundingClientRect().left || 0),
           y: clickY - (stageRef.current?.getBoundingClientRect().top || 0),

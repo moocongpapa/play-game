@@ -1,6 +1,6 @@
 import React, { lazy, Suspense, useContext, useEffect, useLayoutEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { Wind } from 'lucide-react';
+import { Flame, Wind } from 'lucide-react';
 import type { CharacterId, GameId } from '../types';
 import { GAME_CATALOG } from '../data/gameCatalog';
 import { PlayHintsPausedContext, PlayVoiceContext } from './PlayFlowContext';
@@ -28,13 +28,33 @@ export function GameStage({ gameId, buddy, children, soundEnabled = false, micro
   }, [gameId, mode]);
   useEffect(() => subscribeCombo(setComboState), []);
 
-  return <section className={`game-stage theme-${game.theme}`} data-feedback={mode} aria-label={game.title}>
+  return <section
+    className={`game-stage theme-${game.theme}`}
+    data-feedback={mode}
+    data-fever={mode === 'play' && comboState.fever ? 'true' : undefined}
+    data-combo={mode === 'play' && comboState.combo >= 2 ? comboState.combo : undefined}
+    aria-label={game.title}
+  >
     <h1 className="sr-only">{game.title}</h1>
     {mode !== 'quiet' && !LOCAL_FEEDBACK_GAMES.has(gameId) && <Suspense fallback={null}>
       <PlayEffects ambientKind={game.theme} className="z-20 rounded-[inherit]" />
     </Suspense>}
     <div className="game-stage-hud">
       {mode === 'play' && comboState.combo > 0 && <output className="sr-only" aria-label={`함께 해낸 놀이 ${comboState.combo}번`}>{comboState.combo}</output>}
+      {mode === 'play' && comboState.combo >= 2 && !LOCAL_FEEDBACK_GAMES.has(gameId) && (
+        <motion.div
+          key={comboState.combo}
+          initial={reduced ? false : { scale: 0.65, y: -6 }}
+          animate={{ scale: 1, y: 0 }}
+          transition={JUICE_SPRING}
+          className="game-combo-pill"
+          data-fever={comboState.fever ? 'true' : undefined}
+          aria-hidden="true"
+        >
+          <Flame className="game-combo-icon" />
+          <span>{comboState.fever ? `FEVER ×${comboState.combo}!` : `${comboState.combo} COMBO!`}</span>
+        </motion.div>
+      )}
       {WIND_GAMES.has(gameId) && <motion.button type="button" whileTap={reduced ? undefined : { scale: .94 }} transition={JUICE_SPRING}
         onClick={toggleOrBlow} data-listening={micActive || undefined} data-blowing={blowing || undefined}
         className="game-blow-btn" aria-label="바람 불기"><Wind aria-hidden="true" /></motion.button>}

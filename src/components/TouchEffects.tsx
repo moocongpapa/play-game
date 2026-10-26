@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { animate, useReducedMotion } from 'motion/react';
-import { createHaptics, getPlayFeedbackMode, JUICE_SPRING, subscribeJuice } from '../utils/juice';
+import { createHaptics, getComboState, getPlayFeedbackMode, JUICE_SPRING, subscribeJuice } from '../utils/juice';
 import { createTouchParticles, drawTouchParticles } from '../utils/touchParticles';
 
 type Spring = { x: number; y: number; controls: { stop: () => void }[] };
@@ -53,7 +53,7 @@ export function TouchEffects({ active, screenKey, hapticsEnabled }: { active: bo
     const emit = (x: number, y: number, burst: boolean) => {
       if (reduced || !ctx || document.hidden || getPlayFeedbackMode() === 'quiet') return;
       if (getPlayFeedbackMode() === 'care') return;
-      particles.emit(x, y, burst);
+      particles.emit(x, y, burst, getComboState().fever);
       if (!frame) { lastFrame = performance.now(); frame = requestAnimationFrame(draw); }
     };
     const down = (event: PointerEvent) => {
@@ -91,8 +91,21 @@ export function TouchEffects({ active, screenKey, hapticsEnabled }: { active: bo
       // Keep navigation and fixed overlays still while the play surface briefly reacts.
       const scene = document.querySelector<HTMLElement>('.game-stage, .greeting-card');
       shake?.cancel();
-      const power = impact.kind === 'pop' ? 1.5 : 2.5;
-      shake = scene?.animate([{ translate: '0 0' }, { translate: `${power}px 1px` }, { translate: `${-power}px -1px` }, { translate: '1px 0' }, { translate: '0 0' }], { duration: 160, easing: 'ease-out' });
+      const isClimax = impact.climax || impact.kind === 'success' || getComboState().fever;
+      const power = impact.kind === 'pop' ? 1.8 : isClimax ? 3.5 : 2.5;
+      if (isClimax) {
+        // Micro hit-stop hold (0 -> 0.22 offset) followed by climax zoom-out & punchy shake on compositor
+        shake = scene?.animate([
+          { translate: '0 0', scale: '1.028', offset: 0 },
+          { translate: '0 0', scale: '1.028', offset: 0.22 },
+          { translate: `${power}px 1.5px`, scale: '1.015', offset: 0.45 },
+          { translate: `${-power}px -1.5px`, scale: '0.995', offset: 0.72 },
+          { translate: '1px 0', scale: '1.004', offset: 0.88 },
+          { translate: '0 0', scale: '1', offset: 1 },
+        ], { duration: 240, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' });
+      } else {
+        shake = scene?.animate([{ translate: '0 0' }, { translate: `${power}px 1px` }, { translate: `${-power}px -1px` }, { translate: '1px 0' }, { translate: '0 0' }], { duration: 160, easing: 'ease-out' });
+      }
     });
     size();
     document.addEventListener('pointerdown', down, { capture: true, passive: true });

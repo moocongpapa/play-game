@@ -91,8 +91,13 @@ const nextBgmTrack = () => bgmScene === 'sleep' ? SLEEP_MUSIC : nextMusic(BACKGR
 let noteIndex = 0;
 let phraseCount = 0;
 let requestedBgmVolume = .15;
+let bgmTempoMultiplier = 1.0;
 const bgmDucks = new Set<string>();
 const bgmNotes = new Set<OscillatorNode>();
+
+export function setBGMTempo(multiplier = 1.0) {
+  bgmTempoMultiplier = Math.max(0.75, Math.min(1.35, multiplier));
+}
 
 function applyBgmVolume() {
   if (!bgmVolumeNode || !audioCtx) return;
@@ -204,7 +209,9 @@ export function startBGM(volume = requestedBgmVolume) {
           pause = .8;
         }
       }
-      bgmOscillatorInterval = window.setTimeout(step, (duration + pause) * 1000);
+      const feverTempo = bgmScene === 'play' && getComboState().fever ? 1.14 : 1.0;
+      const effectiveTempo = bgmScene === 'sleep' ? 1.0 : Math.max(bgmTempoMultiplier, feverTempo);
+      bgmOscillatorInterval = window.setTimeout(step, (duration / effectiveTempo + pause) * 1000);
     };
     step();
   } catch {
@@ -573,6 +580,68 @@ export function playComboChime(combo: number, enabled = true) {
       osc.start(start);
       osc.stop(start + 0.35);
     });
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+const RISING_SCALE_HZ = [523.25, 587.33, 659.25, 698.46, 783.99, 880.0, 987.77, 1046.5, 1174.66, 1318.51];
+
+/**
+ * 진행도 상승 음계 (도-레-미-파-솔-라-시-도! 단계별로 음정이 맑게 올라가며 기대감 고조)
+ */
+export function playRisingStepChime(step: number, totalSteps = 8, enabled = true) {
+  if (!enabled || !masterSoundEnabled || isPageHidden() || step < 1) return;
+  try {
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+    const ratio = Math.min(1, Math.max(0, (step - 1) / Math.max(1, totalSteps - 1)));
+    const scaleIdx = Math.min(RISING_SCALE_HZ.length - 1, Math.round(ratio * (RISING_SCALE_HZ.length - 1)));
+    const baseFreq = RISING_SCALE_HZ[scaleIdx];
+    const harmonics = [baseFreq, baseFreq * 1.5];
+
+    harmonics.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = idx === 0 ? 'triangle' : 'sine';
+      const start = now + idx * 0.035;
+      osc.frequency.setValueAtTime(freq, start);
+      gain.gain.setValueAtTime(0.001, start);
+      gain.gain.linearRampToValueAtTime(idx === 0 ? 0.19 : 0.09, start + 0.014);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.28);
+      osc.connect(gain);
+      gain.connect(getSfxDestination(ctx));
+      trackEffect(osc, gain);
+      osc.start(start);
+      osc.stop(start + 0.29);
+    });
+  } catch (e) {
+    console.warn(e);
+  }
+}
+
+/**
+ * 타이머 막판 스퍼트 (5초 이하 카운트다운 통통 마림바 틱 사운드)
+ */
+export function playCountdownTick(secondsLeft: number, enabled = true) {
+  if (!enabled || !masterSoundEnabled || isPageHidden() || secondsLeft < 1 || secondsLeft > 5 || isSpeechBusy()) return;
+  try {
+    const ctx = getAudioContext();
+    const now = ctx.currentTime;
+    const tickPitches = [659.25, 587.33, 523.25, 493.88, 440.0]; // 1s -> E5, 5s -> A4
+    const freq = tickPitches[Math.min(tickPitches.length - 1, Math.max(0, secondsLeft - 1))];
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, now);
+    osc.frequency.exponentialRampToValueAtTime(freq * 1.12, now + 0.06);
+    gain.gain.setValueAtTime(0.14, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+    osc.connect(gain);
+    gain.connect(getSfxDestination(ctx));
+    trackEffect(osc, gain);
+    osc.start(now);
+    osc.stop(now + 0.095);
   } catch (e) {
     console.warn(e);
   }

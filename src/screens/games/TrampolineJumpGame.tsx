@@ -13,6 +13,7 @@ import {
   playCorrectFanfare,
 } from '../../utils/soundEngine';
 import { fireStarExplosion, fireConfetti } from '../../utils/confetti';
+import { emitJuice } from '../../utils/juice';
 import './TrampolineJumpGame.css';
 
 interface TrampolineJumpGameProps {
@@ -136,8 +137,14 @@ export const TrampolineJumpGame: React.FC<TrampolineJumpGameProps> = ({
 
     let frameId = 0;
     let lastTime = performance.now();
+    let hitStopUntil = 0;
 
     const stepPhysics = (now: number) => {
+      if (now < hitStopUntil) {
+        lastTime = now;
+        frameId = requestAnimationFrame(stepPhysics);
+        return;
+      }
       const dt = Math.min(2.2, (now - lastTime) / 16.667);
       lastTime = now;
 
@@ -202,6 +209,8 @@ export const TrampolineJumpGame: React.FC<TrampolineJumpGameProps> = ({
 
       // Bounding-circle collision check with sky collectibles
       let hitCount = 0;
+      let lastHitX = 0;
+      let lastHitY = 0;
       const updated = collectiblesRef.current.map((item) => {
         if (item.collected) return item;
         const itemX = item.xNorm * arenaWidth;
@@ -212,6 +221,8 @@ export const TrampolineJumpGame: React.FC<TrampolineJumpGameProps> = ({
           hitCount++;
           const stageRect = stageRef.current?.getBoundingClientRect();
           if (stageRect) {
+            lastHitX = stageRect.left + stageRect.width * 0.5 + itemX;
+            lastHitY = stageRect.top + stageRect.height - 130 - item.heightPx;
             pixiRef.current?.emitBurst({
               x: stageRect.width * 0.5 + itemX,
               y: stageRect.height - 130 - item.heightPx,
@@ -236,7 +247,20 @@ export const TrampolineJumpGame: React.FC<TrampolineJumpGameProps> = ({
         const nextMilestone = Math.floor(p.score / targetStars);
         setScore(p.score);
 
-        if (nextMilestone > prevMilestone) {
+        const isMilestone = nextMilestone > prevMilestone;
+        if (isMilestone || p.combo >= 3) {
+          hitStopUntil = now + 50;
+          if (lastHitX > 0) {
+            emitJuice({
+              kind: isMilestone ? 'success' : 'pop',
+              x: lastHitX,
+              y: lastHitY,
+              climax: true,
+            });
+          }
+        }
+
+        if (isMilestone) {
           playCorrectFanfare(soundEnabled);
           fireStarExplosion();
           fireConfetti();

@@ -8,7 +8,7 @@ import { RoundContinuation } from '../../components/RoundContinuation';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { PlayHintsPausedContext } from '../../components/PlayFlowContext';
 import { useIdleScaffolding } from '../../hooks/useIdleScaffolding';
-import { speakText, stopAllSpeech, playBouncyBoing, playCorrectFanfare } from '../../utils/soundEngine';
+import { speakText, stopAllSpeech, playBouncyBoing, playCorrectFanfare, playRisingStepChime } from '../../utils/soundEngine';
 import { fireStarExplosion } from '../../utils/confetti';
 import { emitJuice, subscribeWindGust, JUICE_SPRING } from '../../utils/juice';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
@@ -90,9 +90,11 @@ export function BlockTowerGame({ buddy, onCompleteQuiz, soundEnabled, ageGroup =
     const next = [...blocks, { offset: falling.to, palette: falling.palette }];
     setBlocks(next); setFalling(null); lock.current = false;
     setSway(falling.to * .06); scheduleGameTimeout(() => setSway(0), 280);
+    playRisingStepChime(next.length, target, soundEnabled);
     const rect = stage.current!.getBoundingClientRect();
-    emitJuice({ kind: 'snap', x: rect.left + size.width / 2 + falling.to, y: rect.top + falling.y });
-    if (next.length === target) {
+    const isFinalBlock = next.length === target;
+    emitJuice({ kind: isFinalBlock ? 'success' : 'snap', x: rect.left + size.width / 2 + falling.to, y: rect.top + falling.y, climax: isFinalBlock });
+    if (isFinalBlock) {
       setCompleted(true); lock.current = true;
       playCorrectFanfare(soundEnabled); fireStarExplosion(); onCompleteQuiz(1);
       speakText('우와! 멋진 블록 집이 완성됐어! 고마워!', soundEnabled, { characterId: buddy, playIntroSFX: false });
