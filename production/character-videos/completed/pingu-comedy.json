@@ -1,0 +1,17 @@
+{
+  "characterId": "pingu",
+  "model": "veo-3.1-lite-generate-preview",
+  "width": 1080,
+  "height": 1920,
+  "duration": 46,
+  "scenes": 6,
+  "publishedAt": "2026-10-26T06:20:49.040Z",
+  "sha256": "b9f963873d383efd1128dbaec27eebdee0e9359849c56c7b20d1bbc7052f870b",
+  "comedyFingerprint": "065aed66dee92628ce16154f9ee89aa122d00519f825dfa5ff3c2ca5ffeb303a",
+  "generatedComedyResolution": "1080p",
+  "voice": {
+    "text": "쓔우웅~ 쿵! 내가 눈사람이 됐어요!",
+    "asset": "dde4f2646e7fd7397ad6000c496dc5fdcb3567ef6ddf315f5a3f466b5df21dfa",
+    "pitch": 1.12
+  }
+}

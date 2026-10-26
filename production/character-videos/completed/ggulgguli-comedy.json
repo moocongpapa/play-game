@@ -1,0 +1,17 @@
+{
+  "characterId": "ggulgguli",
+  "model": "veo-3.1-lite-generate-preview",
+  "width": 1080,
+  "height": 1920,
+  "duration": 46,
+  "scenes": 6,
+  "publishedAt": "2026-10-26T06:16:35.083Z",
+  "sha256": "497bf514a2f1e2ce88b3dc12eeab3f799c77f7f274ffc3a4749871d9fac86241",
+  "comedyFingerprint": "9a4bc69c56dc5153c8425cede34f16ca2509091410c632d38e95d83bcba573bb",
+  "generatedComedyResolution": "1080p",
+  "voice": {
+    "text": "푸딩 점프 띠용~! 하늘까지 슝!",
+    "asset": "de7740065483cc22113ea4893a5e7873634e7efd9150af3bc844884206449514",
+    "pitch": 1.12
+  }
+}

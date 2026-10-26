@@ -1,0 +1,17 @@
+{
+  "characterId": "nurungji",
+  "model": "veo-3.1-lite-generate-preview",
+  "width": 1080,
+  "height": 1920,
+  "duration": 46,
+  "scenes": 6,
+  "publishedAt": "2026-10-26T06:19:27.272Z",
+  "sha256": "f80a8640e98ae591982a6c82b72c761b76360b549e3a9a5026787ee674fe0762",
+  "comedyFingerprint": "4af64ddbe7cfa763a8a19adeef27db05edff710d41ea53b8fa4a3cbf6ff98fa5",
+  "generatedComedyResolution": "1080p",
+  "voice": {
+    "text": "꼬리야 거기 서! 뱅글뱅글 어질어질~ 헤헤!",
+    "asset": "e4f787b02a06039ca52b56c277eb2c99bf29468d30dfcb0da69a5e8e5de28eb5",
+    "pitch": 1.1
+  }
+}

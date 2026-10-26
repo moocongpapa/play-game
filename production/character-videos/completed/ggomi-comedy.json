@@ -1,0 +1,17 @@
+{
+  "characterId": "ggomi",
+  "model": "veo-3.1-lite-generate-preview",
+  "width": 1080,
+  "height": 1920,
+  "duration": 46,
+  "scenes": 6,
+  "publishedAt": "2026-10-26T06:11:12.184Z",
+  "sha256": "46be48599e266a15d46c6303eee315f05254d9675acbf7a62a45d97969356e92",
+  "comedyFingerprint": "manual-ggomi-scene-6",
+  "generatedComedyResolution": "1080p",
+  "voice": {
+    "text": "어라? 딸기 코가 됐네? 에취~!",
+    "asset": "dc966be490df4adbb8988db072c575bab269e8c6b328f6390e86169a66188be7",
+    "pitch": 1.1
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "characterId": "eumme",
+  "model": "veo-3.1-lite-generate-preview",
+  "width": 1080,
+  "height": 1920,
+  "duration": 46,
+  "scenes": 6,
+  "publishedAt": "2026-10-26T06:17:56.316Z",
+  "sha256": "a061181ed94d493828d62c580182c831edcc34240df436cc6d30a8c691b69725",
+  "comedyFingerprint": "0661655939f9bb8b43a9071aec23bcf91a3c2d245bcdba9affee9f8d2944e2c8",
+  "generatedComedyResolution": "1080p",
+  "voice": {
+    "text": "딸꾹! 털이 퐁퐁 부풀어 올랐어! 히히!",
+    "asset": "b3ce171eef10af8f73d3e72c6c914006a7dfdbe656fc0be19ba94deba4fcf8a3",
+    "pitch": 1.08
+  }
+}

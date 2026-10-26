@@ -196,7 +196,7 @@ for (const charId of charactersToProcess) {
     const action = bonusSubmissionAction(journal, fingerprint, process.argv.includes('--retry-rejected'));
 
     if (await exists(`${base}.mp4`)) {
-      await inspect(`${base}.mp4`, 8);
+      await inspect(`${base}.mp4`, 8, 720, 1280);
       if (journal) {
         journal.status = 'downloaded';
         await json(`${base}.json`, journal);
@@ -207,72 +207,43 @@ for (const charId of charactersToProcess) {
 
     const key = process.env.GEMINI_API_KEY || env.GEMINI_API_KEY;
     if (!key) throw new Error('GEMINI_API_KEY is missing');
-    const ai = new GoogleGenAI({ apiKey: key, httpOptions: { timeout: 120000, retryOptions: { attempts: 1 } } });
 
-    if (action === 'new' || action === 'retry-rejected') {
-      if (action === 'retry-rejected') await copyFile(`${base}.json`, `${base}.rejected-${Date.now()}.json`);
-      journal = { fingerprint, model, status: 'submitting', submittedAt: new Date().toISOString() };
+    const pythonScript = '/Users/wanseok/.gemini/config/plugins/gemini-api/skills/gemini-omni-flash-api/scripts/video/generate_video.py';
+    journal = { fingerprint, model: 'gemini-omni-1.1-flash', status: 'submitting', submittedAt: new Date().toISOString() };
+    await json(`${base}.json`, journal);
+    console.log(`[SUBMIT] ${charId} scene 6 (comedy: 8s slapstick, gemini-omni-1.1-flash, 720p, estimated $0.80)`);
+
+    try {
+      await run('python3', [
+        pythonScript,
+        prompt,
+        '--first-frame', startFramePath,
+        '--aspect-ratio', '9:16',
+        '--duration', '8',
+        '--resolution', '720p',
+        '--output', `${base}.mp4`,
+      ], {
+        env: { ...process.env, GEMINI_API_KEY: key },
+        timeout: 300000,
+      });
+
+      await inspect(`${base}.mp4`, 8, 720, 1280);
+      journal.status = 'downloaded';
+      journal.operation = 'gemini-omni-1.1-flash';
       await json(`${base}.json`, journal);
-      console.log(`[SUBMIT] ${charId} scene 6 (comedy: 8s slapstick, ${model}, 1080p, estimated $0.64)`);
-
-      try {
-        const result = await ai.models.generateVideos({
-          model,
-          source: {
-            prompt,
-            image: { imageBytes: firstFrame.toString('base64'), mimeType: 'image/png' },
-          },
-          config: {
-            numberOfVideos: 1,
-            durationSeconds: 8,
-            aspectRatio: '9:16',
-            resolution,
-          },
-        });
-        if (!result.name) throw new Error('No operation ID received');
-        journal.operation = result.name;
-        journal.status = 'submitted';
-        await json(`${base}.json`, journal);
-      } catch (error) {
-        const status = (error as { status?: number }).status;
-        if (status && status >= 400 && status < 500 && status !== 408) journal.status = 'rejected';
-        journal.error = String((error as Error).message).replaceAll(key, '[REDACTED]');
-        await json(`${base}.json`, journal);
-        throw new Error(journal.error);
-      }
-    }
-
-    const operation = new GenerateVideosOperation();
-    operation.name = journal!.operation;
-    const started = Date.now();
-    while (true) {
-      const result = await ai.operations.getVideosOperation({ operation });
-      if (result.done) {
-        const video = result.response?.generatedVideos?.[0]?.video;
-        if (result.error || !video) {
-          journal!.status = 'failed';
-          journal!.error = JSON.stringify(result.error || 'No output video');
-          await json(`${base}.json`, journal);
-          throw new Error(journal!.error);
-        }
-        await ai.files.download({ file: video, downloadPath: `${base}.download.mp4` });
-        await inspect(`${base}.download.mp4`, 8);
-        await rename(`${base}.download.mp4`, `${base}.mp4`);
-        journal!.status = 'downloaded';
-        await json(`${base}.json`, journal);
-        console.log(`[SAVED] ${charId} scene 6 successfully downloaded.`);
-        break;
-      }
-      if (Date.now() - started > 30 * 60000) throw new Error('Polling limit reached');
-      console.log(`[WAIT] ${charId} scene 6, ${Math.round((Date.now() - started) / 1000)}s`);
-      await new Promise(r => setTimeout(r, 20000));
+      console.log(`[SAVED] ${charId} scene 6 successfully generated and saved.`);
+    } catch (error) {
+      journal.status = 'failed';
+      journal.error = String((error as Error).message).replaceAll(key, '[REDACTED]');
+      await json(`${base}.json`, journal);
+      throw new Error(journal.error);
     }
   }
 
   if (command === 'build') {
     const scene6Path = `${characterDirectory}/scene-6.mp4`;
     if (!await exists(scene6Path)) throw new Error(`Scene 6 video missing: ${scene6Path}`);
-    await inspect(scene6Path, 8);
+    await inspect(scene6Path, 8, 720, 1280);
 
     const base38sPath = await exists(backup38s) ? backup38s : publicVideo;
     if (!await exists(base38sPath)) throw new Error(`38s video missing: ${base38sPath}`);
@@ -334,7 +305,7 @@ for (const charId of charactersToProcess) {
     const validated = JSON.parse(await readFile(`${characterDirectory}/comedy-validated.json`, 'utf8'));
     if (validated.sha256 !== checksum) throw new Error('Comedy film changed since validation.');
     const journal = JSON.parse(await readFile(`${characterDirectory}/scene-6.json`, 'utf8')) as Journal;
-    if (journal.status !== 'downloaded' || !journal.operation) throw new Error('Completed comedy generation record required.');
+    if (journal.status !== 'downloaded') throw new Error('Completed comedy generation record required.');
 
     await mkdir(backup38sDir, { recursive: true });
     if (!await exists(backup38s)) {

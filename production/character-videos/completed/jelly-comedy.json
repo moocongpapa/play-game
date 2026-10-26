@@ -1,0 +1,17 @@
+{
+  "characterId": "jelly",
+  "model": "veo-3.1-lite-generate-preview",
+  "width": 1080,
+  "height": 1920,
+  "duration": 46,
+  "scenes": 6,
+  "publishedAt": "2026-10-26T06:14:00.292Z",
+  "sha256": "156c8bcefed7dc91ec2e1b029012bab2cb86af833a5aebac0c61d85e57f763ee",
+  "comedyFingerprint": "880b603dd45f3ff25edc85d04bb2ef939f5427de3237eee6b10d67a2e0de37dc",
+  "generatedComedyResolution": "1080p",
+  "voice": {
+    "text": "뿌웅~ 아이코 깜짝이야! 둥실둥실~!",
+    "asset": "17c1623482e3adddff6cd08490cbc8053f94ff64b0f30d1e3e9387504e052ffe",
+    "pitch": 1.14
+  }
+}

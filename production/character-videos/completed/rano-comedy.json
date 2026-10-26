@@ -1,0 +1,17 @@
+{
+  "characterId": "rano",
+  "model": "veo-3.1-lite-generate-preview",
+  "width": 1080,
+  "height": 1920,
+  "duration": 46,
+  "scenes": 6,
+  "publishedAt": "2026-10-26T06:12:34.730Z",
+  "sha256": "2e1b4ebe2a59e273fe5f1051b08fca008f73d66f5a4b1393be71a2ecaf9cae77",
+  "comedyFingerprint": "37e88435d6bd95b351db93f0920e554f1dc8072d6023c86ca8ff6418d2e3622b",
+  "generatedComedyResolution": "1080p",
+  "voice": {
+    "text": "어이쿠 쿵! 바나나 미끄럼틀이다! 꺄르르!",
+    "asset": "c0d71fbef353fcf6f2afde9435a52157ff28ecb4720cbe34a18ce12b3d9dfd2d",
+    "pitch": 1.08
+  }
+}
