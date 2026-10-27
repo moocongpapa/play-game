@@ -196,10 +196,10 @@ export function GameArtwork({ gameId, buddy = 'jelly' }: { gameId: GameId; buddy
     case 'pipe_connect':
       scene = (
         <>
-          <Toy emoji="⛲" x={12} y={16} size={46} />
-          <Toy emoji="💧" x={54} y={14} size={36} />
-          <Toy emoji="🌊" x={64} y={44} size={32} />
-          <Toy emoji="🌈" x={38} y={8} size={26} />
+          <Toy emoji="🍳" x={14} y={20} size={46} rotate={-8} />
+          <Toy emoji="🍿" x={54} y={10} size={38} rotate={12} />
+          <Toy emoji="🌽" x={20} y={6} size={28} rotate={-15} />
+          <Toy emoji="🧈" x={66} y={42} size={30} rotate={10} />
           <Sparkles className="scene-pop" />
         </>
       );

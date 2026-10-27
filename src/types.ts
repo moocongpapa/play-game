@@ -41,7 +41,7 @@ export type GameId =
   | 'magic_slime'        // 반짝이 마법 슬라임 (창의력·촉감놀이)
   | 'magic_potion'       // 알록달록 마법 물약/요리 만들기 (창의력·조합)
   | 'fruit_catcher'      // 하늘에서 슝슝! 바구니 과일 캐치 (순발력·동체시력)
-  | 'pipe_connect';      // 시원한 물길/파이프 연결하기 (두뇌·공간추론)
+  | 'pipe_connect';      // 통통 팝콘 프라이팬 (오감·촉감 요리놀이)
 
 export type SpeechLanguage = 'en' | 'ko';
 
