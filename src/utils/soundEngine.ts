@@ -1041,7 +1041,7 @@ export function stopPlaySounds() {
   playVoices.clear();
   setBGMDucked('instrument', false);
 }
-function playToyTone(frequency: number, duration: number, volume: number, endFrequency = frequency, delay = 0) {
+export function playToyTone(frequency: number, duration: number, volume: number, endFrequency = frequency, delay = 0) {
   const ctx = getAudioContext();
   while (playVoices.size >= 32) {
     const oldest = playVoices.values().next().value!;
@@ -1084,7 +1084,10 @@ export function playXylophoneNote(frequency: number, enabled = true, animalIndex
   } catch { /* Visual play remains available without Web Audio. */ }
 }
 
-export function playCareSound(kind: 'brush' | 'chew' | 'drink' | 'bubble', enabled = true) {
+export function playCareSound(
+  kind: 'brush' | 'chew' | 'drink' | 'bubble' | 'sour' | 'spicy' | 'freeze' | 'fizzy' | 'toot' | 'giggle' | 'shutter' | 'clang',
+  enabled = true
+) {
   if (!enabled || !masterSoundEnabled || isPageHidden()) return;
   try {
     const pitch = randomEffectPitch();
@@ -1107,6 +1110,48 @@ export function playCareSound(kind: 'brush' | 'chew' | 'drink' | 'bubble', enabl
     } else if (kind === 'drink') {
       playToyTone(420 * pitch, .14, .045, 220 * pitch);
       playToyTone(520 * pitch, .18, .035, 260 * pitch, .18);
+    } else if (kind === 'sour') {
+      playToyTone(520 * pitch, .18, .08, 220 * pitch);
+      playToyTone(240 * pitch, .22, .09, 680 * pitch, .15);
+    } else if (kind === 'spicy') {
+      playToyTone(720 * pitch, .32, .06, 1400 * pitch);
+      playToyTone(920 * pitch, .22, .04, 1600 * pitch, .08);
+    } else if (kind === 'freeze') {
+      playToyTone(980 * pitch, .06, .06, 880 * pitch);
+      playToyTone(920 * pitch, .06, .06, 820 * pitch, .07);
+      playToyTone(1050 * pitch, .06, .06, 950 * pitch, .14);
+      playToyTone(1320 * pitch, .35, .07, 1760 * pitch, .21);
+    } else if (kind === 'fizzy') {
+      playToyTone(450 * pitch, .09, .06, 800 * pitch);
+      playToyTone(620 * pitch, .09, .07, 1100 * pitch, .08);
+      playToyTone(780 * pitch, .12, .08, 1400 * pitch, .16);
+    } else if (kind === 'toot') {
+      const ctx = getAudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      const now = ctx.currentTime;
+      osc.frequency.setValueAtTime(145 * pitch, now);
+      osc.frequency.exponentialRampToValueAtTime(70 * pitch, now + .28);
+      gain.gain.setValueAtTime(.001, now);
+      gain.gain.exponentialRampToValueAtTime(.11, now + .02);
+      gain.gain.exponentialRampToValueAtTime(.001, now + .28);
+      osc.connect(gain);
+      gain.connect(getSfxDestination(ctx));
+      playVoices.add(osc);
+      osc.onended = () => { playVoices.delete(osc); osc.disconnect(); gain.disconnect(); };
+      osc.start(now);
+      osc.stop(now + .3);
+    } else if (kind === 'giggle') {
+      playToyTone(587 * pitch, .08, .08, 700 * pitch);
+      playToyTone(659 * pitch, .08, .08, 784 * pitch, .09);
+      playToyTone(784 * pitch, .12, .09, 880 * pitch, .18);
+    } else if (kind === 'shutter') {
+      playToyTone(1200 * pitch, .04, .09, 800 * pitch);
+      playToyTone(1600 * pitch, .05, .08, 1100 * pitch, .06);
+    } else if (kind === 'clang') {
+      playToyTone(440 * pitch, .45, .09, 430 * pitch);
+      playToyTone(1210 * pitch, .35, .05, 1180 * pitch);
     } else {
       const ctx = getAudioContext();
       if (tryGeneratedEffect('bubble', ctx, getSfxDestination(ctx))) { duckForEffect(550); return; }
@@ -1117,6 +1162,7 @@ export function playCareSound(kind: 'brush' | 'chew' | 'drink' | 'bubble', enabl
     }
   } catch { /* Visual feedback still works when audio is unavailable. */ }
 }
+
 
 /** The same speech channel provides deduplication, mute, language, ducking and navigation cleanup. */
 export function playCareReaction(kind: CareReaction, enabled: boolean, characterId: string): number {

@@ -11,7 +11,8 @@ import { CareFriend, PlayProgress } from '../../components/ToddlerPlay';
 import { DragMatch, DragPiece, DropSlot } from '../../components/DragMatch';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { FOOD_PLATES } from '../../data/toddlerPlay';
-import { playCareReaction } from '../../utils/soundEngine';
+import { playCareReaction, playCareSound } from '../../utils/soundEngine';
+
 import { useCareReactions } from '../../hooks/useCareReactions';
 import { CHARACTER_PERFORMANCE } from '../../utils/characterPerformance';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
@@ -66,7 +67,11 @@ function FeedMeal({ props, plate, completed, finish }: { props: ToddlerGameProps
     setAnticipating(false);
     setGaze({ x: 0, y: 0 });
     setLastFood(id);
-    const voiceDuration = playCareReaction(FOOD_REACTIONS[id]?.motion === 'crunch' ? 'chew' : 'yum', props.soundEnabled, props.buddy);
+    const motionKind = FOOD_REACTIONS[id]?.motion;
+    if (motionKind === 'sour' || motionKind === 'spicy' || motionKind === 'freeze' || motionKind === 'fizzy') {
+      playCareSound(motionKind, props.soundEnabled);
+    }
+    const voiceDuration = playCareReaction(motionKind === 'crunch' ? 'chew' : 'yum', props.soundEnabled, props.buddy);
     const mealDuration = Math.max(1300, voiceDuration);
     scheduleGameTimeout(() => { setChewing(false); setSavoring(true); }, Math.max(800, mealDuration - 320));
     scheduleGameTimeout(() => {
@@ -85,10 +90,17 @@ function FeedMeal({ props, plate, completed, finish }: { props: ToddlerGameProps
       <div className="feeding-scene">
         <div ref={portrait} style={{ '--chew-beat': `${CHARACTER_PERFORMANCE[props.buddy].chewBeat}ms` } as React.CSSProperties} className={`feeding-friend ${chewing ? `is-chewing food-${reaction?.motion}` : ''}`}>
           <CareFriend buddy={props.buddy} gaze={gaze} blush={chewing ? reaction?.blush : undefined} mouth={chewing ? 'chew' : savoring || completed ? 'smile' : anticipating ? 'open' : 'rest'} />
-          {chewing && reaction && <><span className="food-reaction-word" key={lastFood}>{reaction.word}</span>{reaction.motion === 'crown' && <Crown className="broccoli-crown" fill="currentColor" />}</>}
+          {chewing && reaction && <><span className="food-reaction-word" key={lastFood}>{reaction.word}</span>
+            {reaction.motion === 'crown' && <Crown className="broccoli-crown" fill="currentColor" />}
+            {reaction.motion === 'sour' && <span className="mukbang-overlay sour-stars" aria-hidden="true">🍋✨😵</span>}
+            {reaction.motion === 'spicy' && <span className="mukbang-overlay spicy-flames" aria-hidden="true">💨🌶️🔥</span>}
+            {reaction.motion === 'freeze' && <span className="mukbang-overlay freeze-icicles" aria-hidden="true">❄️🧊🥶</span>}
+            {reaction.motion === 'fizzy' && <span className="mukbang-overlay fizzy-bubbles" aria-hidden="true">🫧🥤🫧</span>}
+          </>}
           <DropSlot id="mouth" label="친구의 입" className="feeding-mouth" filled={completed}><span aria-hidden="true" /></DropSlot>
           {(chewing || completed) && <motion.span key={eaten.length} className="feeding-heart" initial={{ y: 15, opacity: 0, scale: .7 }} animate={{ y: -18, opacity: 1, scale: 1 }}><Heart fill="currentColor" /></motion.span>}
         </div>
+
         <div className="picnic-table-edge" aria-hidden="true" />
         <PlayProgress total={plate.length} done={eaten.length} label="맛본 음식" />
       </div>

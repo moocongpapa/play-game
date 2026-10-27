@@ -56,6 +56,11 @@ export const SPEECH_WORDS: Readonly<Record<string, string>> = {
   '부릉부릉': 'vroom vroom', '칙칙폭폭': 'choo choo', '어흥': 'roar', '우끼끼': 'ooh ooh', '삐뽀삐뽀': 'wee-woo wee-woo', '부엉부엉': 'hoot hoot', '우르르 쾅쾅': 'rumble boom',
   '아삭아삭': 'crunch crunch', '오도독 오도독': 'crunch crunch', '몽실몽실, 냠': 'fluffy, yum', '초록 왕관, 냠냠': 'a green crown, yum yum',
   '아삭! 시원해': 'Crunch! So refreshing', '딸기 볼이 발그레': 'Strawberry rosy cheeks', '포도 볼이 보랏빛': 'Grape-purple cheeks', '귤처럼 방긋': 'A sunny tangerine smile',
+  '아이셔어어': 'so sour', '앗 매워어, 불났다': 'so spicy, fire', '으으 띵해, 머리가 띵': 'brrr, brain freeze', '꺼억, 헤헤 트림 나왔어': 'burp, excuse me hehe',
+  '고추': 'chili', '탄산음료': 'fizzy soda',
+  '콧수염 안경': 'mustache glasses', '프라이팬 헬멧': 'frying pan helmet', '바나나 껍질': 'banana peel', '개구리 왕눈이': 'frog bug-eyes', '대왕 왕리본': 'giant big ribbon', '스노클 물안경': 'snorkel goggles', '줄무늬 양말': 'striped socks',
+
+
   '리본 꼬미': 'Ggomi with a bow', '아기 라노': 'little Rano', '하트 젤리': 'Jelly with a heart', '별 도치': 'starry Dochi', '케이크 꿀꿀이': 'Ggulgguli with cake',
   '구름 음메': 'cloudy Eumme', '보물 누룽지': 'Nurungji with treasure', '반짝 황금별': 'sparkling golden star', '반짝 왕관': 'sparkling crown', '웃는 꽃': 'smiling flower',
   'ㄱ': 'giyeok', 'ㄴ': 'nieun', 'ㄷ': 'digeut', 'ㄹ': 'rieul', 'ㅁ': 'mieum', 'ㅂ': 'bieup', 'ㅅ': 'siot', 'ㅇ': 'ieung', 'ㅈ': 'jieut', 'ㅊ': 'chieut', 'ㅋ': 'kieuk', 'ㅌ': 'tieut', 'ㅍ': 'pieup', 'ㅎ': 'hieut',

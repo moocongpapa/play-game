@@ -78,7 +78,16 @@ export function ToyArtwork({ emoji, className = '', label }: { emoji: string; cl
     drawing = <g stroke="#9f7854" strokeWidth="2.5" strokeLinejoin="round"><path d="M42 24 Q40 4 49 10 L56 26 Q63 0 69 8 L65 29 Q83 11 84 24 L66 39" fill="#8bb782" /><path d="M31 28 Q50 19 69 40 Q77 60 17 91 Q11 83 22 50Z" fill="#efad68" /><path d="M28 46 L40 54 M24 63 L32 68 M47 40 L57 48" fill="none" stroke="#cd894b" /><path d="M28 35 Q38 30 44 34" stroke="#ffe0a5" fill="none" /></g>;
   } else if (emoji === '🥦') {
     drawing = <g stroke="#60845e" strokeWidth="2.5" strokeLinejoin="round"><path d="M40 43 L35 88 Q50 98 65 88 L60 43" fill="#b4ca8e" /><path d="M49 84 V56 M49 70 L32 52 M49 69 L68 48" fill="none" stroke="#7da16f" /><path d="M21 61 Q1 52 14 35 Q13 17 33 18 Q44 -1 60 16 Q82 10 85 31 Q103 47 83 60 Q72 73 54 61 Q36 77 21 61" fill="#86b080" /><path d="M28 40 Q22 27 37 26 M48 25 Q58 17 65 30 M67 42 Q82 33 84 46" fill="none" stroke="#b0cc9e" strokeWidth="5" strokeLinecap="round" /></g>;
+  } else if (emoji === '🍋') {
+    drawing = <g stroke="#b59424" strokeWidth="2.5" strokeLinejoin="round"><path d="M50 24 C28 24 16 44 26 68 C34 86 64 88 78 72 C92 56 82 28 50 24 Z" fill="#fde047" /><path d="M48 24 C50 12 62 10 70 16 C62 26 54 22 48 24 Z" fill="#84cc16" stroke="#4d7c0f" strokeWidth="2" /><path d="M38 46 Q46 38 58 40" stroke="#fef08a" strokeWidth="3" fill="none" strokeLinecap="round" /></g>;
+  } else if (emoji === '🌶️') {
+    drawing = <g stroke="#991b1b" strokeWidth="2.5" strokeLinejoin="round"><path d="M58 20 C64 36 74 62 48 84 C32 98 26 78 32 60 C38 44 48 30 58 20 Z" fill="#ef4444" /><path d="M58 20 C62 12 70 8 76 10 M54 22 C56 16 66 18 64 24" stroke="#15803d" strokeWidth="3" fill="none" strokeLinecap="round" /><path d="M44 42 Q40 58 36 68" stroke="#fca5a5" strokeWidth="2.5" fill="none" strokeLinecap="round" /></g>;
+  } else if (emoji === '🍦') {
+    drawing = <g stroke="#854d0e" strokeWidth="2.5" strokeLinejoin="round"><polygon points="36,52 64,52 50,90" fill="#fde047" /><path d="M40 64 L60 64 M44 76 L56 76" stroke="#ca8a04" strokeWidth="2" /><circle cx="50" cy="40" r="22" fill="#bae6fd" stroke="#0284c7" /><circle cx="38" cy="46" r="12" fill="#bae6fd" stroke="#0284c7" /><circle cx="62" cy="46" r="12" fill="#bae6fd" stroke="#0284c7" /><circle cx="50" cy="22" r="6" fill="#ef4444" stroke="#b91c1c" /></g>;
+  } else if (emoji === '🥤') {
+    drawing = <g stroke="#7e22ce" strokeWidth="2.5" strokeLinejoin="round"><polygon points="32,34 68,34 62,86 38,86" fill="#e9d5ff" /><ellipse cx="50" cy="34" rx="18" ry="6" fill="#d8b4fe" /><line x1="56" y1="12" x2="48" y2="34" stroke="#f43f5e" strokeWidth="4" strokeLinecap="round" /><circle cx="44" cy="54" r="3" fill="#c084fc" /><circle cx="54" cy="66" r="4" fill="#c084fc" /><circle cx="46" cy="74" r="2.5" fill="#c084fc" /></g>;
   } else if (mood) {
+
     drawing = <g stroke="#725446" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="22" cy="23" r="13" fill="#d6a380" /><circle cx="78" cy="23" r="13" fill="#d6a380" />
       <circle cx="50" cy="52" r="37" fill={mood === 'angry' ? '#efb19c' : '#f1caa3'} />

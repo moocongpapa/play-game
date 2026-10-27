@@ -1,4 +1,4 @@
-export const FOOD_REACTIONS: Record<string, { word: string; blush: string; motion: 'crunch' | 'soft' | 'crown' }> = {
+export const FOOD_REACTIONS: Record<string, { word: string; blush: string; motion: 'crunch' | 'soft' | 'crown' | 'sour' | 'spicy' | 'freeze' | 'fizzy' }> = {
   apple: { word: '아삭아삭!', blush: '#e8a5a7', motion: 'crunch' },
   carrot: { word: '오도독 오도독!', blush: '#efba7f', motion: 'crunch' },
   banana: { word: '몽실몽실, 냠!', blush: '#ecd990', motion: 'soft' },
@@ -7,4 +7,9 @@ export const FOOD_REACTIONS: Record<string, { word: string; blush: string; motio
   strawberry: { word: '딸기 볼이 발그레!', blush: '#ef91b4', motion: 'soft' },
   grape: { word: '포도 볼이 보랏빛!', blush: '#b6a0d2', motion: 'soft' },
   orange: { word: '귤처럼 방긋!', blush: '#edb46e', motion: 'soft' },
+  lemon: { word: '아이셔어어~!', blush: '#ffd84d', motion: 'sour' },
+  chili: { word: '앗 매워어~! 불났다!', blush: '#ff4d4d', motion: 'spicy' },
+  icecream: { word: '으으 띵해~! 머리가 띵~!', blush: '#85d7ff', motion: 'freeze' },
+  soda: { word: '꺼억~ 헤헤 트림 나왔어!', blush: '#c4a1ff', motion: 'fizzy' },
 };
+

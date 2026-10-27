@@ -4,7 +4,9 @@ export const FOOD_PLATES = [
   [{ id: 'apple', emoji: '🍎', name: '사과' }, { id: 'carrot', emoji: '🥕', name: '당근' }, { id: 'banana', emoji: '🍌', name: '바나나' }, { id: 'broccoli', emoji: '🥦', name: '브로콜리' }],
   [{ id: 'pear', emoji: '🍐', name: '배' }, { id: 'broccoli', emoji: '🥦', name: '브로콜리' }, { id: 'strawberry', emoji: '🍓', name: '딸기' }, { id: 'carrot', emoji: '🥕', name: '당근' }],
   [{ id: 'grape', emoji: '🍇', name: '포도' }, { id: 'carrot', emoji: '🥕', name: '당근' }, { id: 'orange', emoji: '🍊', name: '귤' }, { id: 'broccoli', emoji: '🥦', name: '브로콜리' }],
+  [{ id: 'lemon', emoji: '🍋', name: '레몬' }, { id: 'chili', emoji: '🌶️', name: '고추' }, { id: 'icecream', emoji: '🍦', name: '아이스크림' }, { id: 'soda', emoji: '🥤', name: '탄산음료' }],
 ].map((items, index) => ({ id: `plate-${index}`, items }));
+
 export const XYLOPHONE_KEYS = [
   { note: '도', frequency: 261.63, color: '#e89898', animal: '🐻', name: '곰' },
   { note: '레', frequency: 293.66, color: '#edae7d', animal: '🐶', name: '강아지' },
