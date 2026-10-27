@@ -142,9 +142,10 @@ export function GameArtwork({ gameId, buddy = 'jelly' }: { gameId: GameId; buddy
     case 'mirror_maze':
       scene = (
         <>
-          <Toy emoji="🪞" x={16} y={16} size={46} rotate={-12} />
-          <Toy emoji="⭐" x={56} y={14} size={38} />
-          <Toy emoji="💎" x={66} y={50} size={26} />
+          <Toy emoji="🥚" x={16} y={18} size={46} rotate={-8} />
+          <Toy emoji="🦖" x={54} y={10} size={40} rotate={10} />
+          <Toy emoji="🦕" x={66} y={44} size={30} rotate={-10} />
+          <Toy emoji="🌿" x={18} y={6} size={26} rotate={-15} />
           <Sparkles className="scene-pop" />
         </>
       );

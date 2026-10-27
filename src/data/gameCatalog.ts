@@ -19,7 +19,7 @@ export const GAME_CATALOG: Record<GameId, { title: string; prompt: string; theme
   trampoline_jump: { developmentArea: 'creative', title: '통통 트램펄린', prompt: '톡톡 눌러서 하늘 높이 점프!', theme: 'sky', badge: '폴짝 · 리듬 점프' },
   bubble_bath: { developmentArea: 'care', title: '뽀글뽀글 거품 목욕', prompt: '비누 거품 몽글몽글, 시원하게 목욕해요!', theme: 'magic', badge: '뽀글 · 목욕 습관', category: 'care' },
   block_tower: { developmentArea: 'creative', title: '차곡차곡 블록 탑', prompt: '알록달록 블록을 차곡차곡 쌓아 봐!', theme: 'sky', badge: '차곡 · 균형 탑 쌓기', category: 'hands' },
-  mirror_maze: { developmentArea: 'logic', title: '거울과 별빛 미로', prompt: '거울을 돌리고 스위치를 밟아 길을 열어줘!', theme: 'magic', badge: '길 찾기 · 두뇌 퍼즐', category: 'hands' },
+  mirror_maze: { developmentArea: 'creative', title: '공룡 알 톡톡 깨기', prompt: '공룡 알을 톡톡 두드려 귀여운 아기 공룡을 깨워봐!', theme: 'garden', badge: '톡톡 · 공룡 알 부화', category: 'hands' },
   forest_peekaboo: { developmentArea: 'logic', title: '숲속 친구들 까꿍 팡팡', prompt: '풀숲에서 까꿍 나오는 목표 친구를 빠르게 톡!', theme: 'garden', badge: '순발력 · 까꿍 반응', category: 'hands' },
   magic_slime: { developmentArea: 'creative', title: '반짝이 마법 슬라임', prompt: '말랑말랑 슬라임을 주무르고, 반짝이 토핑으로 꾸며 봐!', theme: 'magic', badge: '촉감 · 창의 슬라임', category: 'hands' },
   magic_potion: { developmentArea: 'creative', title: '알록달록 마법 물약', prompt: '신비한 재료를 퐁당 넣고 보글보글 저어봐!', theme: 'magic', badge: '상상 · 마법 물약', category: 'hands' },
