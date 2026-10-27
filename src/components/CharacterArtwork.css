@@ -65,14 +65,14 @@
 
 .avatar-easter-bubble {
   position: absolute;
-  top: -24px;
+  top: -6px;
   left: 50%;
   transform: translateX(-50%);
   background: #ffffff;
   border: 2px solid #ecd8b9;
   border-radius: 20px;
-  padding: 4px 10px;
-  font-size: 13px;
+  padding: 3px 9px;
+  font-size: 12px;
   font-weight: 800;
   color: #69503e;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);

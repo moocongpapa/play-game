@@ -27,7 +27,7 @@
     min-height: 0;
     padding: 8px;
   }
-  .game-stage .game-surface > :is(.game-board, .toddler-play, .development-play, .adventure-board, .block-tower-stage, .trampoline-stage, .bath-stage, .mirror-maze-stage, .forest-peekaboo-stage, .magic-slime-stage, .magic-potion-stage, .fruit-catcher-stage, .pipe-connect-stage) {
+  .game-stage .game-surface > :is(.game-board, .toddler-play, .development-play, .adventure-board, .block-tower-stage, .fruit-munch-stage, .trampoline-stage, .bath-stage, .mirror-maze-stage, .forest-peekaboo-stage, .magic-slime-stage, .magic-potion-stage, .fruit-catcher-stage, .pipe-connect-stage) {
     flex: 1;
     width: 100%;
     max-width: none;
@@ -113,7 +113,7 @@
 /* Short landscape screens place tools beside the scene instead of below it. */
 @media (max-width: 1024px) and (max-height: 550px) and (orientation: landscape) {
   .game-stage :is(.sensory-play, .face-play) { padding-top: 0; }
-  .game-stage :is(.sensory-play, .face-play) > :is(.sensory-tools, .face-parts) { margin-top: 68px; }
+  .game-stage .face-play > .face-parts { margin-top: 68px; }
   .game-stage :is(.sensory-pool, .emotion-mirror) { min-height: 0; height: 100%; }
   .game-stage :is(.weather-play, .sleep-play) { display: flex; flex-direction: column; }
   .game-stage :is(.weather-play, .sleep-play) > .discovery-scene,

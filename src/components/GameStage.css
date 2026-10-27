@@ -76,7 +76,9 @@
   50% { box-shadow: inset 0 2px 0 #fff, 0 3px 0 #d97706, 0 0 0 10px rgba(251, 191, 36, 0.45); }
 }
 .game-cue:disabled .game-cue-speaker { opacity: .45; }
-.game-stage .game-board:not(.size-sort-board):has(> .visual-prompt), .game-stage .play-journey { padding-top: 0; }
+.game-stage .game-board:has(> .visual-prompt), .game-stage .play-journey, .game-stage .sensory-play { padding-top: 0; }
+.game-stage .game-board:has(> .visual-prompt) > .w-full.mt-3 { padding-left: 72px; }
+.game-stage .sensory-play > .sensory-tools { min-height: 64px; margin-left: 72px; align-items: center; }
 .game-stage .game-board > .visual-prompt {
   align-self: stretch;
   min-height: 64px;
@@ -109,6 +111,7 @@
 .app-world .game-stage .game-surface[data-game='balloon_pop'],
 .app-world .game-stage .game-surface[data-game='bubble_pop'],
 .app-world .game-stage .game-surface[data-game='block_tower'],
+.app-world .game-stage .game-surface[data-game='fruit_munch'],
 .app-world .game-stage .game-surface[data-game='trampoline_jump'],
 .app-world .game-stage .game-surface[data-game='bubble_bath'],
 .app-world .game-stage .game-surface[data-game='mirror_maze'],
@@ -118,6 +121,7 @@
 .app-world .game-stage .game-surface[data-game='fruit_catcher'],
 .app-world .game-stage .game-surface[data-game='pipe_connect'] { padding: 0; }
 .game-stage .block-tower-stage,
+.game-stage .fruit-munch-stage,
 .game-stage .trampoline-stage,
 .game-stage .bath-stage,
 .game-stage .mirror-maze-stage,
@@ -130,8 +134,25 @@
   min-height: var(--game-play-height, calc(100dvh - 84px));
   border-radius: 24px;
 }
+.game-stage :is(
+  .fruit-munch-top-bar,
+  .bath-top-bar,
+  .trampoline-top-bar,
+  .mirror-maze-stage,
+  .forest-peekaboo-stage,
+  .magic-slime-stage,
+  .magic-potion-stage,
+  .fruit-catcher-stage,
+  .pipe-connect-stage
+) .game-cue {
+  position: relative;
+  top: auto;
+  left: auto;
+  flex-shrink: 0;
+}
 .game-stage .bubble-play { padding-top: 0; gap: 4px; }
 .game-stage .bubble-play .game-cue { top: 8px; left: 8px; }
+.game-stage .number-play > .game-cue { top: 10px; left: 10px; }
 .game-stage .bubble-sky { --arena-height: max(260px, calc(var(--game-play-height, 75dvh) - 40px)); border: 0; border-radius: 24px; }
 .game-stage .key-note, .game-stage .echo-caption, .game-stage .melody-echo > span, .game-stage .sensory-tools button > span { display: none; }
 .game-stage .xylophone-play .melody-echo { margin-top: 0; }

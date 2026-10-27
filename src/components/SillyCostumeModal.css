@@ -95,91 +95,53 @@
 .costume-stage {
   position: relative;
   width: 100%;
-  height: 190px;
+  height: 184px;
   background: radial-gradient(ellipse at 50% 60%, #fffbf0 30%, #f7ebd4 85%);
   border: 3px solid #edd9b5;
   border-radius: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: visible;
+  overflow: hidden;
 }
 .costume-avatar-stage {
   position: relative;
-  width: 130px;
-  height: 130px;
-  display: grid;
-  place-items: center;
+  width: 156px;
+  height: 156px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   animation: costume-bounce 0.35s ease-out;
+}
+.costume-avatar-stage > .character-avatar,
+.polaroid-photo > .character-avatar {
+  width: 100% !important;
+  height: 100% !important;
 }
 @keyframes costume-bounce {
   0% { transform: scale(0.9) translateY(4px); }
-  60% { transform: scale(1.08) translateY(-6px); }
+  60% { transform: scale(1.06) translateY(-4px); }
   100% { transform: scale(1) translateY(0); }
 }
 
-.costume-props-layer {
+.costume-props-svg {
   position: absolute;
   inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
+  z-index: 4;
+  overflow: visible;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.18));
 }
-.prop-item {
-  position: absolute;
-  font-size: 38px;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+.prop-svg-group {
+  transform-box: fill-box;
+  transform-origin: center;
   animation: prop-wobble 2s ease-in-out infinite alternate;
 }
-.prop-mustache {
-  top: 40%;
-  left: 50%;
-  transform: translate(-50%, -10%);
-  font-size: 42px;
-}
-.prop-pan {
-  top: -24px;
-  left: 45%;
-  transform: translateX(-50%) rotate(-12deg);
-  font-size: 46px;
-}
-.prop-banana {
-  top: -16px;
-  right: 15px;
-  font-size: 40px;
-  transform: rotate(20deg);
-}
-.prop-frog {
-  top: 15%;
-  left: 50%;
-  transform: translate(-50%, 0);
-  font-size: 44px;
-}
-.prop-crown {
-  top: -28px;
-  left: 50%;
-  transform: translateX(-50%) rotate(10deg);
-  font-size: 44px;
-}
-.prop-ribbon {
-  top: -20px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 46px;
-}
-.prop-snorkel {
-  top: 30%;
-  left: 50%;
-  transform: translate(-50%, 0);
-  font-size: 42px;
-}
-.prop-sock {
-  top: -22px;
-  left: 40%;
-  transform: rotate(-15deg);
-  font-size: 42px;
-}
 @keyframes prop-wobble {
-  0% { transform-origin: center; transform: scale(1); }
-  100% { transform: scale(1.05); }
+  0% { transform: scale(1) rotate(-1.5deg); }
+  100% { transform: scale(1.03) rotate(1.5deg); }
 }
 
 .costume-items-grid {

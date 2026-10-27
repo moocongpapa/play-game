@@ -138,6 +138,7 @@
 .feeding-friend .care-mouth-chew, .feeding-friend .care-friend[data-chewing='true'] .friend-cheek { animation-duration: var(--chew-beat,440ms); animation-iteration-count: infinite; }
 .feeding-friend.is-chewing .care-friend { animation-duration: var(--chew-beat,440ms); animation-iteration-count: infinite; }
 .feeding-friend .food-reaction-word { display: none; }
+.feeding-friend:is(.food-sour, .food-spicy, .food-freeze, .food-fizzy) .food-reaction-word { display: block; top: 18%; right: -12px; font-size: 13px; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.12); }
 .feeding-friend .feeding-heart { right: -8%; top: 26%; }
 .feeding-friend .broccoli-crown { top: -10%; }
 .feeding-friend.food-sour .care-friend { animation: mukbang-sour .38s ease-in-out infinite alternate !important; }

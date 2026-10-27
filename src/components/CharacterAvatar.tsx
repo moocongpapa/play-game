@@ -57,14 +57,16 @@ function ensureGlobalGazeTracker() {
 }
 
 export function CharacterAvatar({ id, size = 'md', mood = 'happy', expression, view = 'front', variant,
-  onClick, className = '', showBadge = false, interactive }: CharacterAvatarProps) {
-  const isInteractive = interactive ?? (size === 'xl' || size === '2xl');
+  onClick, className = '', showBadge = false, interactive = false }: CharacterAvatarProps) {
+  const isInteractive = interactive;
   const reduceMotion = useReducedMotion();
   const [delighted, setDelighted] = useState(false);
   const [liveSpeaking, setLiveSpeaking] = useState(false);
   const [tickled, setTickled] = useState(false);
   const [tooting, setTooting] = useState(false);
   const releaseTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const tickleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const tootTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const tapTimesRef = useRef<number[]>([]);
   const dragTrackerRef = useRef<{ isDown: boolean; startX: number; lastX: number; lastDir: number; reversals: number; startTime: number }>({
     isDown: false,
@@ -83,6 +85,8 @@ export function CharacterAvatar({ id, size = 'md', mood = 'happy', expression, v
     return () => {
       unsub();
       clearTimeout(releaseTimer.current);
+      clearTimeout(tickleTimer.current);
+      clearTimeout(tootTimer.current);
     };
   }, [id, reduceMotion]);
 
@@ -118,10 +122,11 @@ export function CharacterAvatar({ id, size = 'md', mood = 'happy', expression, v
       tapTimesRef.current = recent;
       if (recent.length >= 3) {
         tapTimesRef.current = [];
+        clearTimeout(tootTimer.current);
         setTooting(true);
         playCareSound('toot', true);
         emitJuice({ kind: 'pop', x: e.clientX, y: e.clientY });
-        setTimeout(() => setTooting(false), 1800);
+        tootTimer.current = setTimeout(() => setTooting(false), 1800);
       }
     }
   };
@@ -136,10 +141,11 @@ export function CharacterAvatar({ id, size = 'md', mood = 'happy', expression, v
         dragTrackerRef.current.reversals += 1;
         if (dragTrackerRef.current.reversals >= 3 && now - dragTrackerRef.current.startTime < 1200) {
           // Trigger Tickle Easter Egg!
+          clearTimeout(tickleTimer.current);
           setTickled(true);
           playCareSound('giggle', true);
           emitJuice({ kind: 'pop', x: e.clientX, y: e.clientY });
-          setTimeout(() => setTickled(false), 1600);
+          tickleTimer.current = setTimeout(() => setTickled(false), 1600);
           dragTrackerRef.current.reversals = 0;
         }
       }

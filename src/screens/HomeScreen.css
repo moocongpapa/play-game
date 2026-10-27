@@ -237,39 +237,41 @@
 .storybook-home .welcome-scene { min-height: 190px; padding-block: 20px; }
 .home-games .welcome-scene { min-height: 166px; padding: 16px 24px; }
 .home-games .welcome-copy .eyebrow, .home-games .welcome-subtitle { display: none; }
-.home-games .welcome-copy { max-width: 55%; }
+.home-games .welcome-copy { max-width: 52%; }
 .home-games .welcome-copy h1 { font-size: clamp(23px,3vw,32px); }
-.home-games .welcome-friends { left: 43%; }
-.home-games .selected-buddy-stage { position: absolute; top: 50%; transform: translate(-50%,-50%); width: 250px; height: 136px; left: 50%; display: flex; gap: 10px; align-items: center; }
+.home-games .welcome-friends { left: 42%; }
+.home-games .selected-buddy-stage { position: absolute; top: 50%; transform: translate(-50%,-50%); width: 220px; height: 140px; left: 50%; display: flex; gap: 10px; align-items: center; justify-content: center; }
 .home-games .selected-buddy-stage .selected-buddy-halo { position: relative; top: 0; left: 0; transform: none; padding: 7px; width: 136px; height: 132px; flex-shrink: 0; }
-.buddy-action-tools { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
-.buddy-stage-tool { display: grid; place-items: center; border: 2px solid #e5c993; border-radius: 50%; background: linear-gradient(#fffdf4,#fff0cf); box-shadow: 0 3px 0 #c9ac7c; position: static; flex-shrink: 0; width: 44px; height: 44px; color: #a5764b; animation: none; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.buddy-action-tools { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; z-index: 4; }
+.buddy-stage-tool { display: grid; place-items: center; border: 2px solid #e5c993; border-radius: 50%; background: linear-gradient(#fffdf4,#fff0cf); box-shadow: 0 3px 0 #c9ac7c; position: static; flex-shrink: 0; width: 42px; height: 42px; color: #a5764b; animation: none; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.15s ease; }
 .buddy-stage-tool:active { transform: translateY(2px); box-shadow: 0 1px 0 #c9ac7c; }
-.buddy-stage-tool .stage-tool-emoji { font-size: 20px; }
-.home-games .buddy-video-badge-icon { width: 22px; height: 22px; }
+.buddy-stage-tool .stage-tool-emoji { font-size: 19px; line-height: 1; }
+.home-games .buddy-video-badge-icon { width: 20px; height: 20px; }
 .home-games .selected-buddy-halo > .buddy-switch-cue { min-height: 33px; display: flex; justify-content: center; gap: 4px; min-width: 67px; height: 33px; bottom: -4px; padding: 2px 7px; background: #fff9e9; border: 1px solid #e3d4bd; box-shadow: 0 2px 0 #d9c7aa; }
 .buddy-switch-friend .nav-toy { width: 35px; height: 31px; }
 .home-games .hero-star { display: none; }
 
-/* Living Interactive World */
-.living-sun-btn { position: absolute; top: 14px; right: 18px; z-index: 3; background: transparent; border: 0; font-size: 34px; cursor: pointer; pointer-events: auto; transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
+/* Living Interactive World - placed in open sky & meadow zones away from text and buddy tools */
+.living-sun-btn { position: absolute; top: 8px; left: 37%; z-index: 3; width: 38px; height: 38px; display: grid; place-items: center; background: transparent; border: 0; padding: 0; font-size: 28px; line-height: 1; cursor: pointer; pointer-events: auto; transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .living-sun-btn:hover { transform: scale(1.15) rotate(15deg); }
 .living-sun-btn:active { transform: scale(0.95); }
 .living-sun-btn.is-cool { animation: sun-spin 0.4s ease-out; }
 @keyframes sun-spin { 0% { transform: rotate(0) scale(0.8); } 50% { transform: rotate(180deg) scale(1.25); } 100% { transform: rotate(360deg) scale(1); } }
 
 .living-cloud-btn { pointer-events: auto; cursor: pointer; border: 0; z-index: 3; transition: transform 0.2s ease; }
+.home-games .living-cloud-btn.welcome-cloud { top: 14px; left: 22%; right: auto; }
 .living-cloud-btn:hover { transform: scale(1.08); }
 .living-cloud-btn:active { transform: scale(1.2) translateY(-4px); }
 
 .living-candy-drop { position: absolute; top: 30px; font-size: 22px; pointer-events: none; z-index: 5; animation: candy-tumble 1.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
 @keyframes candy-tumble { 0% { transform: translateY(0) rotate(0deg) scale(0.8); opacity: 1; } 60% { transform: translateY(90px) rotate(180deg) scale(1.1); opacity: 1; } 100% { transform: translateY(130px) rotate(360deg) scale(0.6); opacity: 0; } }
 
-.living-bushes-layer { position: absolute; bottom: 4px; left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 16px; pointer-events: none; z-index: 3; }
-.living-bush { position: relative; pointer-events: auto; background: transparent; border: 0; font-size: 28px; cursor: pointer; transition: transform 0.2s ease; }
+.living-bushes-layer { position: absolute; bottom: 6px; left: 34%; right: auto; display: flex; align-items: center; gap: 12px; padding: 0; pointer-events: none; z-index: 3; }
+.home-games .living-bushes-layer { left: 20px; bottom: 8px; }
+.living-bush { position: relative; pointer-events: auto; background: transparent; border: 0; padding: 2px; font-size: 24px; line-height: 1; cursor: pointer; transition: transform 0.2s ease; }
 .living-bush:hover { transform: scale(1.1); }
 .living-bush:active { transform: scale(1.25) rotate(8deg); }
-.bush-critter { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 13px; font-weight: 900; color: #3b5349; white-space: nowrap; background: #ffffff; padding: 2px 8px; border-radius: 12px; border: 1px solid #c7d7a3; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); animation: critter-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.bush-critter { position: absolute; top: -24px; left: 50%; transform: translateX(-50%); font-size: 12px; font-weight: 900; color: #3b5349; white-space: nowrap; background: #ffffff; padding: 2px 8px; border-radius: 12px; border: 1px solid #c7d7a3; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); animation: critter-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
 @keyframes critter-pop { 0% { transform: translateX(-50%) translateY(10px) scale(0.5); opacity: 0; } 100% { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; } }
 
 .home-games .games-section { margin-top: 16px; }
@@ -287,16 +289,20 @@
   .storybook-home .welcome-scene { min-height: 208px; padding: 16px; border-radius: 28px; }
   .storybook-home .welcome-copy h1 { font-size: 24px; }.storybook-home .welcome-subtitle { font-size: 12px; margin-bottom: 0; }
   .home-friends .hero-bunny { bottom: 94px; }.home-friends .hero-dino { bottom: 78px; right: 3%; width: 48%; }
-  .home-games .welcome-scene { min-height: 154px; padding: 12px; }
-  .home-games .welcome-copy { max-width: 40%; }.home-games .welcome-copy h1 { font-size: 22px; }
-  .home-games .welcome-friends { left: 42%; }
-  .home-games .selected-buddy-stage { width: 196px; height: 116px; gap: 6px; }
-  .home-games .selected-buddy-stage .selected-buddy-halo { width: 112px; height: 112px; padding: 4px; }
+  .home-games .welcome-scene { min-height: 158px; padding: 12px 14px; }
+  .home-games .welcome-copy { max-width: 40%; }.home-games .welcome-copy h1 { font-size: 21px; }
+  .home-games .welcome-friends { left: 40%; }
+  .home-games .selected-buddy-stage { width: 172px; height: 120px; gap: 8px; }
+  .home-games .selected-buddy-stage .selected-buddy-halo { width: 110px; height: 110px; padding: 4px; }
   .home-games .selected-buddy-stage .buddy-stage-tool { width: 36px; height: 36px; }
   .home-games .selected-buddy-stage .stage-tool-emoji { font-size: 16px; }
-  .home-games .selected-buddy-stage .buddy-video-badge-icon { width: 18px; height: 18px; }
+  .home-games .selected-buddy-stage .buddy-video-badge-icon { width: 17px; height: 17px; }
   .home-games .selected-buddy-stage .selected-buddy-halo > .buddy-switch-cue svg { width: auto; height: auto; }
   .home-games .selected-buddy-stage .selected-buddy-halo > .buddy-switch-cue > svg { width: 17px; height: 17px; }
+  .living-sun-btn { top: 6px; left: 36%; font-size: 24px; width: 32px; height: 32px; }
+  .home-games .living-cloud-btn.welcome-cloud { top: 12px; left: 18%; }
+  .living-bush { font-size: 21px; }
+  .home-games .living-bushes-layer { left: 14px; bottom: 6px; gap: 8px; }
 
   .storybook-home .game-card-grid { gap: 12px; }
   .storybook-home .picture-game-card { padding: 6px 6px 10px; border-radius: 22px; }
@@ -310,5 +316,5 @@
   .storybook-home .friend-day-card { min-height: 68px; padding: 4px 8px; gap: 6px; }.storybook-home .friend-day-copy { height: 52px; }
   .storybook-home .friend-day-card > div:first-child { width: 48px; height: 48px; }
 }
-@media (max-width: 359px) { .home-games .welcome-copy h1 { font-size: 19px; }.home-games .welcome-friends { left: 38%; }.nav-toy { width: 50px; height: 54px; } }
+@media (max-width: 359px) { .home-games .welcome-copy h1 { font-size: 18px; }.home-games .welcome-friends { left: 37%; }.nav-toy { width: 50px; height: 54px; } }
 @media (prefers-reduced-motion: reduce) { .home-games .buddy-video-badge, .home-games .buddy-video-badge:hover { transform: none; transition: none; } }

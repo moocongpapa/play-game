@@ -26,7 +26,7 @@
 .routine-action { position: absolute; width: 94px; height: 94px; top: 48%; left: 38%; pointer-events: none; animation: care-use 1.1s ease-out both; }.action-wipe { animation: care-wipe 1.1s ease-in-out both; }
 .meal-smudge { position: absolute; width: 26px; height: 15px; border-radius: 60%; background: #c7875b99; left: 68%; top: 64%; }
 .rinse-finish { position: relative; width: 90px; height: 76px; border-radius: 28px; color: #5f98a5; background: #e1f4ed; border: 3px solid #b3d4d1; }.rinse-finish > svg { width: 48px; height: 48px; margin: auto; }
-.menu-choices { display: grid; gap: 14px; padding: 14px; border-radius: 30px; background: #e7dbc4; }.menu-plate { position: relative; display: flex; align-items: center; justify-content: center; padding: 14px; min-height: 116px; border-radius: 50px; background: #fff9eb; border: 4px solid #dfbc97; box-shadow: inset 0 0 0 4px #fffdf7,0 5px 0 #cbb997; }.menu-plate > .toy-art { width: 22%; max-width: 105px; height: 83px; }
+.menu-choices { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; padding: 12px; border-radius: 30px; background: #e7dbc4; }.menu-plate { position: relative; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center; padding: 12px; min-height: 116px; border-radius: 36px; background: #fff9eb; border: 4px solid #dfbc97; box-shadow: inset 0 0 0 4px #fffdf7,0 5px 0 #cbb997; }.menu-plate > .toy-art { width: 42%; max-width: 68px; height: 58px; }
 .journey-keepsakes { display: flex; justify-content: center; align-items: center; gap: 8px; height: 40px; }.journey-keepsakes > span { display: block; width: 40px; height: 40px; }.journey-keepsakes svg,.journey-keepsakes .toy-art,.journey-keepsakes span > div { width: 100% !important; height: 100% !important; }
 .harvest-picnic { min-height: 280px; padding: 30px 8px; display: grid; align-items: center; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; border-radius: 28px; background: repeating-linear-gradient(0deg,#e5b9ad55 0 26px,#fff0de55 26px 52px),repeating-linear-gradient(90deg,#e5b9ad55 0 26px,#fff0de 26px 52px); }
 .picnic-plate.drop-slot { height: 120px; min-width: 64px; border-radius: 48%; background: #fff7e5; border: 4px solid #dcc4a0; padding: 12px; }.picnic-plate > .toy-art { width: 100%; height: 100%; }.picnic-plate:not([data-filled=true]) > .toy-art { opacity: .3; }
@@ -39,7 +39,7 @@
 @keyframes care-use { 0% { transform: translateY(25px) rotate(-15deg); } 50% { transform: rotate(20deg); } 100% { opacity: 0; transform: translateY(25px); } }
 @keyframes care-wipe { 0%,100% { transform: translateX(-25px); } 30%,70% { transform: translateX(25px) rotate(10deg); } 100% { opacity: 0; } }
 @media (max-width: 380px) { .journey-path { gap: 12px; }.journey-path li { width: 46px; height: 44px; }.care-routine { padding: 12px 8px; }.journey-finale { padding-inline: 8px; }.journey-collection { gap: 8px; } }
-@media (min-width: 700px) { .menu-choices { grid-template-columns: repeat(3,minmax(0,1fr)); }.menu-plate { min-height: 215px; flex-wrap: wrap; border-radius: 48%; }.menu-plate > .toy-art { width: 48%; }.journey-finale { min-height: 450px; }.journey-companion { width: 210px; height: 195px; } }
+@media (min-width: 700px) { .menu-choices { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; }.menu-plate { min-height: 190px; flex-wrap: wrap; border-radius: 42px; }.menu-plate > .toy-art { width: 44%; max-width: 86px; height: 74px; }.journey-finale { min-height: 450px; }.journey-companion { width: 210px; height: 195px; } }
 @media (prefers-reduced-motion: reduce) { .play-journey *, .play-journey *:before, .play-journey *:after { animation: none !important; transition: none !important; } }
 .harvest-orchard-1 .discovery-landscape { filter: hue-rotate(-14deg); }.harvest-orchard-2 .discovery-landscape { filter: hue-rotate(13deg); }
 .journey-keepsakes:empty { display: none; }
@@ -66,6 +66,6 @@
   .play-journey :is(.bathroom-scene,.feeding-scene) { padding: 4px 10px; }.play-journey .sink-rim { margin-bottom: 0; }
   .play-journey .trace-scene,.play-journey .peekaboo-garden { grid-column: 1 / -1; grid-row: 2; min-height: 185px; height: max(185px,calc(100dvh - 205px)); }
   .play-journey > .play-progress,.play-journey .journey-cheer { grid-column: 2; grid-row: 3; }
-  .play-journey .menu-choices { grid-column: 1 / -1; grid-row: 2; grid-template-columns: repeat(3,minmax(0,1fr)); padding: 10px; }.play-journey .menu-plate { min-height: 185px; flex-wrap: wrap; padding: 6px; }.play-journey .menu-plate > .toy-art { width: 43%; height: 65px; }
+  .play-journey .menu-choices { grid-column: 1 / -1; grid-row: 2; grid-template-columns: repeat(4,minmax(0,1fr)); padding: 10px; }.play-journey .menu-plate { min-height: 165px; flex-wrap: wrap; padding: 6px; }.play-journey .menu-plate > .toy-art { width: 43%; height: 58px; }
   .play-journey .journey-finale { grid-column: 1 / -1; grid-row: 2; min-height: 200px; padding: 12px; flex-direction: row; }.play-journey .journey-collection { gap: 6px; }.play-journey .journey-toy { width: 76px; height: 80px; }.play-journey .journey-companion { width: 140px; height: 145px; flex-shrink: 0; margin: 0; }
 }
