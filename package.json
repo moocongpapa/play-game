@@ -9,7 +9,8 @@
     "test": "node --import tsx --test src/server/*.test.ts src/utils/*.test.ts",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "harness:check": "node --import tsx scripts/harness-check.ts"
   },
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.71.0",

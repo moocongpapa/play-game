@@ -13,11 +13,12 @@
 - `scripts/generate-portrait-videos.ts`, `generate-bonus-scenes.ts`, `generate-play-audio.ts`, and `generate-care-voices.ts` are manual maintainer tools. They must not run during app startup, build, or ordinary verification; generation can spend credits.
 - `docs/README.md` indexes current architecture, setup, games, audio, maintenance, and dated QA records. Update relevant docs when behavior changes.
 - `tests/review-regressions.html` is a manual browser harness; `npm test` runs the server/utility tests without paid generation.
+- `.agents/` owns the project Agent Harness (`agents/`, `skills/`, `rules/`, `hooks.json`, and `scripts/`), and `npm run harness:check` (`scripts/harness-check.ts`) statically verifies catalog/routing/thumbnail sync, `.game-cue` layout safety, audio/timer cleanup, and paid-script isolation.
 
 ## Git workflow
 
 - After each repository change request, review the finished changes, then commit and push the intended files. The user has authorized this as a standing workflow unless they explicitly say otherwise; do not ask for confirmation again.
 - Before staging, inspect `git status`, the diff, and untracked files. Preserve changes outside the requested scope and never include secrets or local `.env` files.
-- Run `npm run lint` and `npm run build` for code changes. Report any failure instead of claiming the change was verified.
+- Run `npm run harness:check`, `npm run lint`, and `npm run build` for code changes. Report any failure instead of claiming the change was verified.
 - Stage only the intended files, review the staged diff, then commit with a concise message describing the change.
 - Push the current branch to its configured upstream without force pushing. If the remote has advanced, reconcile it safely before pushing. Report the commit hash and push result.

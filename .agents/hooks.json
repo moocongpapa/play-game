@@ -1,0 +1,27 @@
+{
+  "credit-and-safety-guard": {
+    "enabled": true,
+    "PreToolUse": [
+      {
+        "matcher": "run_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ./scripts/pre-tool-guard.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "quality-gate": {
+    "enabled": true,
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node ./scripts/stop-quality-gate.mjs",
+        "timeout": 20
+      }
+    ]
+  }
+}

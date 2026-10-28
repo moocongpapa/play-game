@@ -6,7 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
-.agents/
 .antigravity/
 .audio-generation/
 .video-generation/
