@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Camera, Check, RotateCcw, X } from 'lucide-react';
 import type { CharacterId } from '../types';
 import { CHARACTERS } from '../data/characters';
 import { CharacterAvatar } from './CharacterAvatar';
-import { playCareSound, playSparkleChime, playToyTone, speakText } from '../utils/soundEngine';
+import { playCareSound, playSparkleChime, playToyTone, speakText, stopAllSpeech } from '../utils/soundEngine';
 import { emitJuice } from '../utils/juice';
 import './SillyCostumeModal.css';
 
@@ -285,8 +285,26 @@ export const SillyCostumeModal: React.FC<SillyCostumeModalProps> = ({
   const [photoFlash, setPhotoFlash] = useState(false);
   const [showPolaroid, setShowPolaroid] = useState(false);
   const [bounceKey, setBounceKey] = useState(0);
+  const snapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const character = CHARACTERS[buddy] || CHARACTERS.ggomi;
+
+  useEffect(() => {
+    if (!isOpen) {
+      if (snapTimerRef.current) {
+        clearTimeout(snapTimerRef.current);
+        snapTimerRef.current = null;
+      }
+      setPhotoFlash(false);
+      setShowPolaroid(false);
+    }
+    return () => {
+      if (snapTimerRef.current) {
+        clearTimeout(snapTimerRef.current);
+        snapTimerRef.current = null;
+      }
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -325,8 +343,10 @@ export const SillyCostumeModal: React.FC<SillyCostumeModalProps> = ({
     emitJuice({ kind: 'snap', x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
     playCareSound('shutter', soundEnabled);
 
+    if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
     setPhotoFlash(true);
-    setTimeout(() => {
+    snapTimerRef.current = setTimeout(() => {
+      snapTimerRef.current = null;
       setPhotoFlash(false);
       setShowPolaroid(true);
       emitJuice({ kind: 'success', x: window.innerWidth / 2, y: window.innerHeight / 2 });
@@ -345,6 +365,11 @@ export const SillyCostumeModal: React.FC<SillyCostumeModalProps> = ({
           type="button"
           className="costume-close-btn"
           onClick={() => {
+            if (snapTimerRef.current) {
+              clearTimeout(snapTimerRef.current);
+              snapTimerRef.current = null;
+            }
+            stopAllSpeech();
             setShowPolaroid(false);
             onClose();
           }}

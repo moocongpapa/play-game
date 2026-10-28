@@ -49,13 +49,19 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
   const [sunCool, setSunCool] = useState(false);
   const [candyDrops, setCandyDrops] = useState<{ id: number; x: number; emoji: string }[]>([]);
   const [peekabooBush, setPeekabooBush] = useState<'chick' | 'ladybug' | null>(null);
+  const bgTimersRef = useRef<Array<ReturnType<typeof setTimeout>>>([]);
 
   // Keep the same picture in the same place when the child changes friends.
   const games = availableGameIds(age, disabledGames);
   const timeGreeting = getTimeGreeting();
 
-
-  useEffect(() => () => stopAllSpeech(), []);
+  useEffect(() => {
+    return () => {
+      bgTimersRef.current.forEach((t) => clearTimeout(t));
+      bgTimersRef.current = [];
+      stopAllSpeech();
+    };
+  }, []);
   useEffect(() => {
     if (hasNavigated) headingRef.current?.focus({ preventScroll: true });
   }, [step, hasNavigated]);
@@ -149,9 +155,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
             emoji: emojis[Math.floor(Math.random() * emojis.length)],
           }));
           setCandyDrops(prev => [...prev.slice(-12), ...newDrops]);
-          setTimeout(() => {
+          bgTimersRef.current.push(setTimeout(() => {
             setCandyDrops(prev => prev.filter(d => !newDrops.some(nd => nd.id === d.id)));
-          }, 1800);
+          }, 1800));
         }}
         aria-label="구름 톡톡! 사탕 비 내리기"
       >
@@ -171,7 +177,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
       ))}
 
       {/* Living Interactive World: Bushes & Peekaboo Critters */}
-      <div className="living-bushes-layer" aria-hidden="true">
+      <div className="living-bushes-layer">
         <button
           type="button"
           className={`living-bush bush-left ${peekabooBush === 'chick' ? 'bush-peekaboo' : ''}`}
@@ -181,12 +187,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
             playCareSound('giggle', soundEnabled);
             emitJuice({ kind: 'pop', x: e.clientX, y: e.clientY });
             speakText('까꿍! 찾았다!', soundEnabled, { characterId: selectedCharacter });
-            setTimeout(() => setPeekabooBush(null), 1900);
+            bgTimersRef.current.push(setTimeout(() => setPeekabooBush(null), 1900));
           }}
           aria-label="풀숲 누르기"
         >
-          {peekabooBush === 'chick' && <span className="bush-critter">🐥 까꿍!</span>}
-          <span className="bush-leaves">🌿</span>
+          {peekabooBush === 'chick' && <span className="bush-critter" aria-hidden="true">🐥 까꿍!</span>}
+          <span className="bush-leaves" aria-hidden="true">🌿</span>
         </button>
 
         <button
@@ -198,12 +204,12 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
             playCareSound('giggle', soundEnabled);
             emitJuice({ kind: 'pop', x: e.clientX, y: e.clientY });
             speakText('까꿍! 찾았다!', soundEnabled, { characterId: selectedCharacter });
-            setTimeout(() => setPeekabooBush(null), 1900);
+            bgTimersRef.current.push(setTimeout(() => setPeekabooBush(null), 1900));
           }}
           aria-label="꽃덤불 누르기"
         >
-          {peekabooBush === 'ladybug' && <span className="bush-critter">🐞 까꿍!</span>}
-          <span className="bush-leaves">🌸</span>
+          {peekabooBush === 'ladybug' && <span className="bush-critter" aria-hidden="true">🐞 까꿍!</span>}
+          <span className="bush-leaves" aria-hidden="true">🌸</span>
         </button>
       </div>
 

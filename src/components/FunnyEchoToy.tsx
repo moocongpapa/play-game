@@ -33,19 +33,22 @@ export const FunnyEchoToy: React.FC<FunnyEchoToyProps> = ({
   const audioChunksRef = useRef<Blob[]>([]);
   const recordedBufferRef = useRef<AudioBuffer | null>(null);
   const activeSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const activeLfoRef = useRef<OscillatorNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isOpenRef = useRef(isOpen);
+  isOpenRef.current = isOpen;
 
   const character = CHARACTERS[buddy] || CHARACTERS.ggomi;
 
-  useEffect(() => {
-    return () => {
-      stopPlayback();
-      stopRecordingTracks();
-    };
-  }, []);
-
   const stopRecordingTracks = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      try {
+        mediaRecorderRef.current.stop();
+      } catch {
+        /* ignore */
+      }
+    }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
@@ -54,9 +57,18 @@ export const FunnyEchoToy: React.FC<FunnyEchoToyProps> = ({
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
+    setIsRecording(false);
   };
 
   const stopPlayback = () => {
+    if (activeLfoRef.current) {
+      try {
+        activeLfoRef.current.stop();
+      } catch {
+        /* Already ended */
+      }
+      activeLfoRef.current = null;
+    }
     if (activeSourceRef.current) {
       try {
         activeSourceRef.current.stop();
@@ -67,6 +79,17 @@ export const FunnyEchoToy: React.FC<FunnyEchoToyProps> = ({
     }
     setIsPlaying(false);
   };
+
+  useEffect(() => {
+    if (!isOpen) {
+      stopPlayback();
+      stopRecordingTracks();
+    }
+    return () => {
+      stopPlayback();
+      stopRecordingTracks();
+    };
+  }, [isOpen]);
 
   const handleStartRecord = async () => {
     if (isRecording) {
@@ -81,6 +104,10 @@ export const FunnyEchoToy: React.FC<FunnyEchoToyProps> = ({
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (!isOpenRef.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
       streamRef.current = stream;
 
       const mediaRecorder = new MediaRecorder(stream);
@@ -95,11 +122,13 @@ export const FunnyEchoToy: React.FC<FunnyEchoToyProps> = ({
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         stopRecordingTracks();
+        if (!isOpenRef.current) return;
 
         try {
           const arrayBuffer = await audioBlob.arrayBuffer();
           const ctx = getAudioContext();
           const decoded = await ctx.decodeAudioData(arrayBuffer);
+          if (!isOpenRef.current) return;
           recordedBufferRef.current = decoded;
           setHasRecording(true);
           setIsRecording(false);
@@ -173,6 +202,7 @@ export const FunnyEchoToy: React.FC<FunnyEchoToyProps> = ({
         // Metallic robot oscillator vibrato
         const tremolo = ctx.createGain();
         const lfo = ctx.createOscillator();
+        activeLfoRef.current = lfo;
         lfo.type = 'square';
         lfo.frequency.value = 45; // 45Hz metallic robotic ring-modulation
         lfo.connect(tremolo.gain);
@@ -185,6 +215,7 @@ export const FunnyEchoToy: React.FC<FunnyEchoToyProps> = ({
           } catch {
             /* ignore */
           }
+          if (activeLfoRef.current === lfo) activeLfoRef.current = null;
           setIsPlaying(false);
         };
       } else {
@@ -213,6 +244,7 @@ export const FunnyEchoToy: React.FC<FunnyEchoToyProps> = ({
           onClick={() => {
             stopPlayback();
             stopRecordingTracks();
+            stopAllSpeech();
             onClose();
           }}
           aria-label="닫기"

@@ -71,7 +71,7 @@ test('spoken literals and direction templates in game screens have authored Engl
         if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) text = node.text;
         if (ts.isTemplateExpression(node)) text = node.head.text + node.templateSpans.map(span => 'Sample' + span.literal.text).join('');
         const context = node.parent?.getText(source) || '';
-        if (text && /[가-힣]/.test(text) && (/speakText\(|finish\(|praise\(|triggerStageClear\(|GUIDE\s*=|guide\s*=|prompt\s*=|promptText\s*=|audioMsg\s*=|entranceVoice\s*=|msg\s*=/.test(context) || (/playThemes\.ts$/.test(file) && /^text:/.test(context)))) {
+        if (text && /[가-힣]/.test(text) && (/speakText\(|finish\(|praise\(|triggerStageClear\(|GUIDE\s*=|guide\s*=|prompt\s*=|promptText\s*=|audioMsg\s*=|entranceVoice\s*=|msg\s*=|guideText\s*:|seasonedVoice\s*:|peekVoice\s*:|hatchedVoice\s*:/.test(context) || (/playThemes\.ts$/.test(file) && /^text:/.test(context)))) {
           assertEnglish(text); checked++;
         }
         ts.forEachChild(node, visit);

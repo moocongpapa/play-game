@@ -167,6 +167,22 @@ function checkAudioAndTimerHygiene(): CheckResult {
     }
   }
 
+  // Also scan all .tsx files in src/screens and src/components for raw setTimeout without clearTimeout or useGameTimeouts
+  const uiFiles = [
+    ...walkFiles(path.join(ROOT, 'src/screens')),
+    ...walkFiles(path.join(ROOT, 'src/components')),
+  ].filter((f) => f.endsWith('.tsx'));
+
+  for (const fullPath of uiFiles) {
+    const src = fs.readFileSync(fullPath, 'utf8');
+    const hasRawTimeout = /\bsetTimeout\s*\(/.test(src);
+    const hasTimeoutCleanup = /\bclearTimeout\s*\(/.test(src) || /\buseGameTimeouts\b/.test(src);
+    if (hasRawTimeout && !hasTimeoutCleanup) {
+      const rel = path.relative(ROOT, fullPath);
+      details.push(`[${rel}] setTimeout 호출 후 clearTimeout 또는 useGameTimeouts 정리 누락`);
+    }
+  }
+
   return {
     name: '3. 음성(stopAllSpeech) 및 타이머/애니메이션 메모리 누수 검사',
     passed: details.length === 0,
