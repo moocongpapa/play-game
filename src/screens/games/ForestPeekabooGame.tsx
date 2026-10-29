@@ -25,6 +25,8 @@ import {
   type ComboState,
 } from '../../utils/juice';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
+import { useGameActivity } from '../../hooks/useGameActivity';
+import { RoundContinuation } from '../../components/RoundContinuation';
 
 interface ForestPeekabooGameProps {
   buddy: CharacterId;
@@ -55,7 +57,10 @@ export const ForestPeekabooGame: React.FC<ForestPeekabooGameProps> = ({
   soundEnabled,
   ageGroup = 'sprout',
 }) => {
-  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+  const { clearGameTimeouts } = useGameTimeouts();
+  const { paused, isBlocked } = useGameActivity();
+  const latest = useRef({ soundEnabled, buddy, onCompleteQuiz });
+  latest.current = { soundEnabled, buddy, onCompleteQuiz };
   const pixiRef = useRef<PixiStageHandle>(null);
   const stageRef = useRef<HTMLDivElement>(null);
 
@@ -90,24 +95,36 @@ export const ForestPeekabooGame: React.FC<ForestPeekabooGameProps> = ({
     });
   }, []);
 
-  // Guide speech on load
+  // The voice can change without cancelling the successful round's continuation.
   useEffect(() => {
-    stopAllSpeech();
+    if (!isBlocked()) speakText(GUIDE, soundEnabled, { characterId: buddy });
+  }, [buddy, soundEnabled, isBlocked]);
+  useEffect(() => {
     resetCombo();
-    speakText(GUIDE, soundEnabled, { characterId: buddy });
     return () => {
       clearGameTimeouts();
       stopAllSpeech();
       resetCombo();
     };
-  }, [buddy, soundEnabled, clearGameTimeouts]);
+  }, [clearGameTimeouts]);
+
+  const pausedAtRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (paused) {
+      pausedAtRef.current ??= Date.now();
+    } else if (pausedAtRef.current !== null) {
+      const elapsed = Date.now() - pausedAtRef.current;
+      pausedAtRef.current = null;
+      setHoles(previous => previous.map(hole => hole.occupant ? { ...hole, peekUntil: hole.peekUntil + elapsed } : hole));
+    }
+  }, [paused]);
 
   // Main Emergence Loop
   useEffect(() => {
-    if (isCompleted) return;
+    if (isCompleted || paused) return;
 
     const interval = setInterval(() => {
-      if (completedRef.current) return;
+      if (completedRef.current || isBlocked()) return;
 
       const now = Date.now();
       setHoles((prev) => {
@@ -163,12 +180,12 @@ export const ForestPeekabooGame: React.FC<ForestPeekabooGameProps> = ({
     }, spawnIntervalMs);
 
     return () => clearInterval(interval);
-  }, [isCompleted, buddy, peekDurationMs, spawnIntervalMs]);
+  }, [isCompleted, buddy, peekDurationMs, spawnIntervalMs, paused, isBlocked]);
 
   // Handle tapping a hole
   const handleTapHole = useCallback(
     (hole: HoleState, e: React.PointerEvent<HTMLButtonElement>) => {
-      if (isCompleted || !hole.occupant || hole.isHit) return;
+      if (isBlocked() || completedRef.current || !hole.occupant || hole.isHit) return;
 
       const rect = e.currentTarget.getBoundingClientRect();
       const clickX = rect.left + rect.width / 2;
@@ -228,19 +245,13 @@ export const ForestPeekabooGame: React.FC<ForestPeekabooGameProps> = ({
           playCorrectFanfare(soundEnabled);
           fireConfetti();
           fireStarExplosion();
-          onCompleteQuiz(10);
+          latest.current.onCompleteQuiz(10);
           stopAllSpeech();
           speakText('우와! 빠른 손놀림으로 숲속 친구들을 모두 찾았어!', soundEnabled, {
             characterId: buddy,
           });
 
-          scheduleGameTimeout(() => {
-            setCatches(0);
-            catchesRef.current = 0;
-            resetCombo();
-            setIsCompleted(false);
-            completedRef.current = false;
-          }, 3200);
+
         }
         return;
       }
@@ -269,12 +280,13 @@ export const ForestPeekabooGame: React.FC<ForestPeekabooGameProps> = ({
         prev.map((h) => (h.id === hole.id ? { ...h, isHit: true, peekUntil: Date.now() + 300 } : h)),
       );
     },
-    [isCompleted, comboState, soundEnabled, buddy, targetCatches, onCompleteQuiz, scheduleGameTimeout],
+    [isCompleted, comboState, soundEnabled, buddy, targetCatches, isBlocked],
   );
 
   return (
     <div
       ref={stageRef}
+      inert={paused}
       className={`forest-peekaboo-stage relative flex flex-col justify-between w-full h-[var(--game-play-height,calc(100dvh-84px))] min-h-[var(--game-play-height,calc(100dvh-84px))] rounded-3xl overflow-hidden select-none bg-gradient-to-b from-[#A7F3D0] via-[#6EE7B7] to-[#10B981] border-3 ${
         comboState.fever ? 'border-amber-400 shadow-[0_0_24px_rgba(251,191,36,0.6)]' : 'border-[#059669]'
       } p-3 sm:p-5`}
@@ -436,6 +448,14 @@ export const ForestPeekabooGame: React.FC<ForestPeekabooGameProps> = ({
           </span>
         </div>
       </div>
+      {isCompleted && <RoundContinuation delayMs={1400} onNext={() => {
+        catchesRef.current = 0;
+        setCatches(0);
+        resetCombo();
+        setHoles(previous => previous.map(hole => ({ ...hole, occupant: null, isHit: false, peekUntil: 0 })));
+        completedRef.current = false;
+        setIsCompleted(false);
+      }}/>}
     </div>
   );
 };

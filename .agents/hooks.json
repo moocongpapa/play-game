@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ./scripts/pre-tool-guard.mjs",
+            "command": "node \"$(git rev-parse --show-toplevel)/.agents/scripts/pre-tool-guard.mjs\"",
             "timeout": 10
           }
         ]
@@ -19,7 +19,7 @@
     "Stop": [
       {
         "type": "command",
-        "command": "node ./scripts/stop-quality-gate.mjs",
+        "command": "node \"$(git rev-parse --show-toplevel)/.agents/scripts/stop-quality-gate.mjs\"",
         "timeout": 20
       }
     ]

@@ -1,9 +1,12 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Mic, MicOff, Play, RotateCcw, Volume2, X } from 'lucide-react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { Mic, MicOff, RotateCcw, X } from 'lucide-react';
 import type { CharacterId } from '../types';
 import { CHARACTERS } from '../data/characters';
 import { CharacterAvatar } from './CharacterAvatar';
-import { getAudioContext, playCareSound, speakText, stopAllSpeech } from '../utils/soundEngine';
+import { areSoundEffectsEnabled, getAudioContext, playCareSound, speakText, stopAllSpeech } from '../utils/soundEngine';
+import { createEchoRecording, type EchoRecordingPhase } from '../utils/echoRecording';
+import { playEchoBuffer, type EchoVoiceFilter } from '../utils/echoPlayback';
+import { PlayHintsPausedContext } from './PlayFlowContext';
 import './FunnyEchoToy.css';
 
 interface FunnyEchoToyProps {
@@ -14,224 +17,107 @@ interface FunnyEchoToyProps {
   childName?: string;
 }
 
-type VoiceFilter = 'chipmunk' | 'bear' | 'robot';
-
 export const FunnyEchoToy: React.FC<FunnyEchoToyProps> = ({
   isOpen,
   onClose,
   buddy,
   soundEnabled,
-  childName = '유하',
 }) => {
-  const [isRecording, setIsRecording] = useState(false);
+  const paused = useContext(PlayHintsPausedContext);
+  const [recordingPhase, setRecordingPhase] = useState<EchoRecordingPhase>('idle');
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasRecording, setHasRecording] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState<VoiceFilter>('chipmunk');
+  const [selectedFilter, setSelectedFilter] = useState<EchoVoiceFilter>('chipmunk');
   const [recordProgress, setRecordProgress] = useState(0);
-
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  const isRecording = recordingPhase === 'recording';
+  const preparing = recordingPhase === 'requesting' || recordingPhase === 'decoding';
+  const mounted = useRef(false);
+  const latest = useRef({ isOpen, paused, soundEnabled, buddy, selectedFilter });
+  latest.current = { isOpen, paused, soundEnabled, buddy, selectedFilter };
   const recordedBufferRef = useRef<AudioBuffer | null>(null);
-  const activeSourceRef = useRef<AudioBufferSourceNode | null>(null);
-  const activeLfoRef = useRef<OscillatorNode | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const isOpenRef = useRef(isOpen);
-  isOpenRef.current = isOpen;
-
+  const activePlaybackRef = useRef<ReturnType<typeof playEchoBuffer>>(null);
+  const playEchoRef = useRef<(buffer: AudioBuffer | null, filter: EchoVoiceFilter) => void>(() => {});
   const character = CHARACTERS[buddy] || CHARACTERS.ggomi;
+  const canContinue = useCallback(() => mounted.current && latest.current.isOpen && !latest.current.paused && !document.hidden, []);
 
-  const stopRecordingTracks = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      try {
-        mediaRecorderRef.current.stop();
-      } catch {
-        /* ignore */
-      }
-    }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    setIsRecording(false);
-  };
+  const stopPlayback = useCallback(() => {
+    activePlaybackRef.current?.stop();
+    activePlaybackRef.current = null;
+    if (mounted.current) setIsPlaying(false);
+  }, []);
 
-  const stopPlayback = () => {
-    if (activeLfoRef.current) {
-      try {
-        activeLfoRef.current.stop();
-      } catch {
-        /* Already ended */
-      }
-      activeLfoRef.current = null;
-    }
-    if (activeSourceRef.current) {
-      try {
-        activeSourceRef.current.stop();
-      } catch {
-        /* Already ended */
-      }
-      activeSourceRef.current = null;
-    }
-    setIsPlaying(false);
-  };
+  const [recording] = useState(() => createEchoRecording<AudioBuffer>({
+    requestStream: () => navigator.mediaDevices.getUserMedia({ audio: true }),
+    createRecorder: stream => new MediaRecorder(stream),
+    decode: async blob => getAudioContext().decodeAudioData(await blob.arrayBuffer()),
+    canContinue,
+    onPhase: phase => { if (mounted.current) setRecordingPhase(phase); },
+    onProgress: progress => { if (mounted.current) setRecordProgress(progress); },
+    onReady: buffer => {
+      if (!canContinue()) return;
+      recordedBufferRef.current = buffer;
+      setHasRecording(true);
+      playEchoRef.current(buffer, latest.current.selectedFilter);
+    },
+    onError: () => {
+      if (!canContinue()) return;
+      const current = latest.current;
+      speakText(`${CHARACTERS[current.buddy].name}에게 말해주면 목소리를 마법으로 바꿔줄게! 마이크를 켜줘~`, current.soundEnabled, { characterId: current.buddy });
+    },
+    setInterval: (callback, delay) => window.setInterval(callback, delay),
+    clearInterval: id => window.clearInterval(id),
+  }));
+
+  const cancelSession = useCallback(() => {
+    recording.cancel();
+    stopPlayback();
+  }, [recording, stopPlayback]);
 
   useEffect(() => {
-    if (!isOpen) {
-      stopPlayback();
-      stopRecordingTracks();
-    }
+    mounted.current = true;
+    const onVisibility = () => { if (document.hidden) cancelSession(); };
+    const onPageHide = () => cancelSession();
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', onPageHide);
     return () => {
-      stopPlayback();
-      stopRecordingTracks();
+      mounted.current = false;
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', onPageHide);
+      cancelSession();
     };
-  }, [isOpen]);
+  }, [cancelSession]);
+
+  useEffect(() => { if (!isOpen || paused) cancelSession(); }, [isOpen, paused, cancelSession]);
+  useEffect(() => { if (!soundEnabled) stopPlayback(); }, [soundEnabled, stopPlayback]);
 
   const handleStartRecord = async () => {
-    if (isRecording) {
-      handleStopRecord();
-      return;
-    }
-
+    if (!canContinue()) return;
+    if (recording.phase === 'recording') { recording.finish(); return; }
+    if (recording.phase !== 'idle') return;
     stopPlayback();
     stopAllSpeech();
-    audioChunksRef.current = [];
     setRecordProgress(0);
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      if (!isOpenRef.current) {
-        stream.getTracks().forEach((track) => track.stop());
-        return;
-      }
-      streamRef.current = stream;
-
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        stopRecordingTracks();
-        if (!isOpenRef.current) return;
-
-        try {
-          const arrayBuffer = await audioBlob.arrayBuffer();
-          const ctx = getAudioContext();
-          const decoded = await ctx.decodeAudioData(arrayBuffer);
-          if (!isOpenRef.current) return;
-          recordedBufferRef.current = decoded;
-          setHasRecording(true);
-          setIsRecording(false);
-          // Automatically play back in selected filter for instant surprise!
-          playEcho(decoded, selectedFilter);
-        } catch (e) {
-          console.warn('Audio decoding fallback', e);
-          setIsRecording(false);
-        }
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-      playCareSound('bubble', soundEnabled);
-
-      let elapsed = 0;
-      const duration = 2800; // 2.8 seconds recording
-      const interval = 100;
-      timerRef.current = setInterval(() => {
-        elapsed += interval;
-        setRecordProgress(Math.min(100, (elapsed / duration) * 100));
-        if (elapsed >= duration) {
-          handleStopRecord();
-        }
-      }, interval);
-    } catch (err) {
-      console.warn('Microphone permission or error:', err);
-      // Fallback: If microphone unavailable, give a friendly prompt
-      speakText(`${character.name}에게 말해주면 목소리를 마법으로 바꿔줄게! 마이크를 켜줘~`, soundEnabled, {
-        characterId: buddy,
-      });
-      setIsRecording(false);
-    }
+    if (await recording.start() && canContinue()) playCareSound('bubble', latest.current.soundEnabled);
   };
 
-  const handleStopRecord = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      mediaRecorderRef.current.stop();
-    }
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-  };
-
-  const playEcho = (buffer: AudioBuffer | null, filter: VoiceFilter) => {
+  const playEcho = (buffer: AudioBuffer | null, filter: EchoVoiceFilter) => {
+    if (!canContinue() || !areSoundEffectsEnabled(latest.current.soundEnabled)) return;
     const targetBuffer = buffer || recordedBufferRef.current;
     if (!targetBuffer) {
-      // If no recording yet, speak playful sample
-      speakText('안녕! 나는 따라쟁이 앵무새야!', soundEnabled, { characterId: buddy });
+      speakText('안녕! 나는 따라쟁이 앵무새야!', latest.current.soundEnabled, { characterId: latest.current.buddy });
       return;
     }
-
     stopPlayback();
-    setIsPlaying(true);
-
     try {
-      const ctx = getAudioContext();
-      const source = ctx.createBufferSource();
-      source.buffer = targetBuffer;
-
-      if (filter === 'chipmunk') {
-        source.playbackRate.value = 1.62; // High-pitched fast chipmunk
-      } else if (filter === 'bear') {
-        source.playbackRate.value = 0.72; // Deep slow giant bear
-      } else {
-        source.playbackRate.value = 1.05; // Robot modulated
-      }
-
-      if (filter === 'robot') {
-        // Metallic robot oscillator vibrato
-        const tremolo = ctx.createGain();
-        const lfo = ctx.createOscillator();
-        activeLfoRef.current = lfo;
-        lfo.type = 'square';
-        lfo.frequency.value = 45; // 45Hz metallic robotic ring-modulation
-        lfo.connect(tremolo.gain);
-        source.connect(tremolo);
-        tremolo.connect(ctx.destination);
-        lfo.start();
-        source.onended = () => {
-          try {
-            lfo.stop();
-          } catch {
-            /* ignore */
-          }
-          if (activeLfoRef.current === lfo) activeLfoRef.current = null;
-          setIsPlaying(false);
-        };
-      } else {
-        source.connect(ctx.destination);
-        source.onended = () => {
-          setIsPlaying(false);
-        };
-      }
-
-      activeSourceRef.current = source;
-      source.start(0);
-    } catch (e) {
-      console.warn('Playback error', e);
-      setIsPlaying(false);
-    }
+      const playback = playEchoBuffer(targetBuffer, filter, () => {
+        activePlaybackRef.current = null;
+        if (mounted.current) setIsPlaying(false);
+      });
+      activePlaybackRef.current = playback;
+      setIsPlaying(playback !== null);
+    } catch { stopPlayback(); }
   };
+  playEchoRef.current = playEcho;
 
   if (!isOpen) return null;
 
@@ -242,8 +128,7 @@ export const FunnyEchoToy: React.FC<FunnyEchoToyProps> = ({
           type="button"
           className="echo-close-btn"
           onClick={() => {
-            stopPlayback();
-            stopRecordingTracks();
+            cancelSession();
             stopAllSpeech();
             onClose();
           }}
@@ -290,9 +175,10 @@ export const FunnyEchoToy: React.FC<FunnyEchoToyProps> = ({
             type="button"
             className={`filter-btn ${selectedFilter === 'chipmunk' ? 'active' : ''}`}
             onClick={() => {
+              if (!canContinue()) return;
               setSelectedFilter('chipmunk');
               playCareSound('bubble', soundEnabled);
-              if (hasRecording && !isRecording) playEcho(null, 'chipmunk');
+              if (hasRecording && recording.phase === 'idle') playEcho(null, 'chipmunk');
             }}
           >
             <span className="filter-emoji">🐥</span>
@@ -303,9 +189,10 @@ export const FunnyEchoToy: React.FC<FunnyEchoToyProps> = ({
             type="button"
             className={`filter-btn ${selectedFilter === 'bear' ? 'active' : ''}`}
             onClick={() => {
+              if (!canContinue()) return;
               setSelectedFilter('bear');
               playCareSound('bubble', soundEnabled);
-              if (hasRecording && !isRecording) playEcho(null, 'bear');
+              if (hasRecording && recording.phase === 'idle') playEcho(null, 'bear');
             }}
           >
             <span className="filter-emoji">🐻</span>
@@ -316,9 +203,10 @@ export const FunnyEchoToy: React.FC<FunnyEchoToyProps> = ({
             type="button"
             className={`filter-btn ${selectedFilter === 'robot' ? 'active' : ''}`}
             onClick={() => {
+              if (!canContinue()) return;
               setSelectedFilter('robot');
               playCareSound('bubble', soundEnabled);
-              if (hasRecording && !isRecording) playEcho(null, 'robot');
+              if (hasRecording && recording.phase === 'idle') playEcho(null, 'robot');
             }}
           >
             <span className="filter-emoji">🤖</span>
@@ -332,13 +220,15 @@ export const FunnyEchoToy: React.FC<FunnyEchoToyProps> = ({
             type="button"
             className={`echo-record-btn ${isRecording ? 'is-recording' : ''}`}
             onClick={handleStartRecord}
-            aria-label={isRecording ? '녹음 끝내기' : '말하기 녹음 시작'}
+            disabled={preparing || paused}
+            aria-busy={preparing}
+            aria-label={preparing ? '마이크 준비 중' : isRecording ? '녹음 끝내기' : '말하기 녹음 시작'}
           >
             <span className="echo-btn-icon">
               {isRecording ? <MicOff size={36} /> : <Mic size={36} />}
             </span>
             <span className="echo-btn-text">
-              {isRecording ? '듣는 중...' : '마이크 콕 누르고 말하기!'}
+              {preparing ? '잠깐만 기다려줘~' : isRecording ? '듣는 중...' : '마이크 콕 누르고 말하기!'}
             </span>
             {isRecording && (
               <div
@@ -353,7 +243,7 @@ export const FunnyEchoToy: React.FC<FunnyEchoToyProps> = ({
             <button
               type="button"
               className="echo-replay-btn"
-              disabled={isRecording || isPlaying}
+              disabled={recordingPhase !== 'idle' || isPlaying || paused || !soundEnabled}
               onClick={() => playEcho(null, selectedFilter)}
               aria-label="다시 듣기"
             >

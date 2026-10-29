@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { Sparkles } from 'lucide-react';
 import type { CharacterId, AgeGroup } from '../../types';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
@@ -14,6 +14,8 @@ import {
 } from '../../utils/soundEngine';
 import { fireStarExplosion, fireConfetti } from '../../utils/confetti';
 import { emitJuice } from '../../utils/juice';
+import { useGameActivity } from '../../hooks/useGameActivity';
+import { createGameFrameClock } from '../../utils/gameFrameClock';
 import './TrampolineJumpGame.css';
 
 interface TrampolineJumpGameProps {
@@ -44,6 +46,11 @@ export const TrampolineJumpGame: React.FC<TrampolineJumpGameProps> = ({
   const pixiRef = useRef<PixiStageHandle>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const arenaRef = useRef<HTMLDivElement>(null);
+  const { paused, isBlocked } = useGameActivity();
+  const latest = useRef({ buddy, soundEnabled, onCompleteQuiz });
+  latest.current = { buddy, soundEnabled, onCompleteQuiz };
+  const clockRef = useRef(createGameFrameClock(36.667));
+  useLayoutEffect(() => { clockRef.current.resetFrame(); }, [paused]);
 
   const targetStars = ageGroup === 'baby' ? 5 : ageGroup === 'sprout' ? 7 : 9;
 
@@ -93,6 +100,7 @@ export const TrampolineJumpGame: React.FC<TrampolineJumpGameProps> = ({
   // Trigger jump boost and steer toward pointer X
   const triggerBoostAndSteer = useCallback(
     (clientX?: number) => {
+      if (isBlocked()) return;
       const p = physRef.current;
       const arena = arenaRef.current?.getBoundingClientRect();
       if (clientX !== undefined && arena && arena.width > 0) {
@@ -115,7 +123,7 @@ export const TrampolineJumpGame: React.FC<TrampolineJumpGameProps> = ({
         }
         setCombo(nextCombo);
         setJumperMood(nextCombo === 3 ? 'excited' : 'waving');
-        playBouncyBoing(soundEnabled);
+        playBouncyBoing(latest.current.soundEnabled);
 
         const stageRect = stageRef.current?.getBoundingClientRect();
         if (stageRect) {
@@ -127,26 +135,28 @@ export const TrampolineJumpGame: React.FC<TrampolineJumpGameProps> = ({
         }
       }
     },
-    [soundEnabled]
+    [isBlocked]
   );
 
   useEffect(() => {
-    createSkyWave();
     stopAllSpeech();
-    speakText('화면을 톡톡! 트램펄린에서 신나게 뛰어볼까?', soundEnabled, { characterId: buddy });
+    if (!isBlocked()) speakText('화면을 톡톡! 트램펄린에서 신나게 뛰어볼까?', latest.current.soundEnabled, { characterId: buddy });
+    return () => stopAllSpeech();
+  }, [buddy, isBlocked]);
 
+  useEffect(() => {
+    createSkyWave();
+    clockRef.current.resetFrame();
     let frameId = 0;
-    let lastTime = performance.now();
     let hitStopUntil = 0;
 
     const stepPhysics = (now: number) => {
-      if (now < hitStopUntil) {
-        lastTime = now;
+      const { frames: dt, elapsedMs } = clockRef.current.step(now, isBlocked());
+      if (dt === 0 || elapsedMs < hitStopUntil) {
         frameId = requestAnimationFrame(stepPhysics);
         return;
       }
-      const dt = Math.min(2.2, (now - lastTime) / 16.667);
-      lastTime = now;
+      const { buddy, soundEnabled, onCompleteQuiz } = latest.current;
 
       const p = physRef.current;
       const arenaRect = arenaRef.current?.getBoundingClientRect();
@@ -249,7 +259,7 @@ export const TrampolineJumpGame: React.FC<TrampolineJumpGameProps> = ({
 
         const isMilestone = nextMilestone > prevMilestone;
         if (isMilestone || p.combo >= 3) {
-          hitStopUntil = now + 50;
+          hitStopUntil = elapsedMs + 50;
           if (lastHitX > 0) {
             emitJuice({
               kind: isMilestone ? 'success' : 'pop',
@@ -298,14 +308,14 @@ export const TrampolineJumpGame: React.FC<TrampolineJumpGameProps> = ({
     frameId = requestAnimationFrame(stepPhysics);
     return () => {
       cancelAnimationFrame(frameId);
-      stopAllSpeech();
     };
-  }, [buddy, soundEnabled, targetStars, onCompleteQuiz, createSkyWave]);
+  }, [targetStars, createSkyWave, isBlocked]);
 
   return (
     <div
       ref={stageRef}
       className="trampoline-stage"
+      data-paused={paused || undefined}
       onPointerDown={(e) => triggerBoostAndSteer(e.clientX)}
       onPointerMove={(e) => {
         if (e.buttons > 0) triggerBoostAndSteer(e.clientX);
@@ -319,7 +329,7 @@ export const TrampolineJumpGame: React.FC<TrampolineJumpGameProps> = ({
       <div className="trampoline-top-bar">
         <PlayGuide
           buddy={buddy}
-          soundEnabled={soundEnabled}
+          soundEnabled={soundEnabled && !paused}
           title="통통 트램펄린"
           guide="화면을 톡톡! 트램펄린에서 신나게 뛰어볼까?"
           happy={combo === 3}
@@ -347,6 +357,8 @@ export const TrampolineJumpGame: React.FC<TrampolineJumpGameProps> = ({
               key={item.id}
               type="button"
               className="trampoline-sky-item"
+              disabled={paused}
+              onPointerDown={(event) => event.stopPropagation()}
               style={{
                 left: `${50 + item.xNorm * 100}%`,
                 bottom: `${110 + item.heightPx}px`,
@@ -432,6 +444,8 @@ export const TrampolineJumpGame: React.FC<TrampolineJumpGameProps> = ({
       <button
         type="button"
         className="trampoline-boost-btn"
+        disabled={paused}
+        onPointerDown={(event) => event.stopPropagation()}
         onClick={(e) => {
           e.stopPropagation();
           triggerBoostAndSteer();

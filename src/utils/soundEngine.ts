@@ -22,6 +22,10 @@ let speechEnabled = true;
 let speechLanguage: SpeechLanguage = DEFAULT_SPEECH_LANGUAGE;
 let spokenChildName = '유하';
 
+export function areSoundEffectsEnabled(enabled = true) {
+  return enabled && masterSoundEnabled && !isPageHidden();
+}
+
 export function setSpeechLanguage(language: SpeechLanguage, childName = spokenChildName) {
   spokenChildName = childName;
   if (speechLanguage === language) return;

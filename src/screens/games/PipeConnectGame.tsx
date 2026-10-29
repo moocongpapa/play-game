@@ -21,6 +21,8 @@ import {
 import { fireConfetti, fireStarExplosion } from '../../utils/confetti';
 import { emitJuice } from '../../utils/juice';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
+import { useGameActivity } from '../../hooks/useGameActivity';
+import { RoundContinuation } from '../../components/RoundContinuation';
 
 interface PipeConnectGameProps {
   buddy: CharacterId;
@@ -122,9 +124,15 @@ export const PipeConnectGame: React.FC<PipeConnectGameProps> = ({
   ageGroup = 'sprout',
 }) => {
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+  const { paused, isBlocked } = useGameActivity();
+  const latest = useRef({ soundEnabled, buddy, onCompleteQuiz });
+  latest.current = { soundEnabled, buddy, onCompleteQuiz };
   const pixiRef = useRef<PixiStageHandle>(null);
   const panRef = useRef<HTMLDivElement>(null);
   const roundDoneRef = useRef(false);
+  const seasoningQueuedRef = useRef(false);
+  const kernelsRef = useRef<KernelItem[]>([]);
+  const [completed, setCompleted] = useState(false);
 
   const [round, setRound] = useState(0);
   const totalRounds = 3;
@@ -140,6 +148,9 @@ export const PipeConnectGame: React.FC<PipeConnectGameProps> = ({
 
   const buildRoundKernels = useCallback((roundIdx: number) => {
     roundDoneRef.current = false;
+    seasoningQueuedRef.current = false;
+    setCompleted(false);
+    setFloatingBursts([]);
     setIsSeasoned(false);
     const flavor = FLAVOR_ROUNDS[roundIdx] || FLAVOR_ROUNDS[0];
     setBuddyBubble(`${flavor.title} 먹고 싶어! 톡톡 튀겨줘!`);
@@ -155,6 +166,7 @@ export const PipeConnectGame: React.FC<PipeConnectGameProps> = ({
       rotation: ((idx * 37) % 40) - 20,
       rainbowTint: RAINBOW_TINTS[idx % RAINBOW_TINTS.length],
     }));
+    kernelsRef.current = items;
     setKernels(items);
   }, [kernelCount]);
 
@@ -164,8 +176,8 @@ export const PipeConnectGame: React.FC<PipeConnectGameProps> = ({
 
   useEffect(() => {
     const flavor = FLAVOR_ROUNDS[round] || FLAVOR_ROUNDS[0];
-    speakText(flavor.guideText, soundEnabled, { characterId: buddy });
-  }, [round, soundEnabled, buddy]);
+    if (!isBlocked()) speakText(flavor.guideText, soundEnabled, { characterId: buddy });
+  }, [round, soundEnabled, buddy, isBlocked]);
 
   useEffect(() => {
     return () => {
@@ -180,10 +192,10 @@ export const PipeConnectGame: React.FC<PipeConnectGameProps> = ({
       roundDoneRef.current = true;
       setIsSeasoned(true);
 
-      playCorrectFanfare(soundEnabled);
-      playCareSound('chew', soundEnabled);
+      playCorrectFanfare(latest.current.soundEnabled);
+      playCareSound('chew', latest.current.soundEnabled);
       setBuddyBubble('와아! 바삭바삭 팝콘 최고야! 냠냠!');
-      speakText(flavor.seasonedVoice, soundEnabled, { characterId: buddy });
+      speakText(flavor.seasonedVoice, latest.current.soundEnabled, { characterId: latest.current.buddy });
 
       if (panRef.current) {
         const rect = panRef.current.getBoundingClientRect();
@@ -199,16 +211,17 @@ export const PipeConnectGame: React.FC<PipeConnectGameProps> = ({
 
       scheduleGameTimeout(() => {
         if (currentRound + 1 < totalRounds) {
-          playStarGain(soundEnabled);
+          playStarGain(latest.current.soundEnabled);
           setRound((r) => r + 1);
         } else {
-          playCelebrationFanfare(soundEnabled);
+          playCelebrationFanfare(latest.current.soundEnabled);
           fireConfetti();
-          onCompleteQuiz(3);
+          setCompleted(true);
+          latest.current.onCompleteQuiz(3);
         }
-      }, 2400);
+      }, 1400);
     },
-    [buddy, onCompleteQuiz, scheduleGameTimeout, soundEnabled]
+    [scheduleGameTimeout]
   );
 
   const spawnFloatingText = useCallback((x: number, y: number, text: string) => {
@@ -218,85 +231,48 @@ export const PipeConnectGame: React.FC<PipeConnectGameProps> = ({
 
   const triggerKernelPop = useCallback(
     (targetId: number, clientX?: number, clientY?: number) => {
-      if (roundDoneRef.current) return;
-
-      setPanShakeKey((k) => k + 1);
-
+      if (isBlocked() || roundDoneRef.current || seasoningQueuedRef.current) return;
+      const previous = kernelsRef.current;
+      const target = previous.find(kernel => kernel.id === targetId);
+      if (!target) return;
+      setPanShakeKey(k => k + 1);
       if (clientX !== undefined && clientY !== undefined) {
         emitJuice({ kind: 'pop', x: clientX, y: clientY });
-        pixiRef.current?.emitBurst({
-          x: clientX,
-          y: clientY,
-          color: currentFlavor.particleColors[0],
-          count: 16,
-          kind: 'star',
-        });
+        pixiRef.current?.emitBurst({ x: clientX, y: clientY, color: currentFlavor.particleColors[0], count: 16, kind: 'star' });
       }
-
-      setKernels((prev) => {
-        const target = prev.find((k) => k.id === targetId);
-        if (!target) return prev;
-
-        // If already popped, bounce it for extra tactile fun!
-        if (target.popped) {
-          playBouncyBoing(soundEnabled);
-          playSparkleChime(soundEnabled);
-          spawnFloatingText(target.x, target.y, '바삭바삭! ✨');
-          return prev.map((k) =>
-            k.id === targetId
-              ? { ...k, bounceCount: k.bounceCount + 1, rotation: k.rotation + 25 }
-              : k
-          );
-        }
-
-        // Pop the target kernel (and if it's the King kernel, also pop 1 extra unpopped kernel!)
-        const extraUnpopped = target.isKing
-          ? prev.find((k) => !k.popped && k.id !== targetId)
-          : undefined;
-
-        const next = prev.map((k) => {
-          if (k.id === targetId || (extraUnpopped && k.id === extraUnpopped.id)) {
-            return {
-              ...k,
-              popped: true,
-              bounceCount: k.bounceCount + 1,
-            };
-          }
-          return k;
-        });
-
-        const poppedNow = next.filter((k) => k.popped).length;
-        playBalloonPop(soundEnabled);
-        playRisingStepChime(poppedNow, next.length, soundEnabled);
-
-        const word = target.isKing ? '왕팝콘 팡팡!! 👑' : target.popWord;
-        spawnFloatingText(target.x, target.y, word);
-
-        if (poppedNow === next.length) {
-          setBuddyBubble('우와! 다 튀겨졌다! 양념 뿌려 냠냠 먹자!');
-          scheduleGameTimeout(() => {
-            finishRoundWithSeasoning(currentFlavor, round);
-          }, 950);
-        } else {
-          const remaining = next.length - poppedNow;
-          setBuddyBubble(
-            target.isKing
-              ? '우와! 왕옥수수가 팡 터졌어!'
-              : `고소해~! ${remaining}개 더 튀겨볼까?`
-          );
-        }
-
-        return next;
-      });
+      if (target.popped) {
+        playBouncyBoing(soundEnabled);
+        playSparkleChime(soundEnabled);
+        spawnFloatingText(target.x, target.y, '바삭바삭! ✨');
+        const next = previous.map(kernel => kernel.id === targetId ? { ...kernel, bounceCount: kernel.bounceCount + 1, rotation: kernel.rotation + 25 } : kernel);
+        kernelsRef.current = next;
+        setKernels(next);
+        return;
+      }
+      const extra = target.isKing ? previous.find(kernel => !kernel.popped && kernel.id !== targetId) : undefined;
+      const next = previous.map(kernel => kernel.id === targetId || kernel.id === extra?.id ? { ...kernel, popped: true, bounceCount: kernel.bounceCount + 1 } : kernel);
+      kernelsRef.current = next;
+      setKernels(next);
+      const poppedNow = next.filter(kernel => kernel.popped).length;
+      playBalloonPop(soundEnabled);
+      playRisingStepChime(poppedNow, next.length, soundEnabled);
+      spawnFloatingText(target.x, target.y, target.isKing ? '왕팝콘 팡팡!! 👑' : target.popWord);
+      if (poppedNow === next.length) {
+        seasoningQueuedRef.current = true;
+        setBuddyBubble('우와! 다 튀겨졌다! 양념 뿌려 냠냠 먹자!');
+        scheduleGameTimeout(() => finishRoundWithSeasoning(currentFlavor, round), 650);
+      } else {
+        setBuddyBubble(target.isKing ? '우와! 왕옥수수가 팡 터졌어!' : `고소해~! ${next.length - poppedNow}개 더 튀겨볼까?`);
+      }
     },
-    [currentFlavor, finishRoundWithSeasoning, round, scheduleGameTimeout, soundEnabled, spawnFloatingText]
+    [currentFlavor, finishRoundWithSeasoning, round, scheduleGameTimeout, soundEnabled, spawnFloatingText, isBlocked]
   );
 
   // Shaking the pan or tapping the pan handle pops the next 1-2 unpopped kernels!
   const handleShakePan = useCallback(
     (e: React.MouseEvent<HTMLElement>) => {
       e.stopPropagation();
-      if (roundDoneRef.current) return;
+      if (isBlocked() || roundDoneRef.current || seasoningQueuedRef.current) return;
 
       playJellyTap(soundEnabled);
       setPanShakeKey((k) => k + 1);
@@ -309,7 +285,7 @@ export const PipeConnectGame: React.FC<PipeConnectGameProps> = ({
         finishRoundWithSeasoning(currentFlavor, round);
       }
     },
-    [currentFlavor, finishRoundWithSeasoning, kernels, round, soundEnabled, triggerKernelPop]
+    [currentFlavor, finishRoundWithSeasoning, kernels, round, soundEnabled, triggerKernelPop, isBlocked]
   );
 
   const poppedCount = kernels.filter((k) => k.popped).length;
@@ -318,6 +294,7 @@ export const PipeConnectGame: React.FC<PipeConnectGameProps> = ({
   return (
     <div
       ref={panRef}
+      inert={paused}
       className="pipe-connect-stage popcorn-pan-stage relative flex flex-col justify-between w-full h-[var(--game-play-height,calc(100dvh-84px))] min-h-[var(--game-play-height,calc(100dvh-84px))] rounded-3xl overflow-hidden select-none bg-gradient-to-b from-[#FFF7ED] via-[#FFEDD5] to-[#FDE68A] border-3 border-[#F59E0B] p-3 sm:p-5"
     >
       <style>{`
@@ -623,6 +600,7 @@ export const PipeConnectGame: React.FC<PipeConnectGameProps> = ({
           </motion.button>
         </div>
       </div>
+      {completed && <RoundContinuation delayMs={900} onNext={() => { setCompleted(false); setRound(0); }}/>}
     </div>
   );
 };

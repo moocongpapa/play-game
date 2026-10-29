@@ -21,6 +21,8 @@ import {
 import { fireConfetti, fireStarExplosion } from '../../utils/confetti';
 import { emitJuice } from '../../utils/juice';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
+import { useGameActivity } from '../../hooks/useGameActivity';
+import { RoundContinuation } from '../../components/RoundContinuation';
 
 interface MirrorMazeGameProps {
   buddy: CharacterId;
@@ -109,9 +111,14 @@ export const MirrorMazeGame: React.FC<MirrorMazeGameProps> = ({
   ageGroup = 'sprout',
 }) => {
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+  const { paused, isBlocked } = useGameActivity();
+  const latest = useRef({ soundEnabled, buddy, onCompleteQuiz });
+  latest.current = { soundEnabled, buddy, onCompleteQuiz };
   const pixiRef = useRef<PixiStageHandle>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const roundAdvancingRef = useRef(false);
+  const tapCountRef = useRef(0);
+  const [completed, setCompleted] = useState(false);
 
   const [round, setRound] = useState(0);
   const totalRounds = 3;
@@ -128,6 +135,9 @@ export const MirrorMazeGame: React.FC<MirrorMazeGameProps> = ({
 
   const setupRound = useCallback((roundIdx: number) => {
     roundAdvancingRef.current = false;
+    tapCountRef.current = 0;
+    setCompleted(false);
+    setFloatingWords([]);
     setTapCount(0);
     setIsHatched(false);
     setWobbleKey(0);
@@ -142,8 +152,8 @@ export const MirrorMazeGame: React.FC<MirrorMazeGameProps> = ({
 
   useEffect(() => {
     const dino = DINO_ROUNDS[round] || DINO_ROUNDS[0];
-    speakText(dino.guideText, soundEnabled, { characterId: buddy });
-  }, [round, soundEnabled, buddy]);
+    if (!isBlocked()) speakText(dino.guideText, soundEnabled, { characterId: buddy });
+  }, [round, soundEnabled, buddy, isBlocked]);
 
   useEffect(() => {
     return () => {
@@ -185,14 +195,15 @@ export const MirrorMazeGame: React.FC<MirrorMazeGameProps> = ({
 
       scheduleGameTimeout(() => {
         if (currentRound + 1 < totalRounds) {
-          playStarGain(soundEnabled);
+          playStarGain(latest.current.soundEnabled);
           setRound((r) => r + 1);
         } else {
-          playCelebrationFanfare(soundEnabled);
+          playCelebrationFanfare(latest.current.soundEnabled);
           fireConfetti();
-          onCompleteQuiz(3);
+          setCompleted(true);
+          latest.current.onCompleteQuiz(3);
         }
-      }, 2700);
+      }, 1400);
     },
     [buddy, onCompleteQuiz, scheduleGameTimeout, soundEnabled]
   );
@@ -200,6 +211,7 @@ export const MirrorMazeGame: React.FC<MirrorMazeGameProps> = ({
   const handleTapEgg = useCallback(
     (e?: React.MouseEvent<HTMLElement>) => {
       if (e) e.stopPropagation();
+      if (isBlocked()) return;
 
       const clientX = e?.clientX ?? window.innerWidth / 2;
       const clientY = e?.clientY ?? window.innerHeight / 2;
@@ -230,7 +242,8 @@ export const MirrorMazeGame: React.FC<MirrorMazeGameProps> = ({
         });
       }
 
-      const nextTap = tapCount + 1;
+      const nextTap = tapCountRef.current + 1;
+      tapCountRef.current = nextTap;
       setTapCount(nextTap);
 
       if (nextTap >= requiredTaps) {
@@ -264,6 +277,7 @@ export const MirrorMazeGame: React.FC<MirrorMazeGameProps> = ({
       spawnFloatingWord,
       tapCount,
       triggerHatchCelebration,
+      isBlocked,
     ]
   );
 
@@ -282,6 +296,7 @@ export const MirrorMazeGame: React.FC<MirrorMazeGameProps> = ({
   return (
     <div
       ref={stageRef}
+      inert={paused}
       className="mirror-maze-stage dino-egg-stage relative flex flex-col justify-between w-full h-[var(--game-play-height,calc(100dvh-84px))] min-h-[var(--game-play-height,calc(100dvh-84px))] rounded-3xl overflow-hidden select-none bg-gradient-to-b from-[#ECFDF5] via-[#FEF9C3] to-[#FDE68A] border-3 border-[#22C55E] p-3 sm:p-5"
     >
       <style>{`
@@ -678,6 +693,7 @@ export const MirrorMazeGame: React.FC<MirrorMazeGameProps> = ({
           </motion.button>
         </div>
       </div>
+      {completed && <RoundContinuation delayMs={900} onNext={() => { setCompleted(false); setRound(0); }}/>}
     </div>
   );
 };

@@ -16,6 +16,8 @@ import {
 import { useCareReactions } from '../../hooks/useCareReactions';
 import { fireConfetti } from '../../utils/confetti';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
+import { useGameActivity } from '../../hooks/useGameActivity';
+import { RoundContinuation } from '../../components/RoundContinuation';
 import './BubbleBathGame.css';
 
 interface BubbleBathGameProps {
@@ -70,6 +72,9 @@ export const BubbleBathGame: React.FC<BubbleBathGameProps> = ({
 }) => {
   useCareReactions(buddy, soundEnabled);
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+  const { paused, isBlocked } = useGameActivity();
+  const latest = useRef({ soundEnabled, buddy, onCompleteQuiz });
+  latest.current = { soundEnabled, buddy, onCompleteQuiz };
   const pixiRef = useRef<PixiStageHandle>(null);
   const stageRef = useRef<HTMLDivElement>(null);
 
@@ -86,17 +91,20 @@ export const BubbleBathGame: React.FC<BubbleBathGameProps> = ({
   const stepProgressRef = useRef(0);
 
   useEffect(() => {
+    if (!isBlocked()) speakText(STEPS_INFO[currentStep].guide, soundEnabled, { characterId: buddy });
+  }, [currentStep, buddy, soundEnabled, isBlocked]);
+  // A mute toggle or a new bath step must not erase the pending step transition.
+  useEffect(() => () => {
+    clearGameTimeouts();
     stopAllSpeech();
-    speakText(STEPS_INFO[currentStep].guide, soundEnabled, { characterId: buddy });
-    return () => {
-      clearGameTimeouts();
-      stopAllSpeech();
-    };
-  }, [currentStep, buddy, soundEnabled, clearGameTimeouts]);
+  }, [clearGameTimeouts]);
+  useEffect(() => {
+    if (paused) { setToolCursor(null); setIsScrubbing(false); }
+  }, [paused]);
 
   const advanceToNextStep = useCallback(
     (completedStep: BathStep) => {
-      if (advancingRef.current) return;
+      if (isBlocked() || advancingRef.current) return;
       advancingRef.current = true;
       setToolCursor(null);
       setIsScrubbing(false);
@@ -142,27 +150,20 @@ export const BubbleBathGame: React.FC<BubbleBathGameProps> = ({
           });
         }
 
-        onCompleteQuiz(10);
+        latest.current.onCompleteQuiz(10);
         stopAllSpeech();
         speakText('우와! 뽀송뽀송 깨끗해졌어요! 상쾌해!', soundEnabled, { characterId: buddy });
 
-        scheduleGameTimeout(() => {
-          setIsFinished(false);
-          stepProgressRef.current = 0;
-          setStepProgress(0);
-          setQuackedDucks([]);
-          setCurrentStep('water');
-          advancingRef.current = false;
-        }, 2700);
+
       }
     },
-    [scheduleGameTimeout, soundEnabled, onCompleteQuiz, buddy]
+    [scheduleGameTimeout, soundEnabled, buddy, isBlocked]
   );
 
   // Apply progress pulse from scrubbing, spraying, or tapping
   const applyBathStroke = useCallback(
     (clientX?: number, clientY?: number) => {
-      if (advancingRef.current || isFinished) return;
+      if (isBlocked() || advancingRef.current || isFinished) return;
 
       const now = performance.now();
       const stageRect = stageRef.current?.getBoundingClientRect();
@@ -222,12 +223,12 @@ export const BubbleBathGame: React.FC<BubbleBathGameProps> = ({
         advanceToNextStep(currentStep);
       }
     },
-    [currentStep, isFinished, soundEnabled, advanceToNextStep]
+    [currentStep, isFinished, soundEnabled, advanceToNextStep, isBlocked]
   );
 
   const handleDuckTap = (index: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (advancingRef.current || isFinished) return;
+    if (isBlocked() || advancingRef.current || isFinished) return;
     if (!quackedDucks.includes(index)) {
       setQuackedDucks((prev) => [...prev, index]);
     }
@@ -239,6 +240,7 @@ export const BubbleBathGame: React.FC<BubbleBathGameProps> = ({
   return (
     <div
       ref={stageRef}
+      inert={paused}
       className="bath-stage"
       onPointerUp={() => {
         setToolCursor(null);
@@ -294,6 +296,12 @@ export const BubbleBathGame: React.FC<BubbleBathGameProps> = ({
             if (e.buttons > 0) applyBathStroke(e.clientX, e.clientY);
           }}
           role="button"
+          onKeyDown={e => {
+            if ((e.key === 'Enter' || e.key === ' ') && !e.repeat) {
+              e.preventDefault();
+              applyBathStroke();
+            }
+          }}
           tabIndex={0}
           aria-label={`${STEPS_INFO[currentStep].label} 문질문질 하기`}
         >
@@ -429,8 +437,10 @@ export const BubbleBathGame: React.FC<BubbleBathGameProps> = ({
               type="button"
               className={`bath-tool-btn ${isActive ? 'is-active' : ''}`}
               onClick={() => {
+                if (isBlocked()) return;
                 if (step !== currentStep && !advancingRef.current && !isFinished) {
                   setCurrentStep(step);
+                  stepProgressRef.current = 0;
                   setStepProgress(0);
                 } else {
                   applyBathStroke();
@@ -446,6 +456,15 @@ export const BubbleBathGame: React.FC<BubbleBathGameProps> = ({
           );
         })}
       </footer>
+      {isFinished && <RoundContinuation delayMs={1400} onNext={() => {
+        setIsFinished(false);
+        stepProgressRef.current = 0;
+        setStepProgress(0);
+        setQuackedDucks([]);
+        setFoamLevel(0);
+        setCurrentStep('water');
+        advancingRef.current = false;
+      }}/>}
     </div>
   );
 };

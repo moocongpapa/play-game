@@ -6,12 +6,21 @@ import { PlayHintsPausedContext } from '../src/components/PlayFlowContext';
 import { useRoundTimer } from '../src/hooks/useRoundTimer';
 import { useGameTimeouts } from '../src/hooks/useGameTimeouts';
 import { BalloonPopGame } from '../src/screens/games/BalloonPopGame';
+import { TrampolineJumpGame } from '../src/screens/games/TrampolineJumpGame';
+import { MagicPotionGame } from '../src/screens/games/MagicPotionGame';
+import { PipeConnectGame } from '../src/screens/games/PipeConnectGame';
+import { setAudioPreferences } from '../src/utils/soundEngine';
 import { renderCharacterSprite } from '../src/sketch/render';
 import { contentBounds, type Artwork, type Stroke } from '../src/sketch/model';
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 const assert = (value: unknown, message: string) => { if (!value) throw new Error(message); };
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const waitFor = async (check: () => unknown, message: string, timeout = 4500) => {
+  const until = performance.now() + timeout;
+  while (!check() && performance.now() < until) await act(async () => { await delay(75); });
+  assert(check(), message);
+};
 const host = document.querySelector('#fixture')!;
 const root = createRoot(host);
 if (import.meta.hot) import.meta.hot.dispose(() => { act(() => root.unmount()); });
@@ -45,6 +54,9 @@ function TimeoutFixture() { delayed = useGameTimeouts(); return null; }
 
 document.querySelector<HTMLButtonElement>('#run')!.onclick = async event => {
   const button = event.currentTarget as HTMLButtonElement; button.disabled = true;
+  // Component soundEnabled props are toggled below, but the real audio engine stays
+  // disabled: this harness must never call a speech provider or play recorded audio.
+  setAudioPreferences(false, false);
   results.replaceChildren(); artHost.replaceChildren();
   await show('세로 도화지 위·아래 그림이 PNG에 모두 남음', async () => {
     const pixel = await sprite({ ...blank(), strokes: [stroke(600, -340), stroke(600, 1240)] });
@@ -64,7 +76,7 @@ document.querySelector<HTMLButtonElement>('#run')!.onclick = async event => {
     await act(async () => root.render(render(true)));
     await act(async () => { await delay(200); });
     assert(next === 0, 'advanced behind parent gate');
-    assert(host.querySelector('button')?.disabled, 'manual advance must be disabled');
+    assert(!host.querySelector('button'), 'automatic continuation must not add a manual next button');
     await act(async () => root.render(render(false)));
     await act(async () => { await delay(150); });
     assert(next === 1, 'must resume exactly once');
@@ -101,6 +113,85 @@ document.querySelector<HTMLButtonElement>('#run')!.onclick = async event => {
     delayed.scheduleGameTimeout(() => stale++, 20);
     await act(async () => root.render(null));
     await delay(40); assert(stale === 0, 'unmounted callback fired');
+  });
+  await show('공통 지연 작업이 부모 인증 뒤 남은 시간부터 이어지고 정지 중 취소도 유지됨', async () => {
+    let completed = 0, cancelled = 0;
+    const render = (paused: boolean) => <PlayHintsPausedContext.Provider value={paused}><TimeoutFixture /></PlayHintsPausedContext.Provider>;
+    await act(async () => root.render(render(false)));
+    delayed.scheduleGameTimeout(() => completed++, 400);
+    await act(async () => { await delay(150); });
+    await act(async () => root.render(render(true)));
+    const cancelledId = delayed.scheduleGameTimeout(() => cancelled++, 20);
+    delayed.cancelGameTimeout(cancelledId);
+    await act(async () => { await delay(450); });
+    assert(completed === 0 && cancelled === 0, 'paused jobs ran behind the parent gate');
+    await act(async () => root.render(render(false)));
+    await act(async () => { await delay(60); });
+    assert(completed === 0, 'resume discarded the remaining delay');
+    await act(async () => { await delay(240); });
+    assert(completed === 1 && cancelled === 0, 'resume restarted the full delay or restored a cancelled job');
+  });
+  await show('트램펄린이 부모 재렌더에도 별을 보존하고 인증 중에는 물리 이동을 멈춤', async () => {
+    const render = (paused: boolean) => <PlayHintsPausedContext.Provider value={paused}><div style={{ width: 360, height: 520 }}><TrampolineJumpGame buddy="jelly" ageGroup="sprout" soundEnabled={false} onCompleteQuiz={() => {}} /></div></PlayHintsPausedContext.Provider>;
+    await act(async () => root.render(render(true)));
+    const stars = [...host.querySelectorAll('.trampoline-sky-item')];
+    assert(stars.length === 5, 'initial sky wave is missing');
+    await act(async () => { await delay(30); root.render(render(true)); });
+    const rerendered = [...host.querySelectorAll('.trampoline-sky-item')];
+    assert(stars.every((node, index) => node === rerendered[index]), 'new parent callback rebuilt the current sky wave');
+    await act(async () => root.render(render(false)));
+    await act(async () => { await delay(100); });
+    const jumper = host.querySelector<HTMLElement>('.trampoline-jumper-node')!;
+    const moving = jumper.style.transform;
+    await act(async () => { await delay(100); });
+    assert(jumper.style.transform !== moving, 'trampoline physics never resumed');
+    await act(async () => root.render(render(true)));
+    const frozen = jumper.style.transform;
+    await act(async () => { await delay(200); });
+    assert(jumper.style.transform === frozen, 'trampoline kept jumping behind the parent gate');
+  });
+  await show('물약을 끓이는 중 소리 토글해도 3판이 완성되고 자동으로 다음 묶음이 열림', async () => {
+    let completed = 0;
+    const render = (soundEnabled = false) => <div style={{ width: 360, height: 620 }}><MagicPotionGame buddy="jelly" ageGroup="sprout" soundEnabled={soundEnabled} onCompleteQuiz={() => completed++} /></div>;
+    await act(async () => root.render(render()));
+    const recipes = [
+      { parts: ['별가루', '보석 눈물'], creature: '별빛 아기 유니콘' },
+      { parts: ['딸기 시럽', '달빛 민트'], creature: '무지개 아기 드래곤' },
+      { parts: ['보라 마법가루', '황금 꿀'], creature: '날개 요정 친구' },
+    ];
+    for (const recipe of recipes) {
+      await waitFor(() => host.querySelector<HTMLButtonElement>(`button[aria-label="${recipe.parts[0]}"]`)?.disabled === false, 'next potion never became playable');
+      for (const part of recipe.parts) await act(async () => host.querySelector<HTMLButtonElement>(`button[aria-label="${part}"]`)!.click());
+      await waitFor(() => host.querySelector('button[aria-label="솥을 톡톡 눌러 저어보기"]'), 'stir action missing');
+      await act(async () => {
+        const stir = host.querySelector<HTMLButtonElement>('button[aria-label="솥을 톡톡 눌러 저어보기"]')!;
+        stir.click(); stir.click(); stir.click();
+      });
+      assert(host.querySelector('.potion-brewing-sparkle'), 'stirring never started brewing');
+      await act(async () => root.render(render(true)));
+      await act(async () => { await delay(50); root.render(render(false)); });
+      await waitFor(() => host.querySelector(`button[aria-label="${recipe.creature}"]`), 'sound toggle cancelled the pending brew');
+    }
+    assert(completed === 1, 'three recipes must award exactly one completion');
+    await waitFor(() => host.querySelector('.potion-recipe[aria-label="별사탕 아기 고양이의 재료"]'), 'final potion did not automatically continue into the next recipe set');
+    assert(!host.querySelector('button[aria-label*="다음"]'), 'potion flow still needs a manual next button');
+  });
+  await show('팝콘 3가지 맛을 완성하면 보상이 한 번 나오고 자동으로 처음 맛이 다시 열림', async () => {
+    let completed = 0;
+    await act(async () => root.render(<div style={{ width: 360, height: 620 }}><PipeConnectGame buddy="jelly" ageGroup="baby" soundEnabled={false} onCompleteQuiz={() => completed++} /></div>));
+    for (let round = 0; round < 3; round++) {
+      await waitFor(() => host.querySelector('button[aria-label="황금 왕옥수수 터뜨리기"]'), 'next popcorn flavor never became playable');
+      for (let attempt = 0; attempt < 6; attempt++) {
+        const kernel = host.querySelector<HTMLButtonElement>('button[aria-label="황금 왕옥수수 터뜨리기"], button[aria-label="옥수수 알맹이 터뜨리기"]');
+        if (!kernel) break;
+        await act(async () => kernel.click());
+      }
+      assert(!host.querySelector('button[aria-label="옥수수 알맹이 터뜨리기"]'), 'not all kernels were popped');
+      if (round < 2) await waitFor(() => host.querySelector(`[role="progressbar"][aria-label="${round + 2}/3"]`), 'seasoning did not automatically advance');
+      else await waitFor(() => completed === 1, 'final flavor never completed');
+    }
+    await waitFor(() => host.querySelector('[role="progressbar"][aria-label="1/3"]') && host.querySelector('button[aria-label="황금 왕옥수수 터뜨리기"]'), 'popcorn stopped after the final flavor');
+    assert(completed === 1, 'final popcorn reward was duplicated');
   });
   await show('일반 풍선 놀이가 5개마다 한 번 기록하고 계속 진행됨', async () => {
     let completions = 0;

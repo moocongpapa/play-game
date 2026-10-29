@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, Wand2, BookOpen, RotateCcw, Heart, Star } from 'lucide-react';
+import { Sparkles, Wand2, RotateCcw, ArrowRight, Check, Hand } from 'lucide-react';
 import type { CharacterId, AgeGroup } from '../../types';
-import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { PlayGuide, PlayProgress } from '../../components/ToddlerPlay';
 import { PixiStageOverlay, type PixiStageHandle } from '../../components/PixiStageOverlay';
 import {
@@ -14,12 +13,14 @@ import {
   playBubblePop,
   playCareSound,
   playJellyTap,
-  playStarGain,
   playWrongBoing,
 } from '../../utils/soundEngine';
 import { fireConfetti, fireStarExplosion } from '../../utils/confetti';
 import { emitJuice, JUICE_SPRING } from '../../utils/juice';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
+import { useGameActivity } from '../../hooks/useGameActivity';
+import { RoundContinuation } from '../../components/RoundContinuation';
+import './MagicPotionGame.css';
 
 interface MagicPotionGameProps {
   buddy: CharacterId;
@@ -72,7 +73,10 @@ export const MagicPotionGame: React.FC<MagicPotionGameProps> = ({
   soundEnabled,
   ageGroup = 'sprout',
 }) => {
-  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+  const { scheduleGameTimeout, cancelGameTimeout, clearGameTimeouts } = useGameTimeouts();
+  const { paused, isBlocked } = useGameActivity();
+  const latest = useRef({ soundEnabled, buddy, onCompleteQuiz });
+  latest.current = { soundEnabled, buddy, onCompleteQuiz };
   const pixiRef = useRef<PixiStageHandle>(null);
   const cauldronRef = useRef<HTMLDivElement>(null);
 
@@ -82,9 +86,13 @@ export const MagicPotionGame: React.FC<MagicPotionGameProps> = ({
 
   // Target recipe for sprout / bloom
   const targetRecipe = RECIPES[round % RECIPES.length];
+  const recipeStep = round % totalRounds;
   const requiredCount = isRecipeMode ? targetRecipe.required.length : 2;
 
   const [addedIngredients, setAddedIngredients] = useState<Ingredient[]>([]);
+  const ingredientsRef = useRef<Ingredient[]>([]);
+  const stirRef = useRef(0);
+  const brewingRef = useRef(false);
   const [liquidColor, setLiquidColor] = useState<[number, number, number]>([147, 51, 234]); // default magical violet
   const [stirProgress, setStirProgress] = useState(0); // 0 to 3
   const [phase, setPhase] = useState<'adding' | 'stirring' | 'brewing' | 'revealed' | 'complete'>('adding');
@@ -94,7 +102,9 @@ export const MagicPotionGame: React.FC<MagicPotionGameProps> = ({
 
   // Bubble animation inside cauldron
   useEffect(() => {
+    if (paused) return;
     const interval = setInterval(() => {
+      if (isBlocked()) return;
       setBubbles((prev) => {
         const next = prev
           .map((b) => ({ ...b, y: b.y - 12 }))
@@ -111,21 +121,39 @@ export const MagicPotionGame: React.FC<MagicPotionGameProps> = ({
       });
     }, 200);
     return () => clearInterval(interval);
+  }, [paused, isBlocked]);
+
+  // Volume changes only affect the voice, never a pending brew or round transition.
+  useEffect(() => {
+    if (!isBlocked()) speakText(GUIDE, soundEnabled, { characterId: buddy });
+  }, [buddy, soundEnabled, isBlocked]);
+  useEffect(() => () => {
+    stopAllSpeech();
+    clearGameTimeouts();
+  }, [clearGameTimeouts]);
+
+  const resetPotion = useCallback(() => {
+    ingredientsRef.current = [];
+    stirRef.current = 0;
+    brewingRef.current = false;
+    setAddedIngredients([]);
+    setStirProgress(0);
+    setPhase('adding');
+    setCreatedCreature(null);
+    setLiquidColor([147, 51, 234]);
+    setRound(r => r + 1);
   }, []);
 
-  // Initial speech guide
   useEffect(() => {
-    speakText(GUIDE, soundEnabled, { characterId: buddy });
-    return () => {
-      stopAllSpeech();
-      clearGameTimeouts();
-    };
-  }, [buddy, soundEnabled, clearGameTimeouts]);
+    if (phase !== 'revealed') return;
+    const id = scheduleGameTimeout(resetPotion, 1400);
+    return () => cancelGameTimeout(id);
+  }, [phase, resetPotion, scheduleGameTimeout, cancelGameTimeout]);
 
   // Drop ingredient into cauldron
   const handleSelectIngredient = (ingredient: Ingredient) => {
-    if (phase !== 'adding' || addedIngredients.length >= requiredCount) return;
-    if (addedIngredients.some((i) => i.id === ingredient.id)) return;
+    if (isBlocked() || phase !== 'adding' || ingredientsRef.current.length >= requiredCount) return;
+    if (ingredientsRef.current.some((i) => i.id === ingredient.id)) return;
     if (isRecipeMode && !targetRecipe.required.includes(ingredient.id)) {
       playWrongBoing(soundEnabled);
       speakText('앗, 이 재료는 레시피에 없어! 책을 다시 볼까?', soundEnabled, { characterId: buddy, playIntroSFX: false });
@@ -135,7 +163,8 @@ export const MagicPotionGame: React.FC<MagicPotionGameProps> = ({
     playCareSound('drink', soundEnabled);
     playBubblePop(soundEnabled);
 
-    const nextAdded = [...addedIngredients, ingredient];
+    const nextAdded = [...ingredientsRef.current, ingredient];
+    ingredientsRef.current = nextAdded;
     setAddedIngredients(nextAdded);
 
     // Dynamic color mixing (weighted RGB blending)
@@ -171,13 +200,14 @@ export const MagicPotionGame: React.FC<MagicPotionGameProps> = ({
 
   // Stir mechanic
   const handleStir = useCallback(() => {
-    if (phase !== 'stirring') return;
+    if (isBlocked() || phase !== 'stirring' || brewingRef.current) return;
 
     playCareSound('bubble', soundEnabled);
     playJellyTap(soundEnabled);
     setWandAngle((prev) => (prev + 90) % 360);
 
-    const nextStir = stirProgress + 1;
+    const nextStir = stirRef.current + 1;
+    stirRef.current = nextStir;
     setStirProgress(nextStir);
 
     if (cauldronRef.current) {
@@ -193,6 +223,7 @@ export const MagicPotionGame: React.FC<MagicPotionGameProps> = ({
     }
 
     if (nextStir >= 3) {
+      brewingRef.current = true;
       setPhase('brewing');
       scheduleGameTimeout(() => {
         // Determine creature
@@ -201,40 +232,26 @@ export const MagicPotionGame: React.FC<MagicPotionGameProps> = ({
           result = RECIPES[round % RECIPES.length];
         }
         setCreatedCreature(result);
-        setPhase('revealed');
-        playSparkleChime(soundEnabled);
-        playCorrectFanfare(soundEnabled);
+        const finalRecipe = recipeStep + 1 >= totalRounds;
+        setPhase(finalRecipe ? 'complete' : 'revealed');
+        playSparkleChime(latest.current.soundEnabled);
+        playCorrectFanfare(latest.current.soundEnabled);
+        if (finalRecipe) {
+          playCelebrationFanfare(latest.current.soundEnabled);
+          fireConfetti();
+          latest.current.onCompleteQuiz(3);
+        }
         fireStarExplosion();
-        speakText('우와! 반짝반짝 신기한 마법 생명체가 태어났어요!', soundEnabled, { characterId: buddy, playIntroSFX: false });
+        speakText('우와! 반짝반짝 신기한 마법 생명체가 태어났어요!', latest.current.soundEnabled, { characterId: latest.current.buddy, playIntroSFX: false });
       }, 1200);
     }
-  }, [phase, soundEnabled, stirProgress, targetRecipe, isRecipeMode, round, liquidColor, buddy, scheduleGameTimeout]);
-
-  // Next round
-  const handleNextRound = () => {
-    if (round + 1 >= totalRounds) {
-      setPhase('complete');
-      playCelebrationFanfare(soundEnabled);
-      fireConfetti();
-      scheduleGameTimeout(() => {
-        onCompleteQuiz(3);
-      }, 2500);
-    } else {
-      setRound((r) => r + 1);
-      setAddedIngredients([]);
-      setStirProgress(0);
-      setPhase('adding');
-      setCreatedCreature(null);
-      setLiquidColor([147, 51, 234]);
-      playStarGain(soundEnabled);
-      speakText(GUIDE, soundEnabled, { characterId: buddy, playIntroSFX: false });
-    }
-  };
+  }, [phase, soundEnabled, targetRecipe, isRecipeMode, round, recipeStep, liquidColor, buddy, scheduleGameTimeout, isBlocked]);
 
   const currentColorRgb = `rgb(${liquidColor[0]}, ${liquidColor[1]}, ${liquidColor[2]})`;
 
   return (
     <div
+      inert={paused}
       className="magic-potion-stage relative flex flex-col justify-between w-full h-full select-none overflow-hidden"
       style={{
         background: 'radial-gradient(circle at 50% 30%, #312e81 0%, #1e1b4b 60%, #0f172a 100%)',
@@ -249,48 +266,29 @@ export const MagicPotionGame: React.FC<MagicPotionGameProps> = ({
           soundEnabled={soundEnabled}
           title="알록달록 마법 물약"
           guide={GUIDE}
-          happy={phase === 'revealed'}
+          happy={phase === 'revealed' || phase === 'complete'}
         />
-        <PlayProgress total={totalRounds} done={round + 1} label="완성 물약" />
+        <PlayProgress total={totalRounds} done={recipeStep + 1} label="완성 물약" />
       </header>
 
-      {/* Recipe Goal Banner for Sprout / Bloom */}
+      {/* Pictures show exactly which ingredients go into this creature's potion. */}
       {isRecipeMode && phase !== 'revealed' && phase !== 'complete' && (
-        <div className="relative z-10 flex items-center justify-center px-4 py-1">
-          <div className="flex items-center gap-3 px-4 py-2 bg-indigo-900/80 backdrop-blur-md rounded-2xl border border-indigo-400/30 shadow-lg text-white text-sm">
-            <BookOpen className="w-5 h-5 text-amber-300" />
-            <span className="font-bold text-amber-200">목표 마법 레시피:</span>
-            <span className="font-extrabold text-base text-pink-300 flex items-center gap-1">
-              <span>{targetRecipe.emoji}</span> {targetRecipe.name}
-            </span>
-            <div className="flex items-center gap-1.5 ml-2">
-              {targetRecipe.required.map((reqId) => {
-                const ing = INGREDIENTS.find((i) => i.id === reqId);
-                const isAdded = addedIngredients.some((i) => i.id === reqId);
-                return (
-                  <span
-                    key={reqId}
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold border transition-all ${
-                      isAdded
-                        ? 'bg-emerald-500/30 border-emerald-400 text-emerald-200 scale-105'
-                        : 'bg-white/10 border-white/20 text-white/80'
-                    }`}
-                  >
-                    <span>{ing?.emoji}</span>
-                    <span>{ing?.name}</span>
-                    {isAdded && '✓'}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
+        <div className="potion-recipe" role="group" aria-label={`${targetRecipe.name}의 재료`}>
+          {targetRecipe.required.map(reqId => {
+            const ingredient = INGREDIENTS.find(item => item.id === reqId)!;
+            const added = addedIngredients.some(item => item.id === reqId);
+            return <span className="potion-recipe-part" data-added={added} key={reqId} aria-label={`${ingredient.name}${added ? ' 넣음' : ''}`}>
+              <span aria-hidden="true">{ingredient.emoji}</span>{added && <Check aria-hidden="true"/>}
+            </span>;
+          })}
+          <ArrowRight aria-hidden="true"/><span className="potion-recipe-creature" aria-hidden="true">{targetRecipe.emoji}</span>
         </div>
       )}
 
       {/* Center Cauldron & Creation Area */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center p-2 min-h-0">
         <AnimatePresence mode="wait">
-          {phase === 'revealed' && createdCreature ? (
+          {(phase === 'revealed' || phase === 'complete') && createdCreature ? (
             /* Creature Revealed Screen */
             <motion.div
               key="creature-reveal"
@@ -306,37 +304,23 @@ export const MagicPotionGame: React.FC<MagicPotionGameProps> = ({
                   transition={{ repeat: Infinity, duration: 8, ease: 'linear' }}
                   className="absolute -inset-4 rounded-full bg-gradient-to-r from-amber-400 via-pink-400 to-indigo-400 opacity-60 blur-md"
                 />
-                <motion.div
+                <motion.button type="button"
                   animate={{ y: [0, -10, 0] }}
                   transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
                   className="relative text-7xl p-6 bg-white/20 rounded-full border-2 border-white/50 shadow-inner cursor-pointer"
+                  aria-label={createdCreature.name}
                   onClick={() => {
+                    if (isBlocked()) return;
                     playSparkleChime(soundEnabled);
                     fireStarExplosion();
                   }}
                 >
                   {createdCreature.emoji}
-                </motion.div>
+                </motion.button>
               </div>
 
-              <h2 className="text-2xl font-black text-amber-200 drop-shadow flex items-center gap-2 mb-1">
-                <Sparkles className="w-6 h-6 text-amber-300 animate-spin" />
-                {createdCreature.title}
-                <Sparkles className="w-6 h-6 text-amber-300 animate-spin" />
-              </h2>
-              <p className="text-white/90 text-sm font-medium mb-5">
-                신비한 마법이 솥 안에서 반짝이며 탄생했어요!
-              </p>
-
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleNextRound}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-400 to-pink-500 text-white font-black text-base rounded-full shadow-lg shadow-pink-500/40 border border-white/40"
-              >
-                <Star className="w-5 h-5 fill-current" />
-                <span>{round + 1 >= totalRounds ? '모험 완성하기!' : '다음 마법 만들기'}</span>
-              </motion.button>
+              <span className="sr-only">{createdCreature.title} 완성!</span>
+              <div className="potion-reveal-stars" aria-hidden="true">✦ ✧ ✦</div>
             </motion.div>
           ) : (
             /* Brewing Cauldron */
@@ -345,7 +329,7 @@ export const MagicPotionGame: React.FC<MagicPotionGameProps> = ({
               <div
                 ref={cauldronRef}
                 onClick={phase === 'stirring' ? handleStir : undefined}
-                className={`relative w-64 h-56 flex flex-col items-center justify-center cursor-pointer transition-transform ${
+                className={`potion-cauldron relative w-64 h-56 flex flex-col items-center justify-center cursor-pointer transition-transform ${
                   phase === 'stirring' ? 'hover:scale-105 active:scale-95' : ''
                 }`}
               >
@@ -426,32 +410,13 @@ export const MagicPotionGame: React.FC<MagicPotionGameProps> = ({
                 )}
               </div>
 
-              {/* Status & Action Prompt Pill */}
-              <div className="mt-3">
-                {phase === 'adding' && (
-                  <div className="flex items-center gap-2 px-4 py-2 bg-purple-950/70 border border-purple-400/40 rounded-full text-purple-200 text-xs font-bold shadow-md">
-                    <Sparkles className="w-4 h-4 text-amber-300" />
-                    <span>
-                      재료를 퐁당 넣어주세요! ({addedIngredients.length}/{requiredCount})
-                    </span>
-                  </div>
-                )}
-                {phase === 'stirring' && (
-                  <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleStir}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-400 to-purple-500 text-white font-extrabold text-sm rounded-full shadow-lg shadow-purple-500/50 border border-white/40 animate-bounce"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                    <span>솥을 톡톡 눌러 저어봐요! ({stirProgress}/3)</span>
-                  </motion.button>
-                )}
-                {phase === 'brewing' && (
-                  <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/30 border border-amber-400/50 rounded-full text-amber-200 text-xs font-bold animate-pulse">
-                    <Sparkles className="w-4 h-4 animate-spin" />
-                    <span>보글보글! 신비한 마법이 피어오르고 있어요...</span>
-                  </div>
-                )}
+              <div className="potion-action" aria-live="polite">
+                {phase === 'adding' && <span className="sr-only">재료를 퐁당 넣어주세요</span>}
+                {phase === 'stirring' && <motion.button type="button" aria-label="솥을 톡톡 눌러 저어보기" whileTap={{ scale: .92 }} onClick={handleStir} className="potion-stir-button">
+                  <RotateCcw aria-hidden="true"/><Hand aria-hidden="true"/>
+                  <span className="sr-only">세 번 중 {stirProgress}번 저었어요</span>
+                </motion.button>}
+                {phase === 'brewing' && <Sparkles className="potion-brewing-sparkle" aria-label="마법이 피어오르고 있어요"/>}
               </div>
             </div>
           )}
@@ -460,7 +425,7 @@ export const MagicPotionGame: React.FC<MagicPotionGameProps> = ({
 
       {/* Bottom Ingredients Shelf */}
       <footer className="relative z-10 p-3 bg-slate-950/80 backdrop-blur-md border-t border-indigo-500/20">
-        <div className="flex items-center justify-center gap-2 max-w-xl mx-auto overflow-x-auto py-1">
+        <div className="potion-ingredient-grid">
           {INGREDIENTS.map((item) => {
             const isAlreadyAdded = addedIngredients.some((a) => a.id === item.id);
             const isNeeded = targetRecipe.required.includes(item.id);
@@ -469,9 +434,11 @@ export const MagicPotionGame: React.FC<MagicPotionGameProps> = ({
                 key={item.id}
                 whileHover={{ scale: 1.08, y: -4 }}
                 whileTap={{ scale: 0.92 }}
-                disabled={phase !== 'adding' || addedIngredients.length >= requiredCount}
+                disabled={paused || phase !== 'adding' || isAlreadyAdded || addedIngredients.length >= requiredCount}
+                aria-label={item.name}
+                aria-pressed={isAlreadyAdded}
                 onClick={() => handleSelectIngredient(item)}
-                className={`relative flex flex-col items-center justify-center p-2 rounded-2xl min-w-[64px] h-20 transition-all border ${
+                className={`potion-ingredient relative flex flex-col items-center justify-center p-2 rounded-2xl min-w-[64px] h-20 transition-all border ${
                   isAlreadyAdded
                     ? 'opacity-40 bg-slate-800 border-slate-700 pointer-events-none'
                     : isRecipeMode && isNeeded
@@ -481,16 +448,17 @@ export const MagicPotionGame: React.FC<MagicPotionGameProps> = ({
               >
                 {isRecipeMode && isNeeded && !isAlreadyAdded && (
                   <span className="absolute -top-1.5 -right-1 px-1.5 py-0.2 bg-amber-400 text-slate-950 text-[10px] font-black rounded-full shadow">
-                    필요
+                    ✦
                   </span>
                 )}
                 <span className="text-3xl mb-1 filter drop-shadow">{item.emoji}</span>
-                <span className="text-white text-xs font-bold tracking-tight">{item.name}</span>
+                <span className="sr-only">{item.name}</span>
               </motion.button>
             );
           })}
         </div>
       </footer>
+      {phase === 'complete' && <RoundContinuation delayMs={1200} onNext={resetPotion}/>}
     </div>
   );
 };

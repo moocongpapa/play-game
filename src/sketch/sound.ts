@@ -1,13 +1,18 @@
 import type { Brush } from './model';
+import { areSoundEffectsEnabled, getAudioContext, getSfxDestination } from '../utils/soundEngine';
 
-let ctx: AudioContext | undefined;
+let noiseContext: AudioContext | undefined;
 let noise: AudioBuffer | undefined;
 let nextDrawSound = 0;
 
 function audio() {
-  ctx ??= new AudioContext();
-  void ctx.resume();
-  return ctx;
+  const context = getAudioContext();
+  if (noiseContext !== context) {
+    noiseContext = context;
+    noise = undefined;
+    nextDrawSound = 0;
+  }
+  return context;
 }
 
 let rainbowNoteIdx = 0;
@@ -21,7 +26,7 @@ export type SoundEffect =
   | 'clear';
 
 export function playSound(kind: SoundEffect, muted: boolean) {
-  if (muted) return;
+  if (muted || !areSoundEffectsEnabled()) return;
   try {
     const context = audio(),
       now = context.currentTime;
@@ -41,7 +46,7 @@ export function playSound(kind: SoundEffect, muted: boolean) {
         gain.gain.setValueAtTime(0.0001, t);
         gain.gain.exponentialRampToValueAtTime(0.065, t + 0.02);
         gain.gain.exponentialRampToValueAtTime(0.0001, t + c.d);
-        osc.connect(gain).connect(context.destination);
+        osc.connect(gain).connect(getSfxDestination(context));
         osc.start(t);
         osc.stop(t + c.d + 0.02);
       });
@@ -58,7 +63,7 @@ export function playSound(kind: SoundEffect, muted: boolean) {
         gain.gain.setValueAtTime(0.0001, t);
         gain.gain.exponentialRampToValueAtTime(0.04, t + 0.01);
         gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
-        osc.connect(gain).connect(context.destination);
+        osc.connect(gain).connect(getSfxDestination(context));
         osc.start(t);
         osc.stop(t + 0.19);
       });
@@ -73,7 +78,7 @@ export function playSound(kind: SoundEffect, muted: boolean) {
       gain.gain.setValueAtTime(0.0001, now);
       gain.gain.exponentialRampToValueAtTime(0.05, now + 0.006);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.06);
-      osc.connect(gain).connect(context.destination);
+      osc.connect(gain).connect(getSfxDestination(context));
       osc.start(now);
       osc.stop(now + 0.07);
       return;
@@ -92,7 +97,7 @@ export function playSound(kind: SoundEffect, muted: boolean) {
       gain.gain.setValueAtTime(0.0001, t);
       gain.gain.exponentialRampToValueAtTime(0.055, t + 0.015);
       gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
-      osc.connect(gain).connect(context.destination);
+      osc.connect(gain).connect(getSfxDestination(context));
       osc.start(t);
       osc.stop(t + 0.22);
     });
@@ -107,7 +112,7 @@ export function playDrawingSound(
   muted: boolean,
   strength = 0.5,
 ) {
-  if (muted) return;
+  if (muted || !areSoundEffectsEnabled()) return;
   try {
     const context = audio(),
       now = context.currentTime;
@@ -126,7 +131,7 @@ export function playDrawingSound(
         gain.gain.setValueAtTime(0.0001, start);
         gain.gain.exponentialRampToValueAtTime(0.045, start + 0.012);
         gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.16);
-        osc.connect(gain).connect(context.destination);
+        osc.connect(gain).connect(getSfxDestination(context));
         osc.start(start);
         osc.stop(start + 0.17);
       });
@@ -144,7 +149,7 @@ export function playDrawingSound(
       gain.gain.setValueAtTime(0.0001, now);
       gain.gain.exponentialRampToValueAtTime(0.035 * energy, now + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
-      osc.connect(gain).connect(context.destination);
+      osc.connect(gain).connect(getSfxDestination(context));
       osc.start(now);
       osc.stop(now + 0.15);
       return;
@@ -159,7 +164,7 @@ export function playDrawingSound(
       gain.gain.setValueAtTime(0.0001, now);
       gain.gain.exponentialRampToValueAtTime(0.022 * energy, now + 0.015);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.11);
-      osc.connect(gain).connect(context.destination);
+      osc.connect(gain).connect(getSfxDestination(context));
       osc.start(now);
       osc.stop(now + 0.12);
       return;
@@ -175,7 +180,7 @@ export function playDrawingSound(
       gain.gain.setValueAtTime(0.0001, now);
       gain.gain.exponentialRampToValueAtTime(0.038 * energy, now + 0.008);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
-      osc.connect(gain).connect(context.destination);
+      osc.connect(gain).connect(getSfxDestination(context));
       osc.start(now);
       osc.stop(now + 0.08);
       return;
@@ -192,7 +197,7 @@ export function playDrawingSound(
       gain.gain.setValueAtTime(0.0001, start);
       gain.gain.exponentialRampToValueAtTime(0.026 * energy, start + 0.012);
       gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.12);
-      osc.connect(gain).connect(context.destination);
+      osc.connect(gain).connect(getSfxDestination(context));
       osc.start(start);
       osc.stop(start + 0.13);
       return;
@@ -219,7 +224,7 @@ export function playDrawingSound(
       now + 0.008,
     );
     gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-    source.connect(filter).connect(gain).connect(context.destination);
+    source.connect(filter).connect(gain).connect(getSfxDestination(context));
     source.start(now, Math.random() * 0.8, duration);
     source.stop(now + duration);
   } catch {

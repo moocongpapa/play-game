@@ -18,6 +18,7 @@ import { refreshChildProfile } from './utils/ageEngine';
 import { advancePlayTime, createForegroundClock, localPlayDate, refreshPlaySession, restartPlayTimer } from './utils/playSession';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { getComboState, recordPlaySuccess } from './utils/juice';
+import { resetPlayPreferences } from './utils/resetPlayPreferences';
 
 const OnboardingScreen = lazy(() => import('./screens/OnboardingScreen').then(module => ({ default: module.OnboardingScreen })));
 const FriendDayScreen = lazy(() => import('./screens/FriendDayScreen').then(m => ({ default: m.FriendDayScreen })));
@@ -258,6 +259,8 @@ export default function App() {
     document.addEventListener('visibilitychange', tick);
     window.addEventListener('pagehide', tick);
     return () => {
+      // Settle the visible fraction before this screen's clock is replaced.
+      tick();
       clearInterval(interval);
       document.removeEventListener('visibilitychange', tick);
       window.removeEventListener('pagehide', tick);
@@ -265,7 +268,7 @@ export default function App() {
   }, [showSplash, appState.isTimeUp, currentScreen, isParentGateOpen]);
 
   // Play Celebration when a quiz round is completed (점수 누적 없이 순수한 성취 축하)
-  const handleCompleteQuiz = (_starsEarned: number, completedGameId: GameId | null = activeGameId) => {
+  const handleCompleteQuiz = useCallback((_starsEarned: number, completedGameId: GameId | null = activeGameId) => {
     if (!document.hidden) {
       recordPlaySuccess();
       playComboChime(getComboState().combo, appState.soundEnabled);
@@ -289,7 +292,7 @@ export default function App() {
       };
     });
 
-  };
+  }, [activeGameId, appState.soundEnabled]);
 
   const handleToggleGameDisabled = (gameId: GameId) => {
     setAppState((prev) => {
@@ -444,15 +447,9 @@ export default function App() {
               setAppState((prev) => ({ ...prev, bgmEnabled: !prev.bgmEnabled }))
             }
             onToggleGameDisabled={handleToggleGameDisabled}
-            onResetProgress={async () => {
+            onResetProgress={() => {
               try {
-                localStorage.removeItem('ITSME_APP_STATE');
-                localStorage.removeItem('ITSME_CHILD_PROFILE');
-                localStorage.removeItem('ITSME_GEMINI_TTS_ENABLED');
-                if (window.indexedDB?.databases) {
-                  const dbs = await window.indexedDB.databases();
-                  dbs.forEach(db => { if (db.name) window.indexedDB.deleteDatabase(db.name); });
-                }
+                resetPlayPreferences(localStorage);
               } catch (e) {
                 console.warn('Reset cleanup error', e);
               }

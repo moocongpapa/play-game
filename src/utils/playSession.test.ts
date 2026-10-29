@@ -49,6 +49,20 @@ test('foreground clock excludes background time and retains visible fractions', 
   now += 750; assert.equal(sample(), .75);
 });
 
+test('settling each outgoing screen retains sub-second visits and enforces the allowance', () => {
+  let now = 0;
+  let state = { ...saved(), playTimeSeconds: 0, isTimeUp: false, timerMinutes: 1 };
+  for (let visit = 0; visit < 75; visit++) {
+    const sample = createForegroundClock(() => now, () => true);
+    assert.equal(sample(), 0);
+    now += 800;
+    // App settles the clock before a navigation or parent gate replaces it.
+    state = advancePlayTime(state, sample(), today);
+  }
+  assert.equal(state.playTimeSeconds, 60);
+  assert.equal(state.isTimeUp, true);
+});
+
 test('persisted age refreshes across the birthday and uses local calendar days', () => {
   const before = createChildProfile('유하', '2023-01-03', new Date(2027, 0, 2, 23, 59));
   assert.equal(before.ageMonths, 47);

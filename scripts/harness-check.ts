@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import * as ts from 'typescript';
 
 const ROOT = process.cwd();
 
@@ -203,6 +204,37 @@ function walkFiles(dir: string, out: string[] = []): string[] {
   return out;
 }
 
+function checkProgressionLifecycles(): CheckResult {
+  const details: string[] = [];
+  const games = ['BubbleBathGame', 'ForestPeekabooGame', 'FruitCatcherGame', 'MagicPotionGame', 'MagicSlimeGame', 'MirrorMazeGame', 'PipeConnectGame', 'TrampolineJumpGame'];
+  for (const game of games) {
+    const file = `src/screens/games/${game}.tsx`;
+    const source = ts.createSourceFile(file, readText(file), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const visit = (node: ts.Node) => {
+      if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && ['useEffect', 'useLayoutEffect'].includes(node.expression.text)) {
+        const [effect, dependencies] = node.arguments;
+        if (effect && dependencies && (ts.isArrowFunction(effect) || ts.isFunctionExpression(effect)) && ts.isArrayLiteralExpression(dependencies)) {
+          const names = dependencies.elements.map(dependency => dependency.getText(source));
+          if (names.includes('soundEnabled') && ts.isBlock(effect.body)) {
+            for (const statement of effect.body.statements) {
+              if (ts.isReturnStatement(statement) && statement.expression?.getText(source).includes('clearGameTimeouts')) {
+                details.push(`[${file}] 음소거 변경이 진행 타이머를 삭제하는 effect cleanup 발견`);
+              }
+            }
+          }
+          if (game === 'TrampolineJumpGame' && names.includes('onCompleteQuiz') && effect.body.getText(source).includes('createSkyWave')) {
+            details.push(`[${file}] 완료 콜백 변경이 수집물을 초기화하는 effect 발견`);
+          }
+        }
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(source);
+  }
+  if (/\bdeleteDatabase\s*\(/.test(readText('src/App.tsx'))) details.push('[App.tsx] 설정 초기화에서 작품·음성 DB를 삭제할 수 없음');
+  return { name: '5. 음소거 중 진행 · 콜백 초기화 · 작품 보존 회귀 검사', passed: details.length === 0, details };
+}
+
 function checkPaidScriptIsolation(): CheckResult {
   const details: string[] = [];
   const forbiddenPatterns = [
@@ -244,6 +276,7 @@ function main() {
     checkStageLayoutAndGameCue(),
     checkAudioAndTimerHygiene(),
     checkPaidScriptIsolation(),
+    checkProgressionLifecycles(),
   ];
 
   let hasFailure = false;
@@ -264,7 +297,7 @@ function main() {
     console.error('🚨 하네스 정적 검증 실패! 위 항목을 수정한 후 다시 실행해 주세요.');
     process.exit(1);
   } else {
-    console.log('🎉 모든 하네스 정적 검증 항목을 완벽히 통과했습니다!');
+    console.log('🎉 하네스 정적 검증 통과. 실제 상태 전환은 npm test와 브라우저 회귀 화면에서 함께 확인합니다.');
   }
 }
 

@@ -1,24 +1,24 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useContext, useEffect, useLayoutEffect, useRef } from 'react';
+import { PlayHintsPausedContext } from '../components/PlayFlowContext';
+import { createGameTimeouts } from '../utils/gameTimeouts';
 
 /** A round's delayed reactions must never follow the child back to the home screen. */
 export function useGameTimeouts() {
-  const timers = useRef(new Set<number>());
-  const clearGameTimeouts = useCallback(() => {
-    timers.current.forEach(id => window.clearTimeout(id));
-    timers.current.clear();
-  }, []);
-  useEffect(() => clearGameTimeouts, [clearGameTimeouts]);
-  const cancelGameTimeout = useCallback((id: number | null) => {
-    if (id === null) return;
-    window.clearTimeout(id);
-    timers.current.delete(id);
-  }, []);
-  const scheduleGameTimeout = useCallback((callback: () => void, delay: number) => {
-    const id = window.setTimeout(() => {
-      if (timers.current.delete(id)) callback();
-    }, delay);
-    timers.current.add(id);
-    return id;
-  }, []);
-  return { scheduleGameTimeout, cancelGameTimeout, clearGameTimeouts };
+  const paused = useContext(PlayHintsPausedContext);
+  const parent = useRef(paused);
+  parent.current = paused;
+  const timers = useRef<ReturnType<typeof createGameTimeouts> | null>(null);
+  if (!timers.current) timers.current = createGameTimeouts({
+    now: () => performance.now(),
+    setTimeout: (run, delay) => window.setTimeout(run, delay),
+    clearTimeout: id => window.clearTimeout(id),
+  }, paused || document.hidden);
+  const manager = timers.current;
+  useLayoutEffect(() => { manager.setPaused(paused || document.hidden); }, [manager, paused]);
+  useEffect(() => {
+    const sync = () => manager.setPaused(parent.current || document.hidden);
+    document.addEventListener('visibilitychange', sync);
+    return () => { document.removeEventListener('visibilitychange', sync); manager.clear(); };
+  }, [manager]);
+  return { scheduleGameTimeout: manager.schedule, cancelGameTimeout: manager.cancel, clearGameTimeouts: manager.clear };
 }

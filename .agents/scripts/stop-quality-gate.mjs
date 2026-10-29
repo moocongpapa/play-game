@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
-import path from 'node:path';
 import { execSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 function main() {
   let raw = '';
@@ -30,7 +30,7 @@ function main() {
     return;
   }
 
-  const repoRoot = payload?.workspacePaths?.[0] || path.resolve(process.cwd(), '..');
+  const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
   const convId = String(payload?.conversationId || 'default').replace(/[^a-zA-Z0-9_-]/g, '');
   const execNum = String(payload?.executionNum ?? 0);
   const retryStamp = `/tmp/play-game-harness-stop-${convId}-${execNum}.stamp`;

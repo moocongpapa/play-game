@@ -574,6 +574,7 @@ export const ParentDashboard: React.FC<ParentDashboardProps> = ({
             <h3 className="text-lg font-black text-[#4A3E3D] mb-1.5">정말 초기화할까요?</h3>
             <p className="text-xs text-[#8C7B79] font-bold mb-4 break-keep">
               아이의 놀이 시간, 완료한 놀이 기록, 설정된 맞춤 정보가 모두 처음으로 되돌아가요.
+              <br />전시회 그림과 그리던 그림, 저장된 음성은 그대로 남아요.
             </p>
             <div className="flex gap-2">
               <button

@@ -1,17 +1,17 @@
 # 게임 목록과 등록 방법
 
-기준일: 2026-10-21 · [목차](README.md)
+기준일: 2026-10-29 · [목차](README.md)
 
-실제 홈 메뉴는 [GAME_CATALOG](../src/data/gameCatalog.ts)와 `availableGameIds`를 기준으로 합니다. 이름·설명은 접근성·음성·부모 정보에도 사용하지만 홈 카드는 그림만 표시합니다. 아래 목록은 현재 소스의 34종을 전부 포함합니다.
+실제 홈 메뉴는 [GAME_CATALOG](../src/data/gameCatalog.ts)와 `availableGameIds`를 기준으로 합니다. 이름·설명은 접근성·음성·부모 정보에도 사용하지만 홈 카드는 놀이 그림을 중심으로 표시합니다. 아래 목록은 현재 소스의 40종을 전부 포함합니다.
 
 ## 연령과 난이도
 
 | 그룹 | 월령 판정 | 메뉴 게임 수 | 기본 보기 | 기본 문제 제한 | 수 세기 범위 |
 |---|---|---|---|---|---|
-| baby · 아기반 | 36개월 미만 | 16 | 2개 | 없음 | 1~3 |
-| sprout · 새싹반 | 36~47개월 | 32 | 4개 | 없음 | 1~7 |
-| bloom · 꽃잎반 | 48~59개월 | 34 | 4개 | 30초 | 1~10 |
-| star · 별님반 | 60개월 이상 | 34 | 4개 | 20초 | 1~20 |
+| baby · 아기반 | 36개월 미만 | 22 | 2개 | 없음 | 1~3 |
+| sprout · 새싹반 | 36~47개월 | 38 | 4개 | 없음 | 1~7 |
+| bloom · 꽃잎반 | 48~59개월 | 40 | 4개 | 30초 | 1~10 |
+| star · 별님반 | 60개월 이상 | 40 | 4개 | 20초 | 1~20 |
 
 기본 프로필은 유하, 2023-01-03입니다. 2026-10-09 기준 45개월로 새싹반입니다. 월령은 현재 날짜와 생일의 현지 날짜로 계산합니다. 보호자 설정에서 연령 자동 맞춤 또는 수동 단계 선택, 개별 놀이 ON/OFF(연령대별 필터·전체 켜기 포함)를 제어할 수 있습니다. 숫자 놀이터는 아기반 0~10, 새싹반 0~20, 꽃잎반·별님반 0~100 범위를 사용합니다.
 
@@ -21,18 +21,18 @@
 |---|---|---|---|---|
 | `object_recognition` | 이름 찾기 | 언어 | 아기반부터 | [GgomiObjectGame](../src/screens/games/GgomiObjectGame.tsx) |
 | `shape_color` | 모양과 색 | 관찰·논리 | 아기반부터 | [RanoShapeColorGame](../src/screens/games/RanoShapeColorGame.tsx) |
-| `korean_letters` | 글자 방울 | 언어 | 아기반부터 | [JellyKoreanGame](../src/screens/games/JellyKoreanGame.tsx) |
-| `sound_quiz` | 누구 소리? | 언어 | 아기반부터 | [DochiSoundGame](../src/screens/games/DochiSoundGame.tsx) |
-| `counting_food` | 냠냠 숫자 | 관찰·논리 | 아기반부터 | [GgulgguliCountingGame](../src/screens/games/GgulgguliCountingGame.tsx) |
+| `korean_letters` | 글자 방울 | 언어 | 새싹반부터 | [JellyKoreanGame](../src/screens/games/JellyKoreanGame.tsx) |
+| `sound_quiz` | 누구 소리? | 언어 | 새싹반부터 | [DochiSoundGame](../src/screens/games/DochiSoundGame.tsx) |
+| `counting_food` | 냠냠 숫자 | 관찰·논리 | 새싹반부터 | [GgulgguliCountingGame](../src/screens/games/GgulgguliCountingGame.tsx) |
 | `number_parade` | 통통 숫자 놀이터 | 관찰·논리 | 아기반부터 | [NumberParadeGame](../src/screens/games/NumberParadeGame.tsx) |
-| `cloud_shapes` | 구름 모으기 | 관찰·논리 | 아기반부터 | [EummeCloudShapeGame](../src/screens/games/EummeCloudShapeGame.tsx) |
-| `treasure_hunt` | 보물 찾기 | 관찰·논리 | 아기반부터 | [NurungjiTreasureGame](../src/screens/games/NurungjiTreasureGame.tsx) |
-| `emotion_quiz` | 마음 얼굴 | 생활·감정 | 아기반부터 | [EmotionQuizGame](../src/screens/games/EmotionQuizGame.tsx) |
+| `cloud_shapes` | 구름 모으기 | 관찰·논리 | 새싹반부터 | [EummeCloudShapeGame](../src/screens/games/EummeCloudShapeGame.tsx) |
+| `treasure_hunt` | 보물 찾기 | 관찰·논리 | 새싹반부터 | [NurungjiTreasureGame](../src/screens/games/NurungjiTreasureGame.tsx) |
+| `emotion_quiz` | 마음 얼굴 | 생활·감정 | 새싹반부터 | [EmotionQuizGame](../src/screens/games/EmotionQuizGame.tsx) |
 | `pattern_sequence` | 다음은 뭘까? | 관찰·논리 | 새싹반부터 | [PatternSequenceGame](../src/screens/games/PatternSequenceGame.tsx) |
 | `word_puzzle` | 단어 퍼즐 | 언어 | 꽃잎반부터 | [WordPuzzleGame](../src/screens/games/WordPuzzleGame.tsx) |
 | `rhythm_game` | 톡톡 음악 | 음악·창작 | 새싹반부터 | [RhythmGame](../src/screens/games/RhythmGame.tsx) |
 | `size_comparison` | 크고 작고 | 관찰·논리 | 아기반부터 | [SizeComparisonGame](../src/screens/games/SizeComparisonGame.tsx) |
-| `memory_card` | 짝꿍 카드 | 관찰·논리 | 아기반부터 | [MemoryCardGame](../src/screens/games/MemoryCardGame.tsx) |
+| `memory_card` | 짝꿍 카드 | 관찰·논리 | 꽃잎반부터 | [MemoryCardGame](../src/screens/games/MemoryCardGame.tsx) |
 | `shadow_quiz` | 그림자 친구 | 관찰·논리 | 새싹반부터 | [ShadowQuizGame](../src/screens/games/ShadowQuizGame.tsx) |
 | `stage_adventure` | 무지개 모험 | 관찰·논리 | 새싹반부터 | [RainbowStageAdventure](../src/screens/RainbowStageAdventure.tsx) |
 | `tooth_brush` | 치카치카 | 생활·감정 | 아기반부터 | [ToothBrushGame](../src/screens/games/ToothBrushGame.tsx) |
@@ -40,19 +40,26 @@
 | `bubble_pop` | 비눗방울 톡톡 | 음악·창작 | 아기반부터 | [BubblePopGame](../src/screens/games/BubblePopGame.tsx) |
 | `peekaboo_hide` | 어디 숨었지? | 관찰·논리 | 아기반부터 | [PeekabooHideGame](../src/screens/games/PeekabooHideGame.tsx) |
 | `animal_xylophone` | 동물 실로폰 | 음악·창작 | 아기반부터 | [AnimalXylophoneGame](../src/screens/games/AnimalXylophoneGame.tsx) |
-| `path_tracing` | 별빛 길 따라가기 | 음악·창작 | 아기반부터 | [PathTracingGame](../src/screens/games/PathTracingGame.tsx) |
-| `fruit_harvest` | 과일 수확 | 관찰·논리 | 아기반부터 | [FruitHarvestGame](../src/screens/games/FruitHarvestGame.tsx) |
-| `symmetry_puzzle` | 반쪽 날개 | 관찰·논리 | 아기반부터 | [SymmetryPuzzleGame](../src/screens/games/SymmetryPuzzleGame.tsx) |
-| `size_ordering` | 곰 세 마리 | 관찰·논리 | 아기반부터 | [SizeOrderingGame](../src/screens/games/SizeOrderingGame.tsx) |
-| `day_night_weather` | 해님 달님 날씨 | 언어 | 아기반부터 | [DayNightWeatherGame](../src/screens/games/DayNightWeatherGame.tsx) |
+| `path_tracing` | 별빛 길 따라가기 | 음악·창작 | 새싹반부터 | [PathTracingGame](../src/screens/games/PathTracingGame.tsx) |
+| `fruit_harvest` | 과일 수확 | 관찰·논리 | 새싹반부터 | [FruitHarvestGame](../src/screens/games/FruitHarvestGame.tsx) |
+| `symmetry_puzzle` | 반쪽 날개 | 관찰·논리 | 새싹반부터 | [SymmetryPuzzleGame](../src/screens/games/SymmetryPuzzleGame.tsx) |
+| `size_ordering` | 곰 세 마리 | 관찰·논리 | 새싹반부터 | [SizeOrderingGame](../src/screens/games/SizeOrderingGame.tsx) |
+| `day_night_weather` | 해님 달님 날씨 | 언어 | 새싹반부터 | [DayNightWeatherGame](../src/screens/games/DayNightWeatherGame.tsx) |
 | `goodnight_sleep` | 코~ 자자 | 생활·감정 | 아기반부터 | [GoodNightSleepGame](../src/screens/games/GoodNightSleepGame.tsx) |
-| `emotion_face` | 마음 거울 | 생활·감정 | 아기반부터 | [EmotionFaceGame](../src/screens/games/EmotionFaceGame.tsx) |
+| `emotion_face` | 마음 거울 | 생활·감정 | 새싹반부터 | [EmotionFaceGame](../src/screens/games/EmotionFaceGame.tsx) |
 | `sensory_paint` | 마법 물감과 모래 | 음악·창작 | 아기반부터 | [SensoryPaintCanvas](../src/screens/games/SensoryPaintCanvas.tsx) |
 | `balloon_pop` | 풍선 팡팡 | 음악·창작 | 아기반부터 | [BalloonPopGame](../src/screens/games/BalloonPopGame.tsx) |
 | `fruit_munch` | 과일 냠냠 몇 개? | 관찰·논리 | 아기반부터 | [FruitMunchGame](../src/screens/games/FruitMunchGame.tsx) |
 | `trampoline_jump` | 통통 트램펄린 | 음악·창작 | 아기반부터 | [TrampolineJumpGame](../src/screens/games/TrampolineJumpGame.tsx) |
 | `block_tower` | 차곡차곡 블록 탑 | 음악·창작 | 아기반부터 | [BlockTowerGame](../src/screens/games/BlockTowerGame.tsx) |
 | `bubble_bath` | 뽀글뽀글 거품 목욕 | 생활·감정 | 아기반부터 | [BubbleBathGame](../src/screens/games/BubbleBathGame.tsx) |
+
+| `mirror_maze` | 공룡 알 톡톡 깨기 | 관찰·논리 | 아기반부터 | [MirrorMazeGame](../src/screens/games/MirrorMazeGame.tsx) |
+| `forest_peekaboo` | 숲속 친구들 까꿍 팡팡 | 관찰·논리 | 아기반부터 | [ForestPeekabooGame](../src/screens/games/ForestPeekabooGame.tsx) |
+| `magic_slime` | 반짝이 마법 슬라임 | 음악·창작 | 아기반부터 | [MagicSlimeGame](../src/screens/games/MagicSlimeGame.tsx) |
+| `magic_potion` | 알록달록 마법 물약 | 음악·창작 | 아기반부터 | [MagicPotionGame](../src/screens/games/MagicPotionGame.tsx) |
+| `fruit_catcher` | 바구니 과일 캐치 | 관찰·논리 | 아기반부터 | [FruitCatcherGame](../src/screens/games/FruitCatcherGame.tsx) |
+| `pipe_connect` | 통통 팝콘 프라이팬 | 음악·창작 | 아기반부터 | [PipeConnectGame](../src/screens/games/PipeConnectGame.tsx) |
 
 ## 홈 하단의 자유 놀이와 연속 놀이
 
@@ -80,6 +87,8 @@
 5. **살아있는 인터랙티브 배경 ([HomeScreen](../src/screens/HomeScreen.tsx))**:
    - 해님 ☀️ 탭 시 선글라스 😎 착용 및 반짝이 회전, 구름 ☁️ 탭 시 알록달록 사탕/팝콘/무지개 비 내림, 풀숲 🌿 탭 시 아기 병아리 🐥/무당벌레 🐞 까꿍 팝업.
 
+
+팝콘·공룡 알·물약은 세 판을 마치면 자동으로 다음 묶음을 시작합니다. 물약은 여섯 레시피를 순환하며 320px에서도 모든 재료를 64px 이상 그리드로 보여 줍니다. 과일 캐치는 완료 후 새 바구니로 이어갑니다.
 
 일반 문제는 정답 후 새로운 보기를 준비하고, 여러 장면 놀이는 완료 후 처음부터 반복합니다. 풍선·비눗방울·실로폰·감각 캔버스는 자유롭게 계속 놀 수 있습니다. 실제 조작과 반복 검증 기록은 [전체 QA](responsive-play-qa-2026-10-09.md), [숫자 놀이](number-parade.md), [모바일 비율](mobile-content-proportions.md)에 있습니다.
 

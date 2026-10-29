@@ -17,6 +17,8 @@ import {
 import { fireConfetti, fireStarExplosion } from '../../utils/confetti';
 import { emitJuice, JUICE_SPRING } from '../../utils/juice';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
+import { useGameActivity } from '../../hooks/useGameActivity';
+import { RoundContinuation } from '../../components/RoundContinuation';
 
 interface MagicSlimeGameProps {
   buddy: CharacterId;
@@ -99,7 +101,10 @@ export const MagicSlimeGame: React.FC<MagicSlimeGameProps> = ({
   onCompleteQuiz,
   soundEnabled,
 }) => {
-  const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+  const { clearGameTimeouts } = useGameTimeouts();
+  const { paused, isBlocked } = useGameActivity();
+  const latest = useRef({ soundEnabled, buddy, onCompleteQuiz });
+  latest.current = { soundEnabled, buddy, onCompleteQuiz };
   const pixiRef = useRef<PixiStageHandle>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -110,6 +115,7 @@ export const MagicSlimeGame: React.FC<MagicSlimeGameProps> = ({
   const [toppings, setToppings] = useState<PlacedTopping[]>([]);
   const [spangles, setSpangles] = useState<PlacedTopping[]>([]);
   const [isGifted, setIsGifted] = useState(false);
+  const giftedRef = useRef(false);
   const [decorationsCount, setDecorationsCount] = useState(0);
 
   const currentColor = SLIME_COLORS[selectedColorIdx];
@@ -150,20 +156,20 @@ export const MagicSlimeGame: React.FC<MagicSlimeGameProps> = ({
     });
   }, []);
 
-  // Guide speech on mount
+  // Voice-only updates must not discard the gift's restart or leave it locked.
   useEffect(() => {
+    if (!isBlocked()) speakText(GUIDE, soundEnabled, { characterId: buddy });
+  }, [buddy, soundEnabled, isBlocked]);
+  useEffect(() => () => {
+    clearGameTimeouts();
     stopAllSpeech();
-    speakText(GUIDE, soundEnabled, { characterId: buddy });
-    return () => {
-      clearGameTimeouts();
-      stopAllSpeech();
-    };
-  }, [buddy, soundEnabled, clearGameTimeouts]);
+  }, [clearGameTimeouts]);
+  useEffect(() => { if (paused) isPointerDownRef.current = false; }, [paused]);
 
   // Jelly physics simulation loop on canvas
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || paused) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -173,6 +179,7 @@ export const MagicSlimeGame: React.FC<MagicSlimeGameProps> = ({
     const neighborK = 0.22;
 
     const render = () => {
+      if (isBlocked()) { rafId = requestAnimationFrame(render); return; }
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       const cx = canvas.width / 2;
@@ -252,7 +259,7 @@ export const MagicSlimeGame: React.FC<MagicSlimeGameProps> = ({
 
     rafId = requestAnimationFrame(render);
     return () => cancelAnimationFrame(rafId);
-  }, [selectedColorIdx]);
+  }, [selectedColorIdx, paused, isBlocked]);
 
   // Pull / Squish Jelly deformation
   const deformJellyAt = useCallback(
@@ -260,8 +267,8 @@ export const MagicSlimeGame: React.FC<MagicSlimeGameProps> = ({
       const canvas = canvasRef.current;
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
-      const px = clientX - rect.left - canvas.width / 2;
-      const py = clientY - rect.top - canvas.height / 2;
+      const px = (clientX - rect.left) * canvas.width / rect.width - canvas.width / 2;
+      const py = (clientY - rect.top) * canvas.height / rect.height - canvas.height / 2;
       const touchDist = Math.hypot(px, py);
       const touchAngle = Math.atan2(py, px);
 
@@ -286,14 +293,15 @@ export const MagicSlimeGame: React.FC<MagicSlimeGameProps> = ({
 
   // Pointer interactions on Slime
   const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (isBlocked() || giftedRef.current) return;
     isPointerDownRef.current = true;
     lastPointerRef.current = { x: e.clientX, y: e.clientY };
 
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-    const relX = (e.clientX - rect.left - canvas.width / 2) / centerRef.current.baseR;
-    const relY = (e.clientY - rect.top - canvas.height / 2) / centerRef.current.baseR;
+    const relX = ((e.clientX - rect.left) * canvas.width / rect.width - canvas.width / 2) / centerRef.current.baseR;
+    const relY = ((e.clientY - rect.top) * canvas.height / rect.height - canvas.height / 2) / centerRef.current.baseR;
 
     if (activeTool === 'squish') {
       deformJellyAt(e.clientX, e.clientY, 48);
@@ -353,7 +361,7 @@ export const MagicSlimeGame: React.FC<MagicSlimeGameProps> = ({
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!isPointerDownRef.current) return;
+    if (isBlocked() || giftedRef.current || !isPointerDownRef.current) return;
     const dx = e.clientX - lastPointerRef.current.x;
     const dy = e.clientY - lastPointerRef.current.y;
     lastPointerRef.current = { x: e.clientX, y: e.clientY };
@@ -372,29 +380,26 @@ export const MagicSlimeGame: React.FC<MagicSlimeGameProps> = ({
 
   // Gift Creation to Buddy
   const handleGiftSlime = useCallback(() => {
-    if (isGifted) return;
-
+    if (isBlocked() || giftedRef.current) return;
+    giftedRef.current = true;
+    isPointerDownRef.current = false;
     setIsGifted(true);
     playCorrectFanfare(soundEnabled);
     playComboChime(10, soundEnabled);
     fireConfetti();
     fireStarExplosion();
-    onCompleteQuiz(10);
+    latest.current.onCompleteQuiz(10);
     stopAllSpeech();
     speakText('우와! 반짝반짝 예쁜 슬라임 선물 고마워! 정말 마음에 들어!', soundEnabled, {
       characterId: buddy,
     });
 
-    scheduleGameTimeout(() => {
-      setIsGifted(false);
-      setToppings([]);
-      setSpangles([]);
-      setDecorationsCount(0);
-    }, 4000);
-  }, [isGifted, soundEnabled, buddy, onCompleteQuiz, scheduleGameTimeout]);
+  }, [soundEnabled, buddy, isBlocked]);
+
 
   // Reset slime bowl
   const handleResetSlime = () => {
+    if (isBlocked() || giftedRef.current) return;
     playBouncyBoing(soundEnabled);
     setToppings([]);
     setSpangles([]);
@@ -404,6 +409,7 @@ export const MagicSlimeGame: React.FC<MagicSlimeGameProps> = ({
   return (
     <div
       ref={stageRef}
+      inert={paused}
       className="magic-slime-stage relative flex flex-col justify-between w-full h-[var(--game-play-height,calc(100dvh-84px))] min-h-[var(--game-play-height,calc(100dvh-84px))] rounded-3xl overflow-hidden select-none bg-gradient-to-b from-[#FDF2F8] via-[#FCE7F3] to-[#EDE9FE] border-3 border-[#F472B6] p-3 sm:p-5 shadow-inner"
     >
       {/* Background Soft Glow */}
@@ -528,6 +534,7 @@ export const MagicSlimeGame: React.FC<MagicSlimeGameProps> = ({
         <div className="flex items-center justify-center gap-2">
           <button
             onClick={() => {
+              if (isBlocked()) return;
               setActiveTool('squish');
               playJellyTap(soundEnabled);
             }}
@@ -543,6 +550,7 @@ export const MagicSlimeGame: React.FC<MagicSlimeGameProps> = ({
           </button>
           <button
             onClick={() => {
+              if (isBlocked()) return;
               setActiveTool('glitter');
               playSparkleChime(soundEnabled);
             }}
@@ -558,6 +566,7 @@ export const MagicSlimeGame: React.FC<MagicSlimeGameProps> = ({
           </button>
           <button
             onClick={() => {
+              if (isBlocked()) return;
               setActiveTool('topping');
               playBouncyBoing(soundEnabled);
             }}
@@ -583,6 +592,7 @@ export const MagicSlimeGame: React.FC<MagicSlimeGameProps> = ({
                 <button
                   key={col.name}
                   onClick={() => {
+                    if (isBlocked()) return;
                     setSelectedColorIdx(idx);
                     playSparkleChime(soundEnabled);
                   }}
@@ -615,6 +625,7 @@ export const MagicSlimeGame: React.FC<MagicSlimeGameProps> = ({
                 <button
                   key={tp}
                   onClick={() => {
+                    if (isBlocked()) return;
                     setSelectedTopping(tp);
                     playBouncyBoing(soundEnabled);
                   }}
@@ -633,6 +644,13 @@ export const MagicSlimeGame: React.FC<MagicSlimeGameProps> = ({
           )}
         </div>
       </div>
+      {isGifted && <RoundContinuation delayMs={1400} onNext={() => {
+        giftedRef.current = false;
+        setIsGifted(false);
+        setToppings([]);
+        setSpangles([]);
+        setDecorationsCount(0);
+      }}/>}
     </div>
   );
 };

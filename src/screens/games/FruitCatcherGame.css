@@ -1,0 +1,3 @@
+/* Override the shared inline-toy size so pictures fill their physics bounds. */
+.fruit-catcher-stage [data-falling-item] > .toy-art { width: 100%; height: 100%; }
+.fruit-catcher-stage .fruit-catcher-basket > .toy-art { width: 58px; height: 58px; }
