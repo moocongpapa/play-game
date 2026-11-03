@@ -27,6 +27,7 @@ import './SketchbookScreen.css';
 interface SketchbookScreenProps {
   buddy: CharacterId;
   onGoHome: () => void;
+  onOpenCharacterPark?: () => void;
   soundEnabled: boolean;
   childName?: string;
 }
@@ -50,7 +51,7 @@ const categories = [
   { name: '과일', Icon: Apple }, { name: '탈것', Icon: Car },
 ];
 
-export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({ buddy, soundEnabled, childName = '유하' }) => {
+export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({ buddy, onOpenCharacterPark, soundEnabled, childName = '유하' }) => {
   const [history, setHistory] = useState<History | null>(null);
   const historyRef = useRef<History | null>(null);
   const active = useRef(true);
@@ -121,7 +122,7 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({ buddy, sound
 
   // One tap puts the current artwork in the exhibition. Repeated saves update
   // the same artwork ID, rather than adding duplicate frames.
-  const exhibitArtwork = async () => {
+  const exhibitArtwork = async (openParkAfter = false) => {
     const picture = historyRef.current?.present;
     if (!picture || savingRef.current) return;
     savingRef.current = true;
@@ -141,9 +142,13 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({ buddy, sound
       setSavedId(picture.id);
       setGalleryRevision(value => value + 1);
       setSelectedSticker(null);
-      setPanel('gallery');
       sound('fanfare');
       fireConfetti();
+      if (openParkAfter && onOpenCharacterPark) {
+        onOpenCharacterPark();
+        return;
+      }
+      setPanel('gallery');
       speakText('우와! 멋진 그림을 전시했어!', soundEnabled, { characterId: buddy });
     } catch {
       if (active.current) setNotice('그림을 저장하지 못했어요. 그림은 그대로 있으니 다시 눌러주세요.');
@@ -204,7 +209,10 @@ export const SketchbookScreen: React.FC<SketchbookScreenProps> = ({ buddy, sound
       // Use the same simple exhibition save flow from the living-character view.
       setCharacterSpriteUrl(null);
       void exhibitArtwork();
-    }} />;
+    }} onSendToPark={onOpenCharacterPark ? () => {
+      setCharacterSpriteUrl(null);
+      void exhibitArtwork(true);
+    } : undefined} />;
 
   return <section className="sketchbook" aria-label={`${childName}의 스케치북`}>
     <header className="sketch-header">

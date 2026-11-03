@@ -41,7 +41,11 @@ export type GameId =
   | 'magic_slime'        // 반짝이 마법 슬라임 (창의력·촉감놀이)
   | 'magic_potion'       // 알록달록 마법 물약/요리 만들기 (창의력·조합)
   | 'fruit_catcher'      // 하늘에서 슝슝! 바구니 과일 캐치 (순발력·동체시력)
-  | 'pipe_connect';      // 통통 팝콘 프라이팬 (오감·촉감 요리놀이)
+  | 'pipe_connect'       // 통통 팝콘 프라이팬 (오감·촉감 요리놀이)
+  | 'scratch_art'        // 쓱싹쓱싹 마법 스크래치 색칠
+  | 'cake_deco'          // 케이크 & 도넛 크림 색칠 살롱
+  | 'beauty_salon'       // 반짝반짝 네일 & 페이스페인팅 살롱
+  | 'splash_color';      // 물풍선 팡팡 색칠 놀이
 
 export type SpeechLanguage = 'en' | 'ko';
 

@@ -1,25 +1,49 @@
 import { useContext, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useReducedMotion } from 'motion/react';
-import { ArrowLeftRight, Footprints, Hand, Heart, Music2, Pause, Play, RotateCw, Sparkles } from 'lucide-react';
+import { ArrowLeftRight, Footprints, Hand, Heart, Music2, Palette, Pause, Play, RotateCw, Sparkles } from 'lucide-react';
 import { CHARACTER_LIST, CHARACTERS } from '../data/characters';
-import { PARK_ACTIONS, PARK_GUIDE, type ParkAction } from '../data/characterPark';
+import { PARK_ACTIONS, PARK_DRAWING_SPEECHES, PARK_GUIDE, type ParkAction } from '../data/characterPark';
 import { CharacterAvatar } from '../components/CharacterAvatar';
 import { PlayHintsPausedContext } from '../components/PlayFlowContext';
 import { useCharacterParkMotion } from '../hooks/useCharacterParkMotion';
 import { useGameTimeouts } from '../hooks/useGameTimeouts';
 import { usePageVisible } from '../hooks/useToddlerPlay';
-import { playBouncyBoing, playJellyTap, playSparkleChime, speakText, stopAllSpeech, stopPlaySounds } from '../utils/soundEngine';
+import { playBouncyBoing, playCelebrationFanfare, playJellyTap, playSparkleChime, speakText, stopAllSpeech, stopPlaySounds } from '../utils/soundEngine';
 import type { CharacterId } from '../types';
 import { useRoamingDrag } from '../hooks/useRoamingDrag';
 import { emitJuice } from '../utils/juice';
+import { listGallery } from '../sketch/storage';
+import { renderCharacterSprite } from '../sketch/render';
+import { templates } from '../sketch/art';
 import './CharacterParkScreen.css';
 
 const ACTION_ICONS = { jump: Sparkles, roll: RotateCw, turn: ArrowLeftRight, dance: Music2, wave: Hand, run: Footprints };
+const CUSTOM_SPOTS = [
+  { left: '24%', top: '34%' },
+  { left: '72%', top: '36%' },
+  { left: '50%', top: '68%' },
+] as const;
 
-export function CharacterParkScreen({ buddy, soundEnabled }: { buddy: CharacterId; soundEnabled: boolean }) {
+interface CustomParkDrawing {
+  id: string;
+  title: string;
+  spriteUrl: string;
+}
+
+export function CharacterParkScreen({
+  buddy,
+  soundEnabled,
+  onOpenDrawing,
+}: {
+  buddy: CharacterId;
+  soundEnabled: boolean;
+  onOpenDrawing?: () => void;
+}) {
   const field = useRef<HTMLDivElement>(null);
   const [paused, setPaused] = useState(false);
   const [reaction, setReaction] = useState<{ id: CharacterId; action: ParkAction; serial: number } | null>(null);
+  const [customDrawings, setCustomDrawings] = useState<CustomParkDrawing[]>([]);
+  const [customReaction, setCustomReaction] = useState<{ id: string; title: string; serial: number } | null>(null);
   const visible = usePageVisible();
   const reduced = useReducedMotion();
   const blocked = useContext(PlayHintsPausedContext);
@@ -30,11 +54,32 @@ export function CharacterParkScreen({ buddy, soundEnabled }: { buddy: CharacterI
   const initial = useRef({ buddy, soundEnabled });
 
   useEffect(() => {
+    let active = true;
+    listGallery()
+      .then((items) => {
+        if (!active) return;
+        const recent = items.slice(0, 3).map((item, idx) => {
+          const tpl = templates.find((t) => t.id === item.artwork.template);
+          return {
+            id: item.id,
+            title: tpl ? `내 ${tpl.name}` : `내 그림 ${idx + 1}`,
+            spriteUrl: renderCharacterSprite(item.artwork),
+          };
+        });
+        setCustomDrawings(recent);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
     speakText(PARK_GUIDE, initial.current.soundEnabled, { characterId: initial.current.buddy });
     return () => { stopAllSpeech(); stopPlaySounds(); };
   }, []);
   useEffect(() => {
-    if (!visible || blocked) { clearGameTimeouts(); setReaction(null); stopAllSpeech(); stopPlaySounds(); }
+    if (!visible || blocked) { clearGameTimeouts(); setReaction(null); setCustomReaction(null); stopAllSpeech(); stopPlaySounds(); }
   }, [visible, blocked, clearGameTimeouts]);
 
   const touchFriend = (id: CharacterId) => {
@@ -43,6 +88,7 @@ export function CharacterParkScreen({ buddy, soundEnabled }: { buddy: CharacterI
     const action = react(id);
     if (!action) return;
     clearGameTimeouts();
+    setCustomReaction(null);
     setReaction({ id, action, serial: ++serial.current });
     if (action === 'jump' || action === 'roll') playBouncyBoing(soundEnabled);
     else if (action === 'wave' || action === 'dance') playSparkleChime(soundEnabled);
@@ -51,6 +97,22 @@ export function CharacterParkScreen({ buddy, soundEnabled }: { buddy: CharacterI
     speakText(PARK_ACTIONS[action].speech, soundEnabled, { characterId: id, playIntroSFX: false });
     scheduleGameTimeout(() => setReaction(null), 2100);
   };
+
+  const touchCustomDrawing = (item: CustomParkDrawing, index: number, e: React.MouseEvent<HTMLButtonElement>) => {
+    if (!visible || blocked || performance.now() - lastTap.current < 180) return;
+    lastTap.current = performance.now();
+    clearGameTimeouts();
+    setReaction(null);
+    setCustomReaction({ id: item.id, title: item.title, serial: ++serial.current });
+    playCelebrationFanfare(soundEnabled);
+    playBouncyBoing(soundEnabled);
+    const rect = e.currentTarget.getBoundingClientRect();
+    emitJuice({ kind: 'success', x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+    const speech = PARK_DRAWING_SPEECHES[index % PARK_DRAWING_SPEECHES.length];
+    speakText(speech, soundEnabled, { characterId: buddy, playIntroSFX: false });
+    scheduleGameTimeout(() => setCustomReaction(null), 2400);
+  };
+
   const drag = useRoamingDrag({ field, held, getPosition, move, release, blocked: !visible || blocked,
     onTap: touchFriend,
     onDrop: (_id, point) => {
@@ -64,11 +126,54 @@ export function CharacterParkScreen({ buddy, soundEnabled }: { buddy: CharacterI
     <div className="park-scenery" aria-hidden="true" />
     <div className="park-cloud park-cloud-one" aria-hidden="true" /><div className="park-cloud park-cloud-two" aria-hidden="true" />
     <div className="park-pennants" aria-hidden="true">{Array.from({ length: 7 }, (_, i) => <i key={i} />)}</div>
-    <span className="park-tap-guide" aria-hidden="true"><Hand /><span>친구를 콕!</span></span>
+    <span className="park-tap-guide" aria-hidden="true"><Hand /><span>친구를 콕!{customDrawings.length > 0 ? ` · 내 그림 ${customDrawings.length}` : ''}</span></span>
+    {onOpenDrawing && (
+      <button
+        type="button"
+        className="park-sketch-btn"
+        aria-label="스케치북에서 내 그림 색칠해서 놀이터로 데려오기"
+        onClick={() => {
+          playJellyTap(soundEnabled);
+          stopAllSpeech();
+          onOpenDrawing();
+        }}
+      >
+        <Palette aria-hidden="true" />
+        <span>내 그림 데려오기</span>
+      </button>
+    )}
     {!reduced && <button className="park-pause" aria-label={paused ? '친구들 다시 움직이기' : '친구들 움직임 멈추기'} aria-pressed={paused} onClick={() => {
       setPaused(value => !value); playJellyTap(soundEnabled); stopAllSpeech();
     }}>{paused ? <Play fill="currentColor" /> : <Pause fill="currentColor" />}</button>}
     <div ref={field} className="park-field">
+      {customDrawings.map((item, idx) => {
+        const spot = CUSTOM_SPOTS[idx % CUSTOM_SPOTS.length];
+        const isReacting = customReaction?.id === item.id;
+        return (
+          <button
+            key={item.id}
+            type="button"
+            className="park-custom-drawing"
+            data-reacting={isReacting}
+            style={{ left: spot.left, top: spot.top, '--custom-delay': `${idx * -0.9}s` } as CSSProperties}
+            aria-label={`내가 그린 ${item.title} 친구와 놀기`}
+            onClick={(e) => touchCustomDrawing(item, idx, e)}
+          >
+            <span className="park-shadow" aria-hidden="true" />
+            <span className="park-custom-performer" aria-hidden="true">
+              <img src={item.spriteUrl} alt="" className="park-custom-img" />
+            </span>
+            <span className="park-custom-badge" aria-hidden="true">🎨 {item.title}</span>
+            {isReacting && (
+              <span key={customReaction.serial} className="park-reaction" aria-hidden="true">
+                <Sparkles />
+                <Heart className="park-love" fill="currentColor" />
+                <span>유하 그림 최고!</span>
+              </span>
+            )}
+          </button>
+        );
+      })}
       {CHARACTER_LIST.map(friend => {
         const selected = reaction?.id === friend.id;
         const ReactionIcon = selected ? ACTION_ICONS[reaction.action] : Heart;
@@ -88,6 +193,6 @@ export function CharacterParkScreen({ buddy, soundEnabled }: { buddy: CharacterI
         </button>;
       })}
     </div>
-    <div className="park-status" aria-live="polite">{reaction ? `${CHARACTERS[reaction.id].name} · ${PARK_ACTIONS[reaction.action].label}` : <span aria-hidden="true"><Heart size={13} fill="currentColor" /> 우리 모두 함께 놀자</span>}</div>
+    <div className="park-status" aria-live="polite">{customReaction ? `${customReaction.title} · 신나게 폴짝!` : reaction ? `${CHARACTERS[reaction.id].name} · ${PARK_ACTIONS[reaction.action].label}` : <span aria-hidden="true"><Heart size={13} fill="currentColor" /> 우리 모두 함께 놀자</span>}</div>
   </section>;
 }

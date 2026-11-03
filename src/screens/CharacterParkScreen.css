@@ -12,6 +12,14 @@
 .park-pause { position: absolute; right: 12px; top: 10px; display: grid; place-items: center; width: 64px; height: 64px; z-index: 2000; border: 2px solid #fffcef; border-radius: 22px; color: #64836a; background: linear-gradient(#fffdf1ed, #edf1d4e8); box-shadow: 0 4px 0 #93a77b50, inset 0 2px 0 #fff; }
 .park-pause[aria-pressed='true'] { background: #f7dfa9; color: #897145; }
 .park-pause > svg { width: 25px; height: 25px; }
+.park-sketch-btn { position: absolute; right: 84px; top: 12px; z-index: 2000; display: inline-flex; align-items: center; gap: 6px; min-height: 52px; padding: 8px 14px; border: 2px solid #fffcef; border-radius: 20px; color: #7c3aed; background: linear-gradient(135deg, #fffdf5, #f3e8ff); box-shadow: 0 4px 0 #93a77b50, inset 0 2px 0 #fff; font-size: 12px; font-weight: 900; cursor: pointer; }
+.park-sketch-btn > svg { width: 18px; height: 18px; }
+.park-custom-drawing { position: absolute; width: var(--park-size); height: var(--park-size); margin-left: calc(var(--park-size) / -2); margin-top: calc(var(--park-size) / -2); border: 0; border-radius: 40%; background: radial-gradient(circle, #ffffffb8 0%, #fffbeb66 56%, transparent 74%); padding: 0; cursor: pointer; z-index: 80; }
+.park-custom-performer { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; pointer-events: none; animation: park-custom-roam 3.2s var(--custom-delay, 0s) ease-in-out infinite; }
+.park-custom-drawing[data-reacting='true'] .park-custom-performer { animation: park-jump 1.35s ease-in-out both; }
+.park-custom-img { width: 88%; height: 88%; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.16)) drop-shadow(0 0 6px #fff); }
+.park-custom-badge { position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); padding: 2px 8px; border-radius: 12px; background: #fffdf0f2; border: 1.5px solid #fde68a; color: #6d28d9; font-size: 10px; font-weight: 900; white-space: nowrap; pointer-events: none; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); }
+@keyframes park-custom-roam { 0%, 100% { transform: translate3d(-8px, 0, 0) rotate(-3deg) scale(1.02, 0.98); } 25% { transform: translate3d(0, -10px, 0) rotate(2deg) scale(0.98, 1.04); } 50% { transform: translate3d(8px, 0, 0) rotate(3deg) scale(1.02, 0.98); } 75% { transform: translate3d(0, -8px, 0) rotate(-2deg) scale(0.98, 1.03); } }
 .park-field { position: absolute; inset: 87px 12px 32px; }
 .park-friend { --step-duration: .56s; --step-lift: -2px; --step-roll: 2deg; --leg-swing: 12deg; position: absolute; top: 0; left: 0; width: var(--park-size); height: var(--park-size); margin-left: calc(var(--park-size) / -2); margin-top: calc(var(--park-size) / -2); border: 0; border-radius: 42%; background: transparent; padding: 0; cursor: pointer; will-change: transform; }
 /* Each friend has a recognisable weight and gait, with one shared position loop. */

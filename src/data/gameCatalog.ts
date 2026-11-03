@@ -25,6 +25,10 @@ export const GAME_CATALOG: Record<GameId, { title: string; prompt: string; theme
   magic_potion: { developmentArea: 'creative', title: '알록달록 마법 물약', prompt: '신비한 재료를 퐁당 넣고 보글보글 저어봐!', theme: 'magic', badge: '상상 · 마법 물약', category: 'hands' },
   fruit_catcher: { developmentArea: 'logic', title: '바구니 과일 캐치', prompt: '하늘에서 떨어지는 달콤한 과일을 쏙 받아봐!', theme: 'picnic', badge: '순발력 · 과일 캐치', category: 'hands' },
   pipe_connect: { developmentArea: 'creative', title: '통통 팝콘 프라이팬', prompt: '프라이팬을 톡톡 두드려 고소한 팝콘을 팡팡 튀겨봐!', theme: 'picnic', badge: '팡팡 · 팝콘 요리', category: 'hands' },
+  scratch_art: { developmentArea: 'creative', title: '마법 스크래치 색칠', prompt: '은박지를 쓱싹 문지르면 무지개 네온 그림이 짠!', theme: 'magic', badge: '쓱싹 · 네온 스크래치', category: 'hands' },
+  cake_deco: { developmentArea: 'creative', title: '케이크 크림 색칠 살롱', prompt: '달콤한 크림을 바르고 토핑을 올려 촛불을 후~!', theme: 'picnic', badge: '달콤 · 케이크 꾸미기', category: 'hands' },
+  beauty_salon: { developmentArea: 'creative', title: '네일 & 분장 뷰티샵', prompt: '손톱에 매니큐어를 칠하고 귀여운 얼굴 분장을 해봐!', theme: 'magic', badge: '반짝 · 뷰티 색칠', category: 'hands' },
+  splash_color: { developmentArea: 'creative', title: '물풍선 팡팡 색칠', prompt: '물풍선을 톡 터뜨려 자동차와 로켓을 알록달록 색칠해봐!', theme: 'sky', badge: '팡팡 · 물풍선 색칠', category: 'hands' },
 
   // --- 🌱 새싹반부터 즐기는 놀이 (만 3세~) ---
   korean_letters: { developmentArea: 'language', title: '글자 방울', prompt: '같은 글자 방울을 톡!', theme: 'sky', minAge: 'sprout', badge: '가나다 · 첫 한글' },

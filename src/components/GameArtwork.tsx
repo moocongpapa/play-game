@@ -205,6 +205,50 @@ export function GameArtwork({ gameId, buddy = 'jelly' }: { gameId: GameId; buddy
         </>
       );
       break;
+    case 'scratch_art':
+      scene = (
+        <>
+          <Toy emoji="🪙" x={14} y={18} size={44} rotate={-12} />
+          <Toy emoji="🌈" x={48} y={10} size={40} rotate={8} />
+          <Toy emoji="🦖" x={58} y={38} size={36} rotate={-6} />
+          <Toy emoji="✨" x={20} y={46} size={28} />
+          <Sparkles className="scene-pop" />
+        </>
+      );
+      break;
+    case 'cake_deco':
+      scene = (
+        <>
+          <Toy emoji="🎂" x={24} y={18} size={50} />
+          <Toy emoji="🍓" x={10} y={14} size={30} rotate={-14} />
+          <Toy emoji="🍩" x={64} y={36} size={34} rotate={12} />
+          <Toy emoji="🕯️" x={62} y={8} size={28} />
+          <Sparkles className="scene-pop" />
+        </>
+      );
+      break;
+    case 'beauty_salon':
+      scene = (
+        <>
+          <Toy emoji="💅" x={16} y={18} size={46} rotate={-10} />
+          <Toy emoji="💎" x={56} y={10} size={34} rotate={12} />
+          <Toy emoji="🦋" x={58} y={40} size={34} rotate={-8} />
+          <Toy emoji="💖" x={14} y={46} size={28} />
+          <Sparkles className="scene-pop" />
+        </>
+      );
+      break;
+    case 'splash_color':
+      scene = (
+        <>
+          <Toy emoji="🎈" x={14} y={12} size={42} rotate={-12} />
+          <Toy emoji="🚗" x={46} y={24} size={46} rotate={6} />
+          <Toy emoji="🎨" x={18} y={44} size={32} rotate={-8} />
+          <Toy emoji="💦" x={66} y={10} size={30} />
+          <Sparkles className="scene-pop" />
+        </>
+      );
+      break;
   }
   return <div className={`game-artwork theme-${theme}`} aria-hidden="true"><span className="scene-cloud cloud-a" /><span className="scene-cloud cloud-b" />{scene}</div>;
 }

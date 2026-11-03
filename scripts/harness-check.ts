@@ -95,6 +95,10 @@ function checkStageLayoutAndGameCue(): CheckResult {
     '.magic-potion-stage',
     '.fruit-catcher-stage',
     '.pipe-connect-stage',
+    '.scratch-art-stage',
+    '.cake-deco-stage',
+    '.beauty-salon-stage',
+    '.splash-color-stage',
   ];
 
   for (const cls of requiredStageClasses) {
@@ -122,6 +126,10 @@ function checkStageLayoutAndGameCue(): CheckResult {
       '.magic-potion-stage',
       '.fruit-catcher-stage',
       '.pipe-connect-stage',
+      '.scratch-art-stage',
+      '.cake-deco-stage',
+      '.beauty-salon-stage',
+      '.splash-color-stage',
     ];
     for (const target of customTopBarTargets) {
       if (!cueSelectorBlock.includes(target)) {

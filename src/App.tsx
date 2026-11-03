@@ -71,6 +71,10 @@ const MagicSlimeGame = lazy(() => import('./screens/games/MagicSlimeGame').then(
 const MagicPotionGame = lazy(() => import('./screens/games/MagicPotionGame').then(module => ({ default: module.MagicPotionGame })));
 const FruitCatcherGame = lazy(() => import('./screens/games/FruitCatcherGame').then(module => ({ default: module.FruitCatcherGame })));
 const PipeConnectGame = lazy(() => import('./screens/games/PipeConnectGame').then(module => ({ default: module.PipeConnectGame })));
+const ScratchArtGame = lazy(() => import('./screens/games/ScratchArtGame').then(module => ({ default: module.ScratchArtGame })));
+const CakeDecoGame = lazy(() => import('./screens/games/CakeDecoGame').then(module => ({ default: module.CakeDecoGame })));
+const BeautySalonGame = lazy(() => import('./screens/games/BeautySalonGame').then(module => ({ default: module.BeautySalonGame })));
+const SplashColorGame = lazy(() => import('./screens/games/SplashColorGame').then(module => ({ default: module.SplashColorGame })));
 
 export default function App() {
   useViewportLock();
@@ -389,6 +393,7 @@ export default function App() {
           <SketchbookScreen
             buddy={appState.selectedCharacter}
             onGoHome={handleGoHome}
+            onOpenCharacterPark={() => openScreen('park')}
             soundEnabled={soundEnabled}
             childName={childName}
           />
@@ -420,7 +425,7 @@ export default function App() {
         return <AquariumScreen buddy={appState.selectedCharacter} childName={childName} soundEnabled={soundEnabled} />;
 
       case 'park':
-        return <CharacterParkScreen buddy={appState.selectedCharacter} soundEnabled={soundEnabled} />;
+        return <CharacterParkScreen buddy={appState.selectedCharacter} soundEnabled={soundEnabled} onOpenDrawing={() => openScreen('drawing')} />;
 
       case 'parent':
         return (
@@ -761,6 +766,46 @@ export default function App() {
                 case 'pipe_connect':
                   return (
                     <PipeConnectGame
+                      buddy={appState.selectedCharacter}
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'scratch_art':
+                  return (
+                    <ScratchArtGame
+                      buddy={appState.selectedCharacter}
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'cake_deco':
+                  return (
+                    <CakeDecoGame
+                      buddy={appState.selectedCharacter}
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'beauty_salon':
+                  return (
+                    <BeautySalonGame
+                      buddy={appState.selectedCharacter}
+                      onCompleteQuiz={handleCompleteQuiz}
+                      soundEnabled={soundEnabled}
+                      ageGroup={ageGroup}
+                      childName={childName}
+                    />
+                  );
+                case 'splash_color':
+                  return (
+                    <SplashColorGame
                       buddy={appState.selectedCharacter}
                       onCompleteQuiz={handleCompleteQuiz}
                       soundEnabled={soundEnabled}

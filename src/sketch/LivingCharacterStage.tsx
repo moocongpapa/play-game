@@ -22,6 +22,7 @@ interface LivingCharacterStageProps {
   soundEnabled: boolean;
   onBack: () => void;
   onSave: () => void;
+  onSendToPark?: () => void;
 }
 
 type MotionMode = 'idle' | 'jump' | 'dance' | 'magic' | 'walk';
@@ -42,6 +43,7 @@ export const LivingCharacterStage: React.FC<LivingCharacterStageProps> = ({
   soundEnabled,
   onBack,
   onSave,
+  onSendToPark,
 }) => {
   const { scheduleGameTimeout, cancelGameTimeout } = useGameTimeouts();
   const actionTimer = useRef<number | null>(null);
@@ -204,13 +206,24 @@ export const LivingCharacterStage: React.FC<LivingCharacterStageProps> = ({
           </h2>
         </div>
 
-        <button
-          onClick={onSave}
-          aria-label="전시회에 저장하기"
-          className="min-h-16 min-w-16 px-3 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-black text-xs sm:text-sm flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 transition-transform shadow-xs"
-        >
-          <ImagePlus className="size-7" /> 저장하기
-        </button>
+        <div className="flex items-center gap-2">
+          {onSendToPark && (
+            <button
+              onClick={onSendToPark}
+              aria-label="친구 놀이터로 보내기"
+              className="min-h-16 min-w-16 px-3 py-2 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white rounded-2xl font-black text-xs sm:text-sm flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 transition-transform shadow-xs"
+            >
+              <Sparkles className="size-7" /> 놀이터로!
+            </button>
+          )}
+          <button
+            onClick={onSave}
+            aria-label="전시회에 저장하기"
+            className="min-h-16 min-w-16 px-3 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl font-black text-xs sm:text-sm flex flex-col items-center justify-center gap-1 cursor-pointer active:scale-95 transition-transform shadow-xs"
+          >
+            <ImagePlus className="size-7" /> 저장하기
+          </button>
+        </div>
       </div>
 
       {/* Speech Bubble from the character */}

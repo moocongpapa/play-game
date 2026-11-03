@@ -22,6 +22,11 @@ export const PARK_PERSONALITIES: Record<CharacterId, { speed: number; actions: r
 };
 
 export const PARK_GUIDE = '친구들이 모두 모였네! 친구를 콕 누르면 신나게 놀아!';
+export const PARK_DRAWING_SPEECHES = [
+  '우와! 유하가 색칠해 준 그림이 놀이터에서 폴짝폴짝 뛰어놀고 있어!',
+  '야호! 유하가 예쁘게 그려줘서 친구들이랑 같이 달리기하고 있어!',
+  '반짝반짝! 유하의 마법 그림 친구가 신나게 춤을 추네!',
+] as const;
 export const PARK_SPEECH_ENGLISH: ReadonlyArray<readonly [string, string]> = [
   [PARK_GUIDE, 'All our friends are here! Tap a friend and see how they play!'],
   [PARK_ACTIONS.jump.speech, 'Hop, hop! Can I reach the clouds?'],
@@ -30,4 +35,7 @@ export const PARK_SPEECH_ENGLISH: ReadonlyArray<readonly [string, string]> = [
   [PARK_ACTIONS.dance.speech, 'Wiggle, wiggle! Dance with me!'],
   [PARK_ACTIONS.wave.speech, 'Hello, friend! I am happy to see you!'],
   [PARK_ACTIONS.run.speech, 'Pitter-patter! Running is so much fun!'],
+  [PARK_DRAWING_SPEECHES[0], 'Wow! The drawing Yuha colored is hopping and playing in the park!'],
+  [PARK_DRAWING_SPEECHES[1], 'Yahoo! Yuha drew me so prettily, and now I am running with my friends!'],
+  [PARK_DRAWING_SPEECHES[2], 'Sparkle, sparkle! Yuha\'s magic drawing friend is dancing happily!'],
 ];

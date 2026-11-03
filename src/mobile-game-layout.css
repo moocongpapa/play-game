@@ -27,7 +27,7 @@
     min-height: 0;
     padding: 8px;
   }
-  .game-stage .game-surface > :is(.game-board, .toddler-play, .development-play, .adventure-board, .block-tower-stage, .fruit-munch-stage, .trampoline-stage, .bath-stage, .mirror-maze-stage, .forest-peekaboo-stage, .magic-slime-stage, .magic-potion-stage, .fruit-catcher-stage, .pipe-connect-stage) {
+  .game-stage .game-surface > :is(.game-board, .toddler-play, .development-play, .adventure-board, .block-tower-stage, .fruit-munch-stage, .trampoline-stage, .bath-stage, .mirror-maze-stage, .forest-peekaboo-stage, .magic-slime-stage, .magic-potion-stage, .fruit-catcher-stage, .pipe-connect-stage, .scratch-art-stage, .cake-deco-stage, .beauty-salon-stage, .splash-color-stage) {
     flex: 1;
     width: 100%;
     max-width: none;
