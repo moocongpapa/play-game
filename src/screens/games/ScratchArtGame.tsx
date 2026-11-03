@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, Wand2 } from 'lucide-react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
+import { motion } from 'motion/react';
+import { Wand2, Hand } from 'lucide-react';
 import type { CharacterId, AgeGroup } from '../../types';
-import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { PlayGuide, PlayProgress } from '../../components/ToddlerPlay';
 import { PixiStageOverlay, type PixiStageHandle } from '../../components/PixiStageOverlay';
 import {
   speakText,
+  isSpeechBusy,
   stopAllSpeech,
   playSparkleChime,
   playCorrectFanfare,
@@ -18,6 +18,9 @@ import {
 import { fireConfetti, fireStarExplosion } from '../../utils/confetti';
 import { emitJuice } from '../../utils/juice';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
+import { useGameActivity } from '../../hooks/useGameActivity';
+import { RoundContinuation } from '../../components/RoundContinuation';
+import './CreativePlay.css';
 
 interface ScratchArtGameProps {
   buddy: CharacterId;
@@ -45,8 +48,8 @@ const SCRATCH_SCENES: ScratchScene[] = [
     title: '무지개 네온 공룡 나라',
     badge: '🦖 네온 공룡 스크래치',
     emoji: '🦖',
-    guideText: '까만 마법 종이를 손가락으로 쓱싹쓱싹 문질러 숨어 있는 무지개 공룡을 찾아봐!',
-    revealedVoice: '우와! 반짝반짝 무지개 네온 공룡이 나타났어요! 정말 멋지다!',
+    guideText: '까만 종이를 쓱싹 문질러 볼까?',
+    revealedVoice: '무지개 공룡을 찾았네!',
     foilColorA: '#1E1B4B',
     foilColorB: '#312E81',
     particleColor: 0x4ADE80,
@@ -57,7 +60,7 @@ const SCRATCH_SCENES: ScratchScene[] = [
     badge: '🦄 별빛 유니콘 스크래치',
     emoji: '🦄',
     guideText: '이번엔 은빛 마법 종이를 쓱싹 문질러 별빛 유니콘과 무지개 성을 깨워 볼까?',
-    revealedVoice: '짜잔! 알록달록 별빛 유니콘과 요술 성이 환하게 빛나요!',
+    revealedVoice: '별빛 유니콘이 반짝여!',
     foilColorA: '#3B0764',
     foilColorB: '#581C87',
     particleColor: 0xF472B6,
@@ -68,7 +71,7 @@ const SCRATCH_SCENES: ScratchScene[] = [
     badge: '🐳 무지개 고래 스크래치',
     emoji: '🐳',
     guideText: '마지막 마법 종이 밑에는 누가 숨어 있을까? 손가락으로 신나게 쓱싹 문질러 봐!',
-    revealedVoice: '대단해! 바닷속 무지개 고래와 보물상자가 나타났어요! 최고의 화가야!',
+    revealedVoice: '무지개 고래야, 안녕!',
     foilColorA: '#0C4A6E',
     foilColorB: '#1E3A8A',
     particleColor: 0x38BDF8,
@@ -86,10 +89,15 @@ export const ScratchArtGame: React.FC<ScratchArtGameProps> = ({
   ageGroup = 'sprout',
 }) => {
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+  const { paused, isBlocked } = useGameActivity();
+  const latest = useRef({ soundEnabled, onCompleteQuiz });
+  latest.current = { soundEnabled, onCompleteQuiz };
+  const [completed, setCompleted] = useState(false);
   const pixiRef = useRef<PixiStageHandle>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const boardRef = useRef<HTMLDivElement>(null);
-  const isDrawingRef = useRef(false);
+  const activePointerRef = useRef<number | null>(null);
+  const lastPointRef = useRef<{ x: number; y: number } | null>(null);
   const lastSoundTimeRef = useRef(0);
   const roundDoneRef = useRef(false);
   const scratchedCellsRef = useRef<Set<number>>(new Set());
@@ -103,7 +111,6 @@ export const ScratchArtGame: React.FC<ScratchArtGameProps> = ({
 
   const [progressPct, setProgressPct] = useState(0);
   const [isRevealed, setIsRevealed] = useState(false);
-  const [buddyBubble, setBuddyBubble] = useState('손가락으로 까만 종이를 쓱싹 문질러 봐!');
 
   const paintFoilCover = useCallback((scene: ScratchScene) => {
     const canvas = canvasRef.current;
@@ -124,7 +131,7 @@ export const ScratchArtGame: React.FC<ScratchArtGameProps> = ({
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
 
-    // Draw cute silver/gold guide stars & "쓱싹쓱싹 문질러요!" pattern on the foil
+    // Small metallic glints keep the untouched foil visibly different from the picture.
     ctx.fillStyle = 'rgba(254, 240, 138, 0.28)';
     for (let i = 0; i < 24; i++) {
       const sx = ((i * 73) % (w - 40)) + 20;
@@ -145,24 +152,27 @@ export const ScratchArtGame: React.FC<ScratchArtGameProps> = ({
   const setupRound = useCallback(
     (roundIdx: number) => {
       roundDoneRef.current = false;
+      setCompleted(false);
+      activePointerRef.current = null;
+      lastPointRef.current = null;
       scratchedCellsRef.current.clear();
       setProgressPct(0);
       setIsRevealed(false);
       const scene = SCRATCH_SCENES[roundIdx] || SCRATCH_SCENES[0];
-      setBuddyBubble('손가락으로 쓱싹 문지르면 무지개 그림이 나타나요!');
+
       paintFoilCover(scene);
     },
     [paintFoilCover]
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setupRound(round);
   }, [round, setupRound]);
 
   useEffect(() => {
     const scene = SCRATCH_SCENES[round] || SCRATCH_SCENES[0];
-    speakText(scene.guideText, soundEnabled, { characterId: buddy });
-  }, [round, soundEnabled, buddy]);
+    if (!isBlocked() && !isSpeechBusy()) speakText(scene.guideText, soundEnabled, { characterId: buddy });
+  }, [round, soundEnabled, buddy, isBlocked]);
 
   useEffect(() => {
     return () => {
@@ -173,14 +183,14 @@ export const ScratchArtGame: React.FC<ScratchArtGameProps> = ({
 
   const completeScratchReveal = useCallback(
     (scene: ScratchScene, currentRound: number) => {
-      if (roundDoneRef.current) return;
+      if (isBlocked() || roundDoneRef.current) return;
       roundDoneRef.current = true;
       setIsRevealed(true);
       setProgressPct(100);
 
       playCorrectFanfare(soundEnabled);
       playSparkleChime(soundEnabled);
-      setBuddyBubble(`우와! ${scene.title} 완성! 반짝반짝 최고야!`);
+
       speakText(scene.revealedVoice, soundEnabled, { characterId: buddy });
 
       fireStarExplosion();
@@ -197,21 +207,22 @@ export const ScratchArtGame: React.FC<ScratchArtGameProps> = ({
 
       scheduleGameTimeout(() => {
         if (currentRound + 1 < totalRounds) {
-          playStarGain(soundEnabled);
+          playStarGain(latest.current.soundEnabled);
           setRound((r) => r + 1);
         } else {
-          playCelebrationFanfare(soundEnabled);
+          playCelebrationFanfare(latest.current.soundEnabled);
           fireConfetti();
-          onCompleteQuiz(3);
+          setCompleted(true);
+          latest.current.onCompleteQuiz(3);
         }
-      }, 2600);
+      }, 700);
     },
-    [buddy, onCompleteQuiz, scheduleGameTimeout, soundEnabled]
+    [buddy, isBlocked, scheduleGameTimeout, soundEnabled]
   );
 
   const scratchAtPoint = useCallback(
     (localX: number, localY: number, radius = 44, clientX?: number, clientY?: number) => {
-      if (roundDoneRef.current) return;
+      if (isBlocked() || roundDoneRef.current) return;
       const canvas = canvasRef.current;
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
@@ -272,18 +283,18 @@ export const ScratchArtGame: React.FC<ScratchArtGameProps> = ({
         if (rawRatio >= targetRatio) {
           completeScratchReveal(currentScene, round);
         } else if (normalizedPct >= 50) {
-          setBuddyBubble('우와! 알록달록 무지개 빛깔이 보이기 시작했어! 조금만 더 쓱싹!');
+
         }
       }
     },
-    [completeScratchReveal, currentScene, round, soundEnabled, targetRatio]
+    [completeScratchReveal, currentScene, isBlocked, round, soundEnabled, targetRatio]
   );
 
   // Magic wand helper button: scratches 3 big glowing circles at once!
   const handleMagicWand = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
-      if (roundDoneRef.current) return;
+      if (isBlocked() || roundDoneRef.current) return;
       const canvas = canvasRef.current;
       if (!canvas) return;
 
@@ -299,71 +310,29 @@ export const ScratchArtGame: React.FC<ScratchArtGameProps> = ({
         scratchAtPoint(rx, ry, 58, e.clientX, e.clientY);
       }
     },
-    [scratchAtPoint, soundEnabled]
+    [isBlocked, scratchAtPoint, soundEnabled]
   );
 
   return (
     <div
       ref={boardRef}
-      className="scratch-art-stage relative flex flex-col justify-between w-full h-[var(--game-play-height,calc(100dvh-84px))] min-h-[var(--game-play-height,calc(100dvh-84px))] rounded-3xl overflow-hidden select-none bg-gradient-to-b from-[#0F172A] via-[#1E1B4B] to-[#312E81] border-3 border-[#818CF8] p-3 sm:p-5"
+      data-paused={paused}
+      className="scratch-art-stage creative-play relative flex flex-col justify-between w-full h-[var(--game-play-height,calc(100dvh-84px))] min-h-[var(--game-play-height,calc(100dvh-84px))] rounded-3xl overflow-hidden select-none bg-gradient-to-b from-[#0F172A] via-[#1E1B4B] to-[#312E81] border-3 border-[#818CF8] p-3 sm:p-5"
     >
-      <style>{`
-        @keyframes neonPulseGlow {
-          0%, 100% { transform: scale(1); opacity: 0.92; }
-          50% { transform: scale(1.04); opacity: 1; }
-        }
-        .neon-art-glow {
-          animation: neonPulseGlow 1.8s ease-in-out infinite;
-          @media (prefers-reduced-motion: reduce) {
-            animation: none;
-          }
-        }
-      `}</style>
-
       <PixiStageOverlay ref={pixiRef} className="z-20 pointer-events-none" />
 
-      {/* Top Header Bar */}
-      <div className="relative z-30 flex items-center justify-between w-full gap-2">
-        <PlayGuide
-          buddy={buddy}
-          title="마법 스크래치 색칠"
-          guide={currentScene.guideText}
-          soundEnabled={soundEnabled}
-          happy={isRevealed}
-        />
-
-        <div className="flex items-center gap-2 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full shadow-md border-2 border-[#A855F7]">
-          <span className="text-lg" aria-hidden="true">{currentScene.emoji}</span>
-          <span className="font-black text-[#6B21A8] text-xs sm:text-sm whitespace-nowrap">
-            {currentScene.badge} · {progressPct}%
-          </span>
+      <div className="creative-play-header">
+        <PlayGuide buddy={buddy} title="마법 스크래치 색칠" guide={currentScene.guideText} soundEnabled={soundEnabled} happy={isRevealed} />
+        <div className="creative-pictorial-guide" aria-hidden="true">
+          <Hand />
+          <span>{currentScene.emoji}</span>
         </div>
-
-        <PlayProgress total={totalRounds} done={round} label={`${round + 1}/${totalRounds}`} />
-      </div>
-
-      {/* Artist Buddy Banner */}
-      <div className="relative z-20 flex items-center justify-center gap-3 my-1">
-        <div className="flex items-center gap-2.5 bg-white/95 backdrop-blur-sm px-4 py-1.5 rounded-3xl border-2 border-[#C084FC] shadow-md">
-          <div className="relative w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center">
-            <CharacterAvatar
-              id={buddy}
-              size="sm"
-              mood={isRevealed ? 'excited' : progressPct > 20 ? 'happy' : 'still'}
-            />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs font-extrabold text-[#7E22CE]">
-              {round + 1}단계 · {currentScene.title}
-            </span>
-            <span className="text-xs sm:text-sm font-black text-[#3B0764]">{buddyBubble}</span>
-          </div>
-        </div>
+        <PlayProgress total={totalRounds} done={completed ? totalRounds : round} label={`${round + 1}/${totalRounds}`} />
       </div>
 
       {/* Center Scratch-Off Rainbow Neon Art Canvas */}
-      <div className="relative z-20 flex-1 flex flex-col items-center justify-center min-h-0 my-1">
-        <div className="relative w-full max-w-[380px] aspect-[4/3] rounded-3xl overflow-hidden shadow-[0_16px_40px_rgba(0,0,0,0.45)] border-4 border-[#FDE047] bg-[#090D16]">
+      <div className="creative-play-body">
+        <div className="creative-play-art creative-scratch-art rounded-3xl overflow-hidden shadow-[0_16px_40px_rgba(0,0,0,0.45)] border-4 border-[#FDE047] bg-[#090D16]">
           {/* Underlying Glowing Rainbow Neon SVG Masterpiece */}
           <svg
             viewBox="0 0 400 300"
@@ -470,66 +439,47 @@ export const ScratchArtGame: React.FC<ScratchArtGameProps> = ({
             )}
           </svg>
 
-          {/* Top Scratch-Off Foil Canvas */}
-          <AnimatePresence>
-            {!isRevealed && (
-              <motion.canvas
-                ref={canvasRef}
-                width={400}
-                height={300}
-                exit={{ opacity: 0, scale: 1.06 }}
-                transition={{ duration: 0.45 }}
-                onPointerDown={(e) => {
-                  isDrawingRef.current = true;
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  scratchAtPoint(
-                    e.clientX - rect.left,
-                    e.clientY - rect.top,
-                    46,
-                    e.clientX,
-                    e.clientY
-                  );
-                }}
-                onPointerMove={(e) => {
-                  if (!isDrawingRef.current) return;
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  scratchAtPoint(
-                    e.clientX - rect.left,
-                    e.clientY - rect.top,
-                    44,
-                    e.clientX,
-                    e.clientY
-                  );
-                }}
-                onPointerUp={() => {
-                  isDrawingRef.current = false;
-                }}
-                onPointerCancel={() => {
-                  isDrawingRef.current = false;
-                }}
-                aria-label="마법 스크래치 캔버스 — 문질러서 그림을 나타내세요"
-                className="absolute inset-0 w-full h-full touch-none cursor-crosshair"
-              />
-            )}
-          </AnimatePresence>
+          {/* Keep this canvas mounted so every automatic new round gets a fresh cover. */}
+          <motion.canvas
+            ref={canvasRef}
+            width={400}
+            height={300}
+            initial={false}
+            animate={{ opacity: isRevealed ? 0 : 1, scale: isRevealed ? 1.04 : 1 }}
+            transition={{ duration: isRevealed ? .35 : 0 }}
+            style={{ pointerEvents: isRevealed ? 'none' : 'auto' }}
+            onPointerDown={e => {
+              if (isBlocked() || roundDoneRef.current || activePointerRef.current !== null) return;
+              activePointerRef.current = e.pointerId;
+              e.currentTarget.setPointerCapture(e.pointerId);
+              const rect = e.currentTarget.getBoundingClientRect();
+              const point = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+              lastPointRef.current = point;
+              scratchAtPoint(point.x, point.y, 46, e.clientX, e.clientY);
+            }}
+            onPointerMove={e => {
+              if (activePointerRef.current !== e.pointerId || isBlocked()) return;
+              const rect = e.currentTarget.getBoundingClientRect();
+              const point = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+              const last = lastPointRef.current ?? point;
+              const steps = Math.min(32, Math.max(1, Math.ceil(Math.hypot(point.x - last.x, point.y - last.y) / 18)));
+              for (let step = 1; step <= steps; step++) scratchAtPoint(last.x + (point.x - last.x) * step / steps, last.y + (point.y - last.y) * step / steps, 44, e.clientX, e.clientY);
+              lastPointRef.current = point;
+            }}
+            onPointerUp={e => { if (activePointerRef.current === e.pointerId) { activePointerRef.current = null; lastPointRef.current = null; } }}
+            onPointerCancel={() => { activePointerRef.current = null; lastPointRef.current = null; }}
+            onLostPointerCapture={() => { activePointerRef.current = null; lastPointRef.current = null; }}
+            aria-label="손가락으로 문질러 그림 찾기"
+            className="absolute inset-0 w-full h-full touch-none cursor-crosshair"
+          />
+          {progressPct === 0 && <Hand className="creative-gesture" aria-hidden="true" />}
         </div>
 
-        {/* Bottom Magic Wand Helper Button */}
-        <div className="relative z-30 mt-3 flex items-center justify-center">
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.92 }}
-            onClick={handleMagicWand}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-full font-black text-sm sm:text-base text-white shadow-lg border-3 border-[#FDE047] bg-gradient-to-r from-[#9333EA] via-[#EC4899] to-[#F59E0B]"
-          >
-            <Wand2 className="w-5 h-5 text-yellow-200" />
-            <span>
-              {isRevealed ? '우와! 무지개 네온 그림 완성! ✨' : '마법 지팡이로 쓱싹 지우기! 🪄'}
-            </span>
-            <Sparkles className="w-5 h-5 text-yellow-200" />
-          </motion.button>
+        <div className="creative-scratch-tools">
+          <motion.button type="button" whileTap={{ scale: .92 }} className="creative-tool" disabled={isRevealed} aria-label="마법 지팡이로 그림 찾기" onClick={handleMagicWand}><Wand2 /></motion.button>
         </div>
       </div>
+      {completed && <RoundContinuation delayMs={700} onNext={() => setRound(0)} />}
     </div>
   );
 };

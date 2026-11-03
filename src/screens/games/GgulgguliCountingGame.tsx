@@ -17,6 +17,7 @@ import { emitJuice, JUICE_SPRING } from '../../utils/juice';
 import { getDifficultyConfig, getKoreanCounts } from '../../utils/ageEngine';
 import { AgeGroup } from '../../types';
 import { RefreshCw, Timer } from 'lucide-react';
+import { usePlayMemory } from '../../components/PlayMemoryContext';
 
 interface GgulgguliCountingGameProps {
   buddy: CharacterId;
@@ -33,6 +34,9 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
   ageGroup,
 }) => {
   const friend = CHARACTERS[buddy];
+  const { memory } = usePlayMemory();
+  const pantry = useRef(memory.fruitBasket);
+  const pantryRound = useRef(0);
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
 
   const diffConfig = getDifficultyConfig(ageGroup);
@@ -64,10 +68,13 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
     setTappedIndices([]);
     setShowHint(false);
 
-    const food = pickNextRound(FOOD_COUNTING_ITEMS, `GgulgguliCountingGame:${ageGroup}`);
+    const pickedFruit = pantry.current.length ? pantry.current[pantryRound.current++ % pantry.current.length] : undefined;
+    const food = pickedFruit ? { ...FOOD_COUNTING_ITEMS[0], id: pickedFruit.kind, name: pickedFruit.label, emoji: { apple: '🍎', orange: '🍊', peach: '🍑' }[pickedFruit.kind] }
+      : pickNextRound(FOOD_COUNTING_ITEMS, `GgulgguliCountingGame:${ageGroup}`);
     const [minRange, maxRange] = diffConfig.countingRange;
     // 범위 내에서 랜덤 카운트 선정
-    const count = Math.floor(Math.random() * (maxRange - minRange + 1)) + minRange;
+    const count = pickedFruit ? Math.max(1, Math.min(maxRange, pantry.current.filter(fruit => fruit.kind === pickedFruit.kind).length))
+      : Math.floor(Math.random() * (maxRange - minRange + 1)) + minRange;
     
     setTargetFood(food);
     setTargetCount(count);
@@ -87,7 +94,7 @@ export const GgulgguliCountingGame: React.FC<GgulgguliCountingGameProps> = ({
     setNumberOptions(finalOptions);
 
     if (soundEnabled) {
-      speakText(`${friend.name} 접시에 맛있는 ${food.name}가 몇 개 있는지 세어주세요!`, soundEnabled, { characterId: buddy });
+      speakText(pickedFruit ? `우리가 딴 ${food.name}야! 하나씩 세어 볼까?` : `${friend.name} 접시에 맛있는 ${food.name}가 몇 개 있는지 세어주세요!`, soundEnabled, { characterId: buddy });
     }
 
     // 힌트 타이머 구동

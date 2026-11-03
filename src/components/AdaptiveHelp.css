@@ -1,0 +1,22 @@
+/* Help changes emphasis, never the remembered location or availability of a toy. */
+.adaptive-choice {
+  min-width: 64px;
+  min-height: 64px;
+  position: relative;
+}
+.adaptive-choice > :not(.scaffolding-hint) {
+  transition: opacity 240ms ease, filter 240ms ease;
+}
+.adaptive-choice[data-softened="true"] > :not(.scaffolding-hint) {
+  opacity: .42;
+  filter: saturate(.55);
+}
+.adaptive-choice[data-guided="true"],
+.drop-slot[data-tap-ready="true"] {
+  outline: 4px solid #f6c65e;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 8px rgb(255 235 161 / .38), 0 5px 0 rgb(145 108 55 / .12);
+}
+@media (prefers-reduced-motion: reduce) {
+  .adaptive-choice > :not(.scaffolding-hint) { transition: none; }
+}

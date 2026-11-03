@@ -15,6 +15,8 @@ import { emitJuice } from '../utils/juice';
 import { listGallery } from '../sketch/storage';
 import { renderCharacterSprite } from '../sketch/render';
 import { templates } from '../sketch/art';
+import { usePlayMemory } from '../components/PlayMemoryContext';
+import { RideKeepsake } from '../components/PlayKeepsakeArtwork';
 import './CharacterParkScreen.css';
 
 const ACTION_ICONS = { jump: Sparkles, roll: RotateCw, turn: ArrowLeftRight, dance: Music2, wave: Hand, run: Footprints };
@@ -44,6 +46,8 @@ export function CharacterParkScreen({
   const [reaction, setReaction] = useState<{ id: CharacterId; action: ParkAction; serial: number } | null>(null);
   const [customDrawings, setCustomDrawings] = useState<CustomParkDrawing[]>([]);
   const [customReaction, setCustomReaction] = useState<{ id: string; title: string; serial: number } | null>(null);
+  const [riding, setRiding] = useState(false);
+  const { memory } = usePlayMemory();
   const visible = usePageVisible();
   const reduced = useReducedMotion();
   const blocked = useContext(PlayHintsPausedContext);
@@ -52,6 +56,7 @@ export function CharacterParkScreen({
   const lastTap = useRef(-Infinity);
   const serial = useRef(0);
   const initial = useRef({ buddy, soundEnabled });
+  const endRide = () => { setRiding(false); held.current.delete(buddy); };
 
   useEffect(() => {
     let active = true;
@@ -79,7 +84,7 @@ export function CharacterParkScreen({
     return () => { stopAllSpeech(); stopPlaySounds(); };
   }, []);
   useEffect(() => {
-    if (!visible || blocked) { clearGameTimeouts(); setReaction(null); setCustomReaction(null); stopAllSpeech(); stopPlaySounds(); }
+    if (!visible || blocked) { clearGameTimeouts(); endRide(); setReaction(null); setCustomReaction(null); stopAllSpeech(); stopPlaySounds(); }
   }, [visible, blocked, clearGameTimeouts]);
 
   const touchFriend = (id: CharacterId) => {
@@ -87,6 +92,7 @@ export function CharacterParkScreen({
     lastTap.current = performance.now();
     const action = react(id);
     if (!action) return;
+    endRide();
     clearGameTimeouts();
     setCustomReaction(null);
     setReaction({ id, action, serial: ++serial.current });
@@ -102,6 +108,7 @@ export function CharacterParkScreen({
     if (!visible || blocked || performance.now() - lastTap.current < 180) return;
     lastTap.current = performance.now();
     clearGameTimeouts();
+    endRide();
     setReaction(null);
     setCustomReaction({ id: item.id, title: item.title, serial: ++serial.current });
     playCelebrationFanfare(soundEnabled);
@@ -116,7 +123,7 @@ export function CharacterParkScreen({
   const drag = useRoamingDrag({ field, held, getPosition, move, release, blocked: !visible || blocked,
     onTap: touchFriend,
     onDrop: (_id, point) => {
-      clearGameTimeouts(); setReaction(null); playJellyTap(soundEnabled);
+      clearGameTimeouts(); endRide(); setReaction(null); playJellyTap(soundEnabled);
       emitJuice({ kind: 'snap', x: point.x, y: point.y });
     },
   });
@@ -146,6 +153,20 @@ export function CharacterParkScreen({
       setPaused(value => !value); playJellyTap(soundEnabled); stopAllSpeech();
     }}>{paused ? <Play fill="currentColor" /> : <Pause fill="currentColor" />}</button>}
     <div ref={field} className="park-field">
+      {memory.paintedRide && <button type="button" className="park-painted-ride" data-riding={riding}
+        aria-label={`내가 색칠한 ${memory.paintedRide.kind === 'rocket' ? '로켓' : memory.paintedRide.kind === 'boat' ? '배' : '자동차'}를 친구와 타기`}
+        onClick={() => {
+          if (!visible || blocked || riding) return;
+          clearGameTimeouts(); setReaction(null); setCustomReaction(null);
+          held.current.add(buddy); setRiding(true);
+          playBouncyBoing(soundEnabled);
+          speakText(memory.paintedRide?.kind === 'rocket' ? '네가 색칠한 로켓이야! 같이 날아가자!' : '네가 색칠한 자동차야! 같이 타자!', soundEnabled, { characterId: buddy, playIntroSFX: false });
+          scheduleGameTimeout(endRide, 1800);
+        }}>
+        {riding && <span className="park-ride-passenger"><CharacterAvatar id={buddy} size="md" mood="excited"/></span>}
+        <RideKeepsake ride={memory.paintedRide}/>
+        <span className="park-ride-star" aria-hidden="true"><Sparkles/></span>
+      </button>}
       {customDrawings.map((item, idx) => {
         const spot = CUSTOM_SPOTS[idx % CUSTOM_SPOTS.length];
         const isReacting = customReaction?.id === item.id;
@@ -179,6 +200,7 @@ export function CharacterParkScreen({
         const ReactionIcon = selected ? ACTION_ICONS[reaction.action] : Heart;
         return <button key={friend.id} ref={node => { if (node) nodes.current.set(friend.id, node); else nodes.current.delete(friend.id); }}
           className="park-friend" data-park-friend={friend.id} data-reacting={selected}
+          data-riding={riding && friend.id === buddy || undefined} aria-hidden={riding && friend.id === buddy || undefined} tabIndex={riding && friend.id === buddy ? -1 : 0}
           style={{ '--friend-color': friend.color } as CSSProperties}
           aria-label={`${friend.name}와 놀기`}
           {...drag.handlers(friend.id)}

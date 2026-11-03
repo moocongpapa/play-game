@@ -3,11 +3,13 @@ import { createPortal } from 'react-dom';
 import { animate, motion, MotionConfig, useMotionValue, useReducedMotion, type HTMLMotionProps } from 'motion/react';
 import { ArrowUp, Check, Hand } from 'lucide-react';
 import { findMagnetTarget, magnetTolerance, MAGNET_SPRING, type DropBounds } from '../utils/dropTarget';
-import { useIdleScaffolding } from '../hooks/useIdleScaffolding';
+import { useAdaptiveHelp } from '../hooks/useAdaptiveHelp';
+import { adaptiveMagnetTolerance, softenedChoiceIds, type HelpLevel } from '../utils/adaptiveHelp';
 import { ScaffoldingHint } from './ScaffoldingHint';
 import { PlayVoiceContext } from './PlayFlowContext';
 import { emitJuice } from '../utils/juice';
 import { playBubblePop, playJellyTap } from '../utils/soundEngine';
+import './AdaptiveHelp.css';
 
 type Piece = { id: string; label: string; children: ReactNode; className: string };
 type Gesture = Piece & { pointerId: number; source: HTMLButtonElement; rect: DOMRect; targets: DropBounds[]; startX: number; startY: number; moved: boolean; phase: 'dragging' | 'settling' };
@@ -23,6 +25,7 @@ type MatchContext = {
   register: (id: string, node: HTMLButtonElement | null) => void;
   registerPiece: (id: string, node: HTMLButtonElement | null) => void;
   showHint: boolean; hasDemo: boolean; hintPieceId?: string; hintTargetId?: string;
+  helpLevel: HelpLevel; softenedIds: string[]; canPlaceSelected: (id: string) => boolean;
 };
 const MatchContext = createContext<MatchContext | null>(null);
 function useMatch() {
@@ -32,20 +35,23 @@ function useMatch() {
 }
 
 /** Pointer capture works with fingers, pens and mice, including outside the source tile. */
-export function DragMatch({ children, onDrop, canDrop, disabled = false, resetKey, hint, onDragMove, juicy = true }: {
+export function DragMatch({ children, onDrop, canDrop, disabled = false, resetKey, hint, onDragMove, juicy = true, choiceIds, tapToPlace = false }: {
   children: ReactNode; onDrop: (pieceId: string, targetId: string) => boolean; disabled?: boolean; resetKey: string | number;
   canDrop?: (pieceId: string, targetId: string) => boolean;
   juicy?: boolean;
   hint?: { pieceId: string; targetId: string };
+  choiceIds?: readonly string[];
+  /** Only opted-in early-age matching games offer one-tap placement after help grows. */
+  tapToPlace?: boolean;
   onDragMove?: (point: { x: number; y: number; targetId: string | null } | null) => void;
 }) {
   const helpId = useId();
   const slots = useRef(new Map<string, HTMLButtonElement>());
   const pieces = useRef(new Map<string, HTMLButtonElement>());
   const voice = useContext(PlayVoiceContext);
-  const help = useIdleScaffolding({
-    resetKey: JSON.stringify([resetKey, hint?.pieceId, hint?.targetId]), disabled: disabled || !hint,
-    voice: voice ? { ...voice, text: '반짝이는 그림을 이쪽으로 쏙!' } : undefined,
+  const help = useAdaptiveHelp({
+    resetKey: JSON.stringify([resetKey, hint?.pieceId, hint?.targetId]), disabled,
+    voice: hint && voice ? { ...voice, text: '반짝이는 그림을 이쪽으로 쏙!' } : undefined,
   });
   const dragCallback = useRef(onDragMove);
   dragCallback.current = onDragMove;
@@ -102,8 +108,8 @@ export function DragMatch({ children, onDrop, canDrop, disabled = false, resetKe
   }, [resetKey]);
 
   useEffect(() => {
-    if (disabled && gesture.current?.phase !== 'settling') cancel();
-  }, [disabled]);
+    if (help.blocked && (help.isBlocked() || gesture.current?.phase !== 'settling')) cancel();
+  }, [help.blocked, help.isBlocked]);
 
   const showHint = !ghost && help.isIdle;
   useEffect(() => {
@@ -130,28 +136,32 @@ export function DragMatch({ children, onDrop, canDrop, disabled = false, resetKe
       const node = slots.current.get(target.id);
       return node && !node.disabled;
     });
-    return findMagnetTarget(clientX, clientY, targets, magnetTolerance(window.innerWidth),
+    return findMagnetTarget(clientX, clientY, targets, adaptiveMagnetTolerance(magnetTolerance(window.innerWidth), help.level),
       canDrop ? id => canDrop(current.id, id) : undefined);
   };
 
   const select = (piece: Piece) => {
     if (juicy && gesture.current?.phase === 'settling') cancel();
-    if (disabled || gesture.current) return;
-    help.reset();
+    if (help.blocked || help.isBlocked() || gesture.current) return;
+    help.resetIdle();
     // Some assistive inputs emit both a pointer tap and a detail=0 click.
     // Selecting the same piece twice must not silently cancel the choice.
     selectedRef.current = piece;
     setSelected(piece);
+    if (tapToPlace && help.level === 2 && hint?.pieceId === piece.id && (!canDrop || canDrop(piece.id, hint.targetId))) {
+      drop(hint.targetId);
+      return;
+    }
     setAnnouncement(`${piece.label}. 놓을 자리를 고르세요. 취소하려면 Escape를 누르세요.`);
   };
 
   const start = (event: PointerEvent<HTMLButtonElement>, piece: Piece) => {
-    if (disabled || !event.isPrimary || event.button !== 0) return;
+    if (help.blocked || help.isBlocked() || !event.isPrimary || event.button !== 0) return;
     // A finishing spring must never swallow the child's next grab.
     if (juicy && gesture.current?.phase === 'settling') cancel();
     if (gesture.current) return;
     const rect = event.currentTarget.getBoundingClientRect();
-    help.reset();
+    help.resetIdle();
     const targets = Array.from(slots.current).filter(([, node]) => !node.disabled).map(([id, node]) => ({ id, ...rectBounds(node.getBoundingClientRect()) }));
     gesture.current = { ...piece, source: event.currentTarget, rect, targets, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, moved: false, phase: 'dragging' };
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -167,7 +177,7 @@ export function DragMatch({ children, onDrop, canDrop, disabled = false, resetKe
 
   const move = (event: PointerEvent<HTMLButtonElement>) => {
     const current = gesture.current;
-    if (!current || current.pointerId !== event.pointerId || current.phase !== 'dragging') return;
+    if (!current || current.pointerId !== event.pointerId || current.phase !== 'dragging' || help.blocked || help.isBlocked()) return;
     const dx = event.clientX - current.startX;
     const dy = event.clientY - current.startY;
     if (!current.moved && Math.hypot(dx, dy) < 6) return;
@@ -192,6 +202,7 @@ export function DragMatch({ children, onDrop, canDrop, disabled = false, resetKe
   const end = (event: PointerEvent<HTMLButtonElement>) => {
     const current = gesture.current;
     if (!current || current.pointerId !== event.pointerId || current.phase !== 'dragging') return;
+    if (help.blocked || help.isBlocked()) { cancel(); return; }
     // Mark settled before releasing capture or invoking game callbacks to reject duplicate drops.
     current.phase = 'settling';
     if (current.source.hasPointerCapture(current.pointerId)) current.source.releasePointerCapture(current.pointerId);
@@ -201,10 +212,11 @@ export function DragMatch({ children, onDrop, canDrop, disabled = false, resetKe
       select(current);
       return;
     }
-    const targetId = disabled ? null : targetAt(event.clientX, event.clientY);
+    const targetId = targetAt(event.clientX, event.clientY);
     const targetRect = current.targets.find(slot => slot.id === targetId);
     const accepted = targetId !== null && onDrop(current.id, targetId);
-    help.reset();
+    help.resetIdle();
+    if (!accepted) help.recordMiss();
     dragCallback.current?.(null);
     setAnnouncement(accepted ? '쏙! 알맞은 자리에 놓았어요.' : '괜찮아요. 다시 옮겨 보세요.');
     setOverId(null);
@@ -217,7 +229,7 @@ export function DragMatch({ children, onDrop, canDrop, disabled = false, resetKe
     ];
     // Complete the spring before fading; cancel/next-grab must never deliver a stale snap.
     void Promise.all(animations.current).then(() => {
-      if (gesture.current !== current) return;
+      if (gesture.current !== current || help.isBlocked()) return;
       if (accepted) {
         playBubblePop(voice?.soundEnabled ?? false);
         emitJuice({ kind: 'snap', x: targetRect ? (targetRect.left + targetRect.right) / 2 : event.clientX, y: targetRect ? (targetRect.top + targetRect.bottom) / 2 : event.clientY });
@@ -229,18 +241,23 @@ export function DragMatch({ children, onDrop, canDrop, disabled = false, resetKe
 
   const drop = (id: string) => {
     const piece = selectedRef.current;
-    if (disabled || !piece || gesture.current) return;
-    selectedRef.current = null;
-    setSelected(null);
+    if (help.blocked || help.isBlocked() || !piece || gesture.current) return;
     const accepted = onDrop(piece.id, id);
-    if (accepted) { playBubblePop(voice?.soundEnabled ?? false); emitJuice({ kind: 'snap' }); }
-    help.reset();
+    if (accepted) {
+      selectedRef.current = null;
+      setSelected(null);
+      playBubblePop(voice?.soundEnabled ?? false);
+      emitJuice({ kind: 'snap' });
+    } else help.recordMiss();
+    help.resetIdle();
     setAnnouncement(accepted ? '쏙! 알맞은 자리에 놓았어요.' : '괜찮아요. 다시 옮겨 보세요.');
   };
 
-  return <MotionConfig reducedMotion="user"><MatchContext.Provider value={{ disabled, activeId: ghost?.id ?? selected?.id ?? null, overId, helpId, start, move, end, cancel, select, drop,
+  return <MotionConfig reducedMotion="user"><MatchContext.Provider value={{ disabled: help.blocked, activeId: ghost?.id ?? selected?.id ?? null, overId, helpId, start, move, end, cancel, select, drop,
     cancelPointer: event => { if (gesture.current?.pointerId === event.pointerId && gesture.current.phase === 'dragging') cancel(); },
     showHint, hasDemo: !!demo, hintPieceId: hint?.pieceId, hintTargetId: hint?.targetId,
+    helpLevel: help.level, softenedIds: hint && choiceIds ? softenedChoiceIds(choiceIds, hint.pieceId, help.level) : [],
+    canPlaceSelected: id => !!selected && (!canDrop || canDrop(selected.id, id)),
     register: (id, node) => { if (node) slots.current.set(id, node); else slots.current.delete(id); },
     registerPiece: (id, node) => { if (node) pieces.current.set(id, node); else pieces.current.delete(id); } }}>
     <span id={helpId} className="sr-only">그림을 잡아 알맞은 자리로 옮겨 놓으세요. 그림과 자리를 차례로 누르거나 Enter 키로 선택할 수도 있어요.</span>
@@ -259,9 +276,10 @@ type PieceProps = Omit<HTMLMotionProps<'button'>, 'id' | 'children'> & { id: str
 export function DragPiece({ id, label, children, className = '', disabled, ...props }: PieceProps) {
   const match = useMatch();
   const piece = { id, label, children, className };
-  return <motion.button {...props} ref={node => match.registerPiece(id, node)} type="button" className={`drag-piece ${className}`} disabled={disabled || match.disabled}
+  return <motion.button {...props} ref={node => match.registerPiece(id, node)} type="button" className={`drag-piece adaptive-choice ${className}`} disabled={disabled || match.disabled}
     aria-label={`${label} 옮기기`} aria-describedby={match.helpId} aria-pressed={match.activeId === id}
     data-drag-piece={id} data-picked={match.activeId === id}
+    data-softened={match.softenedIds.includes(id)} data-guided={match.helpLevel > 0 && match.hintPieceId === id}
     data-help={match.hintPieceId === id && match.showHint}
     onPointerDown={event => match.start(event, piece)} onPointerMove={match.move} onPointerUp={match.end}
     onPointerCancel={match.cancelPointer} onLostPointerCapture={match.cancelPointer}
@@ -277,14 +295,16 @@ export function DropSlot({ id, label, children, className = '', filled = false }
 }) {
   const match = useMatch();
   const reduced = useReducedMotion();
+  const tapReady = !filled && !match.disabled && match.canPlaceSelected(id);
   return <motion.button type="button" ref={node => match.register(id, node)} aria-label={`${label}${filled ? ', 완성' : ' 놓는 자리'}`}
     animate={{ scale: match.overId === id && !reduced ? 1.15 : 1 }} transition={reduced ? { duration: 0 } : MAGNET_SPRING}
     aria-describedby={match.helpId} disabled={filled || match.disabled} onClick={() => match.drop(id)}
     data-drop-slot={id} data-ready={!!match.activeId && !filled} data-over={match.overId === id} data-filled={filled}
     data-help={match.hintTargetId === id && match.showHint && !filled}
+    data-tap-ready={tapReady}
     className={`drop-slot ${className}`}>
     {children}
-    {match.hintTargetId === id && match.showHint && !filled && <ScaffoldingHint ringOnly />}
+    {((match.hintTargetId === id && match.showHint && !filled) || tapReady) && <ScaffoldingHint ringOnly={!tapReady} />}
     {filled && <span className="drop-check" aria-hidden="true"><Check /></span>}
   </motion.button>;
 }

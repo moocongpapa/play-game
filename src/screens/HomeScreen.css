@@ -318,3 +318,24 @@
 }
 @media (max-width: 359px) { .home-games .welcome-copy h1 { font-size: 18px; }.home-games .welcome-friends { left: 37%; }.nav-toy { width: 50px; height: 54px; } }
 @media (prefers-reduced-motion: reduce) { .home-games .buddy-video-badge, .home-games .buddy-video-badge:hover { transform: none; transition: none; } }
+
+/* Picture-only cards and a small personal shelf; the main catalog never reorders. */
+.storybook-home .picture-game-card { padding: 6px; }
+.storybook-home .card-artwork-wrap { width: 100%; }
+.home-quick-shelf { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; margin-bottom: 16px; }
+.quick-game { position: relative; min-width: 0; min-height: 72px; padding: 4px; border: 2px solid #e7d9be; border-radius: 23px; background: #fffaf0; box-shadow: 0 4px #ded1b8; overflow: hidden; }
+.quick-game .game-artwork { width: 100%; height: auto; aspect-ratio: 1.35; border-radius: 17px; }
+.quick-game-marker { position: absolute; right: 7px; bottom: 7px; display: grid; place-items: center; width: 27px; height: 27px; border: 2px solid #fffdf5; border-radius: 50%; background: #f6dfb6; color: #9a7550; }
+.quick-game-marker svg { width: 15px; height: 15px; }
+.quick-game:active { transform: translateY(3px); box-shadow: 0 1px #ded1b8; }
+.home-story-pictures { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); flex: 1; gap: 7px; min-width: 0; height: 58px; }
+.home-story-pictures .game-artwork { width: 100%; height: 100%; aspect-ratio: auto; border-radius: 14px; }
+.storybook-home .picture-game-card:focus-visible, .quick-game:focus-visible { outline: 3px solid #8874ac; outline-offset: 3px; }
+@media (max-width: 639px) {
+  .home-quick-shelf { gap: 8px; margin-bottom: 12px; }
+  .quick-game { border-radius: 19px; }
+  .quick-game .game-artwork { border-radius: 13px; }
+  .home-story-pictures { height: 50px; gap: 4px; }
+  .storybook-home .picture-game-card { padding: 5px; }
+}
+@media (prefers-reduced-motion: reduce) { .quick-game:active { transform: none; } }

@@ -1,0 +1,23 @@
+/** Authored English copy for shared keepsakes; no translation provider is needed. */
+export const CONNECTED_PLAY_SPEECH: [string, string][] = [
+  ['{0} 빛깔 {1}이 반짝여!', 'Your colorful creation is sparkling!'],
+  ['촛불을 후~ 불어 볼까?', 'Shall we blow out the candles?'],
+  ['{0} {1}네! 냠냠!', 'Your colorful treat! Yum yum!'],
+  ['까만 종이를 쓱싹 문질러 볼까?', 'Shall we rub the dark paper?'],
+  ['무지개 공룡을 찾았네!', 'You found a rainbow dinosaur!'],
+  ['별빛 유니콘이 반짝여!', 'The starry unicorn is sparkling!'],
+  ['무지개 고래야, 안녕!', 'Hello, rainbow whale!'],
+  ['우리가 딴 과일로 소풍을 했네! 냠냠, 행복해!', 'We had a picnic with our fruit! Yum yum, I am happy!'],
+  ['네가 꾸민 케이크로 생일 파티를 했어! 고마워!', 'We had a birthday party with your cake! Thank you!'],
+  ['냠냠 먹고, 치카치카! 포근한 이불 속에서 좋은 꿈 꿔!', 'We ate and brushed our teeth! Sweet dreams under a cozy blanket!'],
+  ['우리가 딴 과일이네! 함께 먹자!', 'We picked this fruit! Let us eat together!'],
+  ['네가 꾸민 케이크네! 함께 먹자!', 'You decorated this cake! Let us eat together!'],
+  ['네가 꾸민 케이크도 맛있게 먹었어! 고마워!', 'Your cake was delicious too! Thank you!'],
+  ['우리가 딴 과일이라 더 맛있어! 배가 든든해. 고마워!', 'Our fruit tastes extra yummy! My tummy is full. Thank you!'],
+  ['네가 딴 {0}야! 맛있어!', 'You picked this {0}! Yummy!'],
+  ['네가 꾸민 케이크야! 정말 예쁘고 맛있어!', 'You decorated this cake! It is so pretty and yummy!'],
+  ['네가 고른 색 이불이야. 보들보들, 따뜻해.', 'A blanket in the color you chose. So soft and warm.'],
+  ['네가 색칠한 로켓이야! 같이 날아가자!', 'You painted this rocket! Let us fly together!'],
+  ['네가 색칠한 자동차야! 같이 타자!', 'You painted this car! Let us take a ride!'],
+  ['우리가 딴 {0}야! 하나씩 세어 볼까?', 'We picked these {0}! Shall we count them one by one?'],
+];

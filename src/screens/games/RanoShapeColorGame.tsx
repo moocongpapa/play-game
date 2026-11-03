@@ -253,7 +253,7 @@ export const RanoShapeColorGame: React.FC<RanoShapeColorGameProps> = ({
   };
 
   return (
-    <DragMatch canDrop={id => id === targetItem.id} resetKey={targetItem.id} disabled={!!selectedCorrectId || timeOut} hint={{ pieceId: targetItem.id, targetId: 'shape' }} onDrop={(id) => {
+    <DragMatch tapToPlace={ageGroup === 'baby' || ageGroup === 'sprout'} choiceIds={options.map(item => item.id)} canDrop={id => id === targetItem.id} resetKey={targetItem.id} disabled={!!selectedCorrectId || timeOut} hint={{ pieceId: targetItem.id, targetId: 'shape' }} onDrop={(id) => {
       const item = options.find(option => option.id === id);
       if (!item || !!selectedCorrectId || timeOut) return false;
       handleSelectCard(item);

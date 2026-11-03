@@ -1,19 +1,19 @@
 # 게임 목록과 등록 방법
 
-기준일: 2026-10-29 · [목차](README.md)
+기준일: 2026-11-04 · [목차](README.md)
 
-실제 홈 메뉴는 [GAME_CATALOG](../src/data/gameCatalog.ts)와 `availableGameIds`를 기준으로 합니다. 이름·설명은 접근성·음성·부모 정보에도 사용하지만 홈 카드는 놀이 그림을 중심으로 표시합니다. 아래 목록은 현재 소스의 40종을 전부 포함합니다.
+실제 홈 메뉴는 [GAME_CATALOG](../src/data/gameCatalog.ts)와 `availableGameIds`를 기준으로 합니다. 이름·설명은 접근성·음성·부모 정보에도 사용하지만 홈 카드는 놀이 그림을 중심으로 표시합니다. 아래 목록은 현재 소스의 44종을 전부 포함합니다.
 
 ## 연령과 난이도
 
 | 그룹 | 월령 판정 | 메뉴 게임 수 | 기본 보기 | 기본 문제 제한 | 수 세기 범위 |
 |---|---|---|---|---|---|
-| baby · 아기반 | 36개월 미만 | 22 | 2개 | 없음 | 1~3 |
-| sprout · 새싹반 | 36~47개월 | 38 | 4개 | 없음 | 1~7 |
-| bloom · 꽃잎반 | 48~59개월 | 40 | 4개 | 30초 | 1~10 |
-| star · 별님반 | 60개월 이상 | 40 | 4개 | 20초 | 1~20 |
+| baby · 아기반 | 36개월 미만 | 26 | 2개 | 없음 | 1~3 |
+| sprout · 새싹반 | 36~47개월 | 42 | 4개 | 없음 | 1~7 |
+| bloom · 꽃잎반 | 48~59개월 | 44 | 4개 | 30초 | 1~10 |
+| star · 별님반 | 60개월 이상 | 44 | 4개 | 20초 | 1~20 |
 
-기본 프로필은 유하, 2023-01-03입니다. 2026-10-09 기준 45개월로 새싹반입니다. 월령은 현재 날짜와 생일의 현지 날짜로 계산합니다. 보호자 설정에서 연령 자동 맞춤 또는 수동 단계 선택, 개별 놀이 ON/OFF(연령대별 필터·전체 켜기 포함)를 제어할 수 있습니다. 숫자 놀이터는 아기반 0~10, 새싹반 0~20, 꽃잎반·별님반 0~100 범위를 사용합니다.
+기본 프로필은 유하, 2023-01-03입니다. 2026-11-03 기준 46개월로 새싹반입니다. 월령은 현재 날짜와 생일의 현지 날짜로 계산합니다. 보호자 설정에서 연령 자동 맞춤 또는 수동 단계 선택, 개별 놀이 ON/OFF(연령대별 필터·전체 켜기 포함)를 제어할 수 있습니다. 숫자 놀이터는 아기반 0~10, 새싹반 0~20, 꽃잎반·별님반 0~100 범위를 사용합니다.
 
 ## 개별 게임
 
@@ -53,13 +53,17 @@
 | `trampoline_jump` | 통통 트램펄린 | 음악·창작 | 아기반부터 | [TrampolineJumpGame](../src/screens/games/TrampolineJumpGame.tsx) |
 | `block_tower` | 차곡차곡 블록 탑 | 음악·창작 | 아기반부터 | [BlockTowerGame](../src/screens/games/BlockTowerGame.tsx) |
 | `bubble_bath` | 뽀글뽀글 거품 목욕 | 생활·감정 | 아기반부터 | [BubbleBathGame](../src/screens/games/BubbleBathGame.tsx) |
-
 | `mirror_maze` | 공룡 알 톡톡 깨기 | 관찰·논리 | 아기반부터 | [MirrorMazeGame](../src/screens/games/MirrorMazeGame.tsx) |
 | `forest_peekaboo` | 숲속 친구들 까꿍 팡팡 | 관찰·논리 | 아기반부터 | [ForestPeekabooGame](../src/screens/games/ForestPeekabooGame.tsx) |
 | `magic_slime` | 반짝이 마법 슬라임 | 음악·창작 | 아기반부터 | [MagicSlimeGame](../src/screens/games/MagicSlimeGame.tsx) |
 | `magic_potion` | 알록달록 마법 물약 | 음악·창작 | 아기반부터 | [MagicPotionGame](../src/screens/games/MagicPotionGame.tsx) |
 | `fruit_catcher` | 바구니 과일 캐치 | 관찰·논리 | 아기반부터 | [FruitCatcherGame](../src/screens/games/FruitCatcherGame.tsx) |
 | `pipe_connect` | 통통 팝콘 프라이팬 | 음악·창작 | 아기반부터 | [PipeConnectGame](../src/screens/games/PipeConnectGame.tsx) |
+
+| `scratch_art` | 마법 스크래치 색칠 | 음악·창작 | 아기반부터 | [ScratchArtGame](../src/screens/games/ScratchArtGame.tsx) |
+| `cake_deco` | 케이크 크림 색칠 살롱 | 음악·창작 | 아기반부터 | [CakeDecoGame](../src/screens/games/CakeDecoGame.tsx) |
+| `beauty_salon` | 네일·분장 뷰티샵 | 음악·창작 | 아기반부터 | [BeautySalonGame](../src/screens/games/BeautySalonGame.tsx) |
+| `splash_color` | 물풍선 팡팡 색칠 | 음악·창작 | 아기반부터 | [SplashColorGame](../src/screens/games/SplashColorGame.tsx) |
 
 ## 홈 하단의 자유 놀이와 연속 놀이
 
@@ -68,9 +72,13 @@
 | [색칠 놀이](../src/screens/SketchbookScreen.tsx) | 도구·색상·도안/도화지·스티커 4개 메뉴, 한 단계 되돌리기, 캐릭터 살아나기, 저장·전시·이어 그리기·PNG 내보내기 |
 | [곤충 놀이터](../src/screens/BugGardenScreen.tsx) | 무당벌레·나비·애벌레·꿀벌·달팽이·풍뎅이·개미·귀뚜라미·잠자리·반딧불이·사마귀·사슴벌레 12종 관찰, 탭 인사·드래그 이동·멈춤·다시 모으기. 모바일 선택 버튼은 4개씩 3줄 |
 | [수족관](../src/screens/AquariumScreen.tsx) | 물고기·상어·고래·문어·오징어·해파리 친구들 관찰·이동·인사 |
-| [친구 놀이터](../src/screens/CharacterParkScreen.tsx) | 여덟 캐릭터가 한 명씩 움직임. 탭으로 방향 바꾸기·점프·구르기 등, 드래그 이동 |
+| [친구 놀이터](../src/screens/CharacterParkScreen.tsx) | 여덟 캐릭터가 한 명씩 움직임. 탭으로 방향 바꾸기·점프·구르기 등, 드래그 이동. 내 그림과 색칠한 탈것도 등장 |
 | [친구와 인사](../src/screens/CharacterTalkScreen.tsx) | 친구 선택, 머리·배·손 터치와 캐릭터마다 다른 인사 동작·음성 |
-| [친구의 하루](../src/screens/FriendDayScreen.tsx) | 선택 친구와 먹기·양치·까꿍·실로폰을 자동으로 순환 |
+| [이야기 놀이](../src/screens/FriendDayScreen.tsx) | 소풍(수확·세기·먹기), 생일(케이크·먹기·음악회), 잠자리(먹기·양치·잠자리)를 자동 연결 |
+
+전체 게임 목록은 페이징 없이 기존 순서로 유지합니다. 위쪽의 개인 바로가기 3개만 최근·방문 횟수에 따라 바뀝니다. 보호자가 끈 게임은 바로가기와 이야기에서도 제외합니다.
+
+색칠 게임 4종은 64px 이상 도구·그림 안내를 사용하며 중간 전환은 700ms, 세 장면 완료 후에도 자동 반복합니다. 결과물 연결과 검증 범위는 [연결 놀이 개선](connected-play-2026-11-03.md)에 정리했습니다.
 
 ## 코믹 인터랙션 & 홈 이스터에그 (신규 추가)
 

@@ -94,3 +94,7 @@ node --import tsx scripts/generate-care-voices.ts --generate
 FFmpeg가 필요하며 `CARE_FFMPEG`로 경로를 지정할 수 있습니다. **검증 명령도** manifest·재생 길이·catalog를 다시 저장합니다. 실행 후 변경을 검토합니다. 생성 모드는 포함 크레딧·초과 과금 꺼짐·배치 2,000자 한도를 확인하고, 불확실한 요청 기록이 남으면 중단합니다. 원음·요청 기록은 Git에서 제외된 `.audio-generation/care/`에 보존합니다.
 
 영상 더빙 제작·재사용은 [영상 제작 문서](../production/character-videos/README.md)와 `character-video-audio.ts`에서 관리합니다. 저장 오디오의 출처·기존 생성 배치 기록은 [자산 README](../public/audio/elevenlabs/README.md)에 있습니다. 부모 상태와 API 오류 확인은 [문제 해결](development.md)을 참고합니다.
+
+## 연결 놀이 안내
+
+수확 과일·꾸민 케이크·색칠한 탈것·고른 색 이불·이야기 마무리 안내는 `src/data/connectedPlaySpeech.ts`에 한국어/영어로 등록합니다. 기존 저장 음성·메모리 캐시를 우선 재사용하고 새 문장은 기존 서버 한도와 대체 음성 규칙을 따릅니다. 이 기능 구현/검증에서 유료 일괄 생성 도구를 실행하지 않았습니다.

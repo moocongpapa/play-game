@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import { Crown, Heart } from 'lucide-react';
 import { JourneyFrame, JourneyFinale, JourneyToy } from '../../components/PlayJourney';
 import { CareRoutine } from '../../components/development/CareRoutine';
@@ -11,12 +11,24 @@ import { CareFriend, PlayProgress } from '../../components/ToddlerPlay';
 import { DragMatch, DragPiece, DropSlot } from '../../components/DragMatch';
 import { ToyArtwork } from '../../components/ToyArtwork';
 import { FOOD_PLATES } from '../../data/toddlerPlay';
-import { playCareReaction, playCareSound } from '../../utils/soundEngine';
+import { playCareReaction, playCareSound, trySpeakIdleHint } from '../../utils/soundEngine';
+import { usePlayMemory } from '../../components/PlayMemoryContext';
+import { CakeKeepsake } from '../../components/PlayKeepsakeArtwork';
+import { BasketArt } from '../../components/development/DevelopmentArt';
+import type { PlayCake } from '../../utils/playMemory';
+import { buddyPlayMotion } from '../../utils/buddyPlay';
 
 import { useCareReactions } from '../../hooks/useCareReactions';
 import { CHARACTER_PERFORMANCE } from '../../utils/characterPerformance';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
 import { type ToddlerGameProps } from '../../hooks/useToddlerPlay';
+import './ConnectedPlay.css';
+
+type MealFood = { id: string; name: string; emoji: string; reactionId?: string; harvestId?: string; cake?: PlayCake };
+const HARVEST_PICTURES = { apple: '🍎', orange: '🍊', peach: '🍑' };
+function MealArtwork({ food }: { food: MealFood }) {
+  return food.cake ? <CakeKeepsake cake={food.cake} /> : <ToyArtwork emoji={food.emoji} />;
+}
 
 const STEPS: JourneyStep[] = [
   { id: 'menu', label: '오늘의 맛있는 접시', picture: '🍽️', guide: '무엇을 함께 먹을까? 마음에 드는 접시를 골라 줘!' },
@@ -27,23 +39,34 @@ const STEPS: JourneyStep[] = [
 export function FeedingGame(props: ToddlerGameProps) {
   useCareReactions(props.buddy, props.soundEnabled);
   const journey = usePlayJourney(props, STEPS);
-  const [menu, setMenu] = useState(0);
-  const plate = FOOD_PLATES[menu].items;
+  // The selected plate is a snapshot: consuming pantry fruit must not replace the
+  // remaining pieces while the child's hand is still on this meal.
+  const [plate, setPlate] = useState<MealFood[]>(() => FOOD_PLATES[0].items);
   return <JourneyFrame props={props} journey={journey} className="feeding-play">
     {journey.phase === 'finished' ? <JourneyFinale props={props} journey={journey} scene="picnic">
-      {plate.map(food => <JourneyToy key={food.id} props={props} label={`${food.name} 이야기 듣기`} voice={`${food.name}, 맛있다!`} reaction={FOOD_REACTIONS[food.id]?.motion === 'crunch' ? 'chew' : 'yum'}><ToyArtwork emoji={food.emoji}/></JourneyToy>)}
-    </JourneyFinale> : journey.step === 0 ? <ChooseMenu key={journey.key} props={props} locked={journey.locked} onChoose={index => { setMenu(index); journey.complete('맛있는 접시를 골랐네! 우리 함께 먹자!'); }}/>
+      {plate.map(food => <JourneyToy key={food.id} props={props} label={`${food.name} 이야기 듣기`} voice={`${food.name}, 맛있다!`} reaction={FOOD_REACTIONS[food.reactionId ?? food.id]?.motion === 'crunch' ? 'chew' : 'yum'}><MealArtwork food={food}/></JourneyToy>)}
+    </JourneyFinale> : journey.step === 0 ? <ChooseMenu key={journey.key} props={props} locked={journey.locked} onChoose={foods => { setPlate(foods); journey.complete(foods.some(food => food.harvestId) ? '우리가 딴 과일이네! 함께 먹자!' : foods.some(food => food.cake) ? '네가 꾸민 케이크네! 함께 먹자!' : '맛있는 접시를 골랐네! 우리 함께 먹자!'); }}/>
       : journey.step === 1 ? <FeedMeal key={journey.key} props={props} plate={plate} completed={journey.locked} finish={journey.complete}/>
       : <CareRoutine key={journey.key} props={props} kind={journey.step === 2 ? 'drink' : 'wipe'} locked={journey.locked} onComplete={journey.complete}/>}
   </JourneyFrame>;
 }
-function ChooseMenu({ props, locked, onChoose }: { props: ToddlerGameProps; locked: boolean; onChoose: (index: number) => void }) {
+function ChooseMenu({ props, locked, onChoose }: { props: ToddlerGameProps; locked: boolean; onChoose: (plate: MealFood[]) => void }) {
+  const { memory } = usePlayMemory();
   const chosen = useRef(false);
   const hint = useIdleScaffolding({ resetKey: 'menu', disabled: locked, voice: { text: STEPS[0].guide, buddy: props.buddy, soundEnabled: props.soundEnabled } });
-  return <div className="menu-choices" aria-label="먹고 싶은 접시 고르기">{FOOD_PLATES.map((plate, i) => <button key={plate.id} type="button" className="menu-plate" aria-label={`${plate.items.map(f => f.name).join(', ')} 접시`} disabled={locked}
-    onClick={() => { if (chosen.current) return; chosen.current = true; onChoose(i); }}>{plate.items.map(food => <ToyArtwork key={food.id} emoji={food.emoji}/>)}{i === 0 && hint.isIdle && <ScaffoldingHint/>}</button>)}</div>;
+  const keepsakes: MealFood[] = memory.fruitBasket.slice(0, memory.latestCake ? 3 : 4).map(fruit => ({
+    id: `picked-${fruit.id}`, harvestId: fruit.id, reactionId: fruit.kind,
+    name: fruit.label, emoji: HARVEST_PICTURES[fruit.kind],
+  }));
+  if (memory.latestCake) keepsakes.push({ id: 'my-cake', name: '내가 꾸민 케이크', emoji: '🎂', cake: memory.latestCake });
+  const plates: { id: string; items: MealFood[]; remembered?: boolean }[] = FOOD_PLATES.map(plate => ({ ...plate }));
+  if (keepsakes.length) plates[0] = { id: 'our-keepsakes', items: keepsakes, remembered: true };
+  return <div className="menu-choices" aria-label="먹고 싶은 접시 고르기">{plates.map((plate, i) => <button key={plate.id} type="button" className={`menu-plate ${plate.remembered ? 'our-keepsake-plate' : ''}`} aria-label={`${plate.remembered ? '우리가 준비한 ' : ''}${plate.items.map(f => f.name).join(', ')} 접시`} disabled={locked}
+    onClick={() => { if (chosen.current) return; chosen.current = true; onChoose(plate.items); }}>{plate.items.map(food => <MealArtwork key={food.id} food={food}/>)}{plate.remembered && <span className="meal-keepsake-badge" aria-hidden="true"><BasketArt color="#d8b88b"/></span>}{i === 0 && hint.isIdle && <ScaffoldingHint/>}</button>)}</div>;
 }
-function FeedMeal({ props, plate, completed, finish }: { props: ToddlerGameProps; plate: typeof FOOD_PLATES[number]['items']; completed: boolean; finish: (text: string) => void }) {
+function FeedMeal({ props, plate, completed, finish }: { props: ToddlerGameProps; plate: MealFood[]; completed: boolean; finish: (text: string) => void }) {
+  const { takeFruit } = usePlayMemory();
+  const reducedMotion = useReducedMotion();
   const { scheduleGameTimeout } = useGameTimeouts();
   const [eaten, setEaten] = useState<string[]>([]);
   const eatenRef = useRef(new Set<string>());
@@ -61,13 +84,14 @@ function FeedMeal({ props, plate, completed, finish }: { props: ToddlerGameProps
     if (!food || completed || busy.current || eatenRef.current.has(id)) return false;
     busy.current = true;
     eatenRef.current.add(id);
+    if (food.harvestId) takeFruit(food.harvestId);
     setEaten([...eatenRef.current]);
     setChewing(true);
     setSavoring(false);
     setAnticipating(false);
     setGaze({ x: 0, y: 0 });
-    setLastFood(id);
-    const motionKind = FOOD_REACTIONS[id]?.motion;
+    setLastFood(food.reactionId ?? food.id);
+    const motionKind = FOOD_REACTIONS[food.reactionId ?? food.id]?.motion;
     if (motionKind === 'sour' || motionKind === 'spicy' || motionKind === 'freeze' || motionKind === 'fizzy') {
       playCareSound(motionKind, props.soundEnabled);
     }
@@ -78,7 +102,9 @@ function FeedMeal({ props, plate, completed, finish }: { props: ToddlerGameProps
       setChewing(false);
       setSavoring(false);
       busy.current = false;
-      if (eatenRef.current.size === plate.length) finish(`${props.childName}야, 골고루 먹으니 힘이 쑥쑥! 배가 든든해. 고마워!`);
+      if (eatenRef.current.size === plate.length) finish(food.cake ? '네가 꾸민 케이크도 맛있게 먹었어! 고마워!' : food.harvestId ? '우리가 딴 과일이라 더 맛있어! 배가 든든해. 고마워!' : `${props.childName}야, 골고루 먹으니 힘이 쑥쑥! 배가 든든해. 고마워!`);
+      else if (food.harvestId) trySpeakIdleHint(`네가 딴 ${food.name}야! 맛있어!`, props.soundEnabled, props.buddy);
+      else if (food.cake) trySpeakIdleHint('네가 꾸민 케이크야! 정말 예쁘고 맛있어!', props.soundEnabled, props.buddy);
     }, mealDuration);
     return true;
   };
@@ -88,7 +114,8 @@ function FeedMeal({ props, plate, completed, finish }: { props: ToddlerGameProps
       setGaze(point && rect ? { x: Math.max(-6, Math.min(6, (point.x - rect.left - rect.width / 2) / 20)), y: Math.max(-4, Math.min(4, (point.y - rect.top - rect.height / 2) / 20)) } : { x: 0, y: 0 });
     }}>
       <div className="feeding-scene">
-        <div ref={portrait} style={{ '--chew-beat': `${CHARACTER_PERFORMANCE[props.buddy].chewBeat}ms` } as React.CSSProperties} className={`feeding-friend ${chewing ? `is-chewing food-${reaction?.motion}` : ''}`}>
+        <motion.div ref={portrait} style={{ '--chew-beat': `${CHARACTER_PERFORMANCE[props.buddy].chewBeat}ms` } as React.CSSProperties} className={`feeding-friend ${chewing ? `is-chewing food-${reaction?.motion}` : ''}`}
+          {...(!reducedMotion && (chewing || savoring) ? buddyPlayMotion(props.buddy, 'eat') : {})}>
           <CareFriend buddy={props.buddy} gaze={gaze} blush={chewing ? reaction?.blush : undefined} mouth={chewing ? 'chew' : savoring || completed ? 'smile' : anticipating ? 'open' : 'rest'} />
           {chewing && reaction && <><span className="food-reaction-word" key={lastFood}>{reaction.word}</span>
             {reaction.motion === 'crown' && <Crown className="broccoli-crown" fill="currentColor" />}
@@ -99,14 +126,14 @@ function FeedMeal({ props, plate, completed, finish }: { props: ToddlerGameProps
           </>}
           <DropSlot id="mouth" label="친구의 입" className="feeding-mouth" filled={completed}><span aria-hidden="true" /></DropSlot>
           {(chewing || completed) && <motion.span key={eaten.length} className="feeding-heart" initial={{ y: 15, opacity: 0, scale: .7 }} animate={{ y: -18, opacity: 1, scale: 1 }}><Heart fill="currentColor" /></motion.span>}
-        </div>
+        </motion.div>
 
         <div className="picnic-table-edge" aria-hidden="true" />
         <PlayProgress total={plate.length} done={eaten.length} label="맛본 음식" />
       </div>
       <div className="food-plate" aria-label="과일과 채소 접시">
         {plate.map(food => <DragPiece key={food.id} id={food.id} label={food.name} disabled={eaten.includes(food.id)} className={`food-piece ${eaten.includes(food.id) ? 'food-eaten' : ''}`}>
-          <ToyArtwork emoji={food.emoji} /><span className="sr-only">{food.name}</span>
+          <MealArtwork food={food}/><span className="sr-only">{food.name}</span>
         </DragPiece>)}
       </div>
     </DragMatch>;

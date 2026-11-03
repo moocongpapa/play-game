@@ -1,6 +1,8 @@
 import { GameCue } from '../../components/GameCue';
 import { useRoundTimer } from '../../hooks/useRoundTimer';
-import { useIdleScaffolding } from '../../hooks/useIdleScaffolding';
+import { useAdaptiveHelp } from '../../hooks/useAdaptiveHelp';
+import { softenedChoiceIds } from '../../utils/adaptiveHelp';
+import '../../components/AdaptiveHelp.css';
 import { ScaffoldingHint } from '../../components/ScaffoldingHint';
 import { RoundContinuation } from '../../components/RoundContinuation';
 import { pickNextRound } from '../../utils/roundDeck';
@@ -54,13 +56,14 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
     speakText(`아쉬워요! 시간이 다 되었어요. 다른 문제를 풀어볼까요?`, soundEnabled, { characterId: buddy });
   });
 
-  const { isIdle: showHint, reset: resetHint } = useIdleScaffolding({
+  const help = useAdaptiveHelp({
     resetKey: targetItem.id, disabled: !!selectedCorrectId || timeOut || !options.length,
     voice: { text: '여기 반짝이는 걸 눌러봐!', buddy, soundEnabled },
   });
+  const softenedIds = softenedChoiceIds(options.map(item => item.id), targetItem.id, help.level);
 
   const generateRound = () => {
-    resetHint();
+    help.reset();
     clearGameTimeouts();
     // 기존 타이머 클리어
     stopRoundTimer();
@@ -109,7 +112,7 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
   }, [ageGroup]);
 
   const handleSelectCard = (item: QuizItem, event: React.MouseEvent<HTMLButtonElement>) => {
-    if (selectedCorrectId || timeOut) return;
+    if (selectedCorrectId || timeOut || help.isBlocked()) return;
 
     if (item.id === targetItem.id) {
       stopRoundTimer();
@@ -132,6 +135,7 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
       }
       onCompleteQuiz(diffConfig.starsPerCorrect);
     } else {
+      help.recordMiss();
       setShakingCardId(item.id);
       setStreak(0);
       playWrongBoing(soundEnabled);
@@ -183,7 +187,8 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
           const isShaking = shakingCardId === item.id;
           const isSolved = selectedCorrectId === item.id;
           const isTarget = item.id === targetItem.id;
-          const shouldPulse = showHint && isTarget && !selectedCorrectId;
+          const shouldPulse = (help.isIdle || help.level > 0) && isTarget && !selectedCorrectId;
+          const softened = softenedIds.includes(item.id);
 
           return (
             <motion.button
@@ -194,14 +199,16 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
                   ? { x: [-10, 10, -8, 8, -4, 4, 0] }
                   : isSolved
                   ? { scale: [1, 1.12, 1], rotate: [0, 5, -5, 0] }
-                  : { y: [0, -4, 0] }
+                  : softened ? { y: 0 } : { y: [0, -4, 0] }
               }
               transition={{
                 duration: isShaking ? 0.5 : 2,
-                repeat: isShaking ? 0 : Infinity,
+                repeat: isShaking || softened ? 0 : Infinity,
               }}
               onClick={(e) => handleSelectCard(item, e)}
-              className={`game-choice flex flex-col items-center justify-center p-4 sm:p-6 rounded-3xl border-3 sm:border-4 cursor-pointer select-none transition-all shadow-md touch-manipulation min-h-[140px] sm:min-h-[180px] ${
+              disabled={help.blocked}
+              data-softened={softened} data-guided={shouldPulse}
+              className={`game-choice adaptive-choice flex flex-col items-center justify-center p-4 sm:p-6 rounded-3xl border-3 sm:border-4 cursor-pointer select-none transition-all shadow-md touch-manipulation min-h-[140px] sm:min-h-[180px] ${
                 isSolved
                   ? 'bg-[#E8F5E9] border-[#81C784] ring-4 ring-[#81C784]/30'
                   : shouldPulse
@@ -211,7 +218,7 @@ export const GgomiObjectGame: React.FC<GgomiObjectGameProps> = ({
             >
               <span className="text-5xl sm:text-7xl mb-1 sm:mb-2 drop-shadow-sm"><ToyArtwork emoji={item.emoji} /></span>
               <span className="sr-only">{item.koreanName}</span>
-              {shouldPulse && <ScaffoldingHint />}
+              {shouldPulse && <ScaffoldingHint ringOnly={!help.isIdle} />}
             </motion.button>
           );
         })}

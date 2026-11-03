@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'motion/react';
-import { Sparkles, Paintbrush } from 'lucide-react';
+import { Paintbrush, Hand } from 'lucide-react';
 import type { CharacterId, AgeGroup } from '../../types';
 import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { PlayGuide, PlayProgress } from '../../components/ToddlerPlay';
 import { PixiStageOverlay, type PixiStageHandle } from '../../components/PixiStageOverlay';
 import {
   speakText,
+  isSpeechBusy,
   stopAllSpeech,
   playSparkleChime,
   playCorrectFanfare,
@@ -20,6 +21,10 @@ import {
 import { fireConfetti, fireStarExplosion } from '../../utils/confetti';
 import { emitJuice } from '../../utils/juice';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
+import { useGameActivity } from '../../hooks/useGameActivity';
+import { RoundContinuation } from '../../components/RoundContinuation';
+import './CreativePlay.css';
+import { usePlayMemory } from '../../components/PlayMemoryContext';
 
 interface BeautySalonGameProps {
   buddy: CharacterId;
@@ -95,6 +100,11 @@ export const BeautySalonGame: React.FC<BeautySalonGameProps> = ({
   soundEnabled,
 }) => {
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+  const { paused, isBlocked } = useGameActivity();
+  const latest = useRef({ soundEnabled, onCompleteQuiz });
+  latest.current = { soundEnabled, onCompleteQuiz };
+  const [completed, setCompleted] = useState(false);
+  const { rememberColor } = usePlayMemory();
   const pixiRef = useRef<PixiStageHandle>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const roundDoneRef = useRef(false);
@@ -104,6 +114,7 @@ export const BeautySalonGame: React.FC<BeautySalonGameProps> = ({
   const currentSalon = SALON_ROUNDS[round] || SALON_ROUNDS[0];
 
   const [selectedBrush, setSelectedBrush] = useState(POLISH_COLORS[0]);
+  const zonesRef = useRef<Array<{ hex: string; gem: string } | null>>([null, null, null, null, null]);
   const [zoneColors, setZoneColors] = useState<Array<{ hex: string; gem: string } | null>>([
     null,
     null,
@@ -112,15 +123,15 @@ export const BeautySalonGame: React.FC<BeautySalonGameProps> = ({
     null,
   ]);
   const [isDone, setIsDone] = useState(false);
-  const [buddyBubble, setBuddyBubble] = useState('반짝이는 부분이나 아래 붓 버튼을 톡톡 눌러 칠해줘!');
 
   const setupRound = useCallback((roundIdx: number) => {
     roundDoneRef.current = false;
+    setCompleted(false);
+    zonesRef.current = [null, null, null, null, null];
     setZoneColors([null, null, null, null, null]);
     setIsDone(false);
     setSelectedBrush(POLISH_COLORS[roundIdx % POLISH_COLORS.length]);
-    const salon = SALON_ROUNDS[roundIdx] || SALON_ROUNDS[0];
-    setBuddyBubble(`${salon.title}! 톡톡 눌러서 알록달록 칠해줘!`);
+
   }, []);
 
   useEffect(() => {
@@ -129,8 +140,8 @@ export const BeautySalonGame: React.FC<BeautySalonGameProps> = ({
 
   useEffect(() => {
     const salon = SALON_ROUNDS[round] || SALON_ROUNDS[0];
-    speakText(salon.guideText, soundEnabled, { characterId: buddy });
-  }, [round, soundEnabled, buddy]);
+    if (!isBlocked() && !isSpeechBusy()) speakText(salon.guideText, soundEnabled, { characterId: buddy });
+  }, [round, soundEnabled, buddy, isBlocked]);
 
   useEffect(() => {
     return () => {
@@ -140,15 +151,16 @@ export const BeautySalonGame: React.FC<BeautySalonGameProps> = ({
   }, [clearGameTimeouts]);
 
   const finishRound = useCallback(
-    (salon: SalonRound, currentRound: number) => {
-      if (roundDoneRef.current) return;
+    (salon: SalonRound, currentRound: number, color: typeof POLISH_COLORS[number]) => {
+      if (isBlocked() || roundDoneRef.current) return;
       roundDoneRef.current = true;
       setIsDone(true);
 
       playCorrectFanfare(soundEnabled);
       playCareSound('giggle', soundEnabled);
-      setBuddyBubble('우와! 거울을 봐! 너무 예쁘고 웃겨! 까르르!');
-      speakText(salon.completedVoice, soundEnabled, { characterId: buddy });
+
+      const detail = salon.id === 'nails' ? '손톱' : salon.id === 'facepaint' ? '고양이 수염' : '나비 날개';
+      speakText(`${color.label} 빛깔 ${detail}이 반짝여!`, soundEnabled, { characterId: buddy, englishText: salon.id === 'nails' ? 'Your colorful nails are sparkling!' : salon.id === 'facepaint' ? 'Your kitty whiskers are ready! Meow!' : 'Your butterfly wings are sparkling!' });
 
       fireStarExplosion();
       if (stageRef.current) {
@@ -164,22 +176,23 @@ export const BeautySalonGame: React.FC<BeautySalonGameProps> = ({
 
       scheduleGameTimeout(() => {
         if (currentRound + 1 < totalRounds) {
-          playStarGain(soundEnabled);
+          playStarGain(latest.current.soundEnabled);
           setRound((r) => r + 1);
         } else {
-          playCelebrationFanfare(soundEnabled);
+          playCelebrationFanfare(latest.current.soundEnabled);
           fireConfetti();
-          onCompleteQuiz(3);
+          setCompleted(true);
+          latest.current.onCompleteQuiz(3);
         }
-      }, 2500);
+      }, 700);
     },
-    [buddy, onCompleteQuiz, scheduleGameTimeout, soundEnabled]
+    [buddy, isBlocked, scheduleGameTimeout, soundEnabled]
   );
 
   const handlePaintZone = useCallback(
     (idx: number, brushOverride = selectedBrush, e?: React.MouseEvent<HTMLElement | SVGElement>) => {
       if (e) e.stopPropagation();
-      if (roundDoneRef.current) return;
+      if (isBlocked() || roundDoneRef.current) return;
 
       playJellyTap(soundEnabled);
       playBouncyBoing(soundEnabled);
@@ -197,102 +210,54 @@ export const BeautySalonGame: React.FC<BeautySalonGameProps> = ({
         }
       }
 
-      setZoneColors((prev) => {
-        const next = [...prev];
-        next[idx] = { hex: brushOverride.hex, gem: brushOverride.gem };
-        const paintedCount = next.filter(Boolean).length;
-        playRisingStepChime(paintedCount, 5, soundEnabled);
-
-        if (paintedCount >= 5) {
-          finishRound(currentSalon, round);
-        } else {
-          setBuddyBubble(`우와 반짝반짝! ${5 - paintedCount}곳 더 칠해볼까?`);
-        }
-        return next;
-      });
+      const empty = zonesRef.current.findIndex(zone => zone === null);
+      const target = zonesRef.current[idx] && empty !== -1 ? empty : idx;
+      const next = [...zonesRef.current];
+      next[target] = { hex: brushOverride.hex, gem: brushOverride.gem };
+      zonesRef.current = next;
+      setZoneColors(next);
+      rememberColor({ hex: brushOverride.hex, label: brushOverride.label });
+      const painted = next.filter(Boolean).length;
+      playRisingStepChime(painted, 5, soundEnabled);
+      if (painted === 5) finishRound(currentSalon, round, brushOverride);
     },
-    [currentSalon, finishRound, round, selectedBrush, soundEnabled]
+    [currentSalon, finishRound, isBlocked, rememberColor, round, selectedBrush, soundEnabled]
   );
 
-  const handleQuickPaintNext = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>) => {
-      e.stopPropagation();
-      if (roundDoneRef.current) return;
-      const nextEmpty = zoneColors.findIndex((z) => z === null);
-      const targetIdx = nextEmpty !== -1 ? nextEmpty : Math.floor(Math.random() * 5);
-      const randomColor = POLISH_COLORS[(targetIdx + round) % POLISH_COLORS.length];
-      setSelectedBrush(randomColor);
-      handlePaintZone(targetIdx, randomColor, e);
-    },
-    [handlePaintZone, round, zoneColors]
-  );
+  const handleQuickPaintNext = useCallback((e?: React.MouseEvent<HTMLElement | SVGElement>) => {
+    e?.stopPropagation();
+    if (isBlocked() || roundDoneRef.current) return;
+    const empty = zonesRef.current.findIndex(zone => zone === null);
+    if (empty !== -1) handlePaintZone(empty, selectedBrush, e);
+  }, [handlePaintZone, isBlocked, selectedBrush]);
 
   const paintedCount = zoneColors.filter(Boolean).length;
 
   return (
     <div
       ref={stageRef}
-      className="beauty-salon-stage relative flex flex-col justify-between w-full h-[var(--game-play-height,calc(100dvh-84px))] min-h-[var(--game-play-height,calc(100dvh-84px))] rounded-3xl overflow-hidden select-none bg-gradient-to-b from-[#FAF5FF] via-[#FDF2F8] to-[#FCE7F3] border-3 border-[#D946EF] p-3 sm:p-5"
+      data-paused={paused}
+      className="beauty-salon-stage creative-play relative flex flex-col justify-between w-full h-[var(--game-play-height,calc(100dvh-84px))] min-h-[var(--game-play-height,calc(100dvh-84px))] rounded-3xl overflow-hidden select-none bg-gradient-to-b from-[#FAF5FF] via-[#FDF2F8] to-[#FCE7F3] border-3 border-[#D946EF] p-3 sm:p-5"
     >
-      <style>{`
-        @keyframes zoneGuidePulse {
-          0%, 100% { transform: scale(1); opacity: 0.85; }
-          50% { transform: scale(1.1); opacity: 1; }
-        }
-        .salon-zone-pulse {
-          animation: zoneGuidePulse 1.1s ease-in-out infinite;
-          @media (prefers-reduced-motion: reduce) {
-            animation: none;
-          }
-        }
-      `}</style>
-
       <PixiStageOverlay ref={pixiRef} className="z-20 pointer-events-none" />
 
-      {/* Top Header Bar */}
-      <div className="relative z-30 flex items-center justify-between w-full gap-2">
-        <PlayGuide
-          buddy={buddy}
-          title="네일 & 페이스페인팅샵"
-          guide={currentSalon.guideText}
-          soundEnabled={soundEnabled}
-          happy={isDone}
-        />
-
-        <div className="flex items-center gap-2 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full shadow-md border-2 border-[#D946EF]">
-          <span className="text-lg" aria-hidden="true">{currentSalon.emoji}</span>
-          <span className="font-black text-[#A21CAF] text-xs sm:text-sm whitespace-nowrap">
-            {currentSalon.badge} · {paintedCount}/5
-          </span>
+      <div className="creative-play-header">
+        <PlayGuide buddy={buddy} title="반짝이 분장 놀이" guide={currentSalon.guideText} soundEnabled={soundEnabled} happy={isDone} />
+        <div className="creative-pictorial-guide" aria-hidden="true">
+          <Paintbrush />
+          <span>{currentSalon.emoji}</span>
         </div>
-
-        <PlayProgress total={totalRounds} done={round} label={`${round + 1}/${totalRounds}`} />
-      </div>
-
-      {/* Stylist Buddy Banner */}
-      <div className="relative z-20 flex items-center justify-center gap-3 my-0.5">
-        <div className="flex items-center gap-2.5 bg-white/95 backdrop-blur-sm px-4 py-1.5 rounded-3xl border-2 border-[#F0ABFC] shadow-md">
-          <div className="relative w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center">
-            <CharacterAvatar
-              id={buddy}
-              size="sm"
-              mood={isDone ? 'excited' : paintedCount > 0 ? 'happy' : 'still'}
-            />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs font-extrabold text-[#C026D3]">
-              {round + 1}단계 · {currentSalon.title}
-            </span>
-            <span className="text-xs sm:text-sm font-black text-[#701A75]">{buddyBubble}</span>
-          </div>
-        </div>
+        <PlayProgress total={totalRounds} done={completed ? totalRounds : round} label={`${round + 1}/${totalRounds}`} />
       </div>
 
       {/* Center Salon Mirror / Nail Cushion Stage */}
-      <div className="relative z-20 flex-1 flex flex-col items-center justify-center min-h-0">
+      <div className="creative-play-body">
         {currentSalon.id === 'nails' ? (
           /* Round 1: Big Cute Hand & 5 Paintable Fingernails */
-          <div className="relative w-72 h-56 sm:w-80 sm:h-64 flex items-center justify-center">
+          <div className="creative-play-art"
+            role="button" tabIndex={0} aria-label="손톱에 색칠하기" onClick={handleQuickPaintNext}
+            onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); handleQuickPaintNext(); } }}>
+            {paintedCount === 0 && <Hand className="creative-gesture" aria-hidden="true" />}
             <svg viewBox="0 0 310 240" className="w-full h-full overflow-visible drop-shadow-xl">
               {/* Velvet Heart Cushion */}
               <ellipse cx="155" cy="185" rx="135" ry="44" fill="#FBCFE8" stroke="#EC4899" strokeWidth="4" />
@@ -347,9 +312,12 @@ export const BeautySalonGame: React.FC<BeautySalonGameProps> = ({
           </div>
         ) : (
           /* Round 2 & 3: Lighted Vanity Mirror with Buddy Face-Painting Zones */
-          <div className="relative w-60 h-56 sm:w-68 sm:h-64 flex items-center justify-center rounded-full bg-gradient-to-b from-[#FFF1F2] to-[#FCE7F3] border-[8px] border-[#FACC15] shadow-[0_12px_32px_rgba(217,70,239,0.28)]">
+          <div className="creative-play-art creative-mirror-art rounded-full bg-gradient-to-b from-[#FFF1F2] to-[#FCE7F3] border-[8px] border-[#FACC15] shadow-[0_12px_32px_rgba(217,70,239,0.28)]"
+            role="button" tabIndex={0} aria-label="친구 얼굴 꾸미기" onClick={handleQuickPaintNext}
+            onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); handleQuickPaintNext(); } }}>
+            {paintedCount === 0 && <Hand className="creative-gesture" aria-hidden="true" />}
             {/* Large Buddy Avatar inside Mirror */}
-            <div className="w-44 h-44 sm:w-52 sm:h-52 flex items-center justify-center pointer-events-none">
+            <div className="creative-mirror-avatar flex items-center justify-center pointer-events-none">
               <CharacterAvatar
                 id={buddy}
                 size="xl"
@@ -519,47 +487,17 @@ export const BeautySalonGame: React.FC<BeautySalonGameProps> = ({
           </div>
         )}
 
-        {/* Polish & Face-Paint Palette + Quick Brush Button */}
-        <div className="relative z-30 mt-2 flex flex-col items-center gap-2">
-          <div className="flex items-center justify-center gap-2.5 bg-white/95 px-4 py-1.5 rounded-full shadow-md border-2 border-[#F0ABFC]">
-            {POLISH_COLORS.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={(e) => {
-                  setSelectedBrush(c);
-                  const emptyIdx = zoneColors.findIndex((z) => z === null);
-                  if (emptyIdx !== -1) {
-                    handlePaintZone(emptyIdx, c, e);
-                  } else {
-                    playJellyTap(soundEnabled);
-                  }
-                }}
-                aria-label={`${c.label} 브러시 선택 및 색칠`}
-                style={{ backgroundColor: c.hex }}
-                className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full border-3 flex items-center justify-center text-base transition-transform ${
-                  selectedBrush.id === c.id ? 'scale-115 border-[#1E293B] shadow-md' : 'border-white'
-                }`}
-              >
-                <span aria-hidden="true">{c.gem}</span>
-              </button>
-            ))}
-          </div>
-
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.92 }}
-            onClick={handleQuickPaintNext}
-            className="flex items-center gap-2 px-5 py-2 rounded-full font-black text-sm sm:text-base text-white shadow-lg border-3 border-[#701A75] bg-gradient-to-r from-[#D946EF] via-[#EC4899] to-[#8B5CF6]"
-          >
-            <Paintbrush className="w-5 h-5 text-pink-100" />
-            <span>
-              {isDone ? '블링블링 메이크업 완성! ✨' : '톡톡! 반짝이 브러시로 색칠하기 💅'}
-            </span>
-            <Sparkles className="w-5 h-5 text-yellow-200" />
-          </motion.button>
+        <div className="creative-tool-shelf" aria-label="색깔 붓">
+          {POLISH_COLORS.map(c => <button key={c.id} type="button" className="creative-tool" disabled={isDone} aria-label={`${c.label} 브러시로 칠하기`} aria-pressed={selectedBrush.id === c.id} style={{ backgroundColor: c.hex }} onClick={e => {
+            if (isBlocked() || roundDoneRef.current) return;
+            setSelectedBrush(c);
+            const empty = zonesRef.current.findIndex(zone => zone === null);
+            if (empty !== -1) handlePaintZone(empty, c, e);
+          }}><span aria-hidden="true">{c.gem}</span></button>)}
+          <motion.button type="button" whileTap={{ scale: .92 }} className="creative-tool creative-action-tool" disabled={isDone} aria-label="다음 곳에 색칠하기" onClick={handleQuickPaintNext}><Paintbrush /></motion.button>
         </div>
       </div>
+      {completed && <RoundContinuation delayMs={700} onNext={() => setRound(0)} />}
     </div>
   );
 };

@@ -1,6 +1,8 @@
 import { GameCue } from '../../components/GameCue';
 import { useRoundTimer } from '../../hooks/useRoundTimer';
-import { useIdleScaffolding } from '../../hooks/useIdleScaffolding';
+import { useAdaptiveHelp } from '../../hooks/useAdaptiveHelp';
+import { softenedChoiceIds } from '../../utils/adaptiveHelp';
+import '../../components/AdaptiveHelp.css';
 import { ScaffoldingHint } from '../../components/ScaffoldingHint';
 import { RoundContinuation } from '../../components/RoundContinuation';
 import { useSoundClue } from '../../hooks/useSoundClue';
@@ -60,13 +62,14 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
     speakText(`시간이 완료되었어요. 다른 소리를 들려줄게요!`, soundEnabled, { characterId: buddy });
   });
 
-  const { isIdle: showHint, reset: resetHint } = useIdleScaffolding({
+  const help = useAdaptiveHelp({
     resetKey: targetItem.id, disabled: !!selectedCorrectId || timeOut || !options.length,
     voice: { text: '여기 반짝이는 친구를 눌러보자!', buddy, soundEnabled },
   });
+  const softenedIds = softenedChoiceIds(options.map(item => item.id), targetItem.id, help.level);
 
   const generateRound = () => {
-    resetHint();
+    help.reset();
     clearGameTimeouts();
     stopRoundTimer();
 
@@ -102,7 +105,7 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
   };
 
   const handleSelectCard = (item: typeof itemPool[0], event: React.MouseEvent<HTMLButtonElement>) => {
-    if (selectedCorrectId || timeOut) return;
+    if (selectedCorrectId || timeOut || help.isBlocked()) return;
 
     const rect = event.currentTarget.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
@@ -119,6 +122,7 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
       speakText(`딩동댕! 정답이에요! 귀여운 ${item.name}!`, soundEnabled, { characterId: buddy });
       onCompleteQuiz(diffConfig.starsPerCorrect);
     } else {
+      help.recordMiss();
       setShakingCardId(item.id);
       playWrongBoing(soundEnabled);
       speakText(`다시 소리를 들어보아요!`, soundEnabled, { characterId: buddy });
@@ -193,7 +197,8 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
           const isShaking = shakingCardId === item.id;
           const isSolved = selectedCorrectId === item.id;
           const isTarget = item.id === targetItem.id;
-          const shouldPulse = showHint && isTarget && !selectedCorrectId;
+          const shouldPulse = (help.isIdle || help.level > 0) && isTarget && !selectedCorrectId;
+          const softened = softenedIds.includes(item.id);
 
           return (
             <motion.button
@@ -208,7 +213,9 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
               }
               transition={{ duration: 0.5 }}
               onClick={(e) => handleSelectCard(item, e)}
-              className={`game-choice flex flex-col items-center justify-center p-4 sm:p-5 rounded-3xl border-3 sm:border-4 cursor-pointer select-none transition-all shadow-md touch-manipulation min-h-[130px] sm:min-h-[160px] ${
+              disabled={help.blocked}
+              data-softened={softened} data-guided={shouldPulse}
+              className={`game-choice adaptive-choice flex flex-col items-center justify-center p-4 sm:p-5 rounded-3xl border-3 sm:border-4 cursor-pointer select-none transition-all shadow-md touch-manipulation min-h-[130px] sm:min-h-[160px] ${
                 isSolved
                   ? 'bg-[#E8F5E9] border-[#66BB6A]'
                   : shouldPulse
@@ -218,7 +225,7 @@ export const DochiSoundGame: React.FC<DochiSoundGameProps> = ({
             >
               <span className="text-5xl sm:text-6xl mb-1 sm:mb-2"><ToyArtwork emoji={item.emoji} /></span>
               <span className="sr-only">{item.name}</span>
-              {shouldPulse && <ScaffoldingHint />}
+              {shouldPulse && <ScaffoldingHint ringOnly={!help.isIdle} />}
             </motion.button>
           );
         })}

@@ -1,0 +1,37 @@
+.story-picker { display: grid; gap: 16px; width: min(100%, 740px); margin: auto; padding: 12px 0 24px; }
+.story-picker-buddy { justify-self: center; }
+.story-choice { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 136px; padding: 12px; border: 2px solid #ded5bd; border-radius: 28px; background: #f4eed9; box-shadow: inset 0 3px #fff9, 0 5px #d1c5ad; overflow: hidden; }
+.story-choice.story-party { background: linear-gradient(135deg,#fff1df,#f5dfe8); border-color: #e7c8cd; }
+.story-choice.story-night { background: linear-gradient(135deg,#e5e5f8,#c9dbe8); border-color: #bdcbdf; }
+.story-choice:active { transform: translateY(3px) scale(.985); }
+.story-choice-picture { font-size: 42px; flex: 0 0 52px; }
+.story-choice-scenes { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; flex: 1; min-width: 0; }
+.story-choice-scenes .game-artwork { width: 100%; aspect-ratio: 1; border-radius: 18px; }
+.story-choice > svg { flex: 0 0 22px; color: #776951; }
+.story-empty-home { width: 80px; height: 80px; border-radius: 24px; background: #fff8e4; margin: auto; }
+.connected-story .day-path { margin-bottom: 8px; }
+.connected-story .day-path > div[aria-current='step'] { box-shadow: 0 0 0 3px #b3c994; background: #fff9dd; }
+.connected-story .day-finale { position: relative; }
+.story-cake { position: absolute; left: 50%; bottom: 8%; width: min(42%,220px); transform: translateX(-50%); }
+.story-finale-heart { position: absolute; top: 12%; right: 20%; width: 44px; height: 44px; fill: #df9cb0; stroke: #c18298; }
+.story-sleep-finale { position: relative; display: grid; place-items: center; width: 100%; min-height: 380px; border-radius: 32px; background: radial-gradient(ellipse at 50% 65%,#d4d6e7,#6d799e); }
+.story-sleep-finale > .care-friend { width: min(75%,300px); }
+.story-sleep-finale > svg:first-child { position: absolute; top: 30px; left: 25px; width: 52px; height: 52px; color: #ffe7a7; fill: currentColor; }
+.story-night .story-finale-heart { display: none; }
+@media (max-width: 1024px) {
+  .app-world[data-screen='day'] .connected-story { --game-play-height: calc(var(--mobile-game-height) - 52px); height: var(--mobile-game-height); }
+  .app-world[data-screen='day'] .connected-story .day-path { height: 48px; padding: 2px 8px; margin-block: 0; }
+  .app-world[data-screen='day'] .connected-story > .game-stage { height: var(--game-play-height); min-height: var(--game-play-height); flex: 1 1 0; }
+  .app-world[data-screen='day'] .connected-story .game-surface > .creative-play { height: 100%; min-height: 0; }
+}
+@media (max-width: 699px) {
+  .story-picker { gap: 14px; padding-block: 8px 24px; }
+  .story-choice { min-height: 128px; gap: 6px; padding: 10px; }
+  .story-choice-picture { font-size: 34px; flex-basis: 38px; }
+  .story-choice-scenes { gap: 4px; }
+  .story-choice > svg { flex-basis: 16px; width: 16px; }
+  .app-world[data-screen='day'] .connected-story .day-path { height: 48px; padding: 2px 8px; margin-bottom: 0; }
+  .app-world[data-screen='day'] .connected-story .day-path > div { width: 42px; height: 42px; }
+  .app-world[data-screen='day'] .connected-story .day-path .game-artwork { width: 32px; height: 32px; }
+}
+@media (prefers-reduced-motion: reduce) { .story-choice:active { transform: none; } }

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ArrowLeftRight, ArrowRight, Hand, Heart, Play } from 'lucide-react';
+import { ArrowLeftRight, ArrowRight, Hand, Heart, History, Play, Sparkles } from 'lucide-react';
 import { CHARACTER_LIST, CHARACTERS } from '../data/characters';
 import { CharacterAvatar } from '../components/CharacterAvatar';
 import { CharacterCharmVideoModal } from '../components/CharacterCharmVideoModal';
@@ -8,7 +8,9 @@ import { SillyCostumeModal } from '../components/SillyCostumeModal';
 import { PlayNavArtwork, type PlayNavKind } from '../components/PlayNavArtwork';
 import { GameArtwork } from '../components/GameArtwork';
 import { ToyArtwork } from '../components/ToyArtwork';
-import { FRIEND_DAY } from '../data/friendDay';
+import { availableFriendStories } from '../data/friendDay';
+import { usePlayMemory } from '../components/PlayMemoryContext';
+import { homeQuickGames } from '../utils/playMemory';
 import { availableGameIds, GAME_CATALOG } from '../data/gameCatalog';
 import { getTimeGreeting } from '../data/characterGreetings';
 import { playCareSound, playJellyTap, playSparkleChime, speakText, stopAllSpeech } from '../utils/soundEngine';
@@ -53,6 +55,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
 
   // Keep the same picture in the same place when the child changes friends.
   const games = availableGameIds(age, disabledGames);
+  const { memory } = usePlayMemory();
+  const quickGames = homeQuickGames(memory, games);
+  const stories = availableFriendStories(age, disabledGames);
   const timeGreeting = getTimeGreeting();
 
   useEffect(() => {
@@ -84,8 +89,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
 
   const renderCard = (id: GameId) => {
     const game = GAME_CATALOG[id];
-    const categoryTag = game.badge ? game.badge.split('·')[0].trim() : '';
-    const featureText = game.badge ? (game.badge.split('·')[1]?.trim() || game.badge) : game.prompt;
 
     return (
       <button
@@ -100,20 +103,6 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
       >
         <div className="card-artwork-wrap">
           <GameArtwork gameId={id} buddy={selectedCharacter} />
-          {categoryTag && (
-            <span className="card-floating-badge">
-              {categoryTag}
-            </span>
-          )}
-        </div>
-        <div className="game-card-caption">
-          <div className="card-title-col">
-            <strong className="card-title">{game.title}</strong>
-            <span className="card-desc">{featureText}</span>
-          </div>
-          <span className="play-medallion" aria-hidden="true">
-            <Play fill="currentColor" size={16} />
-          </span>
         </div>
       </button>
     );
@@ -304,9 +293,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ selectedCharacter, onSel
         <span className="friend-name">{friend.name}<span className="friend-arrow"><ArrowRight size={20} /></span></span>
       </button>)}</div>
     </section> : <section aria-label="게임 선택" className="games-section">
-      <button className="friend-day-card" onClick={() => { stopAllSpeech(); playJellyTap(soundEnabled); onStartDay(); }} aria-label={`${buddy.name}의 하루 함께 놀기`}>
-        <CharacterAvatar id={selectedCharacter} size="md" mood="still" /><div className="friend-day-copy"><span className="day-mini-pictures" aria-hidden="true">{FRIEND_DAY.map(item => <GameArtwork key={item.gameId} gameId={item.gameId} buddy={selectedCharacter} />)}</span></div><ArrowRight aria-hidden="true" />
-      </button>
+      {quickGames.length > 0 && <section className="home-quick-shelf" aria-label="최근 놀이와 좋아하는 놀이">
+        {quickGames.map((id, index) => <button type="button" key={id} className={`quick-game theme-${GAME_CATALOG[id].theme}`}
+          aria-label={`${index === 0 && memory.recentGames.includes(id) ? '최근 놀이' : index === 1 ? '좋아하는 놀이' : '함께 해볼 놀이'}, ${GAME_CATALOG[id].title} 시작`}
+          onClick={() => { stopAllSpeech(); playJellyTap(soundEnabled); onStartGame(id, selectedCharacter); }}>
+          <GameArtwork gameId={id} buddy={selectedCharacter}/>
+          <span className="quick-game-marker" aria-hidden="true">{index === 0 ? <History/> : index === 1 ? <Heart fill="currentColor"/> : <Sparkles/>}</span>
+        </button>)}
+      </section>}
+      {stories.length > 0 && <button className="friend-day-card" onClick={() => { stopAllSpeech(); playJellyTap(soundEnabled); onStartDay(); }} aria-label={`${buddy.name}와 소풍, 생일, 잠자리 이야기 고르기`}>
+        <CharacterAvatar id={selectedCharacter} size="md" mood="still"/><span className="home-story-pictures" aria-hidden="true">{stories.map(story => <GameArtwork key={story.id} gameId={story.steps[0].gameId} buddy={selectedCharacter}/>)}</span><ArrowRight aria-hidden="true"/>
+      </button>}
       {(['hands', 'care'] as const).map(category => <div className="discovery-menu-group" key={category}><div className="section-heading"><span className="step-badge">{category === 'hands' ? <Hand size={23} /> : <Heart size={23} />}</span><h2>{category === 'hands' ? '손끝으로 쏙쏙!' : '마음도 쑥쑥!'}</h2></div><div className="game-card-grid">{games.filter(id => GAME_CATALOG[id].category === category).map(renderCard)}</div></div>)}
       <div className="section-heading"><span className="step-badge"><Play size={23}/></span><h2>다른 놀이도 해볼까?</h2></div>
       <div className="game-card-grid">{games.filter(id => !GAME_CATALOG[id].category).map(renderCard)}</div>

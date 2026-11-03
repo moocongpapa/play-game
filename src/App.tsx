@@ -19,6 +19,7 @@ import { advancePlayTime, createForegroundClock, localPlayDate, refreshPlaySessi
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { getComboState, recordPlaySuccess } from './utils/juice';
 import { resetPlayPreferences } from './utils/resetPlayPreferences';
+import { PlayMemoryProvider, usePlayMemory } from './components/PlayMemoryContext';
 
 const OnboardingScreen = lazy(() => import('./screens/OnboardingScreen').then(module => ({ default: module.OnboardingScreen })));
 const FriendDayScreen = lazy(() => import('./screens/FriendDayScreen').then(m => ({ default: m.FriendDayScreen })));
@@ -77,6 +78,11 @@ const BeautySalonGame = lazy(() => import('./screens/games/BeautySalonGame').the
 const SplashColorGame = lazy(() => import('./screens/games/SplashColorGame').then(module => ({ default: module.SplashColorGame })));
 
 export default function App() {
+  return <PlayMemoryProvider><AppContent/></PlayMemoryProvider>;
+}
+
+function AppContent() {
+  const { rememberVisit } = usePlayMemory();
   useViewportLock();
   const mainRef = useRef<HTMLElement>(null);
   const [appState, setAppState] = useState<AppState>(() => {
@@ -160,6 +166,7 @@ export default function App() {
   const { clearGameTimeouts } = useGameTimeouts();
   const [currentScreen, setCurrentScreen] = useState<'home' | 'game' | 'day' | 'bugs' | 'stickers' | 'aquarium' | 'park' | 'talk' | 'parent' | 'drawing'>('home');
   const [activeGameId, setActiveGameId] = useState<GameId | null>(null);
+  const [dayGameId, setDayGameId] = useState<GameId | null>(null);
   const [isParentGateOpen, setIsParentGateOpen] = useState(false);
   const homeScrollTopRef = useRef(0);
   const previousHomeStepRef = useRef(homeStep);
@@ -213,7 +220,7 @@ export default function App() {
     setAudioPreferences(appState.soundEnabled, appState.ttsEnabled !== false);
   }, [appState.soundEnabled, appState.ttsEnabled, appState.speechLanguage, appState.childProfile?.name]);
 
-  const quietPlay = currentScreen === 'game' && activeGameId === 'goodnight_sleep';
+  const quietPlay = (currentScreen === 'game' && activeGameId === 'goodnight_sleep') || (currentScreen === 'day' && dayGameId === 'goodnight_sleep');
 
   // Resume only in a user gesture; stop background audio when the app is hidden.
   useEffect(() => {
@@ -311,6 +318,7 @@ export default function App() {
 
   const handleStartGame = (gameId: GameId, characterId: CharacterId) => {
     stopAllSpeech();
+    rememberVisit(gameId, characterId);
     setHomeStep('games');
     setAppState((prev) => ({ ...prev, selectedCharacter: characterId }));
     setActiveGameId(gameId);
@@ -386,7 +394,7 @@ export default function App() {
         );
 
       case 'day':
-        return <FriendDayScreen buddy={appState.selectedCharacter} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} microphoneEnabled={appState.microphoneEnabled === true} onCompleteGame={id => handleCompleteQuiz(1, id)} onGoHome={handleGoHome} />;
+        return <FriendDayScreen buddy={appState.selectedCharacter} soundEnabled={soundEnabled} ageGroup={ageGroup} childName={childName} microphoneEnabled={appState.microphoneEnabled === true} disabledGames={appState.disabledGames} onActivityChange={setDayGameId} onCompleteGame={id => handleCompleteQuiz(1, id)} onGoHome={handleGoHome} />;
 
       case 'drawing':
         return (
@@ -845,7 +853,7 @@ export default function App() {
   return (
     <div className="app-world text-[#49443d] font-sans antialiased" data-screen={currentScreen}>
       <Suspense fallback={null}>
-        <TouchEffects active={!showSplash && !isParentGateOpen && currentScreen !== 'parent' && !appState.isTimeUp} screenKey={`${currentScreen}:${activeGameId}:${homeStep}`} hapticsEnabled={appState.hapticsEnabled !== false} />
+        <TouchEffects active={!showSplash && !isParentGateOpen && currentScreen !== 'parent' && !appState.isTimeUp && !quietPlay} screenKey={`${currentScreen}:${activeGameId}:${homeStep}`} hapticsEnabled={appState.hapticsEnabled !== false} />
       </Suspense>
 
       {!showSplash && <>

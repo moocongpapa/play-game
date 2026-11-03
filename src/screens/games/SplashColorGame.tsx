@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, Droplets } from 'lucide-react';
+import { Droplets, Hand } from 'lucide-react';
 import type { CharacterId, AgeGroup } from '../../types';
-import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { PlayGuide, PlayProgress } from '../../components/ToddlerPlay';
 import { PixiStageOverlay, type PixiStageHandle } from '../../components/PixiStageOverlay';
 import {
   speakText,
+  isSpeechBusy,
   stopAllSpeech,
   playCorrectFanfare,
   playCelebrationFanfare,
@@ -18,6 +18,10 @@ import {
 import { fireConfetti, fireStarExplosion } from '../../utils/confetti';
 import { emitJuice } from '../../utils/juice';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
+import { useGameActivity } from '../../hooks/useGameActivity';
+import { RoundContinuation } from '../../components/RoundContinuation';
+import './CreativePlay.css';
+import { usePlayMemory } from '../../components/PlayMemoryContext';
 
 interface SplashColorGameProps {
   buddy: CharacterId;
@@ -77,6 +81,11 @@ export const SplashColorGame: React.FC<SplashColorGameProps> = ({
   soundEnabled,
 }) => {
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+  const { paused, isBlocked } = useGameActivity();
+  const latest = useRef({ soundEnabled, onCompleteQuiz });
+  latest.current = { soundEnabled, onCompleteQuiz };
+  const [completed, setCompleted] = useState(false);
+  const { rememberColor, rememberRide } = usePlayMemory();
   const pixiRef = useRef<PixiStageHandle>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const roundDoneRef = useRef(false);
@@ -87,27 +96,29 @@ export const SplashColorGame: React.FC<SplashColorGameProps> = ({
 
   const [selectedBalloon, setSelectedBalloon] = useState(BALLOON_PALETTE[0]);
   const [zones, setZones] = useState<Array<string | null>>([null, null, null, null, null]);
+  const zonesRef = useRef<Array<string | null>>([null, null, null, null, null]);
   const [isCompleted, setIsCompleted] = useState(false);
   const [splatBadges, setSplatBadges] = useState<Array<{ id: number; x: number; y: number; color: string }>>([]);
-  const [buddyBubble, setBuddyBubble] = useState('하얀 칸이나 물풍선을 톡 눌러 팡! 색칠해 봐!');
 
-  const setupRound = useCallback((roundIdx: number) => {
+  const setupRound = useCallback(() => {
     roundDoneRef.current = false;
+    setCompleted(false);
+    zonesRef.current = [null, null, null, null, null];
     setZones([null, null, null, null, null]);
+    setSplatBadges([]);
     setIsCompleted(false);
     setSelectedBalloon(BALLOON_PALETTE[0]);
-    const data = SPLASH_ROUNDS[roundIdx] || SPLASH_ROUNDS[0];
-    setBuddyBubble(`${data.title}의 하얀 칸을 톡톡 눌러 물풍선을 터뜨려 봐!`);
+
   }, []);
 
   useEffect(() => {
-    setupRound(round);
+    setupRound();
   }, [round, setupRound]);
 
   useEffect(() => {
     const data = SPLASH_ROUNDS[round] || SPLASH_ROUNDS[0];
-    speakText(data.guideText, soundEnabled, { characterId: buddy });
-  }, [round, soundEnabled, buddy]);
+    if (!isBlocked() && !isSpeechBusy()) speakText(data.guideText, soundEnabled, { characterId: buddy });
+  }, [round, soundEnabled, buddy, isBlocked]);
 
   useEffect(() => {
     return () => {
@@ -117,15 +128,18 @@ export const SplashColorGame: React.FC<SplashColorGameProps> = ({
   }, [clearGameTimeouts]);
 
   const finishVehicleRound = useCallback(
-    (data: SplashRound, currentRound: number) => {
-      if (roundDoneRef.current) return;
+    (data: SplashRound, currentRound: number, colors: string[]) => {
+      if (isBlocked() || roundDoneRef.current) return;
       roundDoneRef.current = true;
       setIsCompleted(true);
 
       playCorrectFanfare(soundEnabled);
       playBouncyBoing(soundEnabled);
-      setBuddyBubble(`우와! ${data.title} 완성! 부릉부릉 출발~!`);
-      speakText(data.completedVoice, soundEnabled, { characterId: buddy });
+
+      // The existing train remains a train; only the matching saved ride kinds are shared.
+      if (data.id === 'car' || data.id === 'rocket') rememberRide({ kind: data.id, colors });
+      const result = data.id === 'car' ? '알록달록 자동차, 부릉부릉!' : data.id === 'rocket' ? '무지개 로켓, 슈웅!' : '알록달록 기차, 칙칙폭폭!';
+      speakText(result, soundEnabled, { characterId: buddy, englishText: data.id === 'car' ? 'Your colorful car! Vroom vroom!' : data.id === 'rocket' ? 'Your rainbow rocket! Whoosh!' : 'Your colorful train! Choo choo!' });
 
       fireStarExplosion();
       if (stageRef.current) {
@@ -141,22 +155,23 @@ export const SplashColorGame: React.FC<SplashColorGameProps> = ({
 
       scheduleGameTimeout(() => {
         if (currentRound + 1 < totalRounds) {
-          playStarGain(soundEnabled);
+          playStarGain(latest.current.soundEnabled);
           setRound((r) => r + 1);
         } else {
-          playCelebrationFanfare(soundEnabled);
+          playCelebrationFanfare(latest.current.soundEnabled);
           fireConfetti();
-          onCompleteQuiz(3);
+          setCompleted(true);
+          latest.current.onCompleteQuiz(3);
         }
-      }, 2500);
+      }, 700);
     },
-    [buddy, onCompleteQuiz, scheduleGameTimeout, soundEnabled]
+    [buddy, isBlocked, rememberRide, scheduleGameTimeout, soundEnabled]
   );
 
   const handleSplatZone = useCallback(
     (zoneIdx: number, balloonOverride = selectedBalloon, e?: React.MouseEvent<SVGElement | HTMLElement>) => {
       if (e) e.stopPropagation();
-      if (roundDoneRef.current) return;
+      if (isBlocked() || roundDoneRef.current) return;
 
       playBalloonPop(soundEnabled);
 
@@ -185,101 +200,49 @@ export const SplashColorGame: React.FC<SplashColorGameProps> = ({
         },
       ]);
 
-      setZones((prev) => {
-        const next = [...prev];
-        next[zoneIdx] = balloonOverride.hex;
-        const coloredCount = next.filter(Boolean).length;
-        playRisingStepChime(coloredCount, 5, soundEnabled);
-
-        // Auto-advance to the next balloon color for effortless rainbow coloring!
-        const nextBalloon = BALLOON_PALETTE[(balloonOverride.id + 1) % BALLOON_PALETTE.length];
-        setSelectedBalloon(nextBalloon);
-
-        if (coloredCount >= 5) {
-          finishVehicleRound(currentRoundData, round);
-        } else {
-          setBuddyBubble(`팡팡! 시원하게 색칠됐어! ${5 - coloredCount}칸 남았어!`);
-        }
-        return next;
-      });
+      const empty = zonesRef.current.findIndex(zone => zone === null);
+      const target = zonesRef.current[zoneIdx] && empty !== -1 ? empty : zoneIdx;
+      const next = [...zonesRef.current];
+      next[target] = balloonOverride.hex;
+      zonesRef.current = next;
+      setZones(next);
+      rememberColor({ hex: balloonOverride.hex, label: balloonOverride.name.replace(' 물풍선', '') });
+      const painted = next.filter(Boolean).length;
+      playRisingStepChime(painted, 5, soundEnabled);
+      setSelectedBalloon(BALLOON_PALETTE[(balloonOverride.id + 1) % BALLOON_PALETTE.length]);
+      if (painted === 5) finishVehicleRound(currentRoundData, round, next.filter((color): color is string => !!color));
     },
-    [currentRoundData, finishVehicleRound, round, selectedBalloon, soundEnabled]
+    [currentRoundData, finishVehicleRound, isBlocked, rememberColor, round, selectedBalloon, soundEnabled]
   );
 
-  const handleThrowNextBalloon = useCallback(
-    (balloon = selectedBalloon, e?: React.MouseEvent<HTMLElement>) => {
-      if (e) e.stopPropagation();
-      if (roundDoneRef.current) return;
-      const emptyIdx = zones.findIndex((z) => z === null);
-      const targetIdx = emptyIdx !== -1 ? emptyIdx : Math.floor(Math.random() * 5);
-      handleSplatZone(targetIdx, balloon, e);
-    },
-    [handleSplatZone, selectedBalloon, zones]
-  );
+  const handleThrowNextBalloon = useCallback((balloon = selectedBalloon, e?: React.MouseEvent<HTMLElement | SVGElement>) => {
+    e?.stopPropagation();
+    if (isBlocked() || roundDoneRef.current) return;
+    const empty = zonesRef.current.findIndex(zone => zone === null);
+    if (empty !== -1) handleSplatZone(empty, balloon, e);
+  }, [handleSplatZone, isBlocked, selectedBalloon]);
 
   const coloredCount = zones.filter(Boolean).length;
 
   return (
     <div
       ref={stageRef}
-      className="splash-color-stage relative flex flex-col justify-between w-full h-[var(--game-play-height,calc(100dvh-84px))] min-h-[var(--game-play-height,calc(100dvh-84px))] rounded-3xl overflow-hidden select-none bg-gradient-to-b from-[#ECFEFF] via-[#E0F2FE] to-[#FEF9C3] border-3 border-[#0EA5E9] p-3 sm:p-5"
+      data-paused={paused}
+      className="splash-color-stage creative-play relative flex flex-col justify-between w-full h-[var(--game-play-height,calc(100dvh-84px))] min-h-[var(--game-play-height,calc(100dvh-84px))] rounded-3xl overflow-hidden select-none bg-gradient-to-b from-[#ECFEFF] via-[#E0F2FE] to-[#FEF9C3] border-3 border-[#0EA5E9] p-3 sm:p-5"
     >
-      <style>{`
-        @keyframes uncoloredPulse {
-          0%, 100% { opacity: 0.92; }
-          50% { opacity: 1; }
-        }
-        .splash-zone-uncolored {
-          animation: uncoloredPulse 1.2s ease-in-out infinite;
-          @media (prefers-reduced-motion: reduce) {
-            animation: none;
-          }
-        }
-      `}</style>
-
       <PixiStageOverlay ref={pixiRef} className="z-20 pointer-events-none" />
 
-      {/* Top Header Bar */}
-      <div className="relative z-30 flex items-center justify-between w-full gap-2">
-        <PlayGuide
-          buddy={buddy}
-          title="물풍선 팡팡 색칠"
-          guide={currentRoundData.guideText}
-          soundEnabled={soundEnabled}
-          happy={isCompleted}
-        />
-
-        <div className="flex items-center gap-2 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full shadow-md border-2 border-[#0284C7]">
-          <span className="text-lg" aria-hidden="true">{currentRoundData.emoji}</span>
-          <span className="font-black text-[#0369A1] text-xs sm:text-sm whitespace-nowrap">
-            {currentRoundData.badge} · {coloredCount}/5
-          </span>
+      <div className="creative-play-header">
+        <PlayGuide buddy={buddy} title="물풍선 색칠" guide={currentRoundData.guideText} soundEnabled={soundEnabled} happy={isCompleted} />
+        <div className="creative-pictorial-guide" aria-hidden="true">
+          <Droplets />
+          <span>{currentRoundData.emoji}</span>
         </div>
-
-        <PlayProgress total={totalRounds} done={round} label={`${round + 1}/${totalRounds}`} />
-      </div>
-
-      {/* Buddy Banner */}
-      <div className="relative z-20 flex items-center justify-center gap-3 my-0.5">
-        <div className="flex items-center gap-2.5 bg-white/95 backdrop-blur-sm px-4 py-1.5 rounded-3xl border-2 border-[#7DD3FC] shadow-md">
-          <div className="relative w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center">
-            <CharacterAvatar
-              id={buddy}
-              size="sm"
-              mood={isCompleted ? 'excited' : coloredCount > 0 ? 'happy' : 'still'}
-            />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs font-extrabold text-[#0284C7]">
-              {round + 1}단계 · {currentRoundData.title}
-            </span>
-            <span className="text-xs sm:text-sm font-black text-[#0C4A6E]">{buddyBubble}</span>
-          </div>
-        </div>
+        <PlayProgress total={totalRounds} done={completed ? totalRounds : round} label={`${round + 1}/${totalRounds}`} />
       </div>
 
       {/* Center Tap-to-Splat Coloring Canvas */}
-      <div className="relative z-20 flex-1 flex flex-col items-center justify-center min-h-0">
+      <div className="creative-play-body">
         <motion.div
           animate={
             isCompleted
@@ -291,8 +254,11 @@ export const SplashColorGame: React.FC<SplashColorGameProps> = ({
               : {}
           }
           transition={{ duration: 0.65 }}
-          className="relative w-72 h-56 sm:w-84 sm:h-64 flex items-center justify-center bg-white/90 rounded-3xl border-4 border-[#38BDF8] shadow-xl p-2"
+          className="creative-play-art bg-white/90 rounded-3xl border-4 border-[#38BDF8] shadow-xl p-2"
+          role="button" tabIndex={0} aria-label="그림에 물풍선 던지기" onClick={e => handleThrowNextBalloon(selectedBalloon, e)}
+          onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); handleThrowNextBalloon(); } }}
         >
+          {coloredCount === 0 && <Hand className="creative-gesture" aria-hidden="true" />}
           <svg viewBox="0 0 360 250" className="w-full h-full overflow-visible">
             {currentRoundData.id === 'car' && (
               /* Round 1: Cute Rainbow Car with 5 Tap Zones */
@@ -494,7 +460,7 @@ export const SplashColorGame: React.FC<SplashColorGameProps> = ({
             )}
           </svg>
 
-          {/* Floating Water Splat Words ("팡!", "첨벙!") */}
+          {/* A quick pictorial splash follows each touch. */}
           <AnimatePresence>
             {splatBadges.map((sb) => (
               <motion.div
@@ -510,49 +476,21 @@ export const SplashColorGame: React.FC<SplashColorGameProps> = ({
                 transition={{ duration: 0.6 }}
                 className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 px-3 py-0.5 rounded-full text-white font-black text-xs sm:text-sm border-2 border-white shadow-md"
               >
-                물풍선 팡! 💦
+                <Droplets className="creative-splash-drop" aria-hidden="true" />
               </motion.div>
             ))}
           </AnimatePresence>
         </motion.div>
 
-        {/* Bottom Bouncy Water Balloon Rack */}
-        <div className="relative z-30 mt-2.5 flex flex-col items-center gap-2">
-          <div className="flex items-center justify-center gap-2.5 bg-white/95 px-4 py-1.5 rounded-full shadow-md border-2 border-[#38BDF8]">
-            {BALLOON_PALETTE.map((b) => (
-              <motion.button
-                key={b.id}
-                type="button"
-                whileTap={{ scale: 0.85 }}
-                onClick={(e) => {
-                  setSelectedBalloon(b);
-                  handleThrowNextBalloon(b, e);
-                }}
-                aria-label={`${b.name} 던져서 색칠하기`}
-                style={{ backgroundColor: b.hex }}
-                className={`w-10 h-11 sm:w-11 sm:h-12 rounded-t-full rounded-b-3xl border-3 flex items-center justify-center text-white font-black shadow-md transition-transform ${
-                  selectedBalloon.id === b.id ? 'scale-115 border-[#0F172A]' : 'border-white'
-                }`}
-              >
-                💧
-              </motion.button>
-            ))}
-          </div>
-
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.92 }}
-            onClick={(e) => handleThrowNextBalloon(selectedBalloon, e)}
-            className="flex items-center gap-2 px-5 py-2 rounded-full font-black text-sm sm:text-base text-white shadow-lg border-3 border-[#0C4A6E] bg-gradient-to-r from-[#0284C7] via-[#0EA5E9] to-[#6366F1]"
-          >
-            <Droplets className="w-5 h-5 text-cyan-100" />
-            <span>
-              {isCompleted ? '우와! 알록달록 완성! 출발~! 🎉' : '물풍선 팡팡 던져서 색칠하기! 🎈💦'}
-            </span>
-            <Sparkles className="w-5 h-5 text-yellow-200" />
-          </motion.button>
+        <div className="creative-tool-shelf" aria-label="물풍선 색상">
+          {BALLOON_PALETTE.map(b => <motion.button key={b.id} type="button" whileTap={{ scale: .9 }} className="creative-tool" disabled={isCompleted} aria-label={`${b.name} 던지기`} aria-pressed={selectedBalloon.id === b.id} style={{ backgroundColor: b.hex }} onClick={e => {
+            if (isBlocked() || roundDoneRef.current) return;
+            handleThrowNextBalloon(b, e);
+          }}><span className="creative-tool-icon" aria-hidden="true">💧</span></motion.button>)}
+          <motion.button type="button" whileTap={{ scale: .92 }} className="creative-tool creative-action-tool" disabled={isCompleted} aria-label="다음 곳에 물풍선 던지기" onClick={e => handleThrowNextBalloon(selectedBalloon, e)}><Droplets /></motion.button>
         </div>
       </div>
+      {completed && <RoundContinuation delayMs={700} onNext={() => setRound(0)} />}
     </div>
   );
 };

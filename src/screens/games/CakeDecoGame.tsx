@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'motion/react';
-import { Sparkles, Flame } from 'lucide-react';
+import { Paintbrush, Wind, Sparkles } from 'lucide-react';
 import type { CharacterId, AgeGroup } from '../../types';
-import { CharacterAvatar } from '../../components/CharacterAvatar';
 import { PlayGuide, PlayProgress } from '../../components/ToddlerPlay';
 import { PixiStageOverlay, type PixiStageHandle } from '../../components/PixiStageOverlay';
 import {
   speakText,
+  isSpeechBusy,
   stopAllSpeech,
   playSparkleChime,
   playCorrectFanfare,
@@ -20,6 +20,10 @@ import {
 import { fireConfetti, fireStarExplosion } from '../../utils/confetti';
 import { emitJuice } from '../../utils/juice';
 import { useGameTimeouts } from '../../hooks/useGameTimeouts';
+import { useGameActivity } from '../../hooks/useGameActivity';
+import { RoundContinuation } from '../../components/RoundContinuation';
+import './CreativePlay.css';
+import { usePlayMemory } from '../../components/PlayMemoryContext';
 
 interface CakeDecoGameProps {
   buddy: CharacterId;
@@ -101,6 +105,11 @@ export const CakeDecoGame: React.FC<CakeDecoGameProps> = ({
   soundEnabled,
 }) => {
   const { scheduleGameTimeout, clearGameTimeouts } = useGameTimeouts();
+  const { paused, isBlocked } = useGameActivity();
+  const latest = useRef({ soundEnabled, onCompleteQuiz });
+  latest.current = { soundEnabled, onCompleteQuiz };
+  const [completed, setCompleted] = useState(false);
+  const { rememberColor, saveCake } = usePlayMemory();
   const pixiRef = useRef<PixiStageHandle>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const roundDoneRef = useRef(false);
@@ -110,6 +119,11 @@ export const CakeDecoGame: React.FC<CakeDecoGameProps> = ({
   const currentCake = CAKE_ROUNDS[round] || CAKE_ROUNDS[0];
 
   const [selectedColor, setSelectedColor] = useState(CREAM_COLORS[0]);
+  const [toolMode, setToolMode] = useState<'cream' | 'topping'>('cream');
+  type Layers = [string | null, string | null, string | null];
+  const layersRef = useRef<Layers>([null, null, null]);
+  const toppingsRef = useRef<PlacedTopping[]>([]);
+  const candlesReadyRef = useRef(false);
   const [layerColors, setLayerColors] = useState<[string | null, string | null, string | null]>([
     null,
     null,
@@ -118,17 +132,20 @@ export const CakeDecoGame: React.FC<CakeDecoGameProps> = ({
   const [toppings, setToppings] = useState<PlacedTopping[]>([]);
   const [candlesLit, setCandlesLit] = useState(false);
   const [candlesBlown, setCandlesBlown] = useState(false);
-  const [buddyBubble, setBuddyBubble] = useState('하얀 케이크를 톡톡 눌러 크림을 칠해줘!');
 
   const setupRound = useCallback((roundIdx: number) => {
     roundDoneRef.current = false;
+    setCompleted(false);
+    layersRef.current = [null, null, null];
+    toppingsRef.current = [];
+    candlesReadyRef.current = false;
+    setToolMode('cream');
     setLayerColors([null, null, null]);
     setToppings([]);
     setCandlesLit(false);
     setCandlesBlown(false);
     setSelectedColor(CREAM_COLORS[roundIdx % CREAM_COLORS.length]);
-    const cake = CAKE_ROUNDS[roundIdx] || CAKE_ROUNDS[0];
-    setBuddyBubble(`${cake.title}에 맛있는 크림을 칠하고 토핑을 올려줘!`);
+
   }, []);
 
   useEffect(() => {
@@ -137,8 +154,8 @@ export const CakeDecoGame: React.FC<CakeDecoGameProps> = ({
 
   useEffect(() => {
     const cake = CAKE_ROUNDS[round] || CAKE_ROUNDS[0];
-    speakText(cake.guideText, soundEnabled, { characterId: buddy });
-  }, [round, soundEnabled, buddy]);
+    if (!isBlocked() && !isSpeechBusy()) speakText(cake.guideText, soundEnabled, { characterId: buddy });
+  }, [round, soundEnabled, buddy, isBlocked]);
 
   useEffect(() => {
     return () => {
@@ -147,227 +164,118 @@ export const CakeDecoGame: React.FC<CakeDecoGameProps> = ({
     };
   }, [clearGameTimeouts]);
 
-  const checkReadyForCandles = useCallback(
-    (nextLayers: [string | null, string | null, string | null], nextToppings: PlacedTopping[]) => {
-      const coloredCount = nextLayers.filter(Boolean).length;
-      if (coloredCount >= 3 && nextToppings.length >= 2 && !candlesLit && !roundDoneRef.current) {
-        setCandlesLit(true);
-        playSparkleChime(soundEnabled);
-        setBuddyBubble('와! 촛불이 켜졌어! 촛불이나 아래 버튼을 눌러 후~ 불어 꺼 봐!');
-        speakText(currentCake.candleVoice, soundEnabled, { characterId: buddy });
+  const checkReadyForCandles = useCallback((nextLayers: Layers, nextToppings: PlacedTopping[]) => {
+    const painted = nextLayers.filter(Boolean).length;
+    if (painted === 3 && nextToppings.length < 2) setToolMode('topping');
+    if (painted === 3 && nextToppings.length >= 2 && !candlesReadyRef.current && !roundDoneRef.current) {
+      candlesReadyRef.current = true;
+      setCandlesLit(true);
+      playSparkleChime(soundEnabled);
+      speakText('촛불을 후~ 불어 볼까?', soundEnabled, { characterId: buddy, englishText: 'Blow out the candles!' });
+    }
+  }, [buddy, soundEnabled]);
+
+  const handlePaintLayer = useCallback((layerIdx: 0 | 1 | 2, e?: React.MouseEvent<SVGElement | HTMLElement>, color = selectedColor) => {
+    e?.stopPropagation();
+    if (isBlocked() || roundDoneRef.current) return;
+    const next = [...layersRef.current] as Layers;
+    next[layerIdx] = color.hex;
+    layersRef.current = next;
+    setLayerColors(next);
+    rememberColor({ hex: color.hex, label: color.label });
+    playJellyTap(soundEnabled);
+    playRisingStepChime(next.filter(Boolean).length + toppingsRef.current.length, 5, soundEnabled);
+    if (e) {
+      emitJuice({ kind: 'pop', x: e.clientX, y: e.clientY });
+      const rect = stageRef.current?.getBoundingClientRect();
+      if (rect) pixiRef.current?.emitBurst({ x: e.clientX - rect.left, y: e.clientY - rect.top, color: color.num, count: 14, kind: 'star' });
+    }
+    checkReadyForCandles(next, toppingsRef.current);
+  }, [checkReadyForCandles, isBlocked, rememberColor, selectedColor, soundEnabled]);
+
+  const handleAddTopping = useCallback((emoji: string, e?: React.MouseEvent<HTMLElement | SVGElement>) => {
+    e?.stopPropagation();
+    if (isBlocked() || roundDoneRef.current) return;
+    playBouncyBoing(soundEnabled);
+    if (e) emitJuice({ kind: 'pop', x: e.clientX, y: e.clientY });
+    // A topping also helps with an unfinished cream layer; any first action works.
+    const empty = layersRef.current.findIndex(color => color === null);
+    if (empty !== -1) {
+      const nextLayers = [...layersRef.current] as Layers;
+      nextLayers[empty] = selectedColor.hex;
+      layersRef.current = nextLayers;
+      setLayerColors(nextLayers);
+      rememberColor({ hex: selectedColor.hex, label: selectedColor.label });
+    }
+    const spot = TOPPING_SPOTS[toppingsRef.current.length % TOPPING_SPOTS.length];
+    const next = [...toppingsRef.current.slice(-5), { id: Date.now() + Math.random(), emoji, x: spot.x, y: spot.y }];
+    toppingsRef.current = next;
+    setToppings(next);
+    checkReadyForCandles(layersRef.current, next);
+  }, [checkReadyForCandles, isBlocked, rememberColor, selectedColor, soundEnabled]);
+
+  const handleBlowCandles = useCallback((e?: React.MouseEvent<HTMLElement | SVGElement>) => {
+    e?.stopPropagation();
+    if (isBlocked() || roundDoneRef.current) return;
+    if (!candlesReadyRef.current) {
+      const empty = layersRef.current.findIndex(color => color === null);
+      if (empty !== -1) handlePaintLayer(empty as 0 | 1 | 2, e);
+      else handleAddTopping(TOPPING_ITEMS[toppingsRef.current.length % TOPPING_ITEMS.length], e);
+      return;
+    }
+    roundDoneRef.current = true;
+    setCandlesBlown(true);
+    const colors = layersRef.current.filter((color): color is string => !!color);
+    saveCake({ title: currentCake.title, colors, toppings: toppingsRef.current.map(t => t.emoji) });
+    playCorrectFanfare(soundEnabled);
+    playCareSound('chew', soundEnabled);
+    const cream = CREAM_COLORS.find(c => c.hex === colors[0])?.label ?? '무지개 크림';
+    speakText(`${cream} ${currentCake.id === 'donut' ? '도넛' : '케이크'}네! 냠냠!`, soundEnabled, { characterId: buddy, englishText: currentCake.id === 'donut' ? 'Your colorful donut! Yum yum!' : 'Your colorful cake! Yum yum!' });
+    fireStarExplosion();
+    const rect = stageRef.current?.getBoundingClientRect();
+    if (rect) pixiRef.current?.emitBurst({ x: rect.width / 2, y: rect.height / 2, color: 0xF472B6, count: 32, kind: 'star' });
+    scheduleGameTimeout(() => {
+      if (round + 1 < totalRounds) {
+        playStarGain(latest.current.soundEnabled);
+        setRound(r => r + 1);
+      } else {
+        playCelebrationFanfare(latest.current.soundEnabled);
+        fireConfetti();
+        setCompleted(true);
+        latest.current.onCompleteQuiz(3);
       }
-    },
-    [buddy, candlesLit, currentCake.candleVoice, soundEnabled]
-  );
+    }, 700);
+  }, [buddy, currentCake, handleAddTopping, handlePaintLayer, isBlocked, round, saveCake, scheduleGameTimeout, soundEnabled]);
 
-  const handlePaintLayer = useCallback(
-    (layerIdx: 0 | 1 | 2, e?: React.MouseEvent<SVGElement | HTMLButtonElement>) => {
-      if (e) e.stopPropagation();
-      if (roundDoneRef.current) return;
-
-      playJellyTap(soundEnabled);
-      if (e) {
-        emitJuice({ kind: 'pop', x: e.clientX, y: e.clientY });
-        if (stageRef.current) {
-          const rect = stageRef.current.getBoundingClientRect();
-          pixiRef.current?.emitBurst({
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top,
-            color: selectedColor.num,
-            count: 14,
-            kind: 'star',
-          });
-        }
-      }
-
-      setLayerColors((prev) => {
-        const next: [string | null, string | null, string | null] = [...prev] as [
-          string | null,
-          string | null,
-          string | null,
-        ];
-        next[layerIdx] = selectedColor.hex;
-        const coloredCount = next.filter(Boolean).length;
-        playRisingStepChime(coloredCount + toppings.length, 5, soundEnabled);
-        checkReadyForCandles(next, toppings);
-        return next;
-      });
-    },
-    [checkReadyForCandles, selectedColor, soundEnabled, toppings]
-  );
-
-  const handleAddTopping = useCallback(
-    (emoji: string, e?: React.MouseEvent<HTMLElement>) => {
-      if (e) e.stopPropagation();
-      if (roundDoneRef.current) return;
-
-      playBouncyBoing(soundEnabled);
-      if (e) {
-        emitJuice({ kind: 'pop', x: e.clientX, y: e.clientY });
-      }
-
-      // Also auto-fill any uncolored layer if the child taps toppings right away!
-      let updatedLayers = layerColors;
-      const firstEmptyIdx = layerColors.findIndex((c) => c === null);
-      if (firstEmptyIdx !== -1) {
-        const copy: [string | null, string | null, string | null] = [...layerColors] as [
-          string | null,
-          string | null,
-          string | null,
-        ];
-        copy[firstEmptyIdx] = selectedColor.hex;
-        updatedLayers = copy;
-        setLayerColors(copy);
-      }
-
-      setToppings((prev) => {
-        const spot = TOPPING_SPOTS[prev.length % TOPPING_SPOTS.length];
-        const next = [
-          ...prev.slice(-5),
-          {
-            id: Date.now() + Math.floor(Math.random() * 1000),
-            emoji,
-            x: spot.x,
-            y: spot.y,
-          },
-        ];
-        checkReadyForCandles(updatedLayers, next);
-        return next;
-      });
-    },
-    [checkReadyForCandles, layerColors, selectedColor.hex, soundEnabled]
-  );
-
-  const handleBlowCandles = useCallback(
-    (e?: React.MouseEvent<HTMLElement>) => {
-      if (e) e.stopPropagation();
-      if (roundDoneRef.current) return;
-
-      // If not all decorated yet, one tap fills the next step automatically!
-      if (!candlesLit) {
-        const emptyIdx = layerColors.findIndex((c) => c === null);
-        if (emptyIdx !== -1) {
-          handlePaintLayer(emptyIdx as 0 | 1 | 2);
-          return;
-        }
-        handleAddTopping(TOPPING_ITEMS[toppings.length % TOPPING_ITEMS.length], e);
-        return;
-      }
-
-      roundDoneRef.current = true;
-      setCandlesBlown(true);
-      playCorrectFanfare(soundEnabled);
-      playCareSound('chew', soundEnabled);
-      setBuddyBubble('후~! 냠냠 달콤한 케이크 정말 맛있다! 고마워!');
-      speakText(currentCake.finishedVoice, soundEnabled, { characterId: buddy });
-
-      fireStarExplosion();
-      if (stageRef.current) {
-        const rect = stageRef.current.getBoundingClientRect();
-        pixiRef.current?.emitBurst({
-          x: rect.width / 2,
-          y: rect.height / 2,
-          color: 0xF472B6,
-          count: 32,
-          kind: 'star',
-        });
-      }
-
-      scheduleGameTimeout(() => {
-        if (round + 1 < totalRounds) {
-          playStarGain(soundEnabled);
-          setRound((r) => r + 1);
-        } else {
-          playCelebrationFanfare(soundEnabled);
-          fireConfetti();
-          onCompleteQuiz(3);
-        }
-      }, 2500);
-    },
-    [
-      buddy,
-      candlesLit,
-      currentCake.finishedVoice,
-      handleAddTopping,
-      handlePaintLayer,
-      layerColors,
-      onCompleteQuiz,
-      round,
-      scheduleGameTimeout,
-      soundEnabled,
-      toppings.length,
-    ]
-  );
-
-  const coloredLayersCount = layerColors.filter(Boolean).length;
-  const stepDone = Math.min(5, coloredLayersCount + Math.min(2, toppings.length));
 
   return (
     <div
       ref={stageRef}
-      className="cake-deco-stage relative flex flex-col justify-between w-full h-[var(--game-play-height,calc(100dvh-84px))] min-h-[var(--game-play-height,calc(100dvh-84px))] rounded-3xl overflow-hidden select-none bg-gradient-to-b from-[#FDF2F8] via-[#FCE7F3] to-[#FEF3C7] border-3 border-[#F472B6] p-3 sm:p-5"
+      data-paused={paused}
+      className="cake-deco-stage creative-play relative flex flex-col justify-between w-full h-[var(--game-play-height,calc(100dvh-84px))] min-h-[var(--game-play-height,calc(100dvh-84px))] rounded-3xl overflow-hidden select-none bg-gradient-to-b from-[#FDF2F8] via-[#FCE7F3] to-[#FEF3C7] border-3 border-[#F472B6] p-3 sm:p-5"
     >
-      <style>{`
-        @keyframes candleFlameDance {
-          0%, 100% { transform: scaleY(1) rotate(-3deg); }
-          50% { transform: scaleY(1.18) rotate(3deg); }
-        }
-        .cake-candle-flame {
-          transform-origin: center bottom;
-          animation: candleFlameDance 0.65s ease-in-out infinite;
-          @media (prefers-reduced-motion: reduce) {
-            animation: none;
-          }
-        }
-      `}</style>
-
       <PixiStageOverlay ref={pixiRef} className="z-20 pointer-events-none" />
 
-      {/* Top Header Bar */}
-      <div className="relative z-30 flex items-center justify-between w-full gap-2">
-        <PlayGuide
-          buddy={buddy}
-          title="케이크 & 도넛 살롱"
-          guide={currentCake.guideText}
-          soundEnabled={soundEnabled}
-          happy={candlesBlown}
-        />
-
-        <div className="flex items-center gap-2 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full shadow-md border-2 border-[#EC4899]">
-          <span className="text-lg" aria-hidden="true">{currentCake.emoji}</span>
-          <span className="font-black text-[#BE185D] text-xs sm:text-sm whitespace-nowrap">
-            {currentCake.badge} · {stepDone}/5
-          </span>
+      <div className="creative-play-header">
+        <PlayGuide buddy={buddy} title="케이크 꾸미기" guide={currentCake.guideText} soundEnabled={soundEnabled} happy={candlesBlown} />
+        <div className="creative-pictorial-guide" aria-hidden="true">
+          <Paintbrush />
+          <span>{currentCake.emoji}</span>
         </div>
-
-        <PlayProgress total={totalRounds} done={round} label={`${round + 1}/${totalRounds}`} />
-      </div>
-
-      {/* Patissier Buddy Row */}
-      <div className="relative z-20 flex items-center justify-center gap-3 my-0.5">
-        <div className="flex items-center gap-2.5 bg-white/95 backdrop-blur-sm px-4 py-1.5 rounded-3xl border-2 border-[#F9A8D4] shadow-md">
-          <div className="relative w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center">
-            <CharacterAvatar
-              id={buddy}
-              size="sm"
-              mood={candlesBlown ? 'excited' : candlesLit ? 'dancing' : 'happy'}
-            />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs font-extrabold text-[#DB2777]">
-              {round + 1}단계 · {currentCake.title}
-            </span>
-            <span className="text-xs sm:text-sm font-black text-[#831843]">{buddyBubble}</span>
-          </div>
-        </div>
+        <PlayProgress total={totalRounds} done={completed ? totalRounds : round} label={`${round + 1}/${totalRounds}`} />
       </div>
 
       {/* Center Interactive Cake / Donut SVG Stage */}
-      <div className="relative z-20 flex-1 flex flex-col items-center justify-center min-h-0">
+      <div className="creative-play-body">
         <motion.div
           animate={candlesBlown ? { scale: [1, 1.08, 1], y: [0, -10, 0] } : {}}
           transition={{ duration: 0.5 }}
-          className="relative w-64 h-56 sm:w-76 sm:h-64 flex items-center justify-center"
+          className="creative-play-art"
+          role="button"
+          tabIndex={0}
+          aria-label={candlesLit ? '촛불 불어 끄기' : '케이크 꾸미기'}
+          onClick={handleBlowCandles}
+          onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); handleBlowCandles(); } }}
         >
           <svg viewBox="0 0 320 260" className="w-full h-full overflow-visible drop-shadow-xl">
             {/* Fancy Cake Stand Plate */}
@@ -386,7 +294,7 @@ export const CakeDecoGame: React.FC<CakeDecoGameProps> = ({
                   stroke="#B45309"
                   strokeWidth="5"
                   className="cursor-pointer"
-                  onClick={(e) => handlePaintLayer(0, e)}
+                  onClick={(e) => candlesLit ? handleBlowCandles(e) : handlePaintLayer(0, e)}
                 />
                 {/* Scalloped Middle Icing Glaze (Layer 1) */}
                 <path
@@ -395,7 +303,7 @@ export const CakeDecoGame: React.FC<CakeDecoGameProps> = ({
                   stroke="#DB2777"
                   strokeWidth="4.5"
                   className="cursor-pointer"
-                  onClick={(e) => handlePaintLayer(1, e)}
+                  onClick={(e) => candlesLit ? handleBlowCandles(e) : handlePaintLayer(1, e)}
                 />
                 {/* Top Cream Swirl Ring (Layer 2) */}
                 <circle
@@ -407,7 +315,7 @@ export const CakeDecoGame: React.FC<CakeDecoGameProps> = ({
                   strokeWidth="16"
                   strokeDasharray="18 10"
                   className="cursor-pointer"
-                  onClick={(e) => handlePaintLayer(2, e)}
+                  onClick={(e) => candlesLit ? handleBlowCandles(e) : handlePaintLayer(2, e)}
                 />
                 {/* Donut Hole */}
                 <circle cx="160" cy="148" r="24" fill="#FCE7F3" stroke="#B45309" strokeWidth="4" />
@@ -426,7 +334,7 @@ export const CakeDecoGame: React.FC<CakeDecoGameProps> = ({
                   stroke="#D97706"
                   strokeWidth="4.5"
                   className="cursor-pointer"
-                  onClick={(e) => handlePaintLayer(0, e)}
+                  onClick={(e) => candlesLit ? handleBlowCandles(e) : handlePaintLayer(0, e)}
                 />
                 {/* Bottom Tier Cream Drip */}
                 <path
@@ -448,7 +356,7 @@ export const CakeDecoGame: React.FC<CakeDecoGameProps> = ({
                   stroke="#DB2777"
                   strokeWidth="4.5"
                   className="cursor-pointer"
-                  onClick={(e) => handlePaintLayer(1, e)}
+                  onClick={(e) => candlesLit ? handleBlowCandles(e) : handlePaintLayer(1, e)}
                 />
 
                 {/* Top Whipped Cream Frosting Crown (Layer 2) */}
@@ -458,14 +366,14 @@ export const CakeDecoGame: React.FC<CakeDecoGameProps> = ({
                   stroke="#BE185D"
                   strokeWidth="4"
                   className="cursor-pointer"
-                  onClick={(e) => handlePaintLayer(2, e)}
+                  onClick={(e) => candlesLit ? handleBlowCandles(e) : handlePaintLayer(2, e)}
                 />
               </g>
             )}
 
             {/* Birthday Candles on Top */}
             {(candlesLit || candlesBlown) && (
-              <g className="cursor-pointer" onClick={(e) => handleBlowCandles(e as unknown as React.MouseEvent<HTMLElement>)}>
+              <g className="cursor-pointer" onClick={handleBlowCandles}>
                 {[126, 160, 194].map((cx, i) => (
                   <g key={i}>
                     <rect
@@ -513,60 +421,23 @@ export const CakeDecoGame: React.FC<CakeDecoGameProps> = ({
           </svg>
         </motion.div>
 
-        {/* Cream Color Swatches + Topping Stamp Shelf */}
-        <div className="relative z-30 flex flex-col items-center gap-2 w-full max-w-[420px]">
-          <div className="flex items-center justify-center gap-2 bg-white/90 px-3 py-1.5 rounded-full shadow-md border-2 border-[#F9A8D4]">
-            {CREAM_COLORS.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => {
-                  playJellyTap(soundEnabled);
-                  setSelectedColor(c);
-                  const emptyIdx = layerColors.findIndex((l) => l === null);
-                  if (emptyIdx !== -1) {
-                    handlePaintLayer(emptyIdx as 0 | 1 | 2);
-                  }
-                }}
-                aria-label={`${c.label} 색칠하기`}
-                style={{ backgroundColor: c.hex }}
-                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full border-3 transition-transform ${
-                  selectedColor.id === c.id ? 'scale-115 border-[#1E293B] shadow-md' : 'border-white'
-                }`}
-              />
-            ))}
-            <span className="w-0.5 h-6 bg-pink-200 mx-0.5" aria-hidden="true" />
-            {TOPPING_ITEMS.map((emoji) => (
-              <button
-                key={emoji}
-                type="button"
-                onClick={(e) => handleAddTopping(emoji, e)}
-                aria-label={`${emoji} 토핑 올리기`}
-                className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#FFF1F2] border-2 border-[#F472B6] flex items-center justify-center text-lg sm:text-xl shadow-sm active:scale-90 transition-transform"
-              >
-                {emoji}
-              </button>
-            ))}
+        <div className="creative-tool-shelf creative-cake-shelf" aria-label="크림과 토핑 도구">
+          <div className="creative-cake-modes">
+            <button type="button" className="creative-tool creative-cake-mode" aria-label="크림 색상" aria-pressed={toolMode === 'cream'} disabled={candlesBlown} onClick={() => { if (!isBlocked()) { setToolMode('cream'); playJellyTap(soundEnabled); } }}><Paintbrush /></button>
+            <button type="button" className="creative-tool creative-cake-mode" aria-label="토핑" aria-pressed={toolMode === 'topping'} disabled={candlesBlown} onClick={() => { if (!isBlocked()) { setToolMode('topping'); playJellyTap(soundEnabled); } }}><span aria-hidden="true">🍓</span></button>
           </div>
-
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.92 }}
-            onClick={handleBlowCandles}
-            className="flex items-center gap-2 px-5 py-2 rounded-full font-black text-sm sm:text-base text-white shadow-lg border-3 border-[#831843] bg-gradient-to-r from-[#EC4899] via-[#F43F5E] to-[#F59E0B]"
-          >
-            <Flame className="w-5 h-5 fill-yellow-200 text-yellow-100" />
-            <span>
-              {candlesBlown
-                ? '와아! 달콤한 케이크 파티 최고야! 🎉'
-                : candlesLit
-                ? '후~! 촛불 불어 끄고 냠냠 먹기! 🕯️💨'
-                : '쓱쓱 크림 바르고 토핑 올리기! 🎂'}
-            </span>
-            <Sparkles className="w-5 h-5 text-yellow-100" />
-          </motion.button>
+          <div className="creative-cake-options">
+            {toolMode === 'cream' ? CREAM_COLORS.map(c => <button key={c.id} type="button" className="creative-tool" aria-label={`${c.label} 칠하기`} aria-pressed={selectedColor.id === c.id} disabled={candlesBlown} style={{ backgroundColor: c.hex }} onClick={e => {
+              if (isBlocked() || roundDoneRef.current) return;
+              setSelectedColor(c);
+              const empty = layersRef.current.findIndex(color => color === null);
+              handlePaintLayer((empty === -1 ? 0 : empty) as 0 | 1 | 2, e, c);
+            }}><span className="creative-tool-icon" aria-hidden="true">🖌️</span></button>) : TOPPING_ITEMS.map(emoji => <button key={emoji} type="button" className="creative-tool" aria-label={`${emoji} 토핑 올리기`} disabled={candlesBlown} onClick={e => handleAddTopping(emoji, e)}><span aria-hidden="true">{emoji}</span></button>)}
+            <motion.button type="button" whileTap={{ scale: .92 }} className={`creative-tool creative-action-tool${candlesLit && !candlesBlown ? ' creative-candle-ready' : ''}`} disabled={candlesBlown} aria-label={candlesLit ? '후~ 촛불 끄기' : '케이크 꾸미기'} onClick={handleBlowCandles}>{candlesLit ? <Wind /> : <Sparkles />}</motion.button>
+          </div>
         </div>
       </div>
+      {completed && <RoundContinuation delayMs={700} onNext={() => setRound(0)} />}
     </div>
   );
 };
