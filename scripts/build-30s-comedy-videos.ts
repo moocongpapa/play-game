@@ -9,7 +9,7 @@ import { loadEnv } from 'vite';
 import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises';
 import type { CharacterId } from '../src/types';
 import { getCharacterVoice } from '../src/data/characterVoices';
 import { normalizeSpokenText, speechSynthesisSpec } from '../src/data/speechSynthesis';
@@ -18,9 +18,8 @@ const run = promisify(execFile);
 const env = loadEnv('development', process.cwd(), '');
 const ffmpeg = process.env.FFMPEG_PATH || 'ffmpeg';
 const workRoot = '.video-generation/comedy-30s-v1';
-const outVideoDir = 'public/videos/comedy';
-const outPosterDir = 'public/videos/comedy/posters';
-const manifestPath = 'public/videos/comedy-manifest.json';
+const backup46sDir = 'backups/character-videos/2026-11-09-46s-portrait';
+const portraitManifestPath = 'public/videos/portrait-manifest.json';
 
 type SfxId = 'sneeze_pop' | 'slip_boing' | 'toot_propeller' | 'bowling_strike' | 'pudding_bounce' | 'hiccup_poof';
 
@@ -428,8 +427,7 @@ const client = new ElevenLabsClient({ apiKey });
 const beforeSub = await client.user.subscription.get();
 console.log(`[BUDGET] Starting ElevenLabs credits: ${(beforeSub.characterLimit - beforeSub.characterCount).toLocaleString()} remaining`);
 
-await mkdir(outVideoDir, { recursive: true });
-await mkdir(outPosterDir, { recursive: true });
+await mkdir(backup46sDir, { recursive: true });
 
 // 1. Ensure all 6 comedy SFX exist
 const sfxPaths = new Map<SfxId, string>();
@@ -437,9 +435,9 @@ for (const sfxId of Object.keys(COMEDY_SFX_SPECS) as SfxId[]) {
   sfxPaths.set(sfxId, await ensureSfx(client, sfxId));
 }
 
-// 2. Build 30s comedy episode for each character
-const manifest: Record<string, unknown> = (await exists(manifestPath))
-  ? JSON.parse(await readFile(manifestPath, 'utf8'))
+// 2. Build 30s comedy episode and merge with 46s portrait video into 76s unified episode
+const portraitManifest: Record<string, Record<string, unknown>> = (await exists(portraitManifestPath))
+  ? JSON.parse(await readFile(portraitManifestPath, 'utf8'))
   : {};
 
 const targetArg = process.argv[2] as CharacterId | undefined;
@@ -457,88 +455,123 @@ for (const charId of charList) {
     voiceWavs.push(wav);
   }
 
-  // Assemble 4 scenes (8 + 8 + 8 + 6 = 30s) at 1080x1920 24fps
-  const inputs: string[] = [];
-  const filters: string[] = [];
-
-  for (let i = 0; i < plan.scenes.length; i++) {
-    const s = plan.scenes[i];
-    const vIdx = i * 3;
-    const voiceIdx = i * 3 + 1;
-    const sfxIdx = i * 3 + 2;
-    const videoFile = `.video-generation/portrait-v1/${charId}/scene-${s.sourceScene}.mp4`;
-    const voiceFile = voiceWavs[i];
-    const sfxFile = sfxPaths.get(s.sfx)!;
-
-    if (!await exists(videoFile)) throw new Error(`Missing source scene video: ${videoFile}`);
-    inputs.push('-i', videoFile, '-i', voiceFile, '-i', sfxFile);
-
-    const dur = s.duration;
-    filters.push(
-      `[${vIdx}:v]trim=duration=${dur},setpts=PTS-STARTPTS,scale=1080:1920:flags=lanczos,fps=24,format=yuv420p[v${i}]`,
-    );
-    filters.push(
-      `[${vIdx}:a]atrim=duration=${dur},asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo,volume=0.18[bed${i}]`,
-    );
-    filters.push(
-      `[${sfxIdx}:a]aformat=sample_rates=48000:channel_layouts=stereo,volume=0.62,adelay=180|180,apad,atrim=duration=${dur},asetpts=PTS-STARTPTS[sfx${i}]`,
-    );
-    filters.push(
-      `[bed${i}][sfx${i}]amix=inputs=2:normalize=0,atrim=duration=${dur},asetpts=PTS-STARTPTS[bg${i}]`,
-    );
-    filters.push(
-      `[${voiceIdx}:a]aformat=sample_rates=48000:channel_layouts=stereo,adelay=320|320,apad,atrim=duration=${dur},asetpts=PTS-STARTPTS,asplit=2[vo${i}][sc${i}]`,
-    );
-    filters.push(
-      `[bg${i}][sc${i}]sidechaincompress=threshold=0.02:ratio=6:attack=25:release=260[duck${i}]`,
-    );
-    filters.push(
-      `[duck${i}][vo${i}]amix=inputs=2:normalize=0,alimiter=limit=0.95,afade=t=in:d=0.08,afade=t=out:st=${(dur - 0.22).toFixed(2)}:d=0.22,atrim=duration=${dur},asetpts=PTS-STARTPTS[a${i}]`,
-    );
+  const comedy30sMp4 = `${charWorkDir}/comedy-30s.mp4`;
+  const existingPublicComedy = `public/videos/comedy/${charId}.mp4`;
+  if (!(await exists(comedy30sMp4)) && (await exists(existingPublicComedy))) {
+    await copyFile(existingPublicComedy, comedy30sMp4);
   }
 
-  filters.push(
-    `${plan.scenes.map((_, i) => `[v${i}][a${i}]`).join('')}concat=n=4:v=1:a=1[vout][aout]`,
-  );
+  if (!(await exists(comedy30sMp4))) {
+    // Assemble 4 scenes (8 + 8 + 8 + 6 = 30s) at 1080x1920 24fps
+    const inputs: string[] = [];
+    const filters: string[] = [];
 
-  const outMp4 = `${outVideoDir}/${charId}.mp4`;
-  const outPoster = `${outPosterDir}/${charId}.jpg`;
-  console.log(`[BUILD] Rendering 30s comedy episode for ${charId} -> ${outMp4}...`);
+    for (let i = 0; i < plan.scenes.length; i++) {
+      const s = plan.scenes[i];
+      const vIdx = i * 3;
+      const voiceIdx = i * 3 + 1;
+      const sfxIdx = i * 3 + 2;
+      const videoFile = `.video-generation/portrait-v1/${charId}/scene-${s.sourceScene}.mp4`;
+      const voiceFile = voiceWavs[i];
+      const sfxFile = sfxPaths.get(s.sfx)!;
 
+      if (!await exists(videoFile)) throw new Error(`Missing source scene video: ${videoFile}`);
+      inputs.push('-i', videoFile, '-i', voiceFile, '-i', sfxFile);
+
+      const dur = s.duration;
+      filters.push(
+        `[${vIdx}:v]trim=duration=${dur},setpts=PTS-STARTPTS,scale=1080:1920:flags=lanczos,fps=24,format=yuv420p[v${i}]`,
+      );
+      filters.push(
+        `[${vIdx}:a]atrim=duration=${dur},asetpts=PTS-STARTPTS,aformat=sample_rates=48000:channel_layouts=stereo,volume=0.18[bed${i}]`,
+      );
+      filters.push(
+        `[${sfxIdx}:a]aformat=sample_rates=48000:channel_layouts=stereo,volume=0.62,adelay=180|180,apad,atrim=duration=${dur},asetpts=PTS-STARTPTS[sfx${i}]`,
+      );
+      filters.push(
+        `[bed${i}][sfx${i}]amix=inputs=2:normalize=0,atrim=duration=${dur},asetpts=PTS-STARTPTS[bg${i}]`,
+      );
+      filters.push(
+        `[${voiceIdx}:a]aformat=sample_rates=48000:channel_layouts=stereo,adelay=320|320,apad,atrim=duration=${dur},asetpts=PTS-STARTPTS,asplit=2[vo${i}][sc${i}]`,
+      );
+      filters.push(
+        `[bg${i}][sc${i}]sidechaincompress=threshold=0.02:ratio=6:attack=25:release=260[duck${i}]`,
+      );
+      filters.push(
+        `[duck${i}][vo${i}]amix=inputs=2:normalize=0,alimiter=limit=0.95,afade=t=in:d=0.08,afade=t=out:st=${(dur - 0.22).toFixed(2)}:d=0.22,atrim=duration=${dur},asetpts=PTS-STARTPTS[a${i}]`,
+      );
+    }
+
+    filters.push(
+      `${plan.scenes.map((_, i) => `[v${i}][a${i}]`).join('')}concat=n=4:v=1:a=1[vout][aout]`,
+    );
+
+    console.log(`[BUILD] Rendering 30s comedy episode for ${charId} -> ${comedy30sMp4}...`);
+    await run(ffmpeg, [
+      '-hide_banner', '-loglevel', 'error', '-nostdin', '-y',
+      ...inputs,
+      '-filter_complex', filters.join(';'),
+      '-map', '[vout]', '-map', '[aout]',
+      '-r', '24', '-frames:v', '720', '-t', '30',
+      '-c:v', 'libx264', '-crf', '18', '-preset', 'fast',
+      '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k',
+      '-movflags', '+faststart',
+      comedy30sMp4,
+    ], { timeout: 600000, maxBuffer: 2 * 1024 * 1024 });
+  }
+
+  await inspectVideo(comedy30sMp4, 30);
+
+  // Back up the 46s portrait video before replacing public/videos/<id>.mp4 with the 76s merged video
+  const backup46sMp4 = `${backup46sDir}/${charId}.mp4`;
+  const publicPortraitMp4 = `public/videos/${charId}.mp4`;
+  const cached46sMp4 = `.video-generation/portrait-v1/${charId}/comedy-final.mp4`;
+  if (!(await exists(backup46sMp4))) {
+    if (await exists(cached46sMp4)) {
+      await copyFile(cached46sMp4, backup46sMp4);
+    } else {
+      await copyFile(publicPortraitMp4, backup46sMp4);
+    }
+  }
+
+  const merged76sMp4 = `${charWorkDir}/merged-76s.mp4`;
+  console.log(`[MERGE] Combining 46s portrait + 30s comedy -> 76s unified episode for ${charId}...`);
   await run(ffmpeg, [
     '-hide_banner', '-loglevel', 'error', '-nostdin', '-y',
-    ...inputs,
-    '-filter_complex', filters.join(';'),
+    '-i', backup46sMp4,
+    '-i', comedy30sMp4,
+    '-filter_complex', '[0:v][0:a][1:v][1:a]concat=n=2:v=1:a=1[vout][aout]',
     '-map', '[vout]', '-map', '[aout]',
-    '-r', '24', '-frames:v', '720', '-t', '30',
+    '-r', '24', '-frames:v', '1824', '-t', '76',
     '-c:v', 'libx264', '-crf', '18', '-preset', 'fast',
     '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-b:a', '192k',
     '-movflags', '+faststart',
-    outMp4,
+    merged76sMp4,
   ], { timeout: 600000, maxBuffer: 2 * 1024 * 1024 });
 
-  const meta = await inspectVideo(outMp4, 30);
-  await run(ffmpeg, [
-    '-hide_banner', '-loglevel', 'error', '-y',
-    '-ss', '1.5', '-i', outMp4,
-    '-frames:v', '1', '-vf', 'scale=1080:1920', '-q:v', '2',
-    outPoster,
-  ]);
+  const meta = await inspectVideo(merged76sMp4, 76);
+  await copyFile(merged76sMp4, publicPortraitMp4);
 
-  const checksum = hash(await readFile(outMp4));
-  manifest[charId] = {
-    characterId: charId,
-    title: plan.title,
+  const checksum = hash(await readFile(publicPortraitMp4));
+  portraitManifest[charId] = {
+    ...(portraitManifest[charId] || { model: 'veo-3.1-lite-generate-preview' }),
     ...meta,
     sha256: checksum,
-    scenes: 4,
+    scenes: 10,
     dubbedLanguage: 'ko',
     revision: checksum.slice(0, 12),
   };
-  await json(manifestPath, manifest);
-  console.log(`[DONE] ${charId}: 30s comedy video (${Math.round(meta.bytes / 1024 / 1024 * 10) / 10} MB, rev=${checksum.slice(0, 12)})`);
+  await json(portraitManifestPath, portraitManifest);
+  console.log(`[DONE] ${charId}: 76s unified video (${Math.round(meta.bytes / 1024 / 1024 * 10) / 10} MB, rev=${checksum.slice(0, 12)})`);
+}
+
+if (await exists('public/videos/comedy')) {
+  await rm('public/videos/comedy', { recursive: true, force: true });
+}
+if (await exists('public/videos/comedy-manifest.json')) {
+  await rm('public/videos/comedy-manifest.json', { force: true });
 }
 
 const afterSub = await client.user.subscription.get();
-console.log(`\n[COMPLETE] All 30s comedy videos built!`);
+console.log(`\n[COMPLETE] All 76s (46s + 30s) unified comedy videos built!`);
 console.log(`[BUDGET] Used: ${(afterSub.characterCount - beforeSub.characterCount).toLocaleString()} credits | Remaining: ${(afterSub.characterLimit - afterSub.characterCount).toLocaleString()} / ${afterSub.characterLimit.toLocaleString()}`);

@@ -21,7 +21,7 @@ export function CharacterCharmVideoModal({ isOpen, ...props }: CharacterCharmVid
 
 function VideoTheater({ onClose, initialCharacterId, soundEnabled }: Omit<CharacterCharmVideoModalProps, 'isOpen'>) {
   const [activeCharacterId, setActiveCharacterId] = useState<CharacterId>(initialCharacterId);
-  const [format, setFormat] = useState<VideoFormat>('comedy');
+  const [format, setFormat] = useState<VideoFormat>('portrait');
   const presentation = getCharacterVideoPresentation(activeCharacterId, format);
   const dialog = useRef<HTMLDialogElement>(null);
   const [opener] = useState(() => document.activeElement instanceof HTMLElement ? document.activeElement : null);
@@ -177,24 +177,29 @@ function VideoTheater({ onClose, initialCharacterId, soundEnabled }: Omit<Charac
 
   const jumpToBonusScene = () => {
     if (!video.current) return;
-    const targetSec = presentation.isComedy ? 16 : 30;
+    const targetSec = 30;
     video.current.currentTime = targetSec;
-    setProgress(targetSec / (video.current.duration || (presentation.isComedy ? 30 : 46)));
+    setProgress(targetSec / (video.current.duration || 76));
     playBubblePop(soundEnabled && !localMute);
     void requestPlay();
   };
 
-  const toggleComedyEpisode = () => {
-    setFormat(prev => (prev === 'comedy' ? 'portrait' : 'comedy'));
-    playback.current.time = 0;
+  const jumpToComedyShow = () => {
+    if (!video.current) return;
+    const isAlreadyInComedy = video.current.currentTime >= 45;
+    const targetSec = isAlreadyInComedy ? 0 : 46;
+    video.current.currentTime = targetSec;
+    setProgress(targetSec / (video.current.duration || 76));
     playBubblePop(soundEnabled && !localMute);
+    void requestPlay();
   };
 
   const toggleOrientation = () => {
-    setFormat(prev => (prev === 'landscape' ? 'comedy' : 'landscape'));
+    setFormat(prev => (prev === 'landscape' ? 'portrait' : 'landscape'));
     playBubblePop(soundEnabled && !localMute);
   };
 
+  const inComedySection = !presentation.isLandscape && progress * (presentation.duration || 76) >= 45;
   const status = failed ? '영상을 다시 불러올 수 있어요.' : slow ? '준비하고 있어요. 친구와 먼저 인사해요!' : busy ? '영상을 준비하고 있어요.' : playing ? '영상 재생 중' : '재생 버튼을 눌러요.';
 
   return <dialog ref={dialog} className="character-theater" aria-label={`${buddy.name}의 작은 영화관`}
@@ -214,16 +219,16 @@ function VideoTheater({ onClose, initialCharacterId, soundEnabled }: Omit<Charac
         </button>
 
         <div className="theater-header-actions">
-          {presentation.hasComedy && (
+          {!presentation.isLandscape && (
             <button
               type="button"
-              className={`theater-episode-pill ${presentation.isComedy ? 'is-comedy' : ''}`}
-              onClick={toggleComedyEpisode}
-              aria-label={presentation.isComedy ? '기본 이야기 영상으로 보기' : '30초 개그쇼 영상으로 보기'}
-              title={presentation.isComedy ? '기본 이야기 영상으로 보기' : '30초 개그쇼 영상으로 보기'}
+              className={`theater-episode-pill ${inComedySection ? 'is-comedy' : ''}`}
+              onClick={jumpToComedyShow}
+              aria-label={inComedySection ? '처음 이야기부터 보기' : '46초 개그쇼 구간으로 바로가기'}
+              title={inComedySection ? '처음 이야기부터 보기' : '46초 개그쇼 구간으로 바로가기'}
             >
               <Laugh size={17} />
-              <span>{presentation.isComedy ? '🤣 30초 개그쇼' : '🎬 기본 이야기'}</span>
+              <span>{inComedySection ? '🎬 처음부터' : '🤣 개그쇼!'}</span>
             </button>
           )}
           {presentation.hasLandscape && (
@@ -344,11 +349,11 @@ function VideoTheater({ onClose, initialCharacterId, soundEnabled }: Omit<Charac
               type="button"
               className="theater-bonus-jump-btn"
               onClick={jumpToBonusScene}
-              aria-label={presentation.isComedy ? '하이라이트 개그 바로보기' : '30초 댄스 파티 바로보기'}
-              title={presentation.isComedy ? '하이라이트 개그 바로보기' : '30초 댄스 파티 바로보기'}
+              aria-label="30초 댄스 파티 바로보기"
+              title="30초 댄스 파티 바로보기"
             >
               <Sparkles size={15} />
-              <span>{presentation.isComedy ? '개그폭발!' : '댄스타임!'}</span>
+              <span>댄스타임!</span>
             </button>
           )}
 
