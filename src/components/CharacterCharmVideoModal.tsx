@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { Gamepad2, Heart, LoaderCircle, Pause, Play, RotateCcw, Smartphone, Sparkles, Tv, Volume2, VolumeX, X } from 'lucide-react';
+import { Gamepad2, Heart, Laugh, LoaderCircle, Pause, Play, RotateCcw, Smartphone, Sparkles, Tv, Volume2, VolumeX, X } from 'lucide-react';
 import type { CharacterId } from '../types';
 import { CHARACTER_LIST, CHARACTERS } from '../data/characters';
-import { getCharacterVideoPresentation } from './characterVideoPresentation';
+import { getCharacterVideoPresentation, type VideoFormat } from './characterVideoPresentation';
 import { CharacterAvatar } from './CharacterAvatar';
 import { playBubblePop, stopAllSpeech, stopPlaySounds, setBGMDucked, speakText, resumeAfterVideoPlayback } from '../utils/soundEngine';
 import './CharacterCharmVideoModal.css';
@@ -21,8 +21,8 @@ export function CharacterCharmVideoModal({ isOpen, ...props }: CharacterCharmVid
 
 function VideoTheater({ onClose, initialCharacterId, soundEnabled }: Omit<CharacterCharmVideoModalProps, 'isOpen'>) {
   const [activeCharacterId, setActiveCharacterId] = useState<CharacterId>(initialCharacterId);
-  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('portrait');
-  const presentation = getCharacterVideoPresentation(activeCharacterId, orientation);
+  const [format, setFormat] = useState<VideoFormat>('comedy');
+  const presentation = getCharacterVideoPresentation(activeCharacterId, format);
   const dialog = useRef<HTMLDialogElement>(null);
   const [opener] = useState(() => document.activeElement instanceof HTMLElement ? document.activeElement : null);
   const video = useRef<HTMLVideoElement>(null);
@@ -177,14 +177,21 @@ function VideoTheater({ onClose, initialCharacterId, soundEnabled }: Omit<Charac
 
   const jumpToBonusScene = () => {
     if (!video.current) return;
-    video.current.currentTime = 30;
-    setProgress(30 / (video.current.duration || 38));
+    const targetSec = presentation.isComedy ? 16 : 30;
+    video.current.currentTime = targetSec;
+    setProgress(targetSec / (video.current.duration || (presentation.isComedy ? 30 : 46)));
     playBubblePop(soundEnabled && !localMute);
     void requestPlay();
   };
 
+  const toggleComedyEpisode = () => {
+    setFormat(prev => (prev === 'comedy' ? 'portrait' : 'comedy'));
+    playback.current.time = 0;
+    playBubblePop(soundEnabled && !localMute);
+  };
+
   const toggleOrientation = () => {
-    setOrientation(prev => (prev === 'portrait' ? 'landscape' : 'portrait'));
+    setFormat(prev => (prev === 'landscape' ? 'comedy' : 'landscape'));
     playBubblePop(soundEnabled && !localMute);
   };
 
@@ -207,16 +214,28 @@ function VideoTheater({ onClose, initialCharacterId, soundEnabled }: Omit<Charac
         </button>
 
         <div className="theater-header-actions">
+          {presentation.hasComedy && (
+            <button
+              type="button"
+              className={`theater-episode-pill ${presentation.isComedy ? 'is-comedy' : ''}`}
+              onClick={toggleComedyEpisode}
+              aria-label={presentation.isComedy ? '기본 이야기 영상으로 보기' : '30초 개그쇼 영상으로 보기'}
+              title={presentation.isComedy ? '기본 이야기 영상으로 보기' : '30초 개그쇼 영상으로 보기'}
+            >
+              <Laugh size={17} />
+              <span>{presentation.isComedy ? '🤣 30초 개그쇼' : '🎬 기본 이야기'}</span>
+            </button>
+          )}
           {presentation.hasLandscape && (
             <button
               type="button"
               className="theater-aspect-pill"
               onClick={toggleOrientation}
-              aria-label={orientation === 'portrait' ? '가로 화면으로 보기' : '세로 화면으로 보기'}
-              title={orientation === 'portrait' ? '가로 화면으로 보기' : '세로 화면으로 보기'}
+              aria-label={format !== 'landscape' ? '가로 화면으로 보기' : '세로 화면으로 보기'}
+              title={format !== 'landscape' ? '가로 화면으로 보기' : '세로 화면으로 보기'}
             >
-              {orientation === 'portrait' ? <Tv size={17} /> : <Smartphone size={17} />}
-              <span>{orientation === 'portrait' ? '가로영상' : '세로영상'}</span>
+              {format !== 'landscape' ? <Tv size={17} /> : <Smartphone size={17} />}
+              <span>{format !== 'landscape' ? '가로영상' : '세로영상'}</span>
             </button>
           )}
           <button className="theater-button theater-close" onClick={closeTheater} aria-label="영상 닫고 돌아가기" autoFocus><X /></button>
@@ -319,17 +338,17 @@ function VideoTheater({ onClose, initialCharacterId, soundEnabled }: Omit<Charac
           <button className="theater-button" onClick={() => void requestPlay(true)} aria-label="처음부터 다시 보기"><RotateCcw /></button>
           <button className="theater-button theater-primary" onClick={() => playing ? pause() : void requestPlay()} aria-label={playing ? '영상 잠깐 멈추기' : '영상 재생하기'}>{playing ? <Pause fill="currentColor" /> : <Play fill="currentColor" />}</button>
 
-          {/* Bonus Scene Jump Button (when watching portrait 38s video) */}
+          {/* Highlight Jump Button */}
           {!presentation.isLandscape && (
             <button
               type="button"
               className="theater-bonus-jump-btn"
               onClick={jumpToBonusScene}
-              aria-label="30초 댄스 파티 바로보기"
-              title="30초 댄스 파티 바로보기"
+              aria-label={presentation.isComedy ? '하이라이트 개그 바로보기' : '30초 댄스 파티 바로보기'}
+              title={presentation.isComedy ? '하이라이트 개그 바로보기' : '30초 댄스 파티 바로보기'}
             >
               <Sparkles size={15} />
-              <span>댄스타임!</span>
+              <span>{presentation.isComedy ? '개그폭발!' : '댄스타임!'}</span>
             </button>
           )}
 

@@ -2,7 +2,16 @@
 
 문서 기준일: 2026-10-26 · [문서 목차](../../docs/README.md) · [스토리보드](../../public/videos/PROMPTS.md)
 
-## 현재 적용 상태 (2026-10-26)
+## 현재 적용 상태 (2026-11-09)
+
+- **신규 30초 슬랩스틱 개그쇼 에피소드 (`public/videos/comedy/<캐릭터ID>.mp4`)**:
+  - 유하를 위해 8마리 캐릭터별 **30초(8s + 8s + 8s + 6s = 30s) 슬랩스틱 개그쇼** 영상을 제작해 기본 재생 에피소드로 적용했습니다.
+  - 기존 고화질 클레이 장면 자산(`.video-generation/portrait-v1/<id>/scene-*.mp4`)을 가장 웃긴 코미디 하이라이트 중심 순서로 재편집하여 **비디오 생성 API 추가 비용 $0**으로 1080×1920 24fps 영상을 완성했습니다.
+  - **ElevenLabs 무료 포함 크레딧(Starter 플랜 잔여 49,825자 중 626 크레딧만 사용, 잔여 49,199자 유지)**을 활용해 6종의 슬랩스틱 만화 효과음(`sneeze_pop`, `slip_boing`, `toot_propeller`, `bowling_strike`, `pudding_bounce`, `hiccup_poof`)과 8마리 캐릭터 × 4장면(총 32개)의 신규 코미디 개그 더빙을 합성·믹싱했습니다.
+  - 극장 모달(`CharacterCharmVideoModal.tsx`) 상단의 **`🤣 30초 개그쇼` / `🎬 기본 이야기`** 전환 버튼으로 언제든 신규 30초 개그쇼와 기존 46초 기본 이야기를 오가며 감상할 수 있습니다.
+  - 매니페스트 및 포스터는 `public/videos/comedy-manifest.json` 및 `public/videos/comedy/posters/<캐릭터ID>.jpg`에서 관리하며, 스크립트는 `scripts/build-30s-comedy-videos.ts`입니다.
+
+## 이전 적용 상태 (2026-10-26)
 
 - 친구 8명 모두 기존 38초(5장면) 영상에 유하를 위한 8초 슬랩스틱 코미디 장면을 이어 붙인 **46초·6장면 한국어 더빙 세로 영상**을 사용합니다.
 - Veo 3.1 Lite 일몰에 따라 Google 공식 최신 비디오 생성 모델인 **`gemini-omni-1.1-flash`** (720p 9:16 생성 후 1080p Lanczos 무손실 스케일링)로 8마리 캐릭터의 6번째 장면을 생성했습니다.

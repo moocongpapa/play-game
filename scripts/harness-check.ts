@@ -248,6 +248,8 @@ function checkPaidScriptIsolation(): CheckResult {
   const forbiddenPatterns = [
     'generate-portrait-videos',
     'generate-bonus-scenes',
+    'generate-comedy-scenes',
+    'build-30s-comedy-videos',
     'generate-play-audio',
     'generate-care-voices',
   ];

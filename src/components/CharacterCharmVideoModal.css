@@ -11,6 +11,10 @@
 .theater-back-play-button:active { transform: scale(0.96); }
 .theater-back-play-button.pulse-attention { animation: theater-pulse 1.4s infinite ease-in-out; }
 
+.theater-episode-pill { display: inline-flex; align-items: center; gap: 5px; height: clamp(44px, 10vw, 52px); padding: 0 clamp(12px, 3vw, 16px); border: 2px solid #fff; border-radius: 9999px; background: linear-gradient(135deg, #fef3c7, #fde68a); color: #92400e; font-size: clamp(12px, 3.2vw, 14px); font-weight: 900; white-space: nowrap; flex-shrink: 0; box-shadow: 0 3px 0 #f59e0b, inset 0 2px 0 rgba(255, 255, 255, 0.8); cursor: pointer; transition: transform 0.15s ease; }
+.theater-episode-pill.is-comedy { background: linear-gradient(135deg, #fce7f3, #f9a8d4); color: #9d174d; box-shadow: 0 3px 0 #ec4899, inset 0 2px 0 rgba(255, 255, 255, 0.85); }
+.theater-episode-pill:active { transform: translateY(2px); }
+
 .theater-aspect-pill { display: inline-flex; align-items: center; gap: 5px; height: clamp(44px, 10vw, 52px); padding: 0 clamp(12px, 3vw, 16px); border: 2px solid #fff; border-radius: 9999px; background: linear-gradient(135deg, #eef6ff, #cfe2fe); color: #1d4ed8; font-size: clamp(12px, 3.2vw, 14px); font-weight: 900; white-space: nowrap; flex-shrink: 0; box-shadow: 0 3px 0 #93c5fd, inset 0 2px 0 rgba(255, 255, 255, 0.8); cursor: pointer; transition: transform 0.15s ease; }
 .theater-aspect-pill:active { transform: translateY(2px); box-shadow: 0 1px 0 #93c5fd; }
 
