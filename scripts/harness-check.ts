@@ -250,6 +250,7 @@ function checkPaidScriptIsolation(): CheckResult {
     'generate-bonus-scenes',
     'generate-comedy-scenes',
     'build-30s-comedy-videos',
+    'generate-adventure-videos',
     'generate-play-audio',
     'generate-care-voices',
   ];

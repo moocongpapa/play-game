@@ -69,7 +69,7 @@ function main() {
       finish('deny', '.env 시크릿 파일은 스테이징할 수 없습니다.'); return;
     }
   }
-  const paid = ['generate-portrait-videos', 'generate-bonus-scenes', 'generate-comedy-scenes', 'build-30s-comedy-videos', 'generate-play-audio', 'generate-care-voices'];
+  const paid = ['generate-portrait-videos', 'generate-bonus-scenes', 'generate-comedy-scenes', 'build-30s-comedy-videos', 'generate-adventure-videos', 'generate-play-audio', 'generate-care-voices'];
   if (allTokens.some(tokens => tokens.some(token => ['node', 'tsx', 'npm', 'npx', 'bun'].includes(path.basename(token))) && tokens.some(token => paid.some(script => path.basename(token).startsWith(script))))) {
     finish('force_ask', '유료 미디어 생성 스크립트입니다. 크레딧 사용에 대한 명시적 승인을 확인해 주세요.'); return;
   }
