@@ -1,0 +1,17 @@
+{
+  "ggomi": {
+    "characterId": "ggomi",
+    "title": "꼬미의 솜사탕 대소동",
+    "location": "놀이공원",
+    "engine": "elevenlabs-audio+clay-motion",
+    "width": 1080,
+    "height": 1920,
+    "duration": 30,
+    "fps": 24,
+    "bytes": 14134540,
+    "sha256": "8bfebff98f7c59f48386aa97895bb4c7c5aaf6f133dd49a0893d0f5a41a57ddc",
+    "scenes": 4,
+    "dubbedLanguage": "ko",
+    "revision": "8bfebff98f7c"
+  }
+}

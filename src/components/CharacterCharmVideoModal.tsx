@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
-import { Gamepad2, Heart, Laugh, LoaderCircle, Pause, Play, RotateCcw, Smartphone, Sparkles, Tv, Volume2, VolumeX, X } from 'lucide-react';
+import { Compass, Gamepad2, Heart, Laugh, LoaderCircle, Pause, Play, RotateCcw, Smartphone, Sparkles, Tv, Volume2, VolumeX, X } from 'lucide-react';
 import type { CharacterId } from '../types';
 import { CHARACTER_LIST, CHARACTERS } from '../data/characters';
-import { getCharacterVideoPresentation, type VideoFormat } from './characterVideoPresentation';
+import { getCharacterVideoPresentation, hasCharacterAdventureVideo, type VideoFormat } from './characterVideoPresentation';
 import { CharacterAvatar } from './CharacterAvatar';
 import { playBubblePop, stopAllSpeech, stopPlaySounds, setBGMDucked, speakText, resumeAfterVideoPlayback } from '../utils/soundEngine';
 import './CharacterCharmVideoModal.css';
@@ -177,9 +177,16 @@ function VideoTheater({ onClose, initialCharacterId, soundEnabled }: Omit<Charac
 
   const jumpToBonusScene = () => {
     if (!video.current) return;
-    const targetSec = 30;
-    video.current.currentTime = targetSec;
-    setProgress(targetSec / (video.current.duration || 76));
+    if (presentation.isAdventure) {
+      const targetSec = 16;
+      video.current.currentTime = targetSec;
+      setProgress(targetSec / (video.current.duration || 30));
+    } else {
+      const now = video.current.currentTime;
+      const targetSec = now >= 29 && now < 45 ? 46 : 30;
+      video.current.currentTime = targetSec;
+      setProgress(targetSec / (video.current.duration || 76));
+    }
     playBubblePop(soundEnabled && !localMute);
     void requestPlay();
   };
@@ -194,12 +201,21 @@ function VideoTheater({ onClose, initialCharacterId, soundEnabled }: Omit<Charac
     void requestPlay();
   };
 
+  const toggleAdventureEpisode = () => {
+    playback.current.time = 0;
+    setFormat(prev => (prev === 'adventure' ? 'portrait' : 'adventure'));
+    playBubblePop(soundEnabled && !localMute);
+  };
+
   const toggleOrientation = () => {
+    playback.current.time = 0;
     setFormat(prev => (prev === 'landscape' ? 'portrait' : 'landscape'));
     playBubblePop(soundEnabled && !localMute);
   };
 
-  const inComedySection = !presentation.isLandscape && progress * (presentation.duration || 76) >= 45;
+  const currentSec = progress * (presentation.duration || 76);
+  const inComedySection = !presentation.isLandscape && !presentation.isAdventure && currentSec >= 45;
+  const inDanceSection = !presentation.isLandscape && !presentation.isAdventure && currentSec >= 29 && currentSec < 45;
   const status = failed ? '영상을 다시 불러올 수 있어요.' : slow ? '준비하고 있어요. 친구와 먼저 인사해요!' : busy ? '영상을 준비하고 있어요.' : playing ? '영상 재생 중' : '재생 버튼을 눌러요.';
 
   return <dialog ref={dialog} className="character-theater" aria-label={`${buddy.name}의 작은 영화관`}
@@ -219,7 +235,18 @@ function VideoTheater({ onClose, initialCharacterId, soundEnabled }: Omit<Charac
         </button>
 
         <div className="theater-header-actions">
-          {!presentation.isLandscape && (
+          {presentation.hasAdventure ? (
+            <button
+              type="button"
+              className={`theater-episode-pill is-adventure-toggle ${presentation.isAdventure ? 'is-adventure-active' : ''}`}
+              onClick={toggleAdventureEpisode}
+              aria-label={presentation.isAdventure ? '기본 이야기 영상으로 보기' : `${buddy.name}의 새 모험 영상 보기`}
+              title={presentation.isAdventure ? '기본 이야기 영상으로 보기' : `${presentation.adventureLocation || '새 모험'} 에피소드 보기`}
+            >
+              <Compass size={17} />
+              <span>{presentation.isAdventure ? '🎬 기본편' : '🗺️ 새 모험'}</span>
+            </button>
+          ) : !presentation.isLandscape ? (
             <button
               type="button"
               className={`theater-episode-pill ${inComedySection ? 'is-comedy' : ''}`}
@@ -230,7 +257,7 @@ function VideoTheater({ onClose, initialCharacterId, soundEnabled }: Omit<Charac
               <Laugh size={17} />
               <span>{inComedySection ? '🎬 처음부터' : '🤣 개그쇼!'}</span>
             </button>
-          )}
+          ) : null}
           {presentation.hasLandscape && (
             <button
               type="button"
@@ -258,6 +285,7 @@ function VideoTheater({ onClose, initialCharacterId, soundEnabled }: Omit<Charac
             className={`theater-char-pill ${char.id === activeCharacterId ? 'is-active' : ''}`}
             onClick={() => {
               if (char.id !== activeCharacterId) {
+                playback.current.time = 0;
                 playBubblePop(soundEnabled && !localMute);
                 setActiveCharacterId(char.id);
               }
@@ -266,6 +294,9 @@ function VideoTheater({ onClose, initialCharacterId, soundEnabled }: Omit<Charac
           >
             <CharacterAvatar id={char.id} size="sm" mood="still" />
             <span className="theater-char-pill-name">{char.name}</span>
+            {hasCharacterAdventureVideo(char.id) && (
+              <span className="theater-char-adventure-dot" title="새 모험 에피소드 있음" aria-hidden="true">🗺️</span>
+            )}
           </button>
         ))}
       </div>
@@ -349,11 +380,11 @@ function VideoTheater({ onClose, initialCharacterId, soundEnabled }: Omit<Charac
               type="button"
               className="theater-bonus-jump-btn"
               onClick={jumpToBonusScene}
-              aria-label="30초 댄스 파티 바로보기"
-              title="30초 댄스 파티 바로보기"
+              aria-label={presentation.isAdventure ? '16초 하이라이트 장면 바로보기' : inDanceSection ? '46초 개그쇼 바로보기' : '30초 댄스 파티 바로보기'}
+              title={presentation.isAdventure ? '16초 하이라이트 장면 바로보기' : inDanceSection ? '46초 개그쇼 바로보기' : '30초 댄스 파티 바로보기'}
             >
               <Sparkles size={15} />
-              <span>댄스타임!</span>
+              <span>{presentation.isAdventure ? '하이라이트!' : inDanceSection ? '🤣 개그쇼!' : '댄스타임!'}</span>
             </button>
           )}
 
