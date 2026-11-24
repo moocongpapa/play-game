@@ -4,9 +4,17 @@
 
 ## 현재 적용 상태 (2026-11-24)
 
-- **시즌 2 「새 모험」 별도 에피소드 — 1차: 꼬미 놀이공원 편 (`public/videos/adventure/ggomi.mp4`, 30초)**:
-  - Google Gemini 비디오 API를 사용하지 않고(**외부 비디오 생성 과금 \$0**), 내장 3D 클레이 디오라마 장면 생성(4장면) + **ElevenLabs 통합 오디오 API(`music.compose` 30초 놀이공원 오르골 왈츠 BGM + `textToSoundEffects` 만화 효과음 4종 + `textToSpeech` 꼬미 한국어 대사 4개, 총 400자 사용 / 잔여 48,764자)** + FFmpeg 24fps 모션 카메라(통통 점프 줌인, 솜사탕 부풀기 바운스, 하늘 유영 패닝, 폭신 착지)로 **1080×1920 30초 에피소드(「꼬미의 솜사탕 대소동」)**를 제작했습니다.
-  - 기존 76초 세로 영상(`public/videos/<캐릭터ID>.mp4`)은 그대로 유지하며, 작은 영화관(`CharacterCharmVideoModal.tsx`) 상단의 **`🗺️ 새 모험`** 버튼으로 별도 감상할 수 있습니다(`public/videos/adventure-manifest.json`, 제작 스크립트: `scripts/generate-adventure-videos.ts`).
+- **시즌 2 「새 모험」 별도 에피소드 — 8명 전원 제작 완료 (`public/videos/adventure/<캐릭터ID>.mp4`, 각 30초)**:
+  - Google Gemini 비디오 API를 사용하지 않고(**외부 비디오 생성 과금 \$0**), 3D 클레이 디오라마 장면 아트워크(캐릭터당 4장면, 총 32장면) + **ElevenLabs 통합 오디오 API(`music.compose` 30초 테마 배경음악 8곡 + `textToSoundEffects` 장소별 만화 효과음 + `textToSpeech` 캐릭터별 한국어 코미디 대사 32개, 잔여 크레딧 47,103 / 49,825자 유지)** + FFmpeg 24fps 스토리 맞춤 모션 카메라로 8마리 친구 전원의 **1080×1920 30초 에피소드**를 완성했습니다:
+    1. **꼬미 (`ggomi`)**: 놀이공원 — 「꼬미의 솜사탕 대소동」
+    2. **라노 (`rano`)**: 산속 — 「라노의 산속 메아리 놀이」
+    3. **젤리 (`jelly`)**: 바닷속 — 「젤리의 바닷속 방울 파티」
+    4. **도치 (`dochi`)**: 놀이터 — 「도치의 놀이터 음악회」
+    5. **꿀꿀이 (`ggulgguli`)**: 캠핑장 — 「꿀꿀이의 마시멜로 캠핑」
+    6. **음메 (`eumme`)**: 하늘 위 열기구 — 「음메의 열기구 구름 여행」
+    7. **누룽지 (`nurungji`)**: 해적섬 해변 — 「누룽지의 해적섬 보물찾기」
+    8. **핑구 (`pingu`)**: 워터파크 — 「핑구의 워터파크 미끄럼 대작전」
+  - 기존 76초 세로 영상(`public/videos/<캐릭터ID>.mp4`)은 그대로 유지하며, 작은 영화관(`CharacterCharmVideoModal.tsx`) 상단의 **`🗺️ 새 모험`** 버튼으로 언제든 별도 감상할 수 있습니다(`public/videos/adventure-manifest.json`, 제작 스크립트: `scripts/generate-adventure-videos.ts`).
 
 ## 이전 적용 상태 (2026-11-09)
 
